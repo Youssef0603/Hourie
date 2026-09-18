@@ -1,0 +1,51 @@
+<?php
+
+return [
+    'accepted' => 'Le champ :attribute doit être accepté.',
+    'array' => 'Le champ :attribute doit être une liste.',
+    'boolean' => 'Le champ :attribute doit être vrai ou faux.',
+    'confirmed' => 'La confirmation du champ :attribute ne correspond pas.',
+    'date' => 'Le champ :attribute doit être une date valide.',
+    'email' => 'Le champ :attribute doit être une adresse e-mail valide.',
+    'enum' => 'La valeur sélectionnée pour :attribute est invalide.',
+    'exists' => 'La valeur sélectionnée pour :attribute est invalide.',
+    'integer' => 'Le champ :attribute doit être un nombre entier.',
+    'numeric' => 'Le champ :attribute doit être un nombre.',
+    'location_cycle' => 'Une localisation ne peut pas être placée sous elle-même ou sous l’un de ses descendants.',
+    'location_project_mismatch' => 'La localisation parente doit appartenir au même projet.',
+    'max' => [
+        'numeric' => 'Le champ :attribute ne doit pas dépasser :max.',
+        'string' => 'Le champ :attribute ne doit pas dépasser :max caractères.',
+    ],
+    'min' => [
+        'numeric' => 'Le champ :attribute doit être au moins égal à :min.',
+        'string' => 'Le champ :attribute doit contenir au moins :min caractères.',
+    ],
+    'required' => 'Le champ :attribute est obligatoire.',
+    'size' => [
+        'string' => 'Le champ :attribute doit contenir :size caractères.',
+    ],
+    'string' => 'Le champ :attribute doit être du texte.',
+    'unique' => 'La valeur du champ :attribute est déjà utilisée.',
+
+    'attributes' => [
+        'email' => 'adresse e-mail',
+        'category' => 'catégorie',
+        'condition' => 'état',
+        'location_id' => 'localisation physique',
+        'maintenance_date' => 'date de maintenance',
+        'engine_hours' => 'heures moteur',
+        'intervention_type' => 'type d’intervention',
+        'cost' => 'coût',
+        'cost_currency' => 'devise',
+        'name' => 'nom',
+        'operational_situation' => 'situation opérationnelle',
+        'page' => 'page',
+        'password' => 'mot de passe',
+        'password_confirmation' => 'confirmation du mot de passe',
+        'per_page' => 'nombre de résultats par page',
+        'project_id' => 'projet',
+        'q' => 'recherche',
+        'remember' => 'rester connecté',
+    ],
+];

@@ -1,0 +1,28 @@
+.DS_Store
+
+# Environment files and secrets
+.env
+.env.*
+!.env.example
+auth.json
+
+# Installed dependencies and generated frontend output
+node_modules/
+vendor/
+dist/
+public/build/
+public/hot
+
+# Runtime files
+*.log
+.phpunit.cache/
+.phpunit.result.cache
+storage/*.key
+storage/pail/
+
+# Local editor and agent configuration
+.codex/
+.cursor/
+.idea/
+.vscode/
+.zed/
