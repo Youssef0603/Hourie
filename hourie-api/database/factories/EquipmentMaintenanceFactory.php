@@ -27,6 +27,7 @@ class EquipmentMaintenanceFactory extends Factory
             'battery_serviced' => true,
             'coolant_serviced' => true,
             'technician_name' => fake()->name(),
+            'external_technician_phone' => '+225 07 00 00 00 00',
             'next_maintenance_date' => '2027-03-15',
             'cost' => 125000,
             'cost_currency' => 'XOF',

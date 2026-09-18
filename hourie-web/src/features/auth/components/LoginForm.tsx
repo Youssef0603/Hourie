@@ -3,6 +3,7 @@ import { fr } from '../../../i18n/fr'
 import { ApiError, type ValidationErrors } from '../../../shared/api/http'
 import { login } from '../api'
 import type { AuthenticatedUser } from '../types'
+import { LoadingSpinner } from '../../../shared/components/LoadingSpinner'
 
 type LoginFormProps = {
   onAuthenticated: (user: AuthenticatedUser) => void
@@ -103,7 +104,7 @@ export function LoginForm({ onAuthenticated }: LoginFormProps) {
       </label>
 
       <button className="primary-button" type="submit" disabled={isSubmitting}>
-        {isSubmitting ? fr.auth.submitting : fr.auth.submit}
+        {isSubmitting ? <LoadingSpinner compact label={fr.auth.submitting} /> : fr.auth.submit}
       </button>
     </form>
   )

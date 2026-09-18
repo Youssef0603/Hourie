@@ -2,7 +2,7 @@ export type AuthenticatedUser = {
   id: number
   name: string
   email: string
-  role: 'manager' | 'generator_manager' | 'viewer'
+  role: 'manager' | 'cms_manager' | 'generator_manager' | 'viewer'
   employee: {
     id: number
     name: string
@@ -11,6 +11,7 @@ export type AuthenticatedUser = {
     manage_equipment: boolean
     manage_maintenance: boolean
     delete_maintenance: boolean
+    manage_sites: boolean
     manage_users: boolean
   }
 }

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['code', 'name', 'is_active'])]
+#[Fillable(['code', 'name', 'status', 'address', 'start_date', 'expected_end_date', 'notes', 'is_active'])]
 class Project extends Model
 {
     /** @use HasFactory<ProjectFactory> */
@@ -24,10 +24,17 @@ class Project extends Model
         return $this->hasMany(EquipmentProjectAssignment::class);
     }
 
+    public function changes(): HasMany
+    {
+        return $this->hasMany(ProjectChange::class)->latest('occurred_at')->latest('id');
+    }
+
     protected function casts(): array
     {
         return [
             'is_active' => 'boolean',
+            'start_date' => 'date:Y-m-d',
+            'expected_end_date' => 'date:Y-m-d',
         ];
     }
 }

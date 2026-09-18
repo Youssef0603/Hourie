@@ -1,5 +1,5 @@
 type NavigationIconProps = {
-  name: 'generators' | 'sites' | 'people'
+  name: 'generators' | 'sites' | 'people' | 'settings'
 }
 
 export function NavigationIcon({ name }: NavigationIconProps) {
@@ -19,6 +19,8 @@ export function NavigationIcon({ name }: NavigationIconProps) {
       </svg>
     )
   }
+
+  if (name === 'settings') return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M19 13.5v-3l-2-.7a7 7 0 0 0-.7-1.7l.9-1.9-2.1-2.1-1.9.9a7 7 0 0 0-1.7-.7L10.5 2h-3l-.7 2a7 7 0 0 0-1.7.7l-1.9-.9-2.1 2.1.9 1.9a7 7 0 0 0-.7 1.7L0 10.5v3l2 .7a7 7 0 0 0 .7 1.7l-.9 1.9 2.1 2.1 1.9-.9a7 7 0 0 0 1.7.7l.7 2h3l.7-2a7 7 0 0 0 1.7-.7l1.9.9 2.1-2.1-.9-1.9a7 7 0 0 0 .7-1.7Z" /></svg>
 
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">

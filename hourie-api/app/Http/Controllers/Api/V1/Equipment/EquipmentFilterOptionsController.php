@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Api\V1\Equipment;
 
 use App\Http\Controllers\Controller;
+use App\Models\CatalogOption;
 use App\Models\Employee;
 use App\Models\Equipment;
 use App\Models\EquipmentCategory;
-use App\Models\GeneratorDetail;
 use App\Models\Location;
 use App\Models\Project;
 use Illuminate\Http\JsonResponse;
@@ -36,13 +36,8 @@ class EquipmentFilterOptionsController extends Controller
                     ->where('is_active', true)
                     ->orderBy('name')
                     ->get(['id', 'name']),
-                'fuel_types' => GeneratorDetail::query()
-                    ->whereNotNull('fuel_type')
-                    ->where('fuel_type', '!=', '')
-                    ->distinct()
-                    ->orderBy('fuel_type')
-                    ->pluck('fuel_type')
-                    ->values(),
+                'fuel_types' => CatalogOption::query()->where('group', 'fuel_type')->where('is_active', true)->orderBy('sort_order')->pluck('code')->values(),
+                'catalogs' => CatalogOption::query()->where('is_active', true)->orderBy('sort_order')->get(['id', 'group', 'code', 'label_fr', 'label_ar', 'color', 'sort_order']),
             ],
         ]);
     }

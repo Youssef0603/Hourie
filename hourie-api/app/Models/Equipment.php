@@ -2,8 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\EquipmentCondition;
-use App\Enums\OperationalSituation;
 use Database\Factories\EquipmentFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -74,12 +72,15 @@ class Equipment extends Model
             ->latest('id');
     }
 
+    public function images(): HasMany
+    {
+        return $this->hasMany(EquipmentImage::class)->orderBy('sort_order')->orderBy('id');
+    }
+
     protected function casts(): array
     {
         return [
             'purchase_year' => 'integer',
-            'condition' => EquipmentCondition::class,
-            'operational_situation' => OperationalSituation::class,
             'is_active' => 'boolean',
         ];
     }

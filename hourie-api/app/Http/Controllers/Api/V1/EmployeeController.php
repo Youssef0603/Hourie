@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Employees\StoreEmployeeRequest;
+use App\Http\Requests\Employees\UpdateEmployeeRequest;
 use App\Http\Resources\EmployeeResource;
 use App\Models\Employee;
 use App\Models\User;
@@ -62,5 +64,37 @@ class EmployeeController extends Controller
         ])->loadCount('equipmentInCustody');
 
         return new EmployeeResource($employee);
+    }
+
+    public function update(UpdateEmployeeRequest $request, Employee $employee): EmployeeResource
+    {
+        $data = $request->validated();
+
+        DB::transaction(function () use ($data, $employee): void {
+            $employee->update([
+                'name' => $data['name'],
+                'phone_number' => $data['phone_number'] ?? null,
+            ]);
+
+            $accountData = [
+                'name' => $data['name'],
+                'email' => $data['email'] ?? null,
+                'role' => $data['role'] ?? UserRole::Viewer,
+            ];
+
+            if (filled($data['password'] ?? null)) {
+                $accountData['password'] = $data['password'];
+            }
+
+            if ($employee->user_id !== null) {
+                $employee->user()->update($accountData);
+            } elseif (filled($data['email'] ?? null)) {
+                $accountData['password'] = $data['password'];
+                $user = User::query()->create($accountData);
+                $employee->update(['user_id' => $user->id]);
+            }
+        });
+
+        return $this->show($employee->fresh());
     }
 }

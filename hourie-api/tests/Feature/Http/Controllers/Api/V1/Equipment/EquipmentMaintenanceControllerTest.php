@@ -25,6 +25,7 @@ function completeMaintenancePayload(Employee $technician): array
         'coolant_serviced' => true,
         'technician_employee_id' => $technician->id,
         'technician_name' => 'Mamadou Koné',
+        'external_technician_phone' => '+225 07 00 00 00 00',
         'next_maintenance_date' => '2027-03-15',
         'cost' => 185000,
         'cost_currency' => 'XOF',
@@ -55,6 +56,7 @@ it('allows a generator manager to record every maintenance field and audits it',
         ->assertJsonPath('data.coolant_serviced', true)
         ->assertJsonPath('data.technician.id', $technician->id)
         ->assertJsonPath('data.technician_name', 'Mamadou Koné')
+        ->assertJsonPath('data.external_technician_phone', '+225 07 00 00 00 00')
         ->assertJsonPath('data.next_maintenance_date', '2027-03-15')
         ->assertJsonPath('data.cost', '185000.00')
         ->assertJsonPath('data.cost_currency', 'XOF')

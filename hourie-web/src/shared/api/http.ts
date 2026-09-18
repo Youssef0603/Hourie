@@ -50,7 +50,7 @@ export async function apiRequest<T>(
     window.localStorage.getItem('hourie-language') === 'ar' ? 'ar' : 'fr',
   )
 
-  if (init.body && !headers.has('Content-Type')) {
+  if (init.body && !(init.body instanceof FormData) && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json')
   }
 

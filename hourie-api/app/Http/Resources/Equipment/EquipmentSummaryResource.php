@@ -28,8 +28,8 @@ class EquipmentSummaryResource extends JsonResource
             'model' => $this->model,
             'serial_number' => $this->serial_number,
             'purchase_year' => $this->purchase_year,
-            'condition' => $this->condition?->value,
-            'operational_situation' => $this->operational_situation?->value,
+            'condition' => $this->condition,
+            'operational_situation' => $this->operational_situation,
             'current_location' => $this->whenLoaded('currentLocation', function (): ?array {
                 if ($this->currentLocation === null) {
                     return null;

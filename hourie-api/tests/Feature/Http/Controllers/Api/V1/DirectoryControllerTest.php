@@ -31,6 +31,20 @@ it('prevents viewers from adding sites', function () {
         ->assertForbidden();
 });
 
+it('allows CMS managers to add sites without granting user administration', function () {
+    $cmsManager = User::factory()->create(['role' => UserRole::CmsManager]);
+
+    $this->actingAs($cmsManager, 'web')->postJson('/api/v1/sites', [
+        'name' => 'ABIDJAN NORD',
+        'status' => 'active',
+        'locations' => ['BASE'],
+    ])->assertCreated();
+
+    $this->actingAs($cmsManager, 'web')->postJson('/api/v1/employees', [
+        'name' => 'Utilisateur interdit',
+    ])->assertForbidden();
+});
+
 it('shows a site with its locations and current equipment inventory', function () {
     $viewer = User::factory()->create(['role' => UserRole::Viewer]);
     $site = Project::factory()->create(['name' => 'BASSAM']);
@@ -67,13 +81,49 @@ it('shows personnel details with their assigned equipment', function () {
         ->assertJsonPath('data.equipment_in_custody.0.asset_code', 'A.H-010');
 });
 
+it('allows managers to update personnel and their login account', function () {
+    $manager = User::factory()->create(['role' => UserRole::Manager]);
+    $account = User::factory()->create(['role' => UserRole::Viewer]);
+    $employee = Employee::factory()->for($account)->create(['name' => 'Ancien nom']);
+    $originalPassword = $account->password;
+
+    $this->actingAs($manager, 'web')->patchJson("/api/v1/employees/{$employee->id}", [
+        'name' => 'Nouveau nom',
+        'phone_number' => '+225 05 06 07 08 09',
+        'email' => 'nouveau@hourie.ci',
+        'role' => 'generator_manager',
+        'password' => null,
+        'password_confirmation' => null,
+    ])->assertOk()
+        ->assertJsonPath('data.name', 'Nouveau nom')
+        ->assertJsonPath('data.user.email', 'nouveau@hourie.ci')
+        ->assertJsonPath('data.user.role', 'generator_manager');
+
+    $account->refresh();
+    expect($account->password)->toBe($originalPassword);
+    $this->assertDatabaseHas('employees', [
+        'id' => $employee->id,
+        'name' => 'Nouveau nom',
+        'phone_number' => '+225 05 06 07 08 09',
+    ]);
+});
+
 it('allows managers to add sites and personnel', function () {
     $manager = User::factory()->create(['role' => UserRole::Manager]);
-
     $this->actingAs($manager, 'web')->postJson('/api/v1/sites', [
         'name' => 'SAN PEDRO',
-        'code' => 'SP',
-    ])->assertCreated()->assertJsonPath('data.locations.0.name', 'SAN PEDRO');
+        'status' => 'active',
+        'address' => 'Zone industrielle, San Pedro',
+        'start_date' => '2026-10-01',
+        'expected_end_date' => '2027-09-30',
+        'notes' => 'Nouveau chantier portuaire.',
+        'locations' => ['BASE', 'CENTRALE'],
+    ])->assertCreated()
+        ->assertJsonPath('data.address', 'Zone industrielle, San Pedro')
+        ->assertJsonPath('data.changes.0.actor.name', $manager->name)
+        ->assertJsonPath('data.changes.0.action', 'created')
+        ->assertJsonFragment(['name' => 'BASE', 'location_type' => 'project_area'])
+        ->assertJsonFragment(['name' => 'CENTRALE', 'location_type' => 'project_area']);
 
     $this->actingAs($manager, 'web')->postJson('/api/v1/employees', [
         'name' => 'Awa Koné',

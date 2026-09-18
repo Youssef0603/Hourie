@@ -16,8 +16,6 @@ class StoreEquipmentRequest extends UpdateEquipmentRequest
         return [
             ...parent::rules(),
             'asset_code' => ['nullable', 'string', 'max:100', 'unique:equipment,asset_code'],
-            'project_id' => ['nullable', 'integer', 'exists:projects,id'],
-            'current_location_id' => ['nullable', 'integer', 'exists:locations,id'],
         ];
     }
 }

@@ -20,7 +20,7 @@ class StoreEquipmentMaintenanceRequest extends FormRequest
         return [
             'maintenance_date' => ['required', 'date'],
             'engine_hours' => ['nullable', 'numeric', 'min:0'],
-            'intervention_type' => ['required', Rule::in(['urgent', 'electrical', 'mechanical', 'hydraulic'])],
+            'intervention_type' => ['required', Rule::exists('catalog_options', 'code')->where('group', 'maintenance_type')],
             'oil_changed' => ['nullable', 'boolean'],
             'oil_quantity_litres' => [
                 Rule::requiredIf(fn (): bool => $this->boolean('oil_changed')),
@@ -35,6 +35,7 @@ class StoreEquipmentMaintenanceRequest extends FormRequest
             'coolant_serviced' => ['nullable', 'boolean'],
             'technician_employee_id' => ['nullable', 'integer', 'exists:employees,id'],
             'technician_name' => ['nullable', 'string', 'max:255'],
+            'external_technician_phone' => ['nullable', 'string', 'max:50', 'required_with:technician_name'],
             'next_maintenance_date' => ['nullable', 'date', 'after_or_equal:maintenance_date'],
             'cost' => ['nullable', 'numeric', 'min:0'],
             'cost_currency' => ['nullable', 'string', 'size:3'],

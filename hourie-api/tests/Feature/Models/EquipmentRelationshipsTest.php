@@ -66,7 +66,7 @@ it('records an equipment change without becoming the current source of truth', f
 
     $change = $equipment->changes()->firstOrFail();
 
-    expect($equipment->fresh()->condition)->toBe(EquipmentCondition::Functional);
+    expect($equipment->fresh()->condition)->toBe(EquipmentCondition::Functional->value);
     expect($change->previous_values)->toBe(['condition' => 'defective']);
     expect($change->new_values)->toBe(['condition' => 'functional']);
 });

@@ -5,7 +5,6 @@ namespace App\Actions\Equipment;
 use App\Actions\Locations\ValidateLocationHierarchy;
 use App\Enums\EquipmentChangeSource;
 use App\Enums\EquipmentChangeType;
-use App\Enums\EquipmentCondition;
 use App\Enums\EquipmentImportRowStatus;
 use App\Enums\EquipmentImportStatus;
 use App\Models\Equipment;
@@ -20,7 +19,6 @@ use App\Models\Project;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
-use RuntimeException;
 
 class ImportGeneratorInventory
 {
@@ -98,11 +96,10 @@ class ImportGeneratorInventory
             ]);
         }
 
-        $category = EquipmentCategory::query()->where('code', 'generator')->first();
-
-        if ($category === null) {
-            throw new RuntimeException(__('imports.errors.generator_category_missing'));
-        }
+        $category = EquipmentCategory::query()->firstOrCreate(
+            ['code' => 'generator'],
+            ['name' => 'Générateurs', 'is_active' => true],
+        );
 
         return DB::transaction(function () use (
             $actor,
@@ -239,8 +236,8 @@ class ImportGeneratorInventory
     private function normalize(array $row, array &$warnings): array
     {
         $condition = match (mb_strtoupper(trim((string) ($row['Q'] ?? '')))) {
-            'FONCTIONNE' => EquipmentCondition::Functional,
-            'DEFFECT' => EquipmentCondition::Defective,
+            'FONCTIONNE' => 'functional',
+            'DEFFECT' => 'defective',
             '' => null,
             default => $this->warningValue($warnings, 'unknown_condition'),
         };

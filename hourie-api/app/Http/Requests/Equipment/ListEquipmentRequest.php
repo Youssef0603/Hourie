@@ -2,8 +2,6 @@
 
 namespace App\Http\Requests\Equipment;
 
-use App\Enums\EquipmentCondition;
-use App\Enums\OperationalSituation;
 use App\Models\Equipment;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -29,8 +27,8 @@ class ListEquipmentRequest extends FormRequest
         return [
             'q' => ['nullable', 'string', 'max:100'],
             'category' => ['nullable', 'string', 'max:50', 'exists:equipment_categories,code'],
-            'condition' => ['nullable', Rule::enum(EquipmentCondition::class)],
-            'operational_situation' => ['nullable', Rule::enum(OperationalSituation::class)],
+            'condition' => ['nullable', Rule::exists('catalog_options', 'code')->where('group', 'equipment_condition')],
+            'operational_situation' => ['nullable', Rule::exists('catalog_options', 'code')->where('group', 'operational_situation')],
             'project_id' => ['nullable', 'integer', 'exists:projects,id'],
             'location_id' => ['nullable', 'integer', 'exists:locations,id'],
             'custodian_employee_id' => ['nullable', 'integer', 'exists:employees,id'],

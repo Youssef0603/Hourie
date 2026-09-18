@@ -5,6 +5,7 @@ import { getCurrentUser, logout } from '../features/auth/api'
 import { LoginPage } from '../features/auth/pages/LoginPage'
 import type { AuthenticatedUser } from '../features/auth/types'
 import { EquipmentPage } from '../features/equipment/pages/EquipmentPage'
+import { LoadingSpinner } from '../shared/components/LoadingSpinner'
 
 type SessionState =
   | { status: 'checking' }
@@ -76,8 +77,7 @@ function App() {
   if (session.status === 'checking') {
     return (
       <main className="session-loading" aria-live="polite">
-        <span className="loading-mark">H</span>
-        <p>{fr.app.loading}</p>
+        <LoadingSpinner label={fr.app.loading} />
       </main>
     )
   }

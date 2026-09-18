@@ -284,6 +284,45 @@ it('allows a generator manager to fill every inventory field without changing th
     ]);
 });
 
+it('allows a generator manager to change the assigned site and physical location', function () {
+    $manager = User::factory()->create(['role' => UserRole::GeneratorManager]);
+    $equipment = Equipment::factory()->create();
+    GeneratorDetail::factory()->for($equipment)->create();
+    $oldProject = Project::factory()->create();
+    $newProject = Project::factory()->create();
+    $oldLocation = Location::factory()->for($oldProject)->create();
+    $newLocation = Location::factory()->for($newProject)->create();
+    $assignment = EquipmentProjectAssignment::factory()->for($equipment)->for($oldProject)->create();
+    $equipment->update(['current_location_id' => $oldLocation->id]);
+
+    $payload = [
+        'brand' => $equipment->brand,
+        'model' => $equipment->model,
+        'serial_number' => $equipment->serial_number,
+        'purchase_year' => $equipment->purchase_year,
+        'condition' => $equipment->condition->value,
+        'operational_situation' => $equipment->operational_situation?->value,
+        'project_id' => $newProject->id,
+        'current_location_id' => $newLocation->id,
+        'custodian_employee_id' => null,
+        'observations' => null,
+        'generator_details' => [
+            'apparent_power_kva' => null, 'active_power_kw' => null, 'phases' => null,
+            'voltage_rating' => null, 'frequency_hz' => null, 'current_rating' => null,
+            'fuel_type' => null, 'tank_capacity_litres' => null, 'current_engine_hours' => null,
+        ],
+    ];
+
+    $this
+        ->actingAs($manager, 'web')
+        ->patchJson("/api/v1/equipment/{$equipment->id}", $payload)
+        ->assertOk()
+        ->assertJsonPath('data.current_location.id', $newLocation->id)
+        ->assertJsonPath('data.current_project_assignment.project.id', $newProject->id);
+
+    expect($assignment->fresh()->ended_at)->not->toBeNull();
+});
+
 it('prevents a viewer from editing equipment', function () {
     $viewer = User::factory()->create(['role' => UserRole::Viewer]);
     $equipment = Equipment::factory()->create();

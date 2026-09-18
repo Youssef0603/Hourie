@@ -11,7 +11,6 @@ use App\Models\EquipmentProjectAssignment;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use RuntimeException;
 
 class CreateEquipment
 {
@@ -19,11 +18,10 @@ class CreateEquipment
     public function handle(array $data, User $actor): Equipment
     {
         return DB::transaction(function () use ($actor, $data): Equipment {
-            $category = EquipmentCategory::query()->where('code', 'generator')->first();
-
-            if ($category === null) {
-                throw new RuntimeException('The generator category is missing.');
-            }
+            $category = EquipmentCategory::query()->firstOrCreate(
+                ['code' => 'generator'],
+                ['name' => 'Générateurs', 'is_active' => true],
+            );
 
             $generatorDetails = $data['generator_details'];
             $projectId = $data['project_id'] ?? null;

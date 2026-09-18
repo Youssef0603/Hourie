@@ -3,7 +3,10 @@ import type {
   Equipment,
   EquipmentFilterOptions,
   EquipmentFilters,
+  EquipmentImportResult,
+  EquipmentImage,
   EquipmentListResponse,
+  CatalogOption,
   EquipmentMaintenance,
   MaintenancePayload,
 } from './types'
@@ -20,6 +23,18 @@ export async function getEquipment(
   })
 
   return apiRequest<EquipmentListResponse>(`/api/v1/equipment?${params}`)
+}
+
+export async function getCatalogOptions(): Promise<CatalogOption[]> {
+  return (await apiRequest<{ data: CatalogOption[] }>('/api/v1/catalog-options')).data
+}
+
+export async function saveCatalogOption(payload: Omit<CatalogOption, 'id'>, id?: number): Promise<CatalogOption> {
+  await initializeCsrfProtection()
+  return (await apiRequest<{ data: CatalogOption }>(id ? `/api/v1/catalog-options/${id}` : '/api/v1/catalog-options', {
+    method: id ? 'PATCH' : 'POST',
+    body: JSON.stringify(payload),
+  })).data
 }
 
 export async function saveMaintenance(
@@ -84,6 +99,35 @@ export async function createEquipment(
   })
 
   return response.data
+}
+
+export async function importEquipment(file: File): Promise<EquipmentImportResult> {
+  await initializeCsrfProtection()
+  const form = new FormData()
+  form.append('file', file)
+
+  const response = await apiRequest<{ data: EquipmentImportResult }>('/api/v1/equipment-imports', {
+    method: 'POST',
+    body: form,
+  })
+
+  return response.data
+}
+
+export async function uploadEquipmentImages(equipmentId: number, files: File[]): Promise<EquipmentImage[]> {
+  await initializeCsrfProtection()
+  const form = new FormData()
+  files.forEach((file) => form.append('images[]', file))
+
+  return (await apiRequest<{ data: EquipmentImage[] }>(`/api/v1/equipment/${equipmentId}/images`, {
+    method: 'POST',
+    body: form,
+  })).data
+}
+
+export async function deleteEquipmentImage(equipmentId: number, imageId: number): Promise<void> {
+  await initializeCsrfProtection()
+  await apiRequest<void>(`/api/v1/equipment/${equipmentId}/images/${imageId}`, { method: 'DELETE' })
 }
 
 export async function getEquipmentFilterOptions(): Promise<EquipmentFilterOptions> {

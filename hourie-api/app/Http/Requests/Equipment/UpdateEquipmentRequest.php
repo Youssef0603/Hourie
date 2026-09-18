@@ -2,8 +2,6 @@
 
 namespace App\Http\Requests\Equipment;
 
-use App\Enums\EquipmentCondition;
-use App\Enums\OperationalSituation;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -23,8 +21,10 @@ class UpdateEquipmentRequest extends FormRequest
             'model' => ['present', 'nullable', 'string', 'max:255'],
             'serial_number' => ['present', 'nullable', 'string', 'max:255'],
             'purchase_year' => ['present', 'nullable', 'integer', 'min:1900', 'max:'.((int) date('Y') + 1)],
-            'condition' => ['present', 'nullable', Rule::enum(EquipmentCondition::class)],
-            'operational_situation' => ['present', 'nullable', Rule::enum(OperationalSituation::class)],
+            'condition' => ['present', 'nullable', Rule::exists('catalog_options', 'code')->where('group', 'equipment_condition')],
+            'operational_situation' => ['present', 'nullable', Rule::exists('catalog_options', 'code')->where('group', 'operational_situation')],
+            'project_id' => ['sometimes', 'nullable', 'integer', 'exists:projects,id'],
+            'current_location_id' => ['sometimes', 'nullable', 'integer', 'exists:locations,id'],
             'custodian_employee_id' => ['present', 'nullable', 'integer', 'exists:employees,id'],
             'observations' => ['present', 'nullable', 'string'],
             'generator_details' => ['required', 'array'],

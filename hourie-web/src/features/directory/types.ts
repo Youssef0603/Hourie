@@ -1,9 +1,15 @@
 import type { EquipmentSummary } from '../equipment/types'
 
+export type ProjectStatus = string
+
 export type Site = {
   id: number
-  code: string | null
   name: string
+  status: ProjectStatus
+  address: string | null
+  start_date: string | null
+  expected_end_date: string | null
+  notes: string | null
   is_active: boolean
   active_equipment_count: number
   locations: Array<{
@@ -12,6 +18,24 @@ export type Site = {
     name: string
     location_type: string | null
   }>
+  changes: SiteChange[]
+}
+
+export type SiteChange = {
+  id: number
+  action: 'created' | 'updated'
+  actor: { id: number; name: string } | null
+  occurred_at: string
+}
+
+export type CreateSitePayload = {
+  name: string
+  status: ProjectStatus
+  address: string | null
+  start_date: string | null
+  expected_end_date: string | null
+  notes: string | null
+  locations: string[]
 }
 
 export type SiteDetails = Site & {
@@ -24,7 +48,7 @@ export type Employee = {
   name: string
   is_active: boolean
   equipment_in_custody_count: number
-  user: { id: number; email: string; role: 'manager' | 'generator_manager' | 'viewer' } | null
+  user: { id: number; email: string; role: 'manager' | 'cms_manager' | 'generator_manager' | 'viewer' } | null
 }
 
 export type EmployeeDetails = Employee & {
@@ -35,7 +59,16 @@ export type CreateEmployeePayload = {
   name: string
   phone_number: string | null
   email: string
-  role: 'manager' | 'generator_manager' | 'viewer'
+  role: 'manager' | 'cms_manager' | 'generator_manager' | 'viewer'
   password: string
   password_confirmation: string
+}
+
+export type UpdateEmployeePayload = {
+  name: string
+  phone_number: string | null
+  email: string | null
+  role: 'manager' | 'cms_manager' | 'generator_manager' | 'viewer'
+  password: string | null
+  password_confirmation: string | null
 }

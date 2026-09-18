@@ -50,6 +50,8 @@ class EquipmentController extends Controller
             'generatorDetails',
             'maintenances.technician',
             'maintenances.createdBy',
+            'images.uploader',
+            'changes' => fn ($query) => $query->with('actor')->latest('occurred_at')->latest('id'),
         ]);
 
     }

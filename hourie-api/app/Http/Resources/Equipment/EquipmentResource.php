@@ -29,6 +29,21 @@ class EquipmentResource extends JsonResource
                 'current_engine_hours' => $this->generatorDetails->current_engine_hours,
             ]),
             'maintenances' => EquipmentMaintenanceResource::collection($this->whenLoaded('maintenances')),
+            'images' => $this->whenLoaded('images', fn () => $this->images->map(fn ($image) => [
+                'id' => $image->id,
+                'url' => route('equipment.images.show', [$this->resource, $image], false),
+                'original_name' => $image->original_name,
+                'mime_type' => $image->mime_type,
+                'size_bytes' => $image->size_bytes,
+                'created_at' => $image->created_at->toISOString(),
+            ])),
+            'changes' => $this->whenLoaded('changes', fn () => $this->changes->map(fn ($change) => [
+                'id' => $change->id,
+                'type' => $change->change_type->value,
+                'source' => $change->source->value,
+                'actor' => $change->actor === null ? null : ['id' => $change->actor->id, 'name' => $change->actor->name],
+                'occurred_at' => $change->occurred_at->toISOString(),
+            ])),
         ];
     }
 }

@@ -3,16 +3,19 @@ export type NamedReference = {
   name: string
 }
 
-export type EquipmentCondition =
-  | 'functional'
-  | 'defective'
-  | 'beyond_repair'
+export type EquipmentCondition = 'functional' | 'defective' | 'beyond_repair'
+export type OperationalSituation = 'in_use' | 'in_reserve' | 'under_maintenance' | 'out_of_service'
 
-export type OperationalSituation =
-  | 'in_use'
-  | 'in_reserve'
-  | 'under_maintenance'
-  | 'out_of_service'
+export type CatalogOption = {
+  id: number
+  group: 'equipment_condition' | 'operational_situation' | 'maintenance_type' | 'fuel_type' | 'project_status'
+  code: string
+  label_fr: string
+  label_ar: string | null
+  color: string | null
+  sort_order: number
+  is_active?: boolean
+}
 
 export type EquipmentSummary = {
   id: number
@@ -68,6 +71,7 @@ export type EquipmentMaintenance = {
   coolant_serviced: boolean | null
   technician: NamedReference | null
   technician_name: string | null
+  external_technician_phone: string | null
   next_maintenance_date: string | null
   cost: string | null
   cost_currency: string | null
@@ -76,7 +80,7 @@ export type EquipmentMaintenance = {
   created_at: string
 }
 
-export type MaintenanceType = 'urgent' | 'electrical' | 'mechanical' | 'hydraulic'
+export type MaintenanceType = string
 
 export type MaintenancePayload = {
   maintenance_date: string
@@ -91,6 +95,7 @@ export type MaintenancePayload = {
   coolant_serviced: boolean | null
   technician_employee_id: number | null
   technician_name: string | null
+  external_technician_phone: string | null
   next_maintenance_date: string | null
   cost: number | null
   cost_currency: string | null
@@ -101,6 +106,25 @@ export type Equipment = EquipmentSummary & {
   observations: string | null
   generator_details: GeneratorDetails | null
   maintenances: EquipmentMaintenance[]
+  changes: EquipmentChange[]
+  images: EquipmentImage[]
+}
+
+export type EquipmentImage = {
+  id: number
+  url: string
+  original_name: string
+  mime_type: string
+  size_bytes: number
+  created_at: string
+}
+
+export type EquipmentChange = {
+  id: number
+  type: 'initial_import' | 'identity_updated' | 'specifications_updated' | 'condition_changed' | 'operational_situation_changed' | 'location_changed' | 'custodian_changed' | 'project_assignment_changed' | 'maintenance_recorded' | 'maintenance_updated' | 'maintenance_deleted' | 'image_added' | 'image_deleted'
+  source: 'import' | 'manual' | 'transfer' | 'maintenance'
+  actor: NamedReference | null
+  occurred_at: string
 }
 
 export type EquipmentFilters = {
@@ -149,6 +173,17 @@ export type EquipmentListResponse = {
   }
 }
 
+export type EquipmentImportResult = {
+  id: number
+  original_filename: string
+  status: 'completed'
+  imported_at: string
+  summary: {
+    imported_rows: number
+    warning_rows: number
+  }
+}
+
 export type EquipmentFilterOptions = {
   categories: Array<NamedReference & { code: string }>
   projects: Array<NamedReference & { code: string | null }>
@@ -160,4 +195,5 @@ export type EquipmentFilterOptions = {
   }>
   employees: NamedReference[]
   fuel_types: string[]
+  catalogs: CatalogOption[]
 }

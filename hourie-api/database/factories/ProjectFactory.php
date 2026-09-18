@@ -20,6 +20,11 @@ class ProjectFactory extends Factory
         return [
             'code' => fake()->unique()->bothify('PRJ-###'),
             'name' => fake()->city(),
+            'status' => 'active',
+            'address' => fake()->address(),
+            'start_date' => fake()->date(),
+            'expected_end_date' => null,
+            'notes' => null,
             'is_active' => true,
         ];
     }

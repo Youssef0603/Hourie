@@ -121,20 +121,47 @@ html[dir='rtl'] .user-menu {
   text-align: center;
 }
 
-.loading-mark {
-  display: grid;
-  width: 3rem;
-  aspect-ratio: 1;
-  place-items: center;
-  border-radius: 0.85rem;
-  color: white;
-  background: var(--color-primary);
-  font-size: 1.25rem;
-  font-weight: 800;
+.loading-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  color: var(--color-text-muted);
 }
 
-.session-loading p {
-  margin: 0;
+.loading-spinner {
+  width: 1.6rem;
+  height: 1.6rem;
+  flex: 0 0 auto;
+  border: 3px solid var(--color-primary-soft);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: loading-spin 700ms linear infinite;
+}
+
+.loading-indicator-compact {
+  gap: 0.4rem;
+}
+
+.loading-indicator-compact .loading-spinner {
+  width: 1rem;
+  height: 1rem;
+  border-width: 2px;
+}
+
+@keyframes loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.primary-button .loading-indicator {
+  color: inherit;
+}
+
+.primary-button .loading-spinner {
+  border-color: rgb(255 255 255 / 38%);
+  border-top-color: white;
 }
 
 .authenticated-card {

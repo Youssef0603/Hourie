@@ -2,13 +2,18 @@ import { useEffect, useState, type ChangeEvent, type InputHTMLAttributes } from 
 import type { AuthenticatedUser } from '../../auth/types'
 import { EquipmentEditForm } from '../components/EquipmentEditForm'
 import { AddGeneratorForm } from '../components/AddGeneratorForm'
+import { ImportGeneratorForm } from '../components/ImportGeneratorForm'
 import { MaintenanceSection } from '../components/MaintenanceSection'
+import { EquipmentImages } from '../components/EquipmentImages'
+import { CatalogsPage } from '../components/CatalogsPage'
 import { PeoplePage, SitesPage } from '../../directory/pages/DirectoryPages'
+import type { Site } from '../../directory/types'
 import { fr, type Language } from '../../../i18n/fr'
 import { LanguageSwitch } from '../../../shared/components/LanguageSwitch'
 import { NavigationIcon } from '../../../shared/components/NavigationIcon'
 import { ActionIcon } from '../../../shared/components/ActionIcon'
 import { Modal } from '../../../shared/components/Modal'
+import { LoadingSpinner } from '../../../shared/components/LoadingSpinner'
 import hourieLogo from '../../../assets/hourie-logo.svg'
 import {
   getEquipment,
@@ -16,6 +21,7 @@ import {
   getEquipmentItem,
 } from '../api'
 import { locationOptionLabel } from '../locationLabel'
+import { catalogBadgeStyle, catalogLabel, catalogOptions } from '../catalogs'
 import type {
   Equipment,
   EquipmentFilterOptions,
@@ -96,6 +102,13 @@ function measurement(value: string | null | undefined, unit: string) {
   return value ? `${value} ${unit}` : fr.common.toComplete
 }
 
+function auditDate(value: string) {
+  return new Intl.DateTimeFormat('fr-FR', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(new Date(value))
+}
+
 function userInitials(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean)
 
@@ -118,10 +131,14 @@ export function EquipmentPage({
   const [isLoading, setIsLoading] = useState(true)
   const [isLoadingDetail, setIsLoadingDetail] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [activeSection, setActiveSection] = useState<'generators' | 'sites' | 'people'>('generators')
+  const [activeSection, setActiveSection] = useState<'generators' | 'sites' | 'people' | 'catalogs'>('generators')
   const [showAddGenerator, setShowAddGenerator] = useState(false)
+  const [showImportGenerator, setShowImportGenerator] = useState(false)
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
+  const [showFilterDrawer, setShowFilterDrawer] = useState(false)
+  const [showHistory, setShowHistory] = useState<'equipment' | 'site' | null>(null)
+  const [siteContext, setSiteContext] = useState<Site | null>(null)
+  const [refreshToken, setRefreshToken] = useState(0)
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -138,12 +155,27 @@ export function EquipmentPage({
   useEffect(() => {
     let cancelled = false
 
-    Promise.all([getEquipment(filters), getEquipmentFilterOptions()])
-      .then(([equipmentResult, filterOptions]) => {
+    getEquipmentFilterOptions()
+      .then((filterOptions) => {
         if (!cancelled) {
-          setResult(equipmentResult)
           setOptions(filterOptions)
         }
+      })
+      .catch(() => {
+        if (!cancelled) setError(fr.equipment.loadError)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+
+    getEquipment(filters)
+      .then((equipmentResult) => {
+        if (!cancelled) setResult(equipmentResult)
       })
       .catch(() => {
         if (!cancelled) setError(fr.equipment.loadError)
@@ -155,12 +187,35 @@ export function EquipmentPage({
     return () => {
       cancelled = true
     }
-  }, [filters])
+  }, [filters, refreshToken])
+
+  function refreshInventory() {
+    setIsLoading(true)
+    setError(null)
+    setRefreshToken((current) => current + 1)
+  }
+
+  function refreshFilterOptions() {
+    getEquipmentFilterOptions()
+      .then(setOptions)
+      .catch(() => setError(fr.equipment.loadError))
+  }
 
   function updateFilter(name: keyof EquipmentFilters, value: string) {
     setIsLoading(true)
     setError(null)
     setFilters((current) => ({ ...current, [name]: value, page: 1 }))
+  }
+
+  function updateProjectFilter(projectId: string) {
+    setIsLoading(true)
+    setError(null)
+    setFilters((current) => ({
+      ...current,
+      project_id: projectId,
+      location_id: '',
+      page: 1,
+    }))
   }
 
   function changePage(page: number) {
@@ -183,11 +238,37 @@ export function EquipmentPage({
     }
   }
 
+  const isSiteView = siteContext !== null
   const hasFilters = Object.entries(filters).some(
     ([key, value]) =>
-      !['page', 'per_page', 'sort'].includes(key) && value !== '',
+      !['page', 'per_page', 'sort', ...(isSiteView ? ['project_id'] : [])].includes(key)
+      && value !== '',
   )
   const advancedFilterCount = advancedFilterKeys.filter((key) => filters[key] !== '').length
+  const physicalLocationOptions = (options?.locations ?? []).filter((location) => (
+    location.parent_id !== null
+    && (filters.project_id === '' || String(location.project_id) === filters.project_id)
+  ))
+  function openSiteInventory(site: Site) {
+    setSelected(null)
+    setSiteContext(site)
+    setShowFilterDrawer(false)
+    setSearch('')
+    setIsLoading(true)
+    setResult(null)
+    setFilters({ ...initialFilters, project_id: String(site.id) })
+  }
+
+  function closeSiteInventory() {
+    setShowHistory(null)
+    setSiteContext(null)
+    setSearch('')
+    setIsLoading(true)
+    setResult(null)
+    // Always create a new filter object. Reusing `initialFilters` can make
+    // React skip the state change, leaving `isLoading` stuck without a request.
+    setFilters({ ...initialFilters })
+  }
 
   return (
     <div className="workspace-shell">
@@ -208,7 +289,7 @@ export function EquipmentPage({
           </div>
           <button className="logout-button" type="button" onClick={onLogout} disabled={isLoggingOut}>
             <ActionIcon name="logout" />
-            <span>{isLoggingOut ? fr.auth.loggingOut : fr.auth.logout}</span>
+            {isLoggingOut ? <LoadingSpinner compact label={fr.auth.loggingOut} /> : <span>{fr.auth.logout}</span>}
           </button>
         </div>
       </header>
@@ -224,21 +305,31 @@ export function EquipmentPage({
           <nav aria-label={fr.navigation.title}>
             <div className="sidebar-navigation-group">
               <p className="sidebar-group-label">{fr.navigation.inventory}</p>
-              <button title={fr.navigation.generators} className={`sidebar-child ${activeSection === 'generators' ? 'active' : ''}`} type="button" onClick={() => setActiveSection('generators')}><NavigationIcon name="generators" /><span className="nav-label">{fr.navigation.generators}</span></button>
+              <button title={fr.navigation.generators} className={`sidebar-child ${activeSection === 'generators' ? 'active' : ''}`} type="button" onClick={() => { closeSiteInventory(); setActiveSection('generators') }}><NavigationIcon name="generators" /><span className="nav-label">{fr.navigation.generators}</span></button>
             </div>
-            <button title={fr.navigation.sites} className={activeSection === 'sites' ? 'active' : ''} type="button" onClick={() => setActiveSection('sites')}><NavigationIcon name="sites" /><span className="nav-label">{fr.navigation.sites}</span></button>
-            <button title={fr.navigation.people} className={activeSection === 'people' ? 'active' : ''} type="button" onClick={() => setActiveSection('people')}><NavigationIcon name="people" /><span className="nav-label">{fr.navigation.people}</span></button>
+            <button title={fr.navigation.sites} className={activeSection === 'sites' ? 'active' : ''} type="button" onClick={() => { closeSiteInventory(); setActiveSection('sites') }}><NavigationIcon name="sites" /><span className="nav-label">{fr.navigation.sites}</span></button>
+            <button title={fr.navigation.people} className={activeSection === 'people' ? 'active' : ''} type="button" onClick={() => { closeSiteInventory(); setActiveSection('people') }}><NavigationIcon name="people" /><span className="nav-label">{fr.navigation.people}</span></button>
+            {user.permissions.manage_sites && <button title={fr.navigation.settings} className={activeSection === 'catalogs' ? 'active' : ''} type="button" onClick={() => { closeSiteInventory(); setActiveSection('catalogs') }}><NavigationIcon name="settings" /><span className="nav-label">{fr.navigation.settings}</span></button>}
           </nav>
         </aside>
 
-      {activeSection === 'generators' ? <main className="equipment-page">
+      {(activeSection === 'generators' || isSiteView) ? <main className="equipment-page">
+        {isSiteView && <nav className="breadcrumbs" aria-label={fr.navigation.breadcrumbs}>
+          <button type="button" onClick={() => { closeSiteInventory(); setActiveSection('generators') }}>{fr.equipment.section}</button>
+          <span aria-hidden="true">/</span>
+          <button type="button" onClick={() => { closeSiteInventory(); setActiveSection('sites') }}>{fr.directory.sites}</button>
+          <span aria-hidden="true">/</span>
+          <strong aria-current="page">{siteContext.name}</strong>
+        </nav>}
         <section className="page-heading">
           <div>
-            <p className="section-label">{fr.equipment.section}</p>
-            <h1>{fr.equipment.title}</h1>
-            <p>{fr.equipment.subtitle}</p>
+            {!isSiteView && <p className="section-label">{fr.equipment.section}</p>}
+            {isSiteView ? <div className="site-page-title-row"><button className="table-refresh-button" type="button" onClick={() => { closeSiteInventory(); setActiveSection('sites') }}><ActionIcon name="collapse" /><span>{fr.navigation.sites}</span></button><h1>{siteContext.name}</h1></div> : <h1>{fr.equipment.title}</h1>}
+            {(!isSiteView || siteContext?.address) && <p>{isSiteView ? siteContext?.address : fr.equipment.subtitle}</p>}
           </div>
           <div className="heading-actions">
+            {isSiteView && <button className="table-refresh-button" type="button" onClick={() => setShowHistory('site')}><ActionIcon name="history" /><span>{fr.audit.button}</span></button>}
+            {!isSiteView && user.permissions.manage_equipment && <button className="table-refresh-button" type="button" onClick={() => setShowImportGenerator(true)}><ActionIcon name="upload" /><span>{fr.equipment.importExcel}</span></button>}
             {user.permissions.manage_equipment && <button className="primary-button page-action compact-action" type="button" onClick={() => setShowAddGenerator((value) => !value)}><ActionIcon name={showAddGenerator ? 'close' : 'add'} /><span>{showAddGenerator ? fr.common.close : fr.equipment.addGenerator}</span></button>}
             <div className="inventory-count" aria-live="polite">
               <strong>{result?.meta.total ?? '—'}</strong>
@@ -253,7 +344,8 @@ export function EquipmentPage({
           </div>
         )}
 
-        {showAddGenerator && options && <Modal title={fr.equipment.addGenerator} size="wide" onClose={() => setShowAddGenerator(false)}><AddGeneratorForm options={options} onCancel={() => setShowAddGenerator(false)} onCreated={(equipment) => { setShowAddGenerator(false); setSelected(equipment); setFilters((current) => ({ ...current, page: 1 })) }} /></Modal>}
+        {showAddGenerator && options && <Modal title={fr.equipment.addGenerator} size="wide" onClose={() => setShowAddGenerator(false)}><AddGeneratorForm options={options} initialProjectId={siteContext?.id} onCancel={() => setShowAddGenerator(false)} onCreated={(equipment) => { setShowAddGenerator(false); setSelected(equipment); setFilters((current) => ({ ...current, page: 1 })); refreshInventory() }} /></Modal>}
+        {showImportGenerator && <Modal title={fr.equipment.importTitle} onClose={() => setShowImportGenerator(false)}><ImportGeneratorForm onClose={() => setShowImportGenerator(false)} onImported={() => { refreshInventory(); refreshFilterOptions() }} /></Modal>}
 
         <section className="inventory-panel" aria-label={fr.equipment.title}>
           <div className="filter-bar">
@@ -266,69 +358,13 @@ export function EquipmentPage({
                 placeholder={fr.equipment.searchPlaceholder}
               />
             </label>
-            <label>
-              <span>{fr.equipment.condition}</span>
-              <select
-                value={filters.condition}
-                onChange={(event) => updateFilter('condition', event.target.value)}
-              >
-                <option value="">{fr.common.all}</option>
-                {Object.entries(fr.status.condition).map(([value, label]) => (
-                  <option key={value} value={value}>{label}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              <span>{fr.equipment.situation}</span>
-              <select
-                value={filters.operational_situation}
-                onChange={(event) => updateFilter('operational_situation', event.target.value)}
-              >
-                <option value="">{fr.common.all}</option>
-                {Object.entries(fr.status.operationalSituation).map(([value, label]) => (
-                  <option key={value} value={value}>{label}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              <span>{fr.equipment.project}</span>
-              <select
-                value={filters.project_id}
-                onChange={(event) => updateFilter('project_id', event.target.value)}
-              >
-                <option value="">{fr.common.all}</option>
-                {options?.projects.map((project) => (
-                  <option key={project.id} value={project.id}>{project.name}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              <span>{fr.equipment.location}</span>
-              <select
-                value={filters.location_id}
-                onChange={(event) => updateFilter('location_id', event.target.value)}
-              >
-                <option value="">{fr.common.all}</option>
-                {options?.locations.map((location) => (
-                  <option key={location.id} value={location.id}>
-                    {locationOptionLabel(location)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              <span>{fr.equipment.sort}</span>
-              <select value={filters.sort} onChange={(event) => updateFilter('sort', event.target.value)}>
-                <option value="created_at_desc">{fr.equipment.newestFirst}</option>
-                <option value="created_at_asc">{fr.equipment.oldestFirst}</option>
-              </select>
-            </label>
             <div className="filter-toolbar-actions">
-              <button className={`advanced-filter-toggle${showAdvancedFilters ? ' active' : ''}`} type="button" onClick={() => setShowAdvancedFilters((value) => !value)} aria-expanded={showAdvancedFilters}>
+              <button className={`advanced-filter-toggle${showFilterDrawer ? ' active' : ''}`} type="button" onClick={() => setShowFilterDrawer(true)} aria-expanded={showFilterDrawer}>
                 <ActionIcon name="filter" />
-                <span>{showAdvancedFilters ? fr.equipment.hideAdvancedFilters : fr.equipment.advancedFilters}</span>
-                {advancedFilterCount > 0 && <strong>{advancedFilterCount}</strong>}
+                <span>{fr.equipment.filters}</span>
+                {hasFilters && <strong>{advancedFilterCount || 1}</strong>}
               </button>
+              <button className="table-refresh-button filter-refresh-button" type="button" onClick={refreshInventory} aria-label={fr.common.refresh} title={fr.common.refresh}><ActionIcon name="refresh" /></button>
               {hasFilters && (
                 <button
                   className="clear-filters"
@@ -337,7 +373,7 @@ export function EquipmentPage({
                     setIsLoading(true)
                     setError(null)
                     setSearch('')
-                    setFilters(initialFilters)
+                    setFilters({ ...initialFilters, project_id: isSiteView ? String(siteContext?.id) : '' })
                   }}
                 >
                   {fr.equipment.clearFilters}
@@ -345,8 +381,6 @@ export function EquipmentPage({
               )}
             </div>
           </div>
-
-          {showAdvancedFilters && <AdvancedEquipmentFilters filters={filters} options={options} onChange={updateFilter} />}
 
           <div className="equipment-table-wrap">
             <table className="equipment-table">
@@ -365,7 +399,7 @@ export function EquipmentPage({
                 </tr>
               </thead>
               <tbody>
-                {result?.data.map((equipment) => (
+                {!isLoading && result?.data.map((equipment) => (
                   <tr
                     key={equipment.id}
                     tabIndex={0}
@@ -389,18 +423,18 @@ export function EquipmentPage({
                     <td>{measurement(equipment.power?.active_kw, 'kW')}</td>
                     <td>{equipment.fuel_type ?? fr.common.notProvided}</td>
                     <td>
-                      <span className={`status-badge status-${equipment.condition ?? 'unknown'}`}>
-                        {equipment.condition ? fr.status.condition[equipment.condition] : fr.common.notProvided}
+                      <span className={`status-badge status-${equipment.condition ?? 'unknown'}`} style={catalogBadgeStyle(options?.catalogs, 'equipment_condition', equipment.condition)}>
+                        {equipment.condition ? catalogLabel(options?.catalogs, 'equipment_condition', equipment.condition) : fr.common.notProvided}
                       </span>
                     </td>
-                    <td>{equipment.operational_situation ? fr.status.operationalSituation[equipment.operational_situation] : fr.common.notProvided}</td>
+                    <td>{equipment.operational_situation ? catalogLabel(options?.catalogs, 'operational_situation', equipment.operational_situation) : fr.common.notProvided}</td>
                     <td>{equipment.current_project_assignment?.project.name ?? fr.common.notProvided}</td>
                     <td>{locationName(equipment)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            {isLoading && <div className="table-state">{fr.common.loading}</div>}
+            {isLoading && <div className="table-state"><LoadingSpinner label={fr.common.loading} /></div>}
             {!isLoading && result?.data.length === 0 && (
               <div className="table-state">{fr.equipment.empty}</div>
             )}
@@ -431,10 +465,19 @@ export function EquipmentPage({
             </nav>
           )}
         </section>
-      </main> : activeSection === 'sites' ? <SitesPage canAdd={user.permissions.manage_users} /> : <PeoplePage canAdd={user.permissions.manage_users} />}
+        {showFilterDrawer && <EquipmentFilterDrawer
+          filters={filters}
+          options={options}
+          isSiteView={isSiteView}
+          physicalLocationOptions={physicalLocationOptions}
+          onChange={updateFilter}
+          onProjectChange={updateProjectFilter}
+          onClose={() => setShowFilterDrawer(false)}
+        />}
+      </main> : activeSection === 'sites' ? <SitesPage canAdd={user.permissions.manage_sites} catalogs={options?.catalogs} onOpenSite={openSiteInventory} /> : activeSection === 'catalogs' ? <CatalogsPage onChanged={refreshFilterOptions} /> : <PeoplePage canAdd={user.permissions.manage_users} />}
       </div>
 
-      {activeSection === 'generators' && (selected || isLoadingDetail) && (
+      {(activeSection === 'generators' || isSiteView) && (selected || isLoadingDetail) && (
         <div className="detail-backdrop" onMouseDown={() => !isLoadingDetail && setSelected(null)}>
           <aside
             className="detail-panel"
@@ -445,7 +488,7 @@ export function EquipmentPage({
             onMouseDown={(event) => event.stopPropagation()}
           >
             {isLoadingDetail ? (
-              <div className="detail-loading"><span className="loading-spinner" aria-hidden="true" /><span>{fr.common.loading}</span></div>
+              <LoadingSpinner className="detail-loading" label={fr.common.loading} />
             ) : selected && (
               <>
                 <header className="detail-header">
@@ -462,9 +505,13 @@ export function EquipmentPage({
                       equipment={selected}
                       employees={options?.employees ?? []}
                       fuelTypes={options?.fuel_types ?? []}
-                      onChanged={setSelected}
+                      projects={options?.projects ?? []}
+                      locations={options?.locations ?? []}
+                      catalogs={options?.catalogs ?? []}
+                      onChanged={(equipment) => { setSelected(equipment); refreshInventory() }}
                     />
                   )}
+                  <button className="equipment-history-button" type="button" onClick={() => setShowHistory('equipment')}><ActionIcon name="history" />{fr.audit.button}</button>
                   <section>
                     <h3>{fr.equipment.assignment}</h3>
                     <dl>
@@ -478,8 +525,8 @@ export function EquipmentPage({
                     <dl>
                       <div><dt>{fr.equipment.serialNumber}</dt><dd>{displayedValue(selected.serial_number)}</dd></div>
                       <div><dt>{fr.equipment.purchaseYear}</dt><dd>{displayedValue(selected.purchase_year)}</dd></div>
-                      <div><dt>{fr.equipment.condition}</dt><dd>{selected.condition ? fr.status.condition[selected.condition] : fr.common.notProvided}</dd></div>
-                      <div><dt>{fr.equipment.situation}</dt><dd>{selected.operational_situation ? fr.status.operationalSituation[selected.operational_situation] : fr.common.notProvided}</dd></div>
+                      <div><dt>{fr.equipment.condition}</dt><dd>{selected.condition ? <span className={`status-badge status-${selected.condition}`} style={catalogBadgeStyle(options?.catalogs, 'equipment_condition', selected.condition)}>{catalogLabel(options?.catalogs, 'equipment_condition', selected.condition)}</span> : fr.common.notProvided}</dd></div>
+                      <div><dt>{fr.equipment.situation}</dt><dd>{selected.operational_situation ? catalogLabel(options?.catalogs, 'operational_situation', selected.operational_situation) : fr.common.notProvided}</dd></div>
                     </dl>
                   </section>
                   {selected.generator_details && (
@@ -502,11 +549,13 @@ export function EquipmentPage({
                     <h3>{fr.equipment.observations}</h3>
                     <p className="observations">{displayedValue(selected.observations)}</p>
                   </section>
+                  <EquipmentImages equipment={selected} canManage={user.permissions.manage_equipment} onChanged={async () => { setSelected(await getEquipmentItem(selected.id)) }} />
                   <MaintenanceSection
                     equipment={selected}
                     employees={options?.employees ?? []}
                     canManage={user.permissions.manage_maintenance}
                     canDelete={user.permissions.delete_maintenance}
+                    catalogs={options?.catalogs ?? []}
                     onChanged={async () => {
                       setSelected(await getEquipmentItem(selected.id))
                     }}
@@ -517,6 +566,15 @@ export function EquipmentPage({
           </aside>
         </div>
       )}
+      {showHistory && <Modal title={fr.audit.title} onClose={() => setShowHistory(null)}>
+        {showHistory === 'equipment'
+          ? selected && selected.changes.length > 0
+            ? <div className="audit-list audit-modal-list">{selected.changes.map((change) => <article key={change.id}><span className="audit-dot" aria-hidden="true" /><div><strong>{fr.audit.equipmentActions[change.type]}</strong><p>{fr.audit.by(change.actor?.name ?? fr.audit.system)} · <time dateTime={change.occurred_at}>{auditDate(change.occurred_at)}</time></p></div></article>)}</div>
+            : <p className="audit-empty">{fr.audit.empty}</p>
+          : siteContext?.changes?.length
+            ? <div className="audit-list audit-modal-list">{siteContext.changes.map((change) => <article key={change.id}><span className="audit-dot" aria-hidden="true" /><div><strong>{fr.audit.siteActions[change.action]}</strong><p>{fr.audit.by(change.actor?.name ?? fr.audit.system)} · <time dateTime={change.occurred_at}>{auditDate(change.occurred_at)}</time></p></div></article>)}</div>
+            : <p className="audit-empty">{fr.audit.empty}</p>}
+      </Modal>}
     </div>
   )
 }
@@ -525,6 +583,31 @@ type AdvancedEquipmentFiltersProps = {
   filters: EquipmentFilters
   options: EquipmentFilterOptions | null
   onChange: (name: keyof EquipmentFilters, value: string) => void
+}
+
+type EquipmentFilterDrawerProps = AdvancedEquipmentFiltersProps & {
+  isSiteView: boolean
+  physicalLocationOptions: EquipmentFilterOptions['locations']
+  onProjectChange: (projectId: string) => void
+  onClose: () => void
+}
+
+function EquipmentFilterDrawer({ filters, options, isSiteView, physicalLocationOptions, onChange, onProjectChange, onClose }: EquipmentFilterDrawerProps) {
+  return <div className="filter-drawer-backdrop" onMouseDown={onClose}>
+    <aside className="filter-drawer" role="dialog" aria-modal="true" aria-label={fr.equipment.filters} onMouseDown={(event) => event.stopPropagation()}>
+      <header><div><p className="section-label">{fr.equipment.section}</p><h2>{fr.equipment.filters}</h2></div><button type="button" onClick={onClose} aria-label={fr.common.close}><ActionIcon name="close" /></button></header>
+      <div className="filter-drawer-content">
+        <fieldset className="drawer-basic-filters"><legend>{fr.equipment.filters}</legend><div className="advanced-filter-grid">
+          <label><span>{fr.equipment.condition}</span><select value={filters.condition} onChange={(event) => onChange('condition', event.target.value)}><option value="">{fr.common.all}</option>{catalogOptions(options?.catalogs, 'equipment_condition').map((option) => <option key={option.code} value={option.code}>{catalogLabel(options?.catalogs, 'equipment_condition', option.code)}</option>)}</select></label>
+          <label><span>{fr.equipment.situation}</span><select value={filters.operational_situation} onChange={(event) => onChange('operational_situation', event.target.value)}><option value="">{fr.common.all}</option>{catalogOptions(options?.catalogs, 'operational_situation').map((option) => <option key={option.code} value={option.code}>{catalogLabel(options?.catalogs, 'operational_situation', option.code)}</option>)}</select></label>
+          {!isSiteView && <label><span>{fr.equipment.project}</span><select value={filters.project_id} onChange={(event) => onProjectChange(event.target.value)}><option value="">{fr.common.all}</option>{options?.projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}</select></label>}
+          <label><span>{fr.equipment.location}</span><select value={filters.location_id} onChange={(event) => onChange('location_id', event.target.value)}><option value="">{fr.common.all}</option>{physicalLocationOptions.map((location) => <option key={location.id} value={location.id}>{filters.project_id === '' ? locationOptionLabel(location) : location.name}</option>)}</select></label>
+          <label><span>{fr.equipment.sort}</span><select value={filters.sort} onChange={(event) => onChange('sort', event.target.value)}><option value="created_at_desc">{fr.equipment.newestFirst}</option><option value="created_at_asc">{fr.equipment.oldestFirst}</option></select></label>
+        </div></fieldset>
+        <AdvancedEquipmentFilters filters={filters} options={options} onChange={onChange} />
+      </div>
+    </aside>
+  </div>
 }
 
 function AdvancedEquipmentFilters({ filters, options, onChange }: AdvancedEquipmentFiltersProps) {

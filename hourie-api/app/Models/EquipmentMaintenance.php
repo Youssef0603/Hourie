@@ -23,6 +23,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'battery_serviced',
     'coolant_serviced',
     'technician_name',
+    'external_technician_phone',
     'next_maintenance_date',
     'cost',
     'cost_currency',

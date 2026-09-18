@@ -18,7 +18,6 @@ use Illuminate\Validation\ValidationException;
 uses(LazilyRefreshDatabase::class);
 
 it('imports generator rows while preserving codes, nulls, provenance, and separate assignments', function () {
-    EquipmentCategory::factory()->create(['code' => 'generator']);
     $rows = [
         3 => ['A' => 'N°', 'B' => 'ID Groupe'],
         4 => [
@@ -65,6 +64,7 @@ it('imports generator rows while preserving codes, nulls, provenance, and separa
         'warning_rows' => 0,
     ]);
     expect(Equipment::query()->count())->toBe(3);
+    expect(EquipmentCategory::query()->where('code', 'generator')->exists())->toBeTrue();
     expect(EquipmentImportRow::query()->count())->toBe(3);
     expect(EquipmentChange::query()->where('change_type', EquipmentChangeType::InitialImport)->count())->toBe(3);
 
@@ -73,7 +73,7 @@ it('imports generator rows while preserving codes, nulls, provenance, and separa
     $sparseGenerator = Equipment::query()->where('asset_code', 'A.H-0011')->firstOrFail();
 
     expect($bassamGenerator->purchase_year)->toBe(2023);
-    expect($bassamGenerator->condition)->toBe(EquipmentCondition::Functional);
+    expect($bassamGenerator->condition)->toBe(EquipmentCondition::Functional->value);
     expect($bassamGenerator->currentLocation->name)->toBe('BASE');
     expect($bassamGenerator->currentLocation->parent->name)->toBe('BASSAM');
     expect($bassamGenerator->currentLocation->project->name)->toBe('BASSAM');
@@ -82,7 +82,7 @@ it('imports generator rows while preserving codes, nulls, provenance, and separa
     expect($vridiGenerator->asset_code)->toBe('A.H-0010');
     expect($vridiGenerator->model)->toBeNull();
     expect($vridiGenerator->purchase_year)->toBeNull();
-    expect($vridiGenerator->condition)->toBe(EquipmentCondition::Defective);
+    expect($vridiGenerator->condition)->toBe(EquipmentCondition::Defective->value);
     expect($vridiGenerator->operational_situation)->toBeNull();
     expect($vridiGenerator->generatorDetails->voltage_rating)->toBe('220/380');
     expect($vridiGenerator->generatorDetails->current_rating)->toBe('23/40');

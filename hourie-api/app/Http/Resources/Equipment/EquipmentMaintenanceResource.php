@@ -27,6 +27,7 @@ class EquipmentMaintenanceResource extends JsonResource
                 'name' => $this->technician->name,
             ]),
             'technician_name' => $this->technician_name,
+            'external_technician_phone' => $this->external_technician_phone,
             'next_maintenance_date' => $this->next_maintenance_date?->format('Y-m-d'),
             'cost' => $this->cost,
             'cost_currency' => $this->cost_currency,

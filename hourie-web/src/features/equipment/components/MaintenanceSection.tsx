@@ -11,6 +11,8 @@ import type {
   MaintenanceType,
   MaintenancePayload,
 } from '../types'
+import { LoadingSpinner } from '../../../shared/components/LoadingSpinner'
+import { catalogLabel, catalogOptions } from '../catalogs'
 
 type MaintenanceSectionProps = {
   equipment: Equipment
@@ -18,6 +20,7 @@ type MaintenanceSectionProps = {
   canManage: boolean
   canDelete: boolean
   onChanged: () => Promise<void>
+  catalogs: EquipmentFilterOptions['catalogs']
 }
 
 type FormState = {
@@ -33,6 +36,7 @@ type FormState = {
   coolant_serviced: string
   technician_employee_id: string
   technician_name: string
+  external_technician_phone: string
   next_maintenance_date: string
   cost: string
   observations: string
@@ -51,6 +55,7 @@ const emptyForm: FormState = {
   coolant_serviced: '',
   technician_employee_id: '',
   technician_name: '',
+  external_technician_phone: '',
   next_maintenance_date: '',
   cost: '',
   observations: '',
@@ -83,6 +88,7 @@ function maintenanceForm(maintenance: EquipmentMaintenance): FormState {
     coolant_serviced: maintenance.coolant_serviced === null ? '' : String(maintenance.coolant_serviced),
     technician_employee_id: maintenance.technician ? String(maintenance.technician.id) : '',
     technician_name: maintenance.technician_name ?? '',
+    external_technician_phone: maintenance.external_technician_phone ?? '',
     next_maintenance_date: maintenance.next_maintenance_date ?? '',
     cost: maintenance.cost ?? '',
     observations: maintenance.observations ?? '',
@@ -104,6 +110,7 @@ export function MaintenanceSection({
   canManage,
   canDelete,
   onChanged,
+  catalogs,
 }: MaintenanceSectionProps) {
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<number | undefined>()
@@ -152,7 +159,8 @@ export function MaintenanceSection({
       battery_serviced: nullableBoolean(form.battery_serviced),
       coolant_serviced: nullableBoolean(form.coolant_serviced),
       technician_employee_id: form.technician_employee_id === '' ? null : Number(form.technician_employee_id),
-      technician_name: nullableString(form.technician_name),
+      technician_name: form.technician_employee_id === '' ? nullableString(form.technician_name) : null,
+      external_technician_phone: form.technician_employee_id === '' ? nullableString(form.external_technician_phone) : null,
       next_maintenance_date: nullableString(form.next_maintenance_date),
       cost: nullableNumber(form.cost),
       cost_currency: form.cost === '' ? null : 'XOF',
@@ -208,7 +216,7 @@ export function MaintenanceSection({
           <div className="maintenance-form-grid">
             <label><span>{fr.maintenance.date}</span><input required type="date" value={form.maintenance_date} onChange={(event) => update('maintenance_date', event.target.value)} /></label>
             <label><span>{fr.equipment.engineHours}</span><input min="0" step="0.01" type="number" value={form.engine_hours} onChange={(event) => update('engine_hours', event.target.value)} placeholder="1250,50" /></label>
-            <label><span>{fr.maintenance.interventionType}</span><select required value={form.intervention_type} onChange={(event) => update('intervention_type', event.target.value)}><option value="">{fr.common.toComplete}</option>{Object.entries(fr.status.maintenanceType).map(([type, label]) => <option key={type} value={type}>{label}</option>)}</select></label>
+            <label><span>{fr.maintenance.interventionType}</span><select required value={form.intervention_type} onChange={(event) => update('intervention_type', event.target.value)}><option value="">{fr.common.toComplete}</option>{catalogOptions(catalogs, 'maintenance_type').map((option) => <option key={option.code} value={option.code}>{catalogLabel(catalogs, 'maintenance_type', option.code)}</option>)}</select></label>
             <label>
               <span>{fr.maintenance.oil_changed}</span>
               <select value={form.oil_changed} onChange={(event) => update('oil_changed', event.target.value)}>
@@ -236,15 +244,15 @@ export function MaintenanceSection({
             {(['battery_serviced', 'coolant_serviced'] as const).map((field) => (
               <label key={field}><span>{field === 'battery_serviced' ? fr.maintenance.battery : fr.maintenance.coolant}</span><select value={form[field]} onChange={(event) => update(field, event.target.value)}><option value="">{fr.common.notProvided}</option><option value="true">{fr.common.yes}</option><option value="false">{fr.common.no}</option></select></label>
             ))}
-            <label><span>{fr.maintenance.linkedTechnician}</span><select value={form.technician_employee_id} onChange={(event) => update('technician_employee_id', event.target.value)}><option value="">{fr.common.notProvided}</option>{employees.map((employee) => <option key={employee.id} value={employee.id}>{employee.name}</option>)}</select></label>
-            <label><span>{fr.maintenance.technicianName}</span><input value={form.technician_name} onChange={(event) => update('technician_name', event.target.value)} /></label>
+            <label><span>{fr.maintenance.linkedTechnician}</span><select value={form.technician_employee_id} onChange={(event) => { update('technician_employee_id', event.target.value); if (event.target.value !== '') { update('technician_name', ''); update('external_technician_phone', '') } }}><option value="">{fr.common.notProvided}</option>{employees.map((employee) => <option key={employee.id} value={employee.id}>{employee.name}</option>)}</select></label>
+            {form.technician_employee_id === '' && <><label><span>{fr.maintenance.technicianName}</span><input value={form.technician_name} onChange={(event) => update('technician_name', event.target.value)} /></label><label><span>{fr.maintenance.technicianPhone}</span><input type="tel" value={form.external_technician_phone} onChange={(event) => update('external_technician_phone', event.target.value)} placeholder="+225 07 00 00 00 00" /></label></>}
             <label><span>{fr.maintenance.nextDue}</span><input type="date" min={form.maintenance_date || undefined} value={form.next_maintenance_date} onChange={(event) => update('next_maintenance_date', event.target.value)} /></label>
             <label><span>{fr.maintenance.cost} (FCFA)</span><input min="0" step="0.01" type="number" value={form.cost} onChange={(event) => update('cost', event.target.value)} /></label>
             <label className="field-wide"><span>{fr.equipment.observations}</span><textarea rows={3} value={form.observations} onChange={(event) => update('observations', event.target.value)} /></label>
           </div>
           <div className="maintenance-form-actions">
             <button type="button" onClick={closeForm}>{fr.common.cancel}</button>
-            <button className="primary-button" type="submit" disabled={isSaving}>{isSaving ? fr.common.saving : fr.common.save}</button>
+            <button className="primary-button" type="submit" disabled={isSaving}>{isSaving ? <LoadingSpinner compact label={fr.common.saving} /> : fr.common.save}</button>
           </div>
         </form>
         </Modal>
@@ -257,8 +265,8 @@ export function MaintenanceSection({
           {equipment.maintenances.map((maintenance) => (
             <article className="maintenance-card" key={maintenance.id}>
               <header>
-                <div><strong>{fr.status.maintenanceType[maintenance.intervention_type]}</strong><span>{maintenance.maintenance_date}</span></div>
-                {canManage && <div className="maintenance-actions"><button type="button" onClick={() => startEdit(maintenance)}>{fr.common.edit}</button>{canDelete && <button type="button" onClick={() => remove(maintenance)}>{fr.common.delete}</button>}</div>}
+                <div><strong>{catalogLabel(catalogs, 'maintenance_type', maintenance.intervention_type)}</strong><span>{maintenance.maintenance_date}</span></div>
+                {canManage && <div className="maintenance-actions"><button type="button" onClick={() => startEdit(maintenance)}><ActionIcon name="edit" />{fr.common.edit}</button>{canDelete && <button type="button" onClick={() => remove(maintenance)}>{fr.common.delete}</button>}</div>}
               </header>
               <dl>
                 <div><dt>{fr.equipment.engineHours}</dt><dd>{value(maintenance.engine_hours)}</dd></div>
@@ -270,6 +278,7 @@ export function MaintenanceSection({
                 <div><dt>{fr.maintenance.battery}</dt><dd>{answer(maintenance.battery_serviced)}</dd></div>
                 <div><dt>{fr.maintenance.coolant}</dt><dd>{answer(maintenance.coolant_serviced)}</dd></div>
                 <div><dt>{fr.maintenance.technicianName}</dt><dd>{maintenance.technician?.name ?? value(maintenance.technician_name)}</dd></div>
+                {!maintenance.technician && <div><dt>{fr.maintenance.technicianPhone}</dt><dd>{value(maintenance.external_technician_phone)}</dd></div>}
                 <div><dt>{fr.maintenance.nextDue}</dt><dd>{value(maintenance.next_maintenance_date)}</dd></div>
                 <div><dt>{fr.maintenance.cost}</dt><dd>{maintenance.cost ? `${maintenance.cost} FCFA` : fr.common.notProvided}</dd></div>
               </dl>
