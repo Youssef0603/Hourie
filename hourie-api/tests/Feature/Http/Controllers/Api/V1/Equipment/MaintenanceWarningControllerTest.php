@@ -60,7 +60,7 @@ it('lists overdue and upcoming maintenance from each active generators latest in
         ->assertJsonPath('summary.overdue', 1)
         ->assertJsonPath('summary.due_soon', 2)
         ->assertJsonPath('summary.total', 3)
-        ->assertJsonPath('summary.horizon_days', 30)
+        ->assertJsonPath('summary.horizon_days', 14)
         ->assertJsonPath('data.0.equipment.id', $overdueEquipment->id)
         ->assertJsonPath('data.0.status', 'overdue')
         ->assertJsonPath('data.0.days_until_due', -11)

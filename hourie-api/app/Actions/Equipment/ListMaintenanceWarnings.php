@@ -10,11 +10,13 @@ use Illuminate\Database\Eloquent\Builder;
 
 class ListMaintenanceWarnings
 {
+    private const int WARNING_HORIZON_DAYS = 14;
+
     /** @return array{warnings: LengthAwarePaginator<int, Equipment>, summary: array{overdue: int, due_soon: int, total: int, horizon_days: int}} */
     public function handle(int $perPage = 20): array
     {
         $today = CarbonImmutable::today();
-        $warningLimit = $today->addDays(30);
+        $warningLimit = $today->addDays(self::WARNING_HORIZON_DAYS);
 
         $query = Equipment::query()
             ->where('is_active', true)
@@ -54,7 +56,7 @@ class ListMaintenanceWarnings
                 'overdue' => $overdue,
                 'due_soon' => $warnings->total() - $overdue,
                 'total' => $warnings->total(),
-                'horizon_days' => 30,
+                'horizon_days' => self::WARNING_HORIZON_DAYS,
             ],
         ];
     }
