@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\V1\Equipment\EquipmentFilterOptionsController;
 use App\Http\Controllers\Api\V1\Equipment\EquipmentImageController;
 use App\Http\Controllers\Api\V1\Equipment\EquipmentImportController;
 use App\Http\Controllers\Api\V1\Equipment\EquipmentMaintenanceController;
+use App\Http\Controllers\Api\V1\Equipment\MaintenanceWarningController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\SiteController;
 use App\Http\Middleware\EnsurePasswordWasChanged;
@@ -36,6 +37,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', EnsureUserIsActive::class, Ensu
     Route::post('equipment-imports', [EquipmentImportController::class, 'store'])
         ->name('equipment.imports.store');
     Route::apiResource('equipment', EquipmentController::class)->only(['index', 'store', 'show', 'update', 'destroy']);
+    Route::get('maintenance-warnings', MaintenanceWarningController::class)
+        ->name('maintenance-warnings.index');
     Route::post('equipment/{equipment}/images', [EquipmentImageController::class, 'store']);
     Route::get('equipment/{equipment}/images/{image}/file', [EquipmentImageController::class, 'show'])->name('equipment.images.show');
     Route::delete('equipment/{equipment}/images/{image}', [EquipmentImageController::class, 'destroy']);

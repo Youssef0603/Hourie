@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useState, type FormEvent, type ReactNode } from 'react'
 import { fr } from '../../../i18n/fr'
 import { ApiError } from '../../../shared/api/http'
 import { ActionIcon } from '../../../shared/components/ActionIcon'
@@ -16,6 +16,7 @@ type EquipmentEditFormProps = {
   catalogs: EquipmentFilterOptions['catalogs']
   onChanged: (equipment: Equipment) => void
   onEditingChange?: (isEditing: boolean) => void
+  imageEditor?: ReactNode
 }
 
 type FormState = {
@@ -74,7 +75,7 @@ function number(value: string) {
   return value === '' ? null : Number(value)
 }
 
-export function EquipmentEditForm({ equipment, employees, projects, locations, catalogs, onChanged, onEditingChange }: EquipmentEditFormProps) {
+export function EquipmentEditForm({ equipment, employees, projects, locations, catalogs, onChanged, onEditingChange, imageEditor }: EquipmentEditFormProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -175,6 +176,7 @@ export function EquipmentEditForm({ equipment, employees, projects, locations, c
         <label className="field-wide"><span>{fr.equipment.engineHours}</span><input min="0" step="0.01" type="number" value={form.current_engine_hours} onChange={(event) => update('current_engine_hours', event.target.value)} /></label>
         <label className="field-wide"><span>{fr.equipment.observations}</span><textarea rows={4} value={form.observations} onChange={(event) => update('observations', event.target.value)} /></label>
       </div>
+      {imageEditor}
       <div className="maintenance-form-actions"><button type="button" onClick={() => setEditing(false)}>{fr.common.cancel}</button><button className="primary-button" type="submit" disabled={isSaving}>{isSaving ? <LoadingSpinner compact label={fr.common.saving} /> : fr.common.save}</button></div>
     </form>
   )

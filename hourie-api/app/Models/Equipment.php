@@ -73,6 +73,14 @@ class Equipment extends Model
             ->latest('id');
     }
 
+    public function latestMaintenance(): HasOne
+    {
+        return $this->hasOne(EquipmentMaintenance::class)->ofMany([
+            'maintenance_date' => 'max',
+            'id' => 'max',
+        ]);
+    }
+
     public function images(): HasMany
     {
         return $this->hasMany(EquipmentImage::class)->orderBy('sort_order')->orderBy('id');

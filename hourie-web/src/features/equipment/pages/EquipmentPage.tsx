@@ -4,6 +4,7 @@ import { EquipmentEditForm } from '../components/EquipmentEditForm'
 import { AddGeneratorForm } from '../components/AddGeneratorForm'
 import { ImportGeneratorForm } from '../components/ImportGeneratorForm'
 import { MaintenanceSection } from '../components/MaintenanceSection'
+import { MaintenanceWarningsPanel } from '../components/MaintenanceWarningsPage'
 import { EquipmentImages } from '../components/EquipmentImages'
 import { CatalogsPage } from '../components/CatalogsPage'
 import { PeoplePage, SitesPage } from '../../directory/pages/DirectoryPages'
@@ -22,6 +23,7 @@ import {
   getEquipment,
   getEquipmentFilterOptions,
   getEquipmentItem,
+  getMaintenanceWarnings,
 } from '../api'
 import { locationOptionLabel } from '../locationLabel'
 import { catalogBadgeStyle, catalogLabel, catalogOptions } from '../catalogs'
@@ -31,6 +33,7 @@ import type {
   EquipmentFilters,
   EquipmentListResponse,
   EquipmentSummary,
+  MaintenanceWarningResponse,
 } from '../types'
 import './equipment-page.css'
 
@@ -144,6 +147,11 @@ export function EquipmentPage({
   const [showEditSite, setShowEditSite] = useState(false)
   const [siteContext, setSiteContext] = useState<Site | null>(null)
   const [refreshToken, setRefreshToken] = useState(0)
+  const [maintenanceWarnings, setMaintenanceWarnings] = useState<MaintenanceWarningResponse | null>(null)
+  const [maintenanceWarningPage, setMaintenanceWarningPage] = useState(1)
+  const [maintenanceWarningRefreshToken, setMaintenanceWarningRefreshToken] = useState(0)
+  const [isLoadingMaintenanceWarnings, setIsLoadingMaintenanceWarnings] = useState(true)
+  const [maintenanceWarningError, setMaintenanceWarningError] = useState<string | null>(null)
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -193,6 +201,28 @@ export function EquipmentPage({
       cancelled = true
     }
   }, [filters, refreshToken])
+
+  useEffect(() => {
+    let cancelled = false
+
+    getMaintenanceWarnings(maintenanceWarningPage)
+      .then((warnings) => {
+        if (!cancelled) {
+          setMaintenanceWarnings(warnings)
+          setMaintenanceWarningError(null)
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setMaintenanceWarningError(fr.maintenanceWarnings.loadError)
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoadingMaintenanceWarnings(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [maintenanceWarningPage, maintenanceWarningRefreshToken])
 
   function refreshInventory() {
     setIsLoading(true)
@@ -381,6 +411,8 @@ export function EquipmentPage({
         {showImportGenerator && <Modal title={fr.equipment.importTitle} onClose={() => setShowImportGenerator(false)}><ImportGeneratorForm onClose={() => setShowImportGenerator(false)} onImported={() => { refreshInventory(); refreshFilterOptions() }} /></Modal>}
         {showEditSite && siteContext && <Modal title={fr.directory.editSite} size="wide" onClose={() => setShowEditSite(false)}><SiteEditForm site={siteContext} catalogs={options?.catalogs} employees={options?.employees ?? []} onCancel={() => setShowEditSite(false)} onSaved={(site) => { setSiteContext(site); setShowEditSite(false); refreshFilterOptions(); refreshInventory() }} /></Modal>}
 
+        {!isSiteView && <MaintenanceWarningsPanel result={maintenanceWarnings} isLoading={isLoadingMaintenanceWarnings} error={maintenanceWarningError} onRefresh={() => { setIsLoadingMaintenanceWarnings(true); setMaintenanceWarningRefreshToken((current) => current + 1) }} onPageChange={(page) => { setIsLoadingMaintenanceWarnings(true); setMaintenanceWarningPage(page) }} onOpenEquipment={openEquipment} />}
+
         <section className="inventory-panel" aria-label={fr.equipment.title}>
           <div className="filter-bar">
             <label className="search-field">
@@ -545,6 +577,7 @@ export function EquipmentPage({
                         catalogs={options?.catalogs ?? []}
                         onEditingChange={setIsEditingEquipment}
                         onChanged={(equipment) => { setSelected(equipment); refreshInventory() }}
+                        imageEditor={<EquipmentImages equipment={selected} canManage onChanged={async () => { setSelected(await getEquipmentItem(selected.id)) }} />}
                       />
                     )}
                     {!isEditingEquipment && user.permissions.delete_equipment && <button className="danger-button detail-delete-button" type="button" onClick={removeSelectedEquipment}><ActionIcon name="delete" />{fr.equipment.deleteGenerator}</button>}
@@ -587,7 +620,7 @@ export function EquipmentPage({
                     <h3>{fr.equipment.observations}</h3>
                     <p className="observations">{displayedValue(selected.observations)}</p>
                   </section>
-                  <EquipmentImages equipment={selected} canManage={user.permissions.manage_equipment && isEditingEquipment} onChanged={async () => { setSelected(await getEquipmentItem(selected.id)) }} />
+                  {!isEditingEquipment && <EquipmentImages equipment={selected} canManage={false} onChanged={async () => { setSelected(await getEquipmentItem(selected.id)) }} />}
                   <MaintenanceSection
                     equipment={selected}
                     employees={options?.employees ?? []}
@@ -596,6 +629,8 @@ export function EquipmentPage({
                     catalogs={options?.catalogs ?? []}
                     onChanged={async () => {
                       setSelected(await getEquipmentItem(selected.id))
+                      setMaintenanceWarningPage(1)
+                      setMaintenanceWarningRefreshToken((current) => current + 1)
                     }}
                   />
                 </div>

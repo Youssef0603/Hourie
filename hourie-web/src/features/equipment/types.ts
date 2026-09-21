@@ -175,6 +175,25 @@ export type EquipmentListResponse = {
   }
 }
 
+export type MaintenanceWarning = {
+  equipment: EquipmentSummary
+  last_maintenance_date: string
+  next_maintenance_date: string
+  days_until_due: number
+  status: 'overdue' | 'due_soon'
+}
+
+export type MaintenanceWarningResponse = {
+  data: MaintenanceWarning[]
+  summary: {
+    overdue: number
+    due_soon: number
+    total: number
+    horizon_days: number
+  }
+  meta: EquipmentListResponse['meta']
+}
+
 export type EquipmentImportResult = {
   id: number
   original_filename: string
