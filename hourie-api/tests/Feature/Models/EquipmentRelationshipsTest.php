@@ -24,7 +24,7 @@ it('keeps current physical location separate from project assignment', function 
         ->for($physicalLocation, 'currentLocation')
         ->create([
             'asset_code' => 'A.H-0010',
-            'purchase_year' => 2023,
+            'manufacture_year' => 2023,
             'condition' => EquipmentCondition::Functional,
             'operational_situation' => null,
         ]);
@@ -36,7 +36,7 @@ it('keeps current physical location separate from project assignment', function 
     expect($equipment->fresh()->currentLocation->project->is($physicalProject))->toBeTrue();
     expect($equipment->projectAssignments()->firstOrFail()->project->is($assignedProject))->toBeTrue();
     expect($equipment->asset_code)->toBe('A.H-0010');
-    expect($equipment->purchase_year)->toBe(2023);
+    expect($equipment->manufacture_year)->toBe(2023);
     expect($equipment->operational_situation)->toBeNull();
 });
 

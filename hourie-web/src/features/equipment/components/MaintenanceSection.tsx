@@ -12,7 +12,7 @@ import type {
   MaintenancePayload,
 } from '../types'
 import { LoadingSpinner } from '../../../shared/components/LoadingSpinner'
-import { catalogLabel, catalogOptions } from '../catalogs'
+import { catalogBadgeStyle, catalogLabel, catalogOptions } from '../catalogs'
 
 type MaintenanceSectionProps = {
   equipment: Equipment
@@ -292,7 +292,7 @@ export function MaintenanceSection({
                     aria-controls={`maintenance-details-${maintenance.id}`}
                     aria-label={`${isExpanded ? fr.maintenance.hideDetails : fr.maintenance.showDetails} — ${title}`}
                   >
-                    <span className="maintenance-card-summary"><strong>{title}</strong><span>{maintenance.maintenance_date}</span></span>
+                    <span className="maintenance-card-summary"><strong><span className="status-badge" style={catalogBadgeStyle(catalogs, 'maintenance_type', maintenance.intervention_type)}>{title}</span></strong><span>{maintenance.maintenance_date}</span></span>
                     <ActionIcon name="expand" />
                   </button>
                   {canManage && <div className="maintenance-actions"><button type="button" onClick={() => startEdit(maintenance)}><ActionIcon name="edit" />{fr.common.edit}</button>{canDelete && <button type="button" onClick={() => remove(maintenance)}><ActionIcon name="delete" />{fr.common.delete}</button>}</div>}

@@ -163,6 +163,12 @@ export function PeoplePage({ canAdd, canManageManagerAccounts = false, catalogs 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)
+
+    if (!canManageManagerAccounts && role === 'manager') {
+      setRole('viewer')
+      return
+    }
+
     try {
       await createEmployee({
         name: name.trim(),

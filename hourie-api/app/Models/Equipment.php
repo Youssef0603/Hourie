@@ -19,7 +19,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'brand',
     'model',
     'serial_number',
-    'purchase_year',
+    'manufacture_year',
     'condition',
     'operational_situation',
     'observations',
@@ -97,7 +97,7 @@ class Equipment extends Model
     protected function casts(): array
     {
         return [
-            'purchase_year' => 'integer',
+            'manufacture_year' => 'integer',
             'is_active' => 'boolean',
         ];
     }

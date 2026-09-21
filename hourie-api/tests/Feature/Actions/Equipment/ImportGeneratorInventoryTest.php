@@ -60,19 +60,18 @@ it('imports generator rows while preserving codes, nulls, provenance, and separa
 
     expect($equipmentImport->status)->toBe(EquipmentImportStatus::Completed);
     expect($equipmentImport->summary)->toBe([
-        'imported_rows' => 3,
+        'imported_rows' => 2,
         'warning_rows' => 0,
     ]);
-    expect(Equipment::query()->count())->toBe(3);
+    expect(Equipment::query()->count())->toBe(2);
     expect(EquipmentCategory::query()->where('code', 'generator')->exists())->toBeTrue();
-    expect(EquipmentImportRow::query()->count())->toBe(3);
-    expect(EquipmentChange::query()->where('change_type', EquipmentChangeType::InitialImport)->count())->toBe(3);
+    expect(EquipmentImportRow::query()->count())->toBe(2);
+    expect(EquipmentChange::query()->where('change_type', EquipmentChangeType::InitialImport)->count())->toBe(2);
 
     $bassamGenerator = Equipment::query()->where('asset_code', 'A.H-001')->firstOrFail();
     $vridiGenerator = Equipment::query()->where('asset_code', 'A.H-0010')->firstOrFail();
-    $sparseGenerator = Equipment::query()->where('asset_code', 'A.H-0011')->firstOrFail();
 
-    expect($bassamGenerator->purchase_year)->toBe(2023);
+    expect($bassamGenerator->manufacture_year)->toBe(2023);
     expect($bassamGenerator->condition)->toBe(EquipmentCondition::Functional->value);
     expect($bassamGenerator->currentLocation->name)->toBe('BASE');
     expect($bassamGenerator->currentLocation->parent->name)->toBe('BASSAM');
@@ -81,15 +80,13 @@ it('imports generator rows while preserving codes, nulls, provenance, and separa
 
     expect($vridiGenerator->asset_code)->toBe('A.H-0010');
     expect($vridiGenerator->model)->toBeNull();
-    expect($vridiGenerator->purchase_year)->toBeNull();
+    expect($vridiGenerator->manufacture_year)->toBeNull();
     expect($vridiGenerator->condition)->toBe(EquipmentCondition::Defective->value);
     expect($vridiGenerator->operational_situation)->toBeNull();
     expect($vridiGenerator->generatorDetails->voltage_rating)->toBe('220/380');
     expect($vridiGenerator->generatorDetails->current_rating)->toBe('23/40');
 
-    expect($sparseGenerator->brand)->toBeNull();
-    expect($sparseGenerator->current_location_id)->toBeNull();
-    expect($sparseGenerator->projectAssignments()->exists())->toBeFalse();
+    expect(Equipment::query()->where('asset_code', 'A.H-0011')->exists())->toBeFalse();
 
     expect(Project::query()->count())->toBe(2);
     expect(Location::query()->count())->toBe(4);
@@ -100,8 +97,8 @@ it('imports generator rows while preserving codes, nulls, provenance, and separa
 it('rejects duplicate asset codes before writing any import data', function () {
     EquipmentCategory::factory()->create(['code' => 'generator']);
     $rows = [
-        4 => ['A' => '1', 'B' => 'A.H-001'],
-        5 => ['A' => '2', 'B' => 'A.H-001'],
+        4 => ['A' => '1', 'B' => 'A.H-001', 'C' => 'BASSAM'],
+        5 => ['A' => '2', 'B' => 'A.H-001', 'C' => 'BASSAM'],
     ];
 
     expect(fn () => app(ImportGeneratorInventory::class)->handle(

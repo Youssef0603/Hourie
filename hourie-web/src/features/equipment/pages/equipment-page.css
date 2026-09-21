@@ -1888,6 +1888,7 @@ html[dir='rtl'] .filter-bar select {
 
 .status-badge {
   display: inline-flex;
+  border: 1px solid transparent;
   border-radius: 0.35rem;
   padding: 0.24rem 0.42rem;
   background: #f1eff0;

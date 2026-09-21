@@ -24,7 +24,7 @@ class UpdateEquipmentRequest extends FormRequest
             'brand' => ['present', 'nullable', 'string', 'max:255'],
             'model' => ['present', 'nullable', 'string', 'max:255'],
             'serial_number' => ['present', 'nullable', 'string', 'max:255'],
-            'purchase_year' => ['present', 'nullable', 'integer', 'min:1900', 'max:'.((int) date('Y') + 1)],
+            'manufacture_year' => ['present', 'nullable', 'integer', 'min:1900', 'max:'.((int) date('Y') + 1)],
             'condition' => ['present', 'nullable', $this->activeCatalogOption('equipment_condition')],
             'operational_situation' => ['present', 'nullable', $this->activeCatalogOption('operational_situation')],
             'project_id' => ['sometimes', 'nullable', 'integer', Rule::exists('projects', 'id')->where('is_active', true)],

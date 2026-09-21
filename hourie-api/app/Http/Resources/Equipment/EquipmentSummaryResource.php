@@ -27,7 +27,7 @@ class EquipmentSummaryResource extends JsonResource
             'brand' => $this->brand,
             'model' => $this->model,
             'serial_number' => $this->serial_number,
-            'purchase_year' => $this->purchase_year,
+            'manufacture_year' => $this->manufacture_year,
             'condition' => $this->condition,
             'operational_situation' => $this->operational_situation,
             'current_location' => $this->whenLoaded('currentLocation', function (): ?array {

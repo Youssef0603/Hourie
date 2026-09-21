@@ -40,12 +40,11 @@ class ImportGeneratorInventory
         $inventoryRows = 0;
 
         foreach ($rows as $rowNumber => $row) {
-            $assetCode = $this->nullableString($row['B'] ?? null);
-
-            if ($assetCode === null || ! is_numeric($row['A'] ?? null)) {
+            if (! $this->isImportableRow($row)) {
                 continue;
             }
 
+            $assetCode = $this->nullableString($row['B'] ?? null);
             $inventoryRows++;
 
             if (isset($seenAssetCodes[$assetCode])) {
@@ -124,12 +123,11 @@ class ImportGeneratorInventory
             $importedRows = 0;
 
             foreach ($rows as $rowNumber => $row) {
-                $assetCode = $this->nullableString($row['B'] ?? null);
-
-                if ($assetCode === null || ! is_numeric($row['A'] ?? null)) {
+                if (! $this->isImportableRow($row)) {
                     continue;
                 }
 
+                $assetCode = $this->nullableString($row['B'] ?? null);
                 $rowWarnings = [];
                 $data = $this->normalize($row, $rowWarnings);
                 [$project, $location] = $this->resolveProjectAndLocation(
@@ -145,7 +143,7 @@ class ImportGeneratorInventory
                     'brand' => $data['brand'],
                     'model' => $data['model'],
                     'serial_number' => $data['serial_number'],
-                    'purchase_year' => $data['purchase_year'],
+                    'manufacture_year' => $data['manufacture_year'],
                     'condition' => $data['condition'],
                     'operational_situation' => null,
                     'observations' => $data['observations'],
@@ -183,7 +181,7 @@ class ImportGeneratorInventory
                         'brand',
                         'model',
                         'serial_number',
-                        'purchase_year',
+                        'manufacture_year',
                         'condition',
                         'operational_situation',
                         'observations',
@@ -271,7 +269,7 @@ class ImportGeneratorInventory
             'brand' => $this->nullableString($row['E'] ?? null),
             'model' => $this->nullableString($row['F'] ?? null),
             'serial_number' => $this->nullableString($row['G'] ?? null),
-            'purchase_year' => $this->nullablePurchaseYear($row['S'] ?? null, $warnings),
+            'manufacture_year' => $this->nullableManufactureYear($row['S'] ?? null, $warnings),
             'condition' => $condition,
             'observations' => $this->nullableString($row['U'] ?? null),
             ...$generatorDetails,
@@ -364,7 +362,7 @@ class ImportGeneratorInventory
     /**
      * @param  array<int, string>  $warnings
      */
-    private function nullablePurchaseYear(?string $value, array &$warnings): ?int
+    private function nullableManufactureYear(?string $value, array &$warnings): ?int
     {
         $normalized = $this->nullableString($value);
 
@@ -373,7 +371,7 @@ class ImportGeneratorInventory
         }
 
         if (! ctype_digit($normalized) || (int) $normalized < 1900 || (int) $normalized > (int) date('Y') + 1) {
-            $warnings[] = 'invalid_purchase_year';
+            $warnings[] = 'invalid_manufacture_year';
 
             return null;
         }
@@ -390,6 +388,22 @@ class ImportGeneratorInventory
         }
 
         return $value;
+    }
+
+    /** @param array<string, string|null> $row */
+    private function isImportableRow(array $row): bool
+    {
+        if ($this->nullableString($row['B'] ?? null) === null || ! is_numeric($row['A'] ?? null)) {
+            return false;
+        }
+
+        foreach (range('C', 'U') as $column) {
+            if ($this->nullableString($row[$column] ?? null) !== null) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -427,7 +441,7 @@ class ImportGeneratorInventory
             'current_engine_hours' => $row['P'] ?? null,
             'condition' => $row['Q'] ?? null,
             'operational_situation' => $row['R'] ?? null,
-            'purchase_year' => $row['S'] ?? null,
+            'manufacture_year' => $row['S'] ?? null,
             'responsible_person' => $row['T'] ?? null,
             'observations' => $row['U'] ?? null,
         ];

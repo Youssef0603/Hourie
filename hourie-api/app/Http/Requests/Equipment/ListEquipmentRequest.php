@@ -35,8 +35,8 @@ class ListEquipmentRequest extends FormRequest
             'brand' => ['nullable', 'string', 'max:100'],
             'model' => ['nullable', 'string', 'max:100'],
             'serial_number' => ['nullable', 'string', 'max:255'],
-            'purchase_year_from' => ['nullable', 'integer', 'min:1900', 'max:2100'],
-            'purchase_year_to' => ['nullable', 'integer', 'min:1900', 'max:2100', 'gte:purchase_year_from'],
+            'manufacture_year_from' => ['nullable', 'integer', 'min:1900', 'max:2100'],
+            'manufacture_year_to' => ['nullable', 'integer', 'min:1900', 'max:2100', 'gte:manufacture_year_from'],
             'created_from' => ['nullable', 'date_format:Y-m-d'],
             'created_to' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:created_from'],
             'apparent_power_kva_min' => ['nullable', 'numeric', 'min:0'],
@@ -55,7 +55,12 @@ class ListEquipmentRequest extends FormRequest
             'fuel_type' => ['nullable', 'string', 'max:100'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
             'page' => ['nullable', 'integer', 'min:1'],
-            'sort' => ['nullable', Rule::in(['created_at_desc', 'created_at_asc'])],
+            'sort' => ['nullable', Rule::in([
+                'created_at_desc',
+                'created_at_asc',
+                'manufacture_year_desc',
+                'manufacture_year_asc',
+            ])],
         ];
     }
 }

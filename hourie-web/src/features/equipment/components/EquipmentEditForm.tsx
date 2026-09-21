@@ -22,7 +22,7 @@ type FormState = {
   brand: string
   model: string
   serial_number: string
-  purchase_year: string
+  manufacture_year: string
   condition: string
   operational_situation: string
   project_id: string
@@ -47,7 +47,7 @@ function initialForm(equipment: Equipment): FormState {
     brand: equipment.brand ?? '',
     model: equipment.model ?? '',
     serial_number: equipment.serial_number ?? '',
-    purchase_year: equipment.purchase_year?.toString() ?? '',
+    manufacture_year: equipment.manufacture_year?.toString() ?? '',
     condition: equipment.condition ?? '',
     operational_situation: equipment.operational_situation ?? '',
     project_id: equipment.current_project_assignment?.project.id.toString() ?? '',
@@ -114,7 +114,7 @@ export function EquipmentEditForm({ equipment, employees, projects, locations, c
         brand: text(form.brand),
         model: text(form.model),
         serial_number: text(form.serial_number),
-        purchase_year: number(form.purchase_year),
+        manufacture_year: number(form.manufacture_year),
         condition: text(form.condition),
         operational_situation: text(form.operational_situation),
         project_id: number(form.project_id),
@@ -158,7 +158,7 @@ export function EquipmentEditForm({ equipment, employees, projects, locations, c
         <label><span>{fr.equipment.brand}</span><input value={form.brand} onChange={(event) => update('brand', event.target.value)} /></label>
         <label><span>{fr.equipment.model}</span><input value={form.model} onChange={(event) => update('model', event.target.value)} /></label>
         <label><span>{fr.equipment.serialNumber}</span><input value={form.serial_number} onChange={(event) => update('serial_number', event.target.value)} /></label>
-        <label><span>{fr.equipment.purchaseYear}</span><input min="1900" max="2100" type="number" value={form.purchase_year} onChange={(event) => update('purchase_year', event.target.value)} /></label>
+        <label><span>{fr.equipment.manufactureYear}</span><input min="1900" max="2100" type="number" value={form.manufacture_year} onChange={(event) => update('manufacture_year', event.target.value)} /></label>
         <label><span>{fr.equipment.condition}</span><select value={form.condition} onChange={(event) => update('condition', event.target.value)}><option value="">{fr.common.notProvided}</option>{catalogOptions(catalogs, 'equipment_condition').map((option) => <option key={option.code} value={option.code}>{catalogLabel(catalogs, 'equipment_condition', option.code)}</option>)}</select></label>
         <label><span>{fr.equipment.situation}</span><select value={form.operational_situation} onChange={(event) => update('operational_situation', event.target.value)}><option value="">{fr.common.notProvided}</option>{catalogOptions(catalogs, 'operational_situation').map((option) => <option key={option.code} value={option.code}>{catalogLabel(catalogs, 'operational_situation', option.code)}</option>)}</select></label>
         <label><span>{fr.equipment.project}</span><select value={form.project_id} onChange={(event) => updateProject(event.target.value)}><option value="">{fr.common.notProvided}</option>{projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}</select></label>

@@ -54,8 +54,8 @@ const initialFilters: EquipmentFilters = {
   brand: '',
   model: '',
   serial_number: '',
-  purchase_year_from: '',
-  purchase_year_to: '',
+  manufacture_year_from: '',
+  manufacture_year_to: '',
   created_from: '',
   created_to: '',
   apparent_power_kva_min: '',
@@ -78,7 +78,7 @@ const initialFilters: EquipmentFilters = {
 }
 
 const advancedFilterKeys: Array<keyof EquipmentFilters> = [
-  'custodian_employee_id', 'purchase_year_from', 'purchase_year_to', 'created_from', 'created_to',
+  'custodian_employee_id', 'manufacture_year_from', 'manufacture_year_to', 'created_from', 'created_to',
   'apparent_power_kva_min', 'apparent_power_kva_max', 'active_power_kw_min',
   'active_power_kw_max', 'frequency_hz_min', 'frequency_hz_max',
   'engine_hours_min', 'engine_hours_max', 'tank_capacity_litres_min',
@@ -455,13 +455,13 @@ export function EquipmentPage({
                     </td>
                     <td>{measurement(equipment.power?.apparent_kva, 'kVA')}</td>
                     <td>{measurement(equipment.power?.active_kw, 'kW')}</td>
-                    <td>{equipment.fuel_type ? catalogLabel(options?.catalogs, 'fuel_type', equipment.fuel_type) : fr.common.notProvided}</td>
+                    <td>{equipment.fuel_type ? <span className="status-badge" style={catalogBadgeStyle(options?.catalogs, 'fuel_type', equipment.fuel_type)}>{catalogLabel(options?.catalogs, 'fuel_type', equipment.fuel_type)}</span> : fr.common.notProvided}</td>
                     <td>
                       <span className={`status-badge status-${equipment.condition ?? 'unknown'}`} style={catalogBadgeStyle(options?.catalogs, 'equipment_condition', equipment.condition)}>
                         {equipment.condition ? catalogLabel(options?.catalogs, 'equipment_condition', equipment.condition) : fr.common.notProvided}
                       </span>
                     </td>
-                    <td>{equipment.operational_situation ? catalogLabel(options?.catalogs, 'operational_situation', equipment.operational_situation) : fr.common.notProvided}</td>
+                    <td>{equipment.operational_situation ? <span className="status-badge" style={catalogBadgeStyle(options?.catalogs, 'operational_situation', equipment.operational_situation)}>{catalogLabel(options?.catalogs, 'operational_situation', equipment.operational_situation)}</span> : fr.common.notProvided}</td>
                     <td>{equipment.current_project_assignment?.project.name ?? fr.common.notProvided}</td>
                     <td>{locationName(equipment)}</td>
                   </tr>
@@ -508,7 +508,7 @@ export function EquipmentPage({
           onProjectChange={updateProjectFilter}
           onClose={() => setShowFilterDrawer(false)}
         />}
-      </main> : activeSection === 'sites' ? <SitesPage canAdd={user.permissions.manage_sites} catalogs={options?.catalogs} employees={options?.employees} onOpenSite={openSiteInventory} /> : activeSection === 'catalogs' ? <CatalogsPage onChanged={refreshFilterOptions} /> : <PeoplePage canAdd={user.permissions.manage_users} canManageManagerAccounts={user.permissions.manage_manager_accounts} catalogs={options?.catalogs} />}
+      </main> : activeSection === 'sites' ? <SitesPage canAdd={user.permissions.manage_sites} catalogs={options?.catalogs} employees={options?.employees} onOpenSite={openSiteInventory} /> : activeSection === 'catalogs' ? <CatalogsPage onChanged={refreshFilterOptions} /> : <PeoplePage canAdd={user.permissions.manage_users} canManageManagerAccounts={user.role === 'manager'} catalogs={options?.catalogs} />}
       </div>
 
       {(activeSection === 'generators' || isSiteView) && (selected || isLoadingDetail) && (
@@ -562,9 +562,9 @@ export function EquipmentPage({
                     <h3>{fr.equipment.identification}</h3>
                     <dl>
                       <div><dt>{fr.equipment.serialNumber}</dt><dd>{displayedValue(selected.serial_number)}</dd></div>
-                      <div><dt>{fr.equipment.purchaseYear}</dt><dd>{displayedValue(selected.purchase_year)}</dd></div>
+                      <div><dt>{fr.equipment.manufactureYear}</dt><dd>{displayedValue(selected.manufacture_year)}</dd></div>
                       <div><dt>{fr.equipment.condition}</dt><dd>{selected.condition ? <span className={`status-badge status-${selected.condition}`} style={catalogBadgeStyle(options?.catalogs, 'equipment_condition', selected.condition)}>{catalogLabel(options?.catalogs, 'equipment_condition', selected.condition)}</span> : fr.common.notProvided}</dd></div>
-                      <div><dt>{fr.equipment.situation}</dt><dd>{selected.operational_situation ? catalogLabel(options?.catalogs, 'operational_situation', selected.operational_situation) : fr.common.notProvided}</dd></div>
+                      <div><dt>{fr.equipment.situation}</dt><dd>{selected.operational_situation ? <span className="status-badge" style={catalogBadgeStyle(options?.catalogs, 'operational_situation', selected.operational_situation)}>{catalogLabel(options?.catalogs, 'operational_situation', selected.operational_situation)}</span> : fr.common.notProvided}</dd></div>
                     </dl>
                   </section>
                   {selected.generator_details && (
@@ -577,7 +577,7 @@ export function EquipmentPage({
                         <div><dt>{fr.equipment.frequency}</dt><dd>{displayedValue(selected.generator_details.frequency_hz)}</dd></div>
                         <div><dt>{fr.equipment.current}</dt><dd>{displayedValue(selected.generator_details.current_rating)}</dd></div>
                         <div><dt>{fr.equipment.phases}</dt><dd>{displayedValue(selected.generator_details.phases)}</dd></div>
-                        <div><dt>{fr.equipment.fuel}</dt><dd>{selected.generator_details.fuel_type ? catalogLabel(options?.catalogs, 'fuel_type', selected.generator_details.fuel_type) : fr.common.notProvided}</dd></div>
+                        <div><dt>{fr.equipment.fuel}</dt><dd>{selected.generator_details.fuel_type ? <span className="status-badge" style={catalogBadgeStyle(options?.catalogs, 'fuel_type', selected.generator_details.fuel_type)}>{catalogLabel(options?.catalogs, 'fuel_type', selected.generator_details.fuel_type)}</span> : fr.common.notProvided}</dd></div>
                         <div><dt>{fr.equipment.tank}</dt><dd>{displayedValue(selected.generator_details.tank_capacity_litres)}</dd></div>
                         <div><dt>{fr.equipment.engineHours}</dt><dd>{displayedValue(selected.generator_details.current_engine_hours)}</dd></div>
                       </dl>
@@ -640,7 +640,7 @@ function EquipmentFilterDrawer({ filters, options, isSiteView, physicalLocationO
           <label><span>{fr.equipment.situation}</span><select value={filters.operational_situation} onChange={(event) => onChange('operational_situation', event.target.value)}><option value="">{fr.common.all}</option>{catalogOptions(options?.catalogs, 'operational_situation').map((option) => <option key={option.code} value={option.code}>{catalogLabel(options?.catalogs, 'operational_situation', option.code)}</option>)}</select></label>
           {!isSiteView && <label><span>{fr.equipment.project}</span><select value={filters.project_id} onChange={(event) => onProjectChange(event.target.value)}><option value="">{fr.common.all}</option>{options?.projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}</select></label>}
           <label><span>{fr.equipment.location}</span><select value={filters.location_id} onChange={(event) => onChange('location_id', event.target.value)}><option value="">{fr.common.all}</option>{physicalLocationOptions.map((location) => <option key={location.id} value={location.id}>{filters.project_id === '' ? locationOptionLabel(location) : location.name}</option>)}</select></label>
-          <label><span>{fr.equipment.sort}</span><select value={filters.sort} onChange={(event) => onChange('sort', event.target.value)}><option value="created_at_desc">{fr.equipment.newestFirst}</option><option value="created_at_asc">{fr.equipment.oldestFirst}</option></select></label>
+          <label><span>{fr.equipment.sort}</span><select value={filters.sort} onChange={(event) => onChange('sort', event.target.value)}><option value="created_at_desc">{fr.equipment.addedNewestFirst}</option><option value="created_at_asc">{fr.equipment.addedOldestFirst}</option><option value="manufacture_year_desc">{fr.equipment.manufacturedNewestFirst}</option><option value="manufacture_year_asc">{fr.equipment.manufacturedOldestFirst}</option></select></label>
         </div></fieldset>
         <AdvancedEquipmentFilters filters={filters} options={options} onChange={onChange} />
       </div>
@@ -658,8 +658,8 @@ function AdvancedEquipmentFilters({ filters, options, onChange }: AdvancedEquipm
     <div className="advanced-filter-panel">
       <fieldset><legend>{fr.equipment.assignmentAndDateFilters}</legend><div className="advanced-filter-grid">
         <label><span>{fr.equipment.custodian}</span><select value={filters.custodian_employee_id} onChange={(event) => onChange('custodian_employee_id', event.target.value)}><option value="">{fr.common.all}</option>{options?.employees.map((employee) => <option key={employee.id} value={employee.id}>{employee.name}</option>)}</select></label>
-        <label><span>{fr.equipment.yearFrom}</span><input type="number" min="1900" max="2100" {...field('purchase_year_from')} /></label>
-        <label><span>{fr.equipment.yearTo}</span><input type="number" min="1900" max="2100" {...field('purchase_year_to')} /></label>
+        <label><span>{fr.equipment.yearFrom}</span><input type="number" min="1900" max="2100" {...field('manufacture_year_from')} /></label>
+        <label><span>{fr.equipment.yearTo}</span><input type="number" min="1900" max="2100" {...field('manufacture_year_to')} /></label>
         <label><span>{fr.equipment.addedFrom}</span><input type="date" {...field('created_from')} /></label>
         <label><span>{fr.equipment.addedTo}</span><input type="date" {...field('created_to')} /></label>
       </div></fieldset>

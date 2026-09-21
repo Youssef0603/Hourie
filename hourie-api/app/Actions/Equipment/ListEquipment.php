@@ -24,6 +24,7 @@ class ListEquipment
         ];
         $hasGeneratorFilters = collect($generatorFilterKeys)
             ->contains(fn (string $key): bool => isset($filters[$key]) && $filters[$key] !== '');
+        $sort = $filters['sort'] ?? 'created_at_desc';
 
         return Equipment::query()
             ->where('is_active', true)
@@ -63,8 +64,8 @@ class ListEquipment
             ->when($filters['brand'] ?? null, fn (Builder $query, string $value) => $query->where('brand', 'like', '%'.trim($value).'%'))
             ->when($filters['model'] ?? null, fn (Builder $query, string $value) => $query->where('model', 'like', '%'.trim($value).'%'))
             ->when($filters['serial_number'] ?? null, fn (Builder $query, string $value) => $query->where('serial_number', 'like', '%'.trim($value).'%'))
-            ->when(isset($filters['purchase_year_from']), fn (Builder $query) => $query->where('purchase_year', '>=', $filters['purchase_year_from']))
-            ->when(isset($filters['purchase_year_to']), fn (Builder $query) => $query->where('purchase_year', '<=', $filters['purchase_year_to']))
+            ->when(isset($filters['manufacture_year_from']), fn (Builder $query) => $query->where('manufacture_year', '>=', $filters['manufacture_year_from']))
+            ->when(isset($filters['manufacture_year_to']), fn (Builder $query) => $query->where('manufacture_year', '<=', $filters['manufacture_year_to']))
             ->when($filters['created_from'] ?? null, fn (Builder $query, string $date) => $query->whereDate('created_at', '>=', $date))
             ->when($filters['created_to'] ?? null, fn (Builder $query, string $date) => $query->whereDate('created_at', '<=', $date))
             ->when($hasGeneratorFilters, function (Builder $query) use ($filters): void {
@@ -93,11 +94,16 @@ class ListEquipment
                     }
                 });
             })
-            ->when(
-                ($filters['sort'] ?? 'created_at_desc') === 'created_at_asc',
-                fn (Builder $query) => $query->orderBy('created_at')->orderBy('id'),
-                fn (Builder $query) => $query->orderByDesc('created_at')->orderByDesc('id'),
-            )
+            ->when($sort === 'created_at_asc', fn (Builder $query) => $query->orderBy('created_at')->orderBy('id'))
+            ->when($sort === 'created_at_desc', fn (Builder $query) => $query->orderByDesc('created_at')->orderByDesc('id'))
+            ->when($sort === 'manufacture_year_asc', fn (Builder $query) => $query
+                ->orderByRaw('CASE WHEN manufacture_year IS NULL THEN 1 ELSE 0 END')
+                ->orderBy('manufacture_year')
+                ->orderBy('id'))
+            ->when($sort === 'manufacture_year_desc', fn (Builder $query) => $query
+                ->orderByRaw('CASE WHEN manufacture_year IS NULL THEN 1 ELSE 0 END')
+                ->orderByDesc('manufacture_year')
+                ->orderByDesc('id'))
             ->paginate((int) ($filters['per_page'] ?? 20))
             ->withQueryString();
     }

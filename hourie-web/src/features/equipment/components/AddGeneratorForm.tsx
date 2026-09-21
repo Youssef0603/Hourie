@@ -18,7 +18,7 @@ type AddGeneratorFormProps = {
 export function AddGeneratorForm({ options, initialProjectId, onCreated, onCancel }: AddGeneratorFormProps) {
   const defaultCondition = catalogOptions(options.catalogs, 'equipment_condition')[0]?.code ?? ''
   const [form, setForm] = useState({
-    brand: '', model: '', serial_number: '', purchase_year: '', condition: defaultCondition,
+    brand: '', model: '', serial_number: '', manufacture_year: '', condition: defaultCondition,
     operational_situation: '', project_id: initialProjectId?.toString() ?? '', current_location_id: '', custodian_employee_id: '',
     apparent_power_kva: '', active_power_kw: '', phases: '', voltage_rating: '', frequency_hz: '',
     current_rating: '', fuel_type: '', tank_capacity_litres: '', current_engine_hours: '', observations: '',
@@ -59,7 +59,7 @@ export function AddGeneratorForm({ options, initialProjectId, onCreated, onCance
     try {
       const equipment = createdEquipment ?? await createEquipment({
         brand: text(form.brand), model: text(form.model), serial_number: text(form.serial_number),
-        purchase_year: number(form.purchase_year), condition: text(form.condition),
+        manufacture_year: number(form.manufacture_year), condition: text(form.condition),
         operational_situation: text(form.operational_situation),
         project_id: number(form.project_id), current_location_id: number(form.current_location_id),
         custodian_employee_id: number(form.custodian_employee_id), observations: text(form.observations),
@@ -90,7 +90,7 @@ export function AddGeneratorForm({ options, initialProjectId, onCreated, onCance
         <label><span>{fr.equipment.brand}</span><input required value={form.brand} onChange={(event) => update('brand', event.target.value)} /></label>
         <label><span>{fr.equipment.model}</span><input required value={form.model} onChange={(event) => update('model', event.target.value)} /></label>
         <label><span>{fr.equipment.serialNumber}</span><input value={form.serial_number} onChange={(event) => update('serial_number', event.target.value)} /></label>
-        <label><span>{fr.equipment.purchaseYear}</span><input type="number" min="1900" max="2100" value={form.purchase_year} onChange={(event) => update('purchase_year', event.target.value)} /></label>
+        <label><span>{fr.equipment.manufactureYear}</span><input type="number" min="1900" max="2100" value={form.manufacture_year} onChange={(event) => update('manufacture_year', event.target.value)} /></label>
         <label><span>{fr.equipment.apparentPower}</span><input type="number" min="0" step="0.01" value={form.apparent_power_kva} onChange={(event) => update('apparent_power_kva', event.target.value)} /></label>
         <label><span>{fr.equipment.activePower}</span><input type="number" min="0" step="0.01" value={form.active_power_kw} onChange={(event) => update('active_power_kw', event.target.value)} /></label>
         <label><span>{fr.equipment.phases}</span><input value={form.phases} onChange={(event) => update('phases', event.target.value)} /></label>

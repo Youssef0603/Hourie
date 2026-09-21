@@ -26,7 +26,7 @@ export type EquipmentSummary = {
   brand: string | null
   model: string | null
   serial_number: string | null
-  purchase_year: number | null
+  manufacture_year: number | null
   condition: EquipmentCondition | null
   operational_situation: OperationalSituation | null
   current_location: (NamedReference & {
@@ -140,8 +140,8 @@ export type EquipmentFilters = {
   brand: string
   model: string
   serial_number: string
-  purchase_year_from: string
-  purchase_year_to: string
+  manufacture_year_from: string
+  manufacture_year_to: string
   created_from: string
   created_to: string
   apparent_power_kva_min: string
@@ -160,7 +160,7 @@ export type EquipmentFilters = {
   fuel_type: string
   page: number
   per_page: number
-  sort: 'created_at_desc' | 'created_at_asc'
+  sort: 'created_at_desc' | 'created_at_asc' | 'manufacture_year_desc' | 'manufacture_year_asc'
 }
 
 export type EquipmentListResponse = {

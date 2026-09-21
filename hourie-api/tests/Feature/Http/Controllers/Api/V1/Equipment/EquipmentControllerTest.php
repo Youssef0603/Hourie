@@ -57,6 +57,27 @@ it('sorts newest generators first and exposes a three digit display id', functio
         ->assertJsonPath('data.0.display_id', str_pad((string) $newest->id, 3, '0', STR_PAD_LEFT));
 });
 
+it('sorts by manufacturing year and always places missing years last', function () {
+    $user = User::factory()->create();
+    $oldest = Equipment::factory()->create(['manufacture_year' => 1998]);
+    $newest = Equipment::factory()->create(['manufacture_year' => 2025]);
+    $missingYear = Equipment::factory()->create(['manufacture_year' => null]);
+
+    $this->actingAs($user, 'web')
+        ->getJson('/api/v1/equipment?sort=manufacture_year_desc')
+        ->assertOk()
+        ->assertJsonPath('data.0.id', $newest->id)
+        ->assertJsonPath('data.1.id', $oldest->id)
+        ->assertJsonPath('data.2.id', $missingYear->id);
+
+    $this->actingAs($user, 'web')
+        ->getJson('/api/v1/equipment?sort=manufacture_year_asc')
+        ->assertOk()
+        ->assertJsonPath('data.0.id', $oldest->id)
+        ->assertJsonPath('data.1.id', $newest->id)
+        ->assertJsonPath('data.2.id', $missingYear->id);
+});
+
 it('filters equipment by search, category, condition, situation, project, and location', function () {
     $user = User::factory()->create();
     $generatorCategory = EquipmentCategory::factory()->create(['code' => 'generator']);
@@ -163,7 +184,7 @@ it('combines advanced technical, identity, responsibility, and date filters', fu
         'brand' => 'KOHLER',
         'model' => 'KD110',
         'serial_number' => 'SERIAL-ADVANCED',
-        'purchase_year' => 2024,
+        'manufacture_year' => 2024,
         'created_at' => '2026-06-15 10:00:00',
     ]);
     GeneratorDetail::factory()->for($matching)->create([
@@ -177,7 +198,7 @@ it('combines advanced technical, identity, responsibility, and date filters', fu
         'current_rating' => '216 A',
         'fuel_type' => 'GASOIL',
     ]);
-    $other = Equipment::factory()->create(['brand' => 'OTHER', 'purchase_year' => 2010]);
+    $other = Equipment::factory()->create(['brand' => 'OTHER', 'manufacture_year' => 2010]);
     GeneratorDetail::factory()->for($other)->create(['apparent_power_kva' => 20, 'frequency_hz' => 60]);
 
     $query = http_build_query([
@@ -185,8 +206,8 @@ it('combines advanced technical, identity, responsibility, and date filters', fu
         'brand' => 'kohl',
         'model' => 'KD',
         'serial_number' => 'ADVANCED',
-        'purchase_year_from' => 2020,
-        'purchase_year_to' => 2025,
+        'manufacture_year_from' => 2020,
+        'manufacture_year_to' => 2025,
         'created_from' => '2026-01-01',
         'created_to' => '2026-12-31',
         'apparent_power_kva_min' => 100,
@@ -283,7 +304,7 @@ it('returns generator details without inventing missing values', function () {
     $category = EquipmentCategory::factory()->create(['code' => 'generator']);
     $equipment = Equipment::factory()->for($category, 'category')->create([
         'asset_code' => 'A.H-0010',
-        'purchase_year' => null,
+        'manufacture_year' => null,
         'operational_situation' => null,
     ]);
     GeneratorDetail::factory()->for($equipment)->create([
@@ -296,7 +317,7 @@ it('returns generator details without inventing missing values', function () {
         ->getJson("/api/v1/equipment/{$equipment->id}")
         ->assertOk()
         ->assertJsonPath('data.asset_code', 'A.H-0010')
-        ->assertJsonPath('data.purchase_year', null)
+        ->assertJsonPath('data.manufacture_year', null)
         ->assertJsonPath('data.operational_situation', null)
         ->assertJsonPath('data.generator_details.voltage_rating', '220/380')
         ->assertJsonPath('data.generator_details.tank_capacity_litres', null)
@@ -316,7 +337,7 @@ it('allows a generator manager to fill every inventory field without changing th
         'brand' => 'KOHLER',
         'model' => 'B165',
         'serial_number' => '34LNGLH0009',
-        'purchase_year' => 2023,
+        'manufacture_year' => 2023,
         'condition' => 'functional',
         'operational_situation' => 'in_use',
         'custodian_employee_id' => $custodian->id,
@@ -369,7 +390,7 @@ it('allows a generator manager to change the assigned site and physical location
         'brand' => $equipment->brand,
         'model' => $equipment->model,
         'serial_number' => $equipment->serial_number,
-        'purchase_year' => $equipment->purchase_year,
+        'manufacture_year' => $equipment->manufacture_year,
         'condition' => $equipment->condition->value,
         'operational_situation' => $equipment->operational_situation?->value,
         'project_id' => $newProject->id,
@@ -405,7 +426,7 @@ it('returns 422 when a physical location belongs to a different site', function 
         'brand' => null,
         'model' => null,
         'serial_number' => null,
-        'purchase_year' => null,
+        'manufacture_year' => null,
         'condition' => null,
         'operational_situation' => null,
         'project_id' => $selectedProject->id,
@@ -445,7 +466,7 @@ it('allows a generator manager to add a generator with an automatic code and com
         'brand' => 'KOHLER',
         'model' => 'KD110',
         'serial_number' => 'SERIAL-NEW',
-        'purchase_year' => 2026,
+        'manufacture_year' => 2026,
         'condition' => 'functional',
         'operational_situation' => 'in_reserve',
         'custodian_employee_id' => null,
