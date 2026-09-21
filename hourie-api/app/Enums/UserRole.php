@@ -19,6 +19,16 @@ enum UserRole: string
         return in_array($this, [self::Manager, self::CmsManager], true);
     }
 
+    public function canManageUsers(): bool
+    {
+        return in_array($this, [self::Manager, self::CmsManager], true);
+    }
+
+    public function canManageManagerAccounts(): bool
+    {
+        return $this === self::Manager;
+    }
+
     public function canDeleteMaintenance(): bool
     {
         return $this === self::Manager;

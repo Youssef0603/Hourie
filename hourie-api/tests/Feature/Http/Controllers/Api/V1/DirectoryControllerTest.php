@@ -33,7 +33,7 @@ it('prevents viewers from adding sites', function () {
         ->assertForbidden();
 });
 
-it('allows CMS managers to add sites without granting user administration', function () {
+it('allows CMS managers to add sites', function () {
     $cmsManager = User::factory()->create(['role' => UserRole::CmsManager]);
     $responsible = Employee::factory()->create();
 
@@ -43,10 +43,107 @@ it('allows CMS managers to add sites without granting user administration', func
         'responsible_employee_id' => $responsible->id,
         'locations' => ['BASE'],
     ])->assertCreated();
+});
+
+it('allows CMS managers to create personnel and non-manager accounts', function () {
+    $cmsManager = User::factory()->create(['role' => UserRole::CmsManager]);
 
     $this->actingAs($cmsManager, 'web')->postJson('/api/v1/employees', [
-        'name' => 'Utilisateur interdit',
+        'name' => 'Awa Koné',
+        'phone_number' => '+225 07 08 09 10 11',
+        'email' => null,
+        'role' => 'generator_manager',
+        'password' => 'Temporary-2026',
+        'password_confirmation' => 'Temporary-2026',
+    ])->assertCreated()
+        ->assertJsonPath('data.user.username', 'awa.kone')
+        ->assertJsonPath('data.user.role', 'generator_manager');
+
+    $this->assertDatabaseHas('users', [
+        'username' => 'awa.kone',
+        'role' => 'generator_manager',
+    ]);
+
+    $this->actingAs($cmsManager, 'web')->getJson('/api/v1/auth/user')
+        ->assertOk()
+        ->assertJsonPath('data.permissions.manage_users', true)
+        ->assertJsonPath('data.permissions.manage_manager_accounts', false);
+});
+
+it('allows CMS managers to edit and remove non-manager personnel accounts', function () {
+    $cmsManager = User::factory()->create(['role' => UserRole::CmsManager]);
+    $account = User::factory()->create(['role' => UserRole::Viewer]);
+    $employee = Employee::factory()->for($account)->create(['name' => 'Ancien nom']);
+
+    $this->actingAs($cmsManager, 'web')->patchJson("/api/v1/employees/{$employee->id}", [
+        'name' => 'Nouveau nom',
+        'phone_number' => null,
+        'username' => $account->username,
+        'email' => $account->email,
+        'role' => 'generator_manager',
+        'password' => null,
+        'password_confirmation' => null,
+    ])->assertOk()
+        ->assertJsonPath('data.name', 'Nouveau nom')
+        ->assertJsonPath('data.user.role', 'generator_manager');
+
+    $this->actingAs($cmsManager, 'web')
+        ->deleteJson("/api/v1/employees/{$employee->id}")
+        ->assertNoContent();
+
+    expect($employee->fresh()->is_active)->toBeFalse();
+    expect($account->fresh()->is_active)->toBeFalse();
+});
+
+it('prevents CMS managers from creating or promoting manager accounts', function () {
+    $cmsManager = User::factory()->create(['role' => UserRole::CmsManager]);
+    $viewerAccount = User::factory()->create(['role' => UserRole::Viewer]);
+    $viewerEmployee = Employee::factory()->for($viewerAccount)->create();
+
+    $this->actingAs($cmsManager, 'web')->postJson('/api/v1/employees', [
+        'name' => 'Manager interdit',
+        'phone_number' => null,
+        'email' => null,
+        'role' => 'manager',
+        'password' => 'Temporary-2026',
+        'password_confirmation' => 'Temporary-2026',
     ])->assertForbidden();
+
+    $this->actingAs($cmsManager, 'web')->patchJson("/api/v1/employees/{$viewerEmployee->id}", [
+        'name' => $viewerEmployee->name,
+        'phone_number' => null,
+        'username' => $viewerAccount->username,
+        'email' => $viewerAccount->email,
+        'role' => 'manager',
+        'password' => null,
+        'password_confirmation' => null,
+    ])->assertForbidden();
+
+    expect($viewerAccount->fresh()->role)->toBe(UserRole::Viewer);
+    $this->assertDatabaseMissing('users', ['name' => 'Manager interdit']);
+});
+
+it('prevents CMS managers from modifying or removing an existing manager', function () {
+    $cmsManager = User::factory()->create(['role' => UserRole::CmsManager]);
+    $managerAccount = User::factory()->create(['role' => UserRole::Manager]);
+    $managerEmployee = Employee::factory()->for($managerAccount)->create();
+
+    $this->actingAs($cmsManager, 'web')->patchJson("/api/v1/employees/{$managerEmployee->id}", [
+        'name' => 'Nom interdit',
+        'phone_number' => null,
+        'username' => $managerAccount->username,
+        'email' => $managerAccount->email,
+        'role' => 'viewer',
+        'password' => null,
+        'password_confirmation' => null,
+    ])->assertForbidden();
+
+    $this->actingAs($cmsManager, 'web')
+        ->deleteJson("/api/v1/employees/{$managerEmployee->id}")
+        ->assertForbidden();
+
+    expect($managerEmployee->fresh()->is_active)->toBeTrue();
+    expect($managerAccount->fresh()->role)->toBe(UserRole::Manager);
 });
 
 it('shows a site with its locations and current equipment inventory', function () {

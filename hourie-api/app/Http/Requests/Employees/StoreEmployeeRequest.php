@@ -13,7 +13,13 @@ class StoreEmployeeRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->role === UserRole::Manager;
+        $role = $this->user()?->role;
+
+        if ($role === null || ! $role->canManageUsers()) {
+            return false;
+        }
+
+        return $role->canManageManagerAccounts() || $this->input('role') !== UserRole::Manager->value;
     }
 
     /** @return array<string, ValidationRule|array<mixed>|string> */

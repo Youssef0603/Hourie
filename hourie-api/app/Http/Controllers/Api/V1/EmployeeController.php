@@ -138,7 +138,12 @@ class EmployeeController extends Controller
 
     public function destroy(Request $request, Employee $employee): Response
     {
-        abort_unless($request->user()->role === UserRole::Manager, 403);
+        abort_unless($request->user()->role->canManageUsers(), 403);
+        abort_if(
+            ! $request->user()->role->canManageManagerAccounts()
+            && $employee->user?->role === UserRole::Manager,
+            403,
+        );
         abort_if($employee->user_id === $request->user()->id, 422, __('users.cannot_delete_self'));
 
         DB::transaction(function () use ($employee, $request): void {

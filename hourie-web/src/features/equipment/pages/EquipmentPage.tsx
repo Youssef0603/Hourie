@@ -508,7 +508,7 @@ export function EquipmentPage({
           onProjectChange={updateProjectFilter}
           onClose={() => setShowFilterDrawer(false)}
         />}
-      </main> : activeSection === 'sites' ? <SitesPage canAdd={user.permissions.manage_sites} catalogs={options?.catalogs} employees={options?.employees} onOpenSite={openSiteInventory} /> : activeSection === 'catalogs' ? <CatalogsPage onChanged={refreshFilterOptions} /> : <PeoplePage canAdd={user.permissions.manage_users} catalogs={options?.catalogs} />}
+      </main> : activeSection === 'sites' ? <SitesPage canAdd={user.permissions.manage_sites} catalogs={options?.catalogs} employees={options?.employees} onOpenSite={openSiteInventory} /> : activeSection === 'catalogs' ? <CatalogsPage onChanged={refreshFilterOptions} /> : <PeoplePage canAdd={user.permissions.manage_users} canManageManagerAccounts={user.permissions.manage_manager_accounts} catalogs={options?.catalogs} />}
       </div>
 
       {(activeSection === 'generators' || isSiteView) && (selected || isLoadingDetail) && (

@@ -14,7 +14,20 @@ class UpdateEmployeeRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->role === UserRole::Manager;
+        $role = $this->user()?->role;
+        /** @var Employee|null $employee */
+        $employee = $this->route('employee');
+
+        if ($role === null || ! $role->canManageUsers()) {
+            return false;
+        }
+
+        if ($role->canManageManagerAccounts()) {
+            return true;
+        }
+
+        return $employee?->user?->role !== UserRole::Manager
+            && $this->input('role') !== UserRole::Manager->value;
     }
 
     /** @return array<string, ValidationRule|array<mixed>|string> */

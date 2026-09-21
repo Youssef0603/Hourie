@@ -32,7 +32,8 @@ class UserResource extends JsonResource
                 'delete_maintenance' => $this->role->canDeleteMaintenance(),
                 'delete_equipment' => $this->role === UserRole::Manager,
                 'manage_sites' => $this->role->canManageSites(),
-                'manage_users' => $this->role === UserRole::Manager,
+                'manage_users' => $this->role->canManageUsers(),
+                'manage_manager_accounts' => $this->role->canManageManagerAccounts(),
             ],
         ];
     }

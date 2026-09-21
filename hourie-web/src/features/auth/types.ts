@@ -16,6 +16,7 @@ export type AuthenticatedUser = {
     delete_equipment: boolean
     manage_sites: boolean
     manage_users: boolean
+    manage_manager_accounts: boolean
   }
 }
 
