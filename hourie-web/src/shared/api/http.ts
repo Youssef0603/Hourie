@@ -17,6 +17,8 @@ export class ApiError extends Error {
   }
 }
 
+export const unauthorizedEvent = 'hourie:unauthorized'
+
 function readCookie(name: string): string | null {
   const prefix = `${name}=`
   const cookie = document.cookie
@@ -72,6 +74,10 @@ export async function apiRequest<T>(
   const payload = (await response.json().catch(() => ({}))) as T & ErrorPayload
 
   if (!response.ok) {
+    if (response.status === 401 && !path.endsWith('/auth/login')) {
+      window.dispatchEvent(new CustomEvent(unauthorizedEvent))
+    }
+
     throw new ApiError(
       payload.message ?? `Request failed with status ${response.status}.`,
       response.status,

@@ -18,7 +18,8 @@ class StoreSiteRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255', 'unique:projects,name'],
-            'status' => ['required', Rule::exists('catalog_options', 'code')->where('group', 'project_status')],
+            'status' => ['required', Rule::exists('catalog_options', 'code')->where(fn ($query) => $query->where('group', 'project_status')->where('is_active', true))],
+            'responsible_employee_id' => ['required', 'integer', Rule::exists('employees', 'id')->where('is_active', true)],
             'address' => ['nullable', 'string', 'max:255'],
             'start_date' => ['nullable', 'date'],
             'expected_end_date' => ['nullable', 'date', 'after_or_equal:start_date'],

@@ -37,6 +37,16 @@ export async function saveCatalogOption(payload: Omit<CatalogOption, 'id'>, id?:
   })).data
 }
 
+export async function deleteCatalogOption(id: number): Promise<void> {
+  await initializeCsrfProtection()
+  await apiRequest<void>(`/api/v1/catalog-options/${id}`, { method: 'DELETE' })
+}
+
+export async function deleteEquipment(id: number): Promise<void> {
+  await initializeCsrfProtection()
+  await apiRequest<void>(`/api/v1/equipment/${id}`, { method: 'DELETE' })
+}
+
 export async function saveMaintenance(
   equipmentId: number,
   payload: MaintenancePayload,

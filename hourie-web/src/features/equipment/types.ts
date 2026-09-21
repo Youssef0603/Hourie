@@ -3,8 +3,8 @@ export type NamedReference = {
   name: string
 }
 
-export type EquipmentCondition = 'functional' | 'defective' | 'beyond_repair'
-export type OperationalSituation = 'in_use' | 'in_reserve' | 'under_maintenance' | 'out_of_service'
+export type EquipmentCondition = string
+export type OperationalSituation = string
 
 export type CatalogOption = {
   id: number
@@ -35,9 +35,11 @@ export type EquipmentSummary = {
   }) | null
   current_project_assignment: {
     id: number
-    project: NamedReference
+    project: NamedReference & { responsible: NamedReference | null }
   } | null
   custodian: NamedReference | null
+  responsible: NamedReference | null
+  responsible_source: 'site' | 'generator' | null
   power: {
     apparent_kva: string | null
     active_kw: string | null
@@ -121,7 +123,7 @@ export type EquipmentImage = {
 
 export type EquipmentChange = {
   id: number
-  type: 'initial_import' | 'identity_updated' | 'specifications_updated' | 'condition_changed' | 'operational_situation_changed' | 'location_changed' | 'custodian_changed' | 'project_assignment_changed' | 'maintenance_recorded' | 'maintenance_updated' | 'maintenance_deleted' | 'image_added' | 'image_deleted'
+  type: 'initial_import' | 'identity_updated' | 'specifications_updated' | 'condition_changed' | 'operational_situation_changed' | 'location_changed' | 'custodian_changed' | 'project_assignment_changed' | 'maintenance_recorded' | 'maintenance_updated' | 'maintenance_deleted' | 'image_added' | 'image_deleted' | 'archived'
   source: 'import' | 'manual' | 'transfer' | 'maintenance'
   actor: NamedReference | null
   occurred_at: string
@@ -186,7 +188,7 @@ export type EquipmentImportResult = {
 
 export type EquipmentFilterOptions = {
   categories: Array<NamedReference & { code: string }>
-  projects: Array<NamedReference & { code: string | null }>
+  projects: Array<NamedReference & { code: string | null; responsible: NamedReference | null }>
   locations: Array<NamedReference & {
     project_id: number | null
     parent_id: number | null

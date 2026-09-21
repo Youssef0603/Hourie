@@ -17,4 +17,5 @@ enum EquipmentChangeType: string
     case MaintenanceDeleted = 'maintenance_deleted';
     case ImageAdded = 'image_added';
     case ImageDeleted = 'image_deleted';
+    case Archived = 'archived';
 }

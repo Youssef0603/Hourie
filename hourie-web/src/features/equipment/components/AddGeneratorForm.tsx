@@ -16,10 +16,12 @@ type AddGeneratorFormProps = {
 }
 
 export function AddGeneratorForm({ options, initialProjectId, onCreated, onCancel }: AddGeneratorFormProps) {
+  const defaultCondition = catalogOptions(options.catalogs, 'equipment_condition')[0]?.code ?? ''
   const [form, setForm] = useState({
-    brand: '', model: '', serial_number: '', purchase_year: '', condition: 'functional',
+    brand: '', model: '', serial_number: '', purchase_year: '', condition: defaultCondition,
     operational_situation: '', project_id: initialProjectId?.toString() ?? '', current_location_id: '', custodian_employee_id: '',
-    apparent_power_kva: '', active_power_kw: '', fuel_type: '', observations: '',
+    apparent_power_kva: '', active_power_kw: '', phases: '', voltage_rating: '', frequency_hz: '',
+    current_rating: '', fuel_type: '', tank_capacity_litres: '', current_engine_hours: '', observations: '',
   })
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -30,6 +32,7 @@ export function AddGeneratorForm({ options, initialProjectId, onCreated, onCance
     location.parent_id !== null
     && (form.project_id === '' || String(location.project_id) === form.project_id),
   )
+  const selectedProject = options.projects.find((project) => String(project.id) === form.project_id)
 
   function update(name: keyof typeof form, value: string) {
     setForm((current) => ({ ...current, [name]: value }))
@@ -62,8 +65,9 @@ export function AddGeneratorForm({ options, initialProjectId, onCreated, onCance
         custodian_employee_id: number(form.custodian_employee_id), observations: text(form.observations),
         generator_details: {
           apparent_power_kva: number(form.apparent_power_kva), active_power_kw: number(form.active_power_kw),
-          phases: null, voltage_rating: null, frequency_hz: null, current_rating: null,
-          fuel_type: text(form.fuel_type), tank_capacity_litres: null, current_engine_hours: null,
+          phases: text(form.phases), voltage_rating: text(form.voltage_rating), frequency_hz: number(form.frequency_hz),
+          current_rating: text(form.current_rating), fuel_type: text(form.fuel_type),
+          tank_capacity_litres: number(form.tank_capacity_litres), current_engine_hours: number(form.current_engine_hours),
         },
       })
       savedEquipment = equipment
@@ -89,12 +93,18 @@ export function AddGeneratorForm({ options, initialProjectId, onCreated, onCance
         <label><span>{fr.equipment.purchaseYear}</span><input type="number" min="1900" max="2100" value={form.purchase_year} onChange={(event) => update('purchase_year', event.target.value)} /></label>
         <label><span>{fr.equipment.apparentPower}</span><input type="number" min="0" step="0.01" value={form.apparent_power_kva} onChange={(event) => update('apparent_power_kva', event.target.value)} /></label>
         <label><span>{fr.equipment.activePower}</span><input type="number" min="0" step="0.01" value={form.active_power_kw} onChange={(event) => update('active_power_kw', event.target.value)} /></label>
-        <label><span>{fr.equipment.fuel}</span><select value={form.fuel_type} onChange={(event) => update('fuel_type', event.target.value)}><option value="">{fr.common.toComplete}</option>{options.fuel_types.map((fuelType) => <option key={fuelType} value={fuelType}>{fuelType}</option>)}</select></label>
+        <label><span>{fr.equipment.phases}</span><input value={form.phases} onChange={(event) => update('phases', event.target.value)} /></label>
+        <label><span>{fr.equipment.voltage}</span><input value={form.voltage_rating} onChange={(event) => update('voltage_rating', event.target.value)} /></label>
+        <label><span>{fr.equipment.frequency}</span><input type="number" min="0" step="0.01" value={form.frequency_hz} onChange={(event) => update('frequency_hz', event.target.value)} /></label>
+        <label><span>{fr.equipment.current}</span><input value={form.current_rating} onChange={(event) => update('current_rating', event.target.value)} /></label>
+        <label><span>{fr.equipment.fuel}</span><select value={form.fuel_type} onChange={(event) => update('fuel_type', event.target.value)}><option value="">{fr.common.toComplete}</option>{catalogOptions(options.catalogs, 'fuel_type').map((option) => <option key={option.code} value={option.code}>{catalogLabel(options.catalogs, 'fuel_type', option.code)}</option>)}</select></label>
+        <label><span>{fr.equipment.tank}</span><input type="number" min="0" step="0.01" value={form.tank_capacity_litres} onChange={(event) => update('tank_capacity_litres', event.target.value)} /></label>
+        <label className="field-wide"><span>{fr.equipment.engineHours}</span><input type="number" min="0" step="0.01" value={form.current_engine_hours} onChange={(event) => update('current_engine_hours', event.target.value)} /></label>
         <label><span>{fr.equipment.condition}</span><select value={form.condition} onChange={(event) => update('condition', event.target.value)}>{catalogOptions(options.catalogs, 'equipment_condition').map((option) => <option key={option.code} value={option.code}>{catalogLabel(options.catalogs, 'equipment_condition', option.code)}</option>)}</select></label>
         <label><span>{fr.equipment.situation}</span><select value={form.operational_situation} onChange={(event) => update('operational_situation', event.target.value)}><option value="">{fr.common.toComplete}</option>{catalogOptions(options.catalogs, 'operational_situation').map((option) => <option key={option.code} value={option.code}>{catalogLabel(options.catalogs, 'operational_situation', option.code)}</option>)}</select></label>
         <label><span>{fr.equipment.project}</span><select value={form.project_id} onChange={(event) => updateProject(event.target.value)}><option value="">{fr.common.toComplete}</option>{options.projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}</select></label>
         <label><span>{fr.equipment.location}</span><select value={form.current_location_id} onChange={(event) => update('current_location_id', event.target.value)}><option value="">{fr.common.toComplete}</option>{physicalLocationOptions.map((location) => <option key={location.id} value={location.id}>{form.project_id === '' ? locationOptionLabel(location) : location.name}</option>)}</select></label>
-        <label className="field-wide"><span>{fr.equipment.custodian}</span><select value={form.custodian_employee_id} onChange={(event) => update('custodian_employee_id', event.target.value)}><option value="">{fr.common.toComplete}</option>{options.employees.map((employee) => <option key={employee.id} value={employee.id}>{employee.name}</option>)}</select></label>
+        <label className="field-wide"><span>{fr.equipment.custodian}</span><select value={form.custodian_employee_id} onChange={(event) => update('custodian_employee_id', event.target.value)}><option value="">{selectedProject?.responsible ? fr.equipment.useSiteResponsible(selectedProject.responsible.name) : fr.equipment.noSiteResponsible}</option>{options.employees.map((employee) => <option key={employee.id} value={employee.id}>{employee.name}</option>)}</select></label>
         <label className="field-wide"><span>{fr.equipment.observations}</span><textarea rows={3} value={form.observations} onChange={(event) => update('observations', event.target.value)} /></label>
         <div className="generator-photo-field field-wide"><span>{fr.images.optionalTitle}</span><input ref={photoInput} hidden multiple accept="image/jpeg,image/png,image/webp" type="file" onChange={(event) => setPhotos(Array.from(event.target.files ?? []))} /><button type="button" onClick={() => photoInput.current?.click()}><ActionIcon name="upload" /><span>{photos.length > 0 ? fr.images.selected(photos.length) : fr.images.addOnCreate}</span><small>{fr.images.formats}</small></button>{photos.length > 0 && <div className="selected-photo-list">{photos.map((photo) => <span key={`${photo.name}-${photo.lastModified}`}>{photo.name}</span>)}</div>}</div>
       </div>

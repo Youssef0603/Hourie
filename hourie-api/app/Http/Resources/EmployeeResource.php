@@ -16,9 +16,13 @@ class EmployeeResource extends JsonResource
             'name' => $this->name,
             'phone_number' => $this->phone_number,
             'is_active' => $this->is_active,
-            'equipment_in_custody_count' => $this->whenCounted('equipmentInCustody'),
+            'equipment_in_custody_count' => $this->when(
+                array_key_exists('equipment_in_custody_count', $this->resource->getAttributes()),
+                fn () => (int) $this->equipment_in_custody_count,
+            ),
             'user' => $this->whenLoaded('user', fn () => $this->user === null ? null : [
                 'id' => $this->user->id,
+                'username' => $this->user->username,
                 'email' => $this->user->email,
                 'role' => $this->user->role->value,
             ]),

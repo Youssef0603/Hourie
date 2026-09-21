@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api\V1\Equipment;
 use App\Actions\Equipment\CreateEquipment;
 use App\Actions\Equipment\ListEquipment;
 use App\Actions\Equipment\UpdateEquipment;
+use App\Enums\EquipmentChangeSource;
+use App\Enums\EquipmentChangeType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Equipment\ListEquipmentRequest;
 use App\Http\Requests\Equipment\StoreEquipmentRequest;
@@ -12,8 +14,12 @@ use App\Http\Requests\Equipment\UpdateEquipmentRequest;
 use App\Http\Resources\Equipment\EquipmentResource;
 use App\Http\Resources\Equipment\EquipmentSummaryResource;
 use App\Models\Equipment;
+use App\Models\EquipmentChange;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 class EquipmentController extends Controller
@@ -45,7 +51,7 @@ class EquipmentController extends Controller
             'category',
             'currentLocation.parent',
             'currentLocation.project',
-            'currentProjectAssignment.project',
+            'currentProjectAssignment.project.responsible:id,name',
             'custodian',
             'generatorDetails',
             'maintenances.technician',
@@ -64,5 +70,32 @@ class EquipmentController extends Controller
         $equipment = $updateEquipment->handle($equipment, $request->validated(), $request->user());
 
         return new EquipmentResource($this->loadDetails($equipment));
+    }
+
+    public function destroy(Request $request, Equipment $equipment): Response
+    {
+        Gate::authorize('delete', $equipment);
+
+        DB::transaction(function () use ($equipment, $request): void {
+            $previousValues = $equipment->only(['is_active', 'current_location_id', 'custodian_employee_id']);
+            $equipment->currentProjectAssignment()->update(['ended_at' => now()]);
+            $equipment->update([
+                'is_active' => false,
+                'current_location_id' => null,
+                'custodian_employee_id' => null,
+            ]);
+
+            EquipmentChange::query()->create([
+                'equipment_id' => $equipment->id,
+                'actor_user_id' => $request->user()->id,
+                'change_type' => EquipmentChangeType::Archived,
+                'source' => EquipmentChangeSource::Manual,
+                'previous_values' => $previousValues,
+                'new_values' => ['is_active' => false],
+                'occurred_at' => now(),
+            ]);
+        });
+
+        return response()->noContent();
     }
 }

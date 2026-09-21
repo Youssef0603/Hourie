@@ -26,7 +26,7 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'string', 'email', 'max:255'],
+            'login' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string'],
             'remember' => ['sometimes', 'boolean'],
         ];
@@ -39,22 +39,26 @@ class LoginRequest extends FormRequest
      */
     public function authenticate(): void
     {
+        $login = $this->string('login')->toString();
+        $loginField = str_contains($login, '@') ? 'email' : 'username';
         $authenticated = Auth::guard('web')->attempt(
-            $this->safe()->only(['email', 'password']),
+            [$loginField => $login, 'is_active' => true, 'password' => $this->string('password')->toString()],
             $this->boolean('remember'),
         );
 
         if (! $authenticated) {
             throw ValidationException::withMessages([
-                'email' => [__('auth.failed')],
+                'login' => [__('auth.failed')],
             ]);
         }
     }
 
     protected function prepareForValidation(): void
     {
+        $login = $this->string('login')->trim()->toString();
+
         $this->merge([
-            'email' => Str::lower($this->string('email')->trim()->toString()),
+            'login' => Str::lower($login !== '' ? $login : $this->string('email')->trim()->toString()),
         ]);
     }
 }

@@ -1,13 +1,17 @@
 <?php
 
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 uses(LazilyRefreshDatabase::class);
 
 it('authenticates a valid user and returns the current user', function () {
+    CarbonImmutable::setTestNow('2026-09-20 12:00:00');
     $user = User::factory()->create([
+        'username' => 'manager',
         'email' => 'manager@hourie.test',
         'password' => Hash::make('correct-password'),
     ]);
@@ -26,11 +30,60 @@ it('authenticates a valid user and returns the current user', function () {
             'data' => [
                 'id' => $user->id,
                 'name' => $user->name,
+                'username' => 'manager',
                 'email' => 'manager@hourie.test',
             ],
         ])
         ->assertJsonMissingPath('data.password');
     $this->assertAuthenticatedAs($user, 'web');
+
+    $rememberCookie = $response->getCookie(Auth::guard('web')->getRecallerName());
+
+    expect($rememberCookie)->not->toBeNull()
+        ->and($rememberCookie?->getExpiresTime())
+        ->toBe(now()->addMinutes(43200)->getTimestamp());
+
+    CarbonImmutable::setTestNow();
+});
+
+it('authenticates a user without an email by username', function () {
+    $user = User::factory()->create([
+        'username' => 'chef.chantier',
+        'email' => null,
+        'password' => Hash::make('correct-password'),
+    ]);
+
+    $this
+        ->withHeader('Origin', 'http://localhost:5173')
+        ->postJson('/api/v1/auth/login', [
+            'login' => ' CHEF.CHANTIER ',
+            'password' => 'correct-password',
+        ])
+        ->assertOk()
+        ->assertJsonPath('data.id', $user->id)
+        ->assertJsonPath('data.username', 'chef.chantier')
+        ->assertJsonPath('data.email', null);
+
+    $this->assertAuthenticatedAs($user, 'web');
+});
+
+it('rejects login for a deactivated user', function () {
+    User::factory()->create([
+        'username' => 'ancien.utilisateur',
+        'is_active' => false,
+        'password' => Hash::make('correct-password'),
+    ]);
+
+    $this
+        ->withHeader('Origin', 'http://localhost:5173')
+        ->postJson('/api/v1/auth/login', [
+            'login' => 'ancien.utilisateur',
+            'password' => 'correct-password',
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['login']);
+
+    $this->assertGuest('web');
 });
 
 it('returns 422 with a French message for invalid credentials', function () {
@@ -42,14 +95,14 @@ it('returns 422 with a French message for invalid credentials', function () {
     $response = $this
         ->withHeader('Origin', 'http://localhost:5173')
         ->postJson('/api/v1/auth/login', [
-            'email' => 'manager@hourie.test',
+            'login' => 'manager',
             'password' => 'incorrect-password',
         ]);
 
     $response
         ->assertUnprocessable()
-        ->assertJsonValidationErrors(['email'])
-        ->assertJsonPath('errors.email.0', 'Les identifiants fournis sont incorrects.');
+        ->assertJsonValidationErrors(['login'])
+        ->assertJsonPath('errors.login.0', 'Les identifiants fournis sont incorrects.');
     $this->assertGuest('web');
 });
 
@@ -60,8 +113,8 @@ it('returns 422 with French validation messages when credentials are missing', f
 
     $response
         ->assertUnprocessable()
-        ->assertJsonValidationErrors(['email', 'password'])
-        ->assertJsonPath('errors.email.0', 'Le champ adresse e-mail est obligatoire.')
+        ->assertJsonValidationErrors(['login', 'password'])
+        ->assertJsonPath('errors.login.0', 'Le champ nom d’utilisateur ou adresse e-mail est obligatoire.')
         ->assertJsonPath('errors.password.0', 'Le champ mot de passe est obligatoire.');
 });
 
@@ -73,16 +126,16 @@ it('returns Arabic validation messages when Arabic is requested', function () {
         ])
         ->postJson('/api/v1/auth/login')
         ->assertUnprocessable()
-        ->assertJsonPath('errors.email.0', 'حقل البريد الإلكتروني مطلوب.')
+        ->assertJsonPath('errors.login.0', 'حقل اسم المستخدم أو البريد الإلكتروني مطلوب.')
         ->assertJsonPath('errors.password.0', 'حقل كلمة المرور مطلوب.');
 });
 
-it('returns 429 after five login attempts for the same email and address', function () {
+it('returns 429 after five login attempts for the same username and address', function () {
     foreach (range(1, 5) as $attempt) {
         $this
             ->withHeader('Origin', 'http://localhost:5173')
             ->postJson('/api/v1/auth/login', [
-                'email' => 'unknown@hourie.test',
+                'login' => 'unknown',
                 'password' => 'incorrect-password',
             ])
             ->assertUnprocessable();
@@ -91,7 +144,7 @@ it('returns 429 after five login attempts for the same email and address', funct
     $this
         ->withHeader('Origin', 'http://localhost:5173')
         ->postJson('/api/v1/auth/login', [
-            'email' => 'unknown@hourie.test',
+            'login' => 'unknown',
             'password' => 'incorrect-password',
         ])
         ->assertTooManyRequests();
@@ -112,6 +165,7 @@ it('returns the authenticated current user', function () {
             'data' => [
                 'id' => $user->id,
                 'name' => $user->name,
+                'username' => $user->username,
                 'email' => $user->email,
             ],
         ]);

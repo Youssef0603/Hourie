@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { activateLanguage, fr, type Language } from '../i18n/fr'
-import { ApiError } from '../shared/api/http'
+import { ApiError, unauthorizedEvent } from '../shared/api/http'
 import { getCurrentUser, logout } from '../features/auth/api'
 import { LoginPage } from '../features/auth/pages/LoginPage'
+import { PasswordChangePage } from '../features/auth/pages/PasswordChangePage'
 import type { AuthenticatedUser } from '../features/auth/types'
 import { EquipmentPage } from '../features/equipment/pages/EquipmentPage'
 import { LoadingSpinner } from '../shared/components/LoadingSpinner'
@@ -56,6 +57,16 @@ function App() {
     }
   }, [])
 
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      setLogoutError(null)
+      setSession({ status: 'guest' })
+    }
+
+    window.addEventListener(unauthorizedEvent, handleUnauthorized)
+    return () => window.removeEventListener(unauthorizedEvent, handleUnauthorized)
+  }, [])
+
   async function handleLogout() {
     setIsLoggingOut(true)
     setLogoutError(null)
@@ -91,6 +102,20 @@ function App() {
         onAuthenticated={(user) =>
           setSession({ status: 'authenticated', user })
         }
+      />
+    )
+  }
+
+  if (session.user.must_change_password) {
+    return (
+      <PasswordChangePage
+        user={session.user}
+        language={language}
+        isLoggingOut={isLoggingOut}
+        logoutError={logoutError}
+        onChanged={(user) => setSession({ status: 'authenticated', user })}
+        onLogout={handleLogout}
+        onToggleLanguage={toggleLanguage}
       />
     )
   }

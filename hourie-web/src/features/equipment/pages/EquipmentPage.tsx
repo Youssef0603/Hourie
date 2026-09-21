@@ -7,6 +7,8 @@ import { MaintenanceSection } from '../components/MaintenanceSection'
 import { EquipmentImages } from '../components/EquipmentImages'
 import { CatalogsPage } from '../components/CatalogsPage'
 import { PeoplePage, SitesPage } from '../../directory/pages/DirectoryPages'
+import { SiteEditForm } from '../../directory/components/SiteEditForm'
+import { deleteSite } from '../../directory/api'
 import type { Site } from '../../directory/types'
 import { fr, type Language } from '../../../i18n/fr'
 import { LanguageSwitch } from '../../../shared/components/LanguageSwitch'
@@ -16,6 +18,7 @@ import { Modal } from '../../../shared/components/Modal'
 import { LoadingSpinner } from '../../../shared/components/LoadingSpinner'
 import hourieLogo from '../../../assets/hourie-logo.svg'
 import {
+  deleteEquipment,
   getEquipment,
   getEquipmentFilterOptions,
   getEquipmentItem,
@@ -130,6 +133,7 @@ export function EquipmentPage({
   const [selected, setSelected] = useState<Equipment | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isLoadingDetail, setIsLoadingDetail] = useState(false)
+  const [isEditingEquipment, setIsEditingEquipment] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [activeSection, setActiveSection] = useState<'generators' | 'sites' | 'people' | 'catalogs'>('generators')
   const [showAddGenerator, setShowAddGenerator] = useState(false)
@@ -137,6 +141,7 @@ export function EquipmentPage({
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [showFilterDrawer, setShowFilterDrawer] = useState(false)
   const [showHistory, setShowHistory] = useState<'equipment' | 'site' | null>(null)
+  const [showEditSite, setShowEditSite] = useState(false)
   const [siteContext, setSiteContext] = useState<Site | null>(null)
   const [refreshToken, setRefreshToken] = useState(0)
 
@@ -226,6 +231,7 @@ export function EquipmentPage({
 
   async function openEquipment(id: number) {
     setIsLoadingDetail(true)
+    setIsEditingEquipment(false)
     setSelected(null)
     setError(null)
 
@@ -261,6 +267,7 @@ export function EquipmentPage({
 
   function closeSiteInventory() {
     setShowHistory(null)
+    setShowEditSite(false)
     setSiteContext(null)
     setSearch('')
     setIsLoading(true)
@@ -268,6 +275,30 @@ export function EquipmentPage({
     // Always create a new filter object. Reusing `initialFilters` can make
     // React skip the state change, leaving `isLoading` stuck without a request.
     setFilters({ ...initialFilters })
+  }
+
+  async function removeSelectedEquipment() {
+    if (!selected || !window.confirm(fr.equipment.deleteConfirmation)) return
+
+    try {
+      await deleteEquipment(selected.id)
+      setSelected(null)
+      refreshInventory()
+    } catch {
+      setError(fr.common.deleteError)
+    }
+  }
+
+  async function removeCurrentSite() {
+    if (!siteContext || !window.confirm(fr.directory.deleteSiteConfirmation)) return
+
+    try {
+      await deleteSite(siteContext.id)
+      closeSiteInventory()
+      setActiveSection('sites')
+    } catch {
+      setError(fr.common.deleteError)
+    }
   }
 
   return (
@@ -329,6 +360,8 @@ export function EquipmentPage({
           </div>
           <div className="heading-actions">
             {isSiteView && <button className="table-refresh-button" type="button" onClick={() => setShowHistory('site')}><ActionIcon name="history" /><span>{fr.audit.button}</span></button>}
+            {isSiteView && user.permissions.manage_sites && <button className="table-refresh-button" type="button" onClick={() => setShowEditSite(true)}><ActionIcon name="edit" /><span>{fr.common.edit}</span></button>}
+            {isSiteView && user.permissions.manage_sites && <button className="danger-button" type="button" onClick={removeCurrentSite}><ActionIcon name="delete" /><span>{fr.directory.deleteSite}</span></button>}
             {!isSiteView && user.permissions.manage_equipment && <button className="table-refresh-button" type="button" onClick={() => setShowImportGenerator(true)}><ActionIcon name="upload" /><span>{fr.equipment.importExcel}</span></button>}
             {user.permissions.manage_equipment && <button className="primary-button page-action compact-action" type="button" onClick={() => setShowAddGenerator((value) => !value)}><ActionIcon name={showAddGenerator ? 'close' : 'add'} /><span>{showAddGenerator ? fr.common.close : fr.equipment.addGenerator}</span></button>}
             <div className="inventory-count" aria-live="polite">
@@ -346,6 +379,7 @@ export function EquipmentPage({
 
         {showAddGenerator && options && <Modal title={fr.equipment.addGenerator} size="wide" onClose={() => setShowAddGenerator(false)}><AddGeneratorForm options={options} initialProjectId={siteContext?.id} onCancel={() => setShowAddGenerator(false)} onCreated={(equipment) => { setShowAddGenerator(false); setSelected(equipment); setFilters((current) => ({ ...current, page: 1 })); refreshInventory() }} /></Modal>}
         {showImportGenerator && <Modal title={fr.equipment.importTitle} onClose={() => setShowImportGenerator(false)}><ImportGeneratorForm onClose={() => setShowImportGenerator(false)} onImported={() => { refreshInventory(); refreshFilterOptions() }} /></Modal>}
+        {showEditSite && siteContext && <Modal title={fr.directory.editSite} size="wide" onClose={() => setShowEditSite(false)}><SiteEditForm site={siteContext} catalogs={options?.catalogs} employees={options?.employees ?? []} onCancel={() => setShowEditSite(false)} onSaved={(site) => { setSiteContext(site); setShowEditSite(false); refreshFilterOptions(); refreshInventory() }} /></Modal>}
 
         <section className="inventory-panel" aria-label={fr.equipment.title}>
           <div className="filter-bar">
@@ -421,7 +455,7 @@ export function EquipmentPage({
                     </td>
                     <td>{measurement(equipment.power?.apparent_kva, 'kVA')}</td>
                     <td>{measurement(equipment.power?.active_kw, 'kW')}</td>
-                    <td>{equipment.fuel_type ?? fr.common.notProvided}</td>
+                    <td>{equipment.fuel_type ? catalogLabel(options?.catalogs, 'fuel_type', equipment.fuel_type) : fr.common.notProvided}</td>
                     <td>
                       <span className={`status-badge status-${equipment.condition ?? 'unknown'}`} style={catalogBadgeStyle(options?.catalogs, 'equipment_condition', equipment.condition)}>
                         {equipment.condition ? catalogLabel(options?.catalogs, 'equipment_condition', equipment.condition) : fr.common.notProvided}
@@ -474,7 +508,7 @@ export function EquipmentPage({
           onProjectChange={updateProjectFilter}
           onClose={() => setShowFilterDrawer(false)}
         />}
-      </main> : activeSection === 'sites' ? <SitesPage canAdd={user.permissions.manage_sites} catalogs={options?.catalogs} onOpenSite={openSiteInventory} /> : activeSection === 'catalogs' ? <CatalogsPage onChanged={refreshFilterOptions} /> : <PeoplePage canAdd={user.permissions.manage_users} />}
+      </main> : activeSection === 'sites' ? <SitesPage canAdd={user.permissions.manage_sites} catalogs={options?.catalogs} employees={options?.employees} onOpenSite={openSiteInventory} /> : activeSection === 'catalogs' ? <CatalogsPage onChanged={refreshFilterOptions} /> : <PeoplePage canAdd={user.permissions.manage_users} catalogs={options?.catalogs} />}
       </div>
 
       {(activeSection === 'generators' || isSiteView) && (selected || isLoadingDetail) && (
@@ -500,24 +534,28 @@ export function EquipmentPage({
                   <button type="button" aria-label={fr.common.close} onClick={() => setSelected(null)}><ActionIcon name="close" /></button>
                 </header>
                 <div className="detail-content">
-                  {user.permissions.manage_equipment && (
-                    <EquipmentEditForm
-                      equipment={selected}
-                      employees={options?.employees ?? []}
-                      fuelTypes={options?.fuel_types ?? []}
-                      projects={options?.projects ?? []}
-                      locations={options?.locations ?? []}
-                      catalogs={options?.catalogs ?? []}
-                      onChanged={(equipment) => { setSelected(equipment); refreshInventory() }}
-                    />
-                  )}
-                  <button className="equipment-history-button" type="button" onClick={() => setShowHistory('equipment')}><ActionIcon name="history" />{fr.audit.button}</button>
+                  <div className={`detail-primary-actions${isEditingEquipment ? ' editing' : ''}`}>
+                    {user.permissions.manage_equipment && (
+                      <EquipmentEditForm
+                        key={selected.id}
+                        equipment={selected}
+                        employees={options?.employees ?? []}
+                        projects={options?.projects ?? []}
+                        locations={options?.locations ?? []}
+                        catalogs={options?.catalogs ?? []}
+                        onEditingChange={setIsEditingEquipment}
+                        onChanged={(equipment) => { setSelected(equipment); refreshInventory() }}
+                      />
+                    )}
+                    {!isEditingEquipment && user.permissions.delete_equipment && <button className="danger-button detail-delete-button" type="button" onClick={removeSelectedEquipment}><ActionIcon name="delete" />{fr.equipment.deleteGenerator}</button>}
+                    {!isEditingEquipment && <button className="equipment-history-button" type="button" onClick={() => setShowHistory('equipment')}><ActionIcon name="history" />{fr.audit.button}</button>}
+                  </div>
                   <section>
                     <h3>{fr.equipment.assignment}</h3>
                     <dl>
                       <div><dt>{fr.equipment.project}</dt><dd>{selected.current_project_assignment?.project.name ?? fr.common.notProvided}</dd></div>
                       <div><dt>{fr.equipment.location}</dt><dd>{locationName(selected)}</dd></div>
-                      <div><dt>{fr.equipment.custodian}</dt><dd>{selected.custodian?.name ?? fr.common.notProvided}</dd></div>
+                      <div><dt>{fr.equipment.custodian}</dt><dd>{selected.responsible ? <>{selected.responsible.name}{selected.responsible_source === 'site' && <small className="responsibility-source">{fr.equipment.inheritedFromSite}</small>}</> : fr.common.notProvided}</dd></div>
                     </dl>
                   </section>
                   <section>
@@ -539,7 +577,7 @@ export function EquipmentPage({
                         <div><dt>{fr.equipment.frequency}</dt><dd>{displayedValue(selected.generator_details.frequency_hz)}</dd></div>
                         <div><dt>{fr.equipment.current}</dt><dd>{displayedValue(selected.generator_details.current_rating)}</dd></div>
                         <div><dt>{fr.equipment.phases}</dt><dd>{displayedValue(selected.generator_details.phases)}</dd></div>
-                        <div><dt>{fr.equipment.fuel}</dt><dd>{displayedValue(selected.generator_details.fuel_type)}</dd></div>
+                        <div><dt>{fr.equipment.fuel}</dt><dd>{selected.generator_details.fuel_type ? catalogLabel(options?.catalogs, 'fuel_type', selected.generator_details.fuel_type) : fr.common.notProvided}</dd></div>
                         <div><dt>{fr.equipment.tank}</dt><dd>{displayedValue(selected.generator_details.tank_capacity_litres)}</dd></div>
                         <div><dt>{fr.equipment.engineHours}</dt><dd>{displayedValue(selected.generator_details.current_engine_hours)}</dd></div>
                       </dl>
@@ -549,7 +587,7 @@ export function EquipmentPage({
                     <h3>{fr.equipment.observations}</h3>
                     <p className="observations">{displayedValue(selected.observations)}</p>
                   </section>
-                  <EquipmentImages equipment={selected} canManage={user.permissions.manage_equipment} onChanged={async () => { setSelected(await getEquipmentItem(selected.id)) }} />
+                  <EquipmentImages equipment={selected} canManage={user.permissions.manage_equipment && isEditingEquipment} onChanged={async () => { setSelected(await getEquipmentItem(selected.id)) }} />
                   <MaintenanceSection
                     equipment={selected}
                     employees={options?.employees ?? []}
@@ -634,7 +672,7 @@ function AdvancedEquipmentFilters({ filters, options, onChange }: AdvancedEquipm
         <label><span>{fr.equipment.phases}</span><input {...field('phases')} /></label>
         <label><span>{fr.equipment.voltage}</span><input {...field('voltage_rating')} /></label>
         <label><span>{fr.equipment.current}</span><input {...field('current_rating')} /></label>
-        <label><span>{fr.equipment.fuel}</span><select value={filters.fuel_type} onChange={(event) => onChange('fuel_type', event.target.value)}><option value="">{fr.common.all}</option>{options?.fuel_types.map((fuelType) => <option key={fuelType} value={fuelType}>{fuelType}</option>)}</select></label>
+        <label><span>{fr.equipment.fuel}</span><select value={filters.fuel_type} onChange={(event) => onChange('fuel_type', event.target.value)}><option value="">{fr.common.all}</option>{catalogOptions(options?.catalogs, 'fuel_type').map((option) => <option key={option.code} value={option.code}>{catalogLabel(options?.catalogs, 'fuel_type', option.code)}</option>)}</select></label>
         <label><span>{fr.equipment.engineHoursMin}</span><input type="number" min="0" step="0.01" {...field('engine_hours_min')} /></label>
         <label><span>{fr.equipment.engineHoursMax}</span><input type="number" min="0" step="0.01" {...field('engine_hours_max')} /></label>
         <label><span>{fr.equipment.tankMin}</span><input type="number" min="0" step="0.01" {...field('tank_capacity_litres_min')} /></label>

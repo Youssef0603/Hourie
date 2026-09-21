@@ -114,9 +114,14 @@ export function MaintenanceSection({
 }: MaintenanceSectionProps) {
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<number | undefined>()
+  const [expandedIds, setExpandedIds] = useState<Set<number>>(
+    () => new Set(equipment.maintenances[0] ? [equipment.maintenances[0].id] : []),
+  )
   const [form, setForm] = useState<FormState>(emptyForm)
   const [isSaving, setIsSaving] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
+  const maintenanceTypes = catalogOptions(catalogs, 'maintenance_type')
+  const currentTypeIsUnavailable = form.intervention_type !== '' && !maintenanceTypes.some((option) => option.code === form.intervention_type)
 
   function update(name: keyof FormState, fieldValue: string) {
     setForm((current) => ({ ...current, [name]: fieldValue }))
@@ -130,10 +135,20 @@ export function MaintenanceSection({
   }
 
   function startEdit(maintenance: EquipmentMaintenance) {
+    setExpandedIds((current) => new Set(current).add(maintenance.id))
     setEditingId(maintenance.id)
     setForm(maintenanceForm(maintenance))
     setFormError(null)
     setShowForm(true)
+  }
+
+  function toggleMaintenance(maintenanceId: number) {
+    setExpandedIds((current) => {
+      const next = new Set(current)
+      if (next.has(maintenanceId)) next.delete(maintenanceId)
+      else next.add(maintenanceId)
+      return next
+    })
   }
 
   function closeForm() {
@@ -216,7 +231,7 @@ export function MaintenanceSection({
           <div className="maintenance-form-grid">
             <label><span>{fr.maintenance.date}</span><input required type="date" value={form.maintenance_date} onChange={(event) => update('maintenance_date', event.target.value)} /></label>
             <label><span>{fr.equipment.engineHours}</span><input min="0" step="0.01" type="number" value={form.engine_hours} onChange={(event) => update('engine_hours', event.target.value)} placeholder="1250,50" /></label>
-            <label><span>{fr.maintenance.interventionType}</span><select required value={form.intervention_type} onChange={(event) => update('intervention_type', event.target.value)}><option value="">{fr.common.toComplete}</option>{catalogOptions(catalogs, 'maintenance_type').map((option) => <option key={option.code} value={option.code}>{catalogLabel(catalogs, 'maintenance_type', option.code)}</option>)}</select></label>
+            <label><span>{fr.maintenance.interventionType}</span><select required value={form.intervention_type} onChange={(event) => update('intervention_type', event.target.value)}><option value="">{fr.common.toComplete}</option>{currentTypeIsUnavailable && <option value={form.intervention_type}>{catalogLabel(catalogs, 'maintenance_type', form.intervention_type)}</option>}{maintenanceTypes.map((option) => <option key={option.code} value={option.code}>{catalogLabel(catalogs, 'maintenance_type', option.code)}</option>)}</select></label>
             <label>
               <span>{fr.maintenance.oil_changed}</span>
               <select value={form.oil_changed} onChange={(event) => update('oil_changed', event.target.value)}>
@@ -262,30 +277,49 @@ export function MaintenanceSection({
         <p className="maintenance-empty">{fr.maintenance.empty}</p>
       ) : (
         <div className="maintenance-list">
-          {equipment.maintenances.map((maintenance) => (
-            <article className="maintenance-card" key={maintenance.id}>
-              <header>
-                <div><strong>{catalogLabel(catalogs, 'maintenance_type', maintenance.intervention_type)}</strong><span>{maintenance.maintenance_date}</span></div>
-                {canManage && <div className="maintenance-actions"><button type="button" onClick={() => startEdit(maintenance)}><ActionIcon name="edit" />{fr.common.edit}</button>{canDelete && <button type="button" onClick={() => remove(maintenance)}>{fr.common.delete}</button>}</div>}
-              </header>
-              <dl>
-                <div><dt>{fr.equipment.engineHours}</dt><dd>{value(maintenance.engine_hours)}</dd></div>
-                <div><dt>{fr.maintenance.oil_changed}</dt><dd>{answer(maintenance.oil_changed)}</dd></div>
-                <div><dt>{fr.maintenance.oilQuantity}</dt><dd>{maintenance.oil_quantity_litres ? `${maintenance.oil_quantity_litres} L` : fr.common.notProvided}</dd></div>
-                <div><dt>{fr.maintenance.oil_filter_changed}</dt><dd>{answer(maintenance.oil_filter_changed)}</dd></div>
-                <div><dt>{fr.maintenance.fuel_filter_changed}</dt><dd>{answer(maintenance.fuel_filter_changed)}</dd></div>
-                <div><dt>{fr.maintenance.air_filter_changed}</dt><dd>{answer(maintenance.air_filter_changed)}</dd></div>
-                <div><dt>{fr.maintenance.battery}</dt><dd>{answer(maintenance.battery_serviced)}</dd></div>
-                <div><dt>{fr.maintenance.coolant}</dt><dd>{answer(maintenance.coolant_serviced)}</dd></div>
-                <div><dt>{fr.maintenance.technicianName}</dt><dd>{maintenance.technician?.name ?? value(maintenance.technician_name)}</dd></div>
-                {!maintenance.technician && <div><dt>{fr.maintenance.technicianPhone}</dt><dd>{value(maintenance.external_technician_phone)}</dd></div>}
-                <div><dt>{fr.maintenance.nextDue}</dt><dd>{value(maintenance.next_maintenance_date)}</dd></div>
-                <div><dt>{fr.maintenance.cost}</dt><dd>{maintenance.cost ? `${maintenance.cost} FCFA` : fr.common.notProvided}</dd></div>
-              </dl>
-              <p>{value(maintenance.observations)}</p>
-              <small>{fr.maintenance.recordedBy(maintenance.created_by.name)}</small>
-            </article>
-          ))}
+          {equipment.maintenances.map((maintenance) => {
+            const isExpanded = expandedIds.has(maintenance.id)
+            const title = catalogLabel(catalogs, 'maintenance_type', maintenance.intervention_type)
+
+            return (
+              <article className={`maintenance-card${isExpanded ? ' expanded' : ''}`} key={maintenance.id}>
+                <header>
+                  <button
+                    className="maintenance-card-toggle"
+                    type="button"
+                    onClick={() => toggleMaintenance(maintenance.id)}
+                    aria-expanded={isExpanded}
+                    aria-controls={`maintenance-details-${maintenance.id}`}
+                    aria-label={`${isExpanded ? fr.maintenance.hideDetails : fr.maintenance.showDetails} — ${title}`}
+                  >
+                    <span className="maintenance-card-summary"><strong>{title}</strong><span>{maintenance.maintenance_date}</span></span>
+                    <ActionIcon name="expand" />
+                  </button>
+                  {canManage && <div className="maintenance-actions"><button type="button" onClick={() => startEdit(maintenance)}><ActionIcon name="edit" />{fr.common.edit}</button>{canDelete && <button type="button" onClick={() => remove(maintenance)}><ActionIcon name="delete" />{fr.common.delete}</button>}</div>}
+                </header>
+                {isExpanded && (
+                  <div className="maintenance-card-body" id={`maintenance-details-${maintenance.id}`}>
+                    <dl>
+                      <div><dt>{fr.equipment.engineHours}</dt><dd>{value(maintenance.engine_hours)}</dd></div>
+                      <div><dt>{fr.maintenance.oil_changed}</dt><dd>{answer(maintenance.oil_changed)}</dd></div>
+                      <div><dt>{fr.maintenance.oilQuantity}</dt><dd>{maintenance.oil_quantity_litres ? `${maintenance.oil_quantity_litres} L` : fr.common.notProvided}</dd></div>
+                      <div><dt>{fr.maintenance.oil_filter_changed}</dt><dd>{answer(maintenance.oil_filter_changed)}</dd></div>
+                      <div><dt>{fr.maintenance.fuel_filter_changed}</dt><dd>{answer(maintenance.fuel_filter_changed)}</dd></div>
+                      <div><dt>{fr.maintenance.air_filter_changed}</dt><dd>{answer(maintenance.air_filter_changed)}</dd></div>
+                      <div><dt>{fr.maintenance.battery}</dt><dd>{answer(maintenance.battery_serviced)}</dd></div>
+                      <div><dt>{fr.maintenance.coolant}</dt><dd>{answer(maintenance.coolant_serviced)}</dd></div>
+                      <div><dt>{fr.maintenance.technicianName}</dt><dd>{maintenance.technician?.name ?? value(maintenance.technician_name)}</dd></div>
+                      {!maintenance.technician && <div><dt>{fr.maintenance.technicianPhone}</dt><dd>{value(maintenance.external_technician_phone)}</dd></div>}
+                      <div><dt>{fr.maintenance.nextDue}</dt><dd>{value(maintenance.next_maintenance_date)}</dd></div>
+                      <div><dt>{fr.maintenance.cost}</dt><dd>{maintenance.cost ? `${maintenance.cost} FCFA` : fr.common.notProvided}</dd></div>
+                    </dl>
+                    <p>{value(maintenance.observations)}</p>
+                    <small>{fr.maintenance.recordedBy(maintenance.created_by.name)}</small>
+                  </div>
+                )}
+              </article>
+            )
+          })}
         </div>
       )}
     </section>

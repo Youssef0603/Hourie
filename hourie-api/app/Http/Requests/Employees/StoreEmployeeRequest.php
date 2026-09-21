@@ -22,7 +22,7 @@ class StoreEmployeeRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'phone_number' => ['nullable', 'string', 'max:30'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+            'email' => ['nullable', 'string', 'email', 'max:255', 'unique:users,email'],
             'role' => ['required', Rule::enum(UserRole::class)],
             'password' => ['required', 'string', Password::min(12), 'confirmed'],
         ];
@@ -31,7 +31,7 @@ class StoreEmployeeRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->merge([
-            'email' => Str::lower($this->string('email')->trim()->toString()),
+            'email' => Str::lower($this->string('email')->trim()->toString()) ?: null,
         ]);
     }
 }

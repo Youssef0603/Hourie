@@ -10,16 +10,19 @@ uses(LazilyRefreshDatabase::class);
 it('creates an internal user with a securely hashed password', function () {
     $this->artisan('users:create')
         ->expectsQuestion('Nom complet', 'Marie Koné')
-        ->expectsQuestion('Adresse e-mail', ' MARIE@HOURIE.TEST ')
+        ->expectsQuestion('Nom d’utilisateur', ' MARIE.KONE ')
+        ->expectsQuestion('Adresse e-mail (facultative)', '')
         ->expectsQuestion('Mot de passe (12 caractères minimum)', 'a-secure-password')
         ->expectsQuestion('Confirmez le mot de passe', 'a-secure-password')
         ->expectsOutput('Le compte interne a été créé.')
         ->assertSuccessful();
 
-    $user = User::query()->where('email', 'marie@hourie.test')->firstOrFail();
+    $user = User::query()->where('username', 'marie.kone')->firstOrFail();
 
     expect($user->name)->toBe('Marie Koné');
+    expect($user->email)->toBeNull();
     expect(Hash::check('a-secure-password', $user->password))->toBeTrue();
+    expect($user->must_change_password)->toBeTrue();
     expect($user->employee)->not->toBeNull();
     expect($user->employee->name)->toBe('Marie Koné');
 });
@@ -27,7 +30,8 @@ it('creates an internal user with a securely hashed password', function () {
 it('creates a linked employee profile for a generator manager', function () {
     $this->artisan('users:create --role=generator_manager')
         ->expectsQuestion('Nom complet', 'Jean Responsable')
-        ->expectsQuestion('Adresse e-mail', 'jean@hourie.test')
+        ->expectsQuestion('Nom d’utilisateur', 'jean.responsable')
+        ->expectsQuestion('Adresse e-mail (facultative)', 'jean@hourie.test')
         ->expectsQuestion('Mot de passe (12 caractères minimum)', 'a-secure-password')
         ->expectsQuestion('Confirmez le mot de passe', 'a-secure-password')
         ->assertSuccessful();
@@ -39,16 +43,17 @@ it('creates a linked employee profile for a generator manager', function () {
     expect($user->employee->name)->toBe('Jean Responsable');
 });
 
-it('rejects an email address that already belongs to a user', function () {
-    User::factory()->create(['email' => 'marie@hourie.test']);
+it('rejects a username that already belongs to a user', function () {
+    User::factory()->create(['username' => 'marie.kone']);
 
     $this->artisan('users:create')
         ->expectsQuestion('Nom complet', 'Marie Koné')
-        ->expectsQuestion('Adresse e-mail', 'marie@hourie.test')
+        ->expectsQuestion('Nom d’utilisateur', 'marie.kone')
+        ->expectsQuestion('Adresse e-mail (facultative)', '')
         ->expectsQuestion('Mot de passe (12 caractères minimum)', 'a-secure-password')
         ->expectsQuestion('Confirmez le mot de passe', 'a-secure-password')
-        ->expectsOutput('La valeur du champ adresse e-mail est déjà utilisée.')
+        ->expectsOutput('La valeur du champ nom d’utilisateur est déjà utilisée.')
         ->assertFailed();
 
-    expect(User::query()->where('email', 'marie@hourie.test')->count())->toBe(1);
+    expect(User::query()->where('username', 'marie.kone')->count())->toBe(1);
 });

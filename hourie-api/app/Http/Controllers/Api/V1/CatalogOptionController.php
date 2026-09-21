@@ -42,9 +42,11 @@ class CatalogOptionController extends Controller
     /** @return array<string, mixed> */
     private function validated(Request $request, ?CatalogOption $option = null): array
     {
+        $groups = ['equipment_condition', 'operational_situation', 'maintenance_type', 'fuel_type', 'project_status'];
+
         return $request->validate([
-            'group' => ['required', Rule::in(['equipment_condition', 'operational_situation', 'maintenance_type', 'fuel_type', 'project_status'])],
-            'code' => ['required', 'string', 'max:80', 'regex:/^[A-Za-z0-9_-]+$/', Rule::unique('catalog_options')->where('group', $request->input('group'))->ignore($option)],
+            'group' => ['required', Rule::in($option === null ? $groups : [$option->group])],
+            'code' => ['required', 'string', 'max:80', 'regex:/^[A-Za-z0-9_-]+$/', ...($option === null ? [] : [Rule::in([$option->code])]), Rule::unique('catalog_options')->where('group', $request->input('group'))->ignore($option)],
             'label_fr' => ['required', 'string', 'max:255'],
             'label_ar' => ['nullable', 'string', 'max:255'],
             'color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],

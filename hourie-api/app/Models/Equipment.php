@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Database\Factories\EquipmentFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -75,6 +76,22 @@ class Equipment extends Model
     public function images(): HasMany
     {
         return $this->hasMany(EquipmentImage::class)->orderBy('sort_order')->orderBy('id');
+    }
+
+    public function scopeEffectiveResponsible(Builder $query, int $employeeId): Builder
+    {
+        return $query->where(function (Builder $query) use ($employeeId): void {
+            $query
+                ->where('custodian_employee_id', $employeeId)
+                ->orWhere(function (Builder $query) use ($employeeId): void {
+                    $query
+                        ->whereNull('custodian_employee_id')
+                        ->whereHas(
+                            'currentProjectAssignment.project',
+                            fn (Builder $query) => $query->where('responsible_employee_id', $employeeId),
+                        );
+                });
+        });
     }
 
     protected function casts(): array

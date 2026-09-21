@@ -19,11 +19,12 @@ class EquipmentImageController extends Controller
     public function store(StoreEquipmentImagesRequest $request, Equipment $equipment): JsonResponse
     {
         $images = collect($request->file('images', []))->map(function ($file, int $index) use ($equipment, $request): EquipmentImage {
-            $path = $file->store("equipment/{$equipment->id}", 'public');
+            $disk = (string) config('filesystems.equipment_images_disk');
+            $path = $file->store("equipment/{$equipment->id}", $disk);
 
             $image = $equipment->images()->create([
                 'uploaded_by_user_id' => $request->user()->id,
-                'disk' => 'public',
+                'disk' => $disk,
                 'path' => $path,
                 'original_name' => $file->getClientOriginalName(),
                 'mime_type' => $file->getMimeType() ?? 'application/octet-stream',

@@ -27,16 +27,24 @@ class UpdateEmployeeRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'phone_number' => ['nullable', 'string', 'max:30'],
-            'email' => [
+            'username' => [
                 $hasAccount ? 'required' : 'nullable',
+                'string',
+                'min:3',
+                'max:50',
+                'regex:/^[a-z0-9._-]+$/',
+                Rule::unique('users', 'username')->ignore($employee?->user_id),
+            ],
+            'email' => [
+                'nullable',
                 'string',
                 'email',
                 'max:255',
                 Rule::unique('users', 'email')->ignore($employee?->user_id),
             ],
-            'role' => [$hasAccount ? 'required' : 'required_with:email', Rule::enum(UserRole::class)],
+            'role' => [$hasAccount ? 'required' : 'required_with:username', Rule::enum(UserRole::class)],
             'password' => [
-                Rule::requiredIf(! $hasAccount && $this->filled('email')),
+                Rule::requiredIf(! $hasAccount && $this->filled('username')),
                 'nullable',
                 'string',
                 Password::min(12),
@@ -47,6 +55,12 @@ class UpdateEmployeeRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        if ($this->has('username')) {
+            $this->merge([
+                'username' => Str::lower($this->string('username')->trim()->toString()) ?: null,
+            ]);
+        }
+
         if ($this->has('email')) {
             $this->merge([
                 'email' => Str::lower($this->string('email')->trim()->toString()) ?: null,

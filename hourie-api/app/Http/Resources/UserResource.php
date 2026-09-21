@@ -18,8 +18,10 @@ class UserResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'username' => $this->username,
             'email' => $this->email,
             'role' => $this->role->value,
+            'must_change_password' => $this->must_change_password,
             'employee' => $this->whenLoaded('employee', fn () => $this->employee === null ? null : [
                 'id' => $this->employee->id,
                 'name' => $this->employee->name,
@@ -28,6 +30,7 @@ class UserResource extends JsonResource
                 'manage_equipment' => $this->role->canManageEquipment(),
                 'manage_maintenance' => $this->role->canManageEquipment(),
                 'delete_maintenance' => $this->role->canDeleteMaintenance(),
+                'delete_equipment' => $this->role === UserRole::Manager,
                 'manage_sites' => $this->role->canManageSites(),
                 'manage_users' => $this->role === UserRole::Manager,
             ],

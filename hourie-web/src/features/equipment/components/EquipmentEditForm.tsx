@@ -11,11 +11,11 @@ import { LoadingSpinner } from '../../../shared/components/LoadingSpinner'
 type EquipmentEditFormProps = {
   equipment: Equipment
   employees: EquipmentFilterOptions['employees']
-  fuelTypes: EquipmentFilterOptions['fuel_types']
   projects: EquipmentFilterOptions['projects']
   locations: EquipmentFilterOptions['locations']
   catalogs: EquipmentFilterOptions['catalogs']
   onChanged: (equipment: Equipment) => void
+  onEditingChange?: (isEditing: boolean) => void
 }
 
 type FormState = {
@@ -74,19 +74,26 @@ function number(value: string) {
   return value === '' ? null : Number(value)
 }
 
-export function EquipmentEditForm({ equipment, employees, fuelTypes, projects, locations, catalogs, onChanged }: EquipmentEditFormProps) {
+export function EquipmentEditForm({ equipment, employees, projects, locations, catalogs, onChanged, onEditingChange }: EquipmentEditFormProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [form, setForm] = useState(() => initialForm(equipment))
-  const availableFuelTypes = Array.from(new Set([...fuelTypes, form.fuel_type].filter(Boolean)))
+  const availableFuelTypes = catalogOptions(catalogs, 'fuel_type')
+  const currentFuelIsUnavailable = form.fuel_type !== '' && !availableFuelTypes.some((option) => option.code === form.fuel_type)
   const physicalLocationOptions = locations.filter((location) =>
     location.parent_id !== null
     && (form.project_id === '' || String(location.project_id) === form.project_id),
   )
+  const selectedProject = projects.find((project) => String(project.id) === form.project_id)
 
   function update(name: keyof FormState, value: string) {
     setForm((current) => ({ ...current, [name]: value }))
+  }
+
+  function setEditing(isEditing: boolean) {
+    setIsOpen(isEditing)
+    onEditingChange?.(isEditing)
   }
 
   function updateProject(projectId: string) {
@@ -128,7 +135,7 @@ export function EquipmentEditForm({ equipment, employees, fuelTypes, projects, l
       })
       onChanged(updated)
       setForm(initialForm(updated))
-      setIsOpen(false)
+      setEditing(false)
     } catch (caught) {
       setError(caught instanceof ApiError
         ? Object.values(caught.errors)[0]?.[0] ?? fr.equipment.saveError
@@ -139,12 +146,12 @@ export function EquipmentEditForm({ equipment, employees, fuelTypes, projects, l
   }
 
   if (!isOpen) {
-    return <button className="equipment-edit-button" type="button" onClick={() => setIsOpen(true)}><ActionIcon name="edit" />{fr.equipment.edit}</button>
+    return <button className="equipment-edit-button" type="button" onClick={() => setEditing(true)}><ActionIcon name="edit" />{fr.equipment.edit}</button>
   }
 
   return (
     <form className="maintenance-form equipment-edit-form" onSubmit={submit}>
-      <div className="maintenance-form-heading"><strong>{fr.equipment.editTitle}</strong><button type="button" onClick={() => setIsOpen(false)} aria-label={fr.common.close}><ActionIcon name="close" /></button></div>
+      <div className="maintenance-form-heading"><strong>{fr.equipment.editTitle}</strong><button type="button" onClick={() => setEditing(false)} aria-label={fr.common.close}><ActionIcon name="close" /></button></div>
       {error && <div className="form-alert" role="alert">{error}</div>}
       <p className="protected-code">{fr.equipment.assetCode}: <strong>{equipment.asset_code}</strong> · {fr.equipment.codeProtected}</p>
       <div className="maintenance-form-grid">
@@ -156,19 +163,19 @@ export function EquipmentEditForm({ equipment, employees, fuelTypes, projects, l
         <label><span>{fr.equipment.situation}</span><select value={form.operational_situation} onChange={(event) => update('operational_situation', event.target.value)}><option value="">{fr.common.notProvided}</option>{catalogOptions(catalogs, 'operational_situation').map((option) => <option key={option.code} value={option.code}>{catalogLabel(catalogs, 'operational_situation', option.code)}</option>)}</select></label>
         <label><span>{fr.equipment.project}</span><select value={form.project_id} onChange={(event) => updateProject(event.target.value)}><option value="">{fr.common.notProvided}</option>{projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}</select></label>
         <label><span>{fr.equipment.location}</span><select value={form.current_location_id} onChange={(event) => update('current_location_id', event.target.value)}><option value="">{fr.common.notProvided}</option>{physicalLocationOptions.map((location) => <option key={location.id} value={location.id}>{form.project_id === '' ? locationOptionLabel(location) : location.name}</option>)}</select></label>
-        <label className="field-wide"><span>{fr.equipment.custodian}</span><select value={form.custodian_employee_id} onChange={(event) => update('custodian_employee_id', event.target.value)}><option value="">{fr.common.notProvided}</option>{employees.map((employee) => <option key={employee.id} value={employee.id}>{employee.name}</option>)}</select></label>
+        <label className="field-wide"><span>{fr.equipment.custodian}</span><select value={form.custodian_employee_id} onChange={(event) => update('custodian_employee_id', event.target.value)}><option value="">{selectedProject?.responsible ? fr.equipment.useSiteResponsible(selectedProject.responsible.name) : fr.equipment.noSiteResponsible}</option>{employees.map((employee) => <option key={employee.id} value={employee.id}>{employee.name}</option>)}</select></label>
         <label><span>{fr.equipment.apparentPower}</span><input min="0" step="0.01" type="number" value={form.apparent_power_kva} onChange={(event) => update('apparent_power_kva', event.target.value)} /></label>
         <label><span>{fr.equipment.activePower}</span><input min="0" step="0.01" type="number" value={form.active_power_kw} onChange={(event) => update('active_power_kw', event.target.value)} /></label>
         <label><span>{fr.equipment.phases}</span><input value={form.phases} onChange={(event) => update('phases', event.target.value)} /></label>
         <label><span>{fr.equipment.voltage}</span><input value={form.voltage_rating} onChange={(event) => update('voltage_rating', event.target.value)} /></label>
         <label><span>{fr.equipment.frequency}</span><input min="0" step="0.01" type="number" value={form.frequency_hz} onChange={(event) => update('frequency_hz', event.target.value)} /></label>
         <label><span>{fr.equipment.current}</span><input value={form.current_rating} onChange={(event) => update('current_rating', event.target.value)} /></label>
-        <label><span>{fr.equipment.fuel}</span><select value={form.fuel_type} onChange={(event) => update('fuel_type', event.target.value)}><option value="">{fr.common.notProvided}</option>{availableFuelTypes.map((fuelType) => <option key={fuelType} value={fuelType}>{fuelType}</option>)}</select></label>
+        <label><span>{fr.equipment.fuel}</span><select value={form.fuel_type} onChange={(event) => update('fuel_type', event.target.value)}><option value="">{fr.common.notProvided}</option>{currentFuelIsUnavailable && <option value={form.fuel_type}>{form.fuel_type}</option>}{availableFuelTypes.map((option) => <option key={option.code} value={option.code}>{catalogLabel(catalogs, 'fuel_type', option.code)}</option>)}</select></label>
         <label><span>{fr.equipment.tank}</span><input min="0" step="0.01" type="number" value={form.tank_capacity_litres} onChange={(event) => update('tank_capacity_litres', event.target.value)} /></label>
         <label className="field-wide"><span>{fr.equipment.engineHours}</span><input min="0" step="0.01" type="number" value={form.current_engine_hours} onChange={(event) => update('current_engine_hours', event.target.value)} /></label>
         <label className="field-wide"><span>{fr.equipment.observations}</span><textarea rows={4} value={form.observations} onChange={(event) => update('observations', event.target.value)} /></label>
       </div>
-      <div className="maintenance-form-actions"><button type="button" onClick={() => setIsOpen(false)}>{fr.common.cancel}</button><button className="primary-button" type="submit" disabled={isSaving}>{isSaving ? <LoadingSpinner compact label={fr.common.saving} /> : fr.common.save}</button></div>
+      <div className="maintenance-form-actions"><button type="button" onClick={() => setEditing(false)}>{fr.common.cancel}</button><button className="primary-button" type="submit" disabled={isSaving}>{isSaving ? <LoadingSpinner compact label={fr.common.saving} /> : fr.common.save}</button></div>
     </form>
   )
 }

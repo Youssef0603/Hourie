@@ -1,5 +1,5 @@
 import { apiRequest, initializeCsrfProtection } from '../../shared/api/http'
-import type { CreateEmployeePayload, CreateSitePayload, Employee, EmployeeDetails, Site, SiteDetails, UpdateEmployeePayload } from './types'
+import type { CreateEmployeePayload, CreateSitePayload, Employee, EmployeeDetails, Site, SiteDetails, UpdateEmployeePayload, UpdateSitePayload } from './types'
 
 export async function getSites(): Promise<Site[]> {
   return (await apiRequest<{ data: Site[] }>('/api/v1/sites')).data
@@ -15,6 +15,19 @@ export async function createSite(payload: CreateSitePayload): Promise<Site> {
     method: 'POST',
     body: JSON.stringify(payload),
   })).data
+}
+
+export async function updateSite(id: number, payload: UpdateSitePayload): Promise<Site> {
+  await initializeCsrfProtection()
+  return (await apiRequest<{ data: Site }>(`/api/v1/sites/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  })).data
+}
+
+export async function deleteSite(id: number): Promise<void> {
+  await initializeCsrfProtection()
+  await apiRequest<void>(`/api/v1/sites/${id}`, { method: 'DELETE' })
 }
 
 export async function getEmployees(): Promise<Employee[]> {
@@ -39,4 +52,9 @@ export async function updateEmployee(id: number, payload: UpdateEmployeePayload)
     method: 'PATCH',
     body: JSON.stringify(payload),
   })).data
+}
+
+export async function deleteEmployee(id: number): Promise<void> {
+  await initializeCsrfProtection()
+  await apiRequest<void>(`/api/v1/employees/${id}`, { method: 'DELETE' })
 }

@@ -13,6 +13,7 @@ return [
     'numeric' => 'Le champ :attribute doit être un nombre.',
     'location_cycle' => 'Une localisation ne peut pas être placée sous elle-même ou sous l’un de ses descendants.',
     'location_project_mismatch' => 'La localisation parente doit appartenir au même projet.',
+    'equipment_location_project_mismatch' => 'La localisation sélectionnée doit appartenir au projet sélectionné.',
     'max' => [
         'numeric' => 'Le champ :attribute ne doit pas dépasser :max.',
         'string' => 'Le champ :attribute ne doit pas dépasser :max caractères.',
@@ -30,6 +31,8 @@ return [
 
     'attributes' => [
         'email' => 'adresse e-mail',
+        'login' => 'nom d’utilisateur ou adresse e-mail',
+        'username' => 'nom d’utilisateur',
         'category' => 'catégorie',
         'condition' => 'état',
         'location_id' => 'localisation physique',
@@ -42,9 +45,11 @@ return [
         'operational_situation' => 'situation opérationnelle',
         'page' => 'page',
         'password' => 'mot de passe',
+        'current_password' => 'mot de passe actuel',
         'password_confirmation' => 'confirmation du mot de passe',
         'per_page' => 'nombre de résultats par page',
         'project_id' => 'projet',
+        'responsible_employee_id' => 'responsable du site',
         'q' => 'recherche',
         'remember' => 'rester connecté',
     ],

@@ -10,7 +10,7 @@ type LoginFormProps = {
 }
 
 export function LoginForm({ onAuthenticated }: LoginFormProps) {
-  const [email, setEmail] = useState('')
+  const [loginIdentifier, setLoginIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [remember, setRemember] = useState(false)
   const [errors, setErrors] = useState<ValidationErrors>({})
@@ -24,7 +24,7 @@ export function LoginForm({ onAuthenticated }: LoginFormProps) {
     setIsSubmitting(true)
 
     try {
-      const user = await login({ email, password, remember })
+      const user = await login({ login: loginIdentifier, password, remember })
       onAuthenticated(user)
     } catch (error) {
       if (error instanceof ApiError) {
@@ -42,7 +42,7 @@ export function LoginForm({ onAuthenticated }: LoginFormProps) {
     }
   }
 
-  const emailError = errors.email?.[0]
+  const loginError = errors.login?.[0]
   const passwordError = errors.password?.[0]
 
   return (
@@ -54,22 +54,22 @@ export function LoginForm({ onAuthenticated }: LoginFormProps) {
       )}
 
       <div className="field-group">
-        <label htmlFor="email">{fr.auth.email}</label>
+        <label htmlFor="login">{fr.auth.login}</label>
         <input
-          id="email"
-          name="email"
-          type="email"
-          autoComplete="email"
+          id="login"
+          name="login"
+          type="text"
+          autoComplete="username"
           autoFocus
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          placeholder={fr.auth.emailPlaceholder}
-          aria-invalid={Boolean(emailError)}
-          aria-describedby={emailError ? 'email-error' : undefined}
+          value={loginIdentifier}
+          onChange={(event) => setLoginIdentifier(event.target.value)}
+          placeholder={fr.auth.loginPlaceholder}
+          aria-invalid={Boolean(loginError)}
+          aria-describedby={loginError ? 'login-error' : undefined}
         />
-        {emailError && (
-          <p className="field-error" id="email-error">
-            {emailError}
+        {loginError && (
+          <p className="field-error" id="login-error">
+            {loginError}
           </p>
         )}
       </div>

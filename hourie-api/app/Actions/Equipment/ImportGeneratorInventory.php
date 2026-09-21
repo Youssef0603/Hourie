@@ -7,6 +7,7 @@ use App\Enums\EquipmentChangeSource;
 use App\Enums\EquipmentChangeType;
 use App\Enums\EquipmentImportRowStatus;
 use App\Enums\EquipmentImportStatus;
+use App\Models\CatalogOption;
 use App\Models\Equipment;
 use App\Models\EquipmentCategory;
 use App\Models\EquipmentChange;
@@ -22,6 +23,9 @@ use Illuminate\Validation\ValidationException;
 
 class ImportGeneratorInventory
 {
+    /** @var array<string, array<string, string>> */
+    private array $activeCatalogCodes = [];
+
     public function __construct(private ValidateLocationHierarchy $validateLocationHierarchy) {}
 
     /**
@@ -241,6 +245,9 @@ class ImportGeneratorInventory
             '' => null,
             default => $this->warningValue($warnings, 'unknown_condition'),
         };
+        if ($condition !== null && $this->activeCatalogCode('equipment_condition', $condition) === null) {
+            $condition = $this->warningValue($warnings, 'unknown_condition');
+        }
 
         if ($this->nullableString($row['R'] ?? null) !== null) {
             $warnings[] = 'operational_situation_not_imported';
@@ -253,7 +260,7 @@ class ImportGeneratorInventory
             'voltage_rating' => $this->nullableString($row['K'] ?? null),
             'frequency_hz' => $this->nullableDecimal($row['L'] ?? null, 'frequency_hz', $warnings),
             'current_rating' => $this->nullableString($row['M'] ?? null),
-            'fuel_type' => $this->nullableString($row['N'] ?? null),
+            'fuel_type' => $this->normalizeFuelType($row['N'] ?? null, $warnings),
             'tank_capacity_litres' => $this->nullableDecimal($row['O'] ?? null, 'tank_capacity_litres', $warnings),
             'current_engine_hours' => $this->nullableDecimal($row['P'] ?? null, 'current_engine_hours', $warnings),
         ];
@@ -270,6 +277,34 @@ class ImportGeneratorInventory
             ...$generatorDetails,
             'generator_details' => $generatorDetails,
         ];
+    }
+
+    /** @param array<int, string> $warnings */
+    private function normalizeFuelType(?string $value, array &$warnings): ?string
+    {
+        $fuelType = $this->nullableString($value);
+        if ($fuelType === null) {
+            return null;
+        }
+
+        $normalized = $this->activeCatalogCode('fuel_type', $fuelType);
+        if ($normalized === null) {
+            $warnings[] = 'unknown_fuel_type';
+        }
+
+        return $normalized;
+    }
+
+    private function activeCatalogCode(string $group, string $code): ?string
+    {
+        $this->activeCatalogCodes[$group] ??= CatalogOption::query()
+            ->where('group', $group)
+            ->where('is_active', true)
+            ->pluck('code')
+            ->mapWithKeys(fn (string $code) => [mb_strtoupper($code) => $code])
+            ->all();
+
+        return $this->activeCatalogCodes[$group][mb_strtoupper($code)] ?? null;
     }
 
     /**

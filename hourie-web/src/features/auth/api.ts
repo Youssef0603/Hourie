@@ -4,6 +4,7 @@ import {
 } from '../../shared/api/http'
 import type {
   AuthenticatedUser,
+  ChangePasswordPayload,
   LoginCredentials,
   Resource,
 } from './types'
@@ -38,4 +39,20 @@ export async function logout(): Promise<void> {
   await apiRequest<void>('/api/v1/auth/logout', {
     method: 'POST',
   })
+}
+
+export async function changePassword(
+  payload: ChangePasswordPayload,
+): Promise<AuthenticatedUser> {
+  await initializeCsrfProtection()
+
+  const response = await apiRequest<Resource<AuthenticatedUser>>(
+    '/api/v1/auth/password',
+    {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    },
+  )
+
+  return response.data
 }

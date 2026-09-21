@@ -119,6 +119,43 @@ it('returns physical locations and Excel power values in the inventory list', fu
         ->assertJsonPath('data.0.fuel_type', 'GASOIL');
 });
 
+it('inherits the site responsible unless the generator has an override', function () {
+    $user = User::factory()->create();
+    $siteResponsible = Employee::factory()->create(['name' => 'Responsable du site']);
+    $generatorResponsible = Employee::factory()->create(['name' => 'Responsable du générateur']);
+    $project = Project::factory()->create(['responsible_employee_id' => $siteResponsible->id]);
+    $inherited = Equipment::factory()->create(['custodian_employee_id' => null]);
+    $overridden = Equipment::factory()->create(['custodian_employee_id' => $generatorResponsible->id]);
+    EquipmentProjectAssignment::factory()->for($inherited)->for($project)->create(['ended_at' => null]);
+    EquipmentProjectAssignment::factory()->for($overridden)->for($project)->create(['ended_at' => null]);
+
+    $this->actingAs($user, 'web')->getJson("/api/v1/equipment/{$inherited->id}")
+        ->assertOk()
+        ->assertJsonPath('data.custodian', null)
+        ->assertJsonPath('data.responsible.id', $siteResponsible->id)
+        ->assertJsonPath('data.responsible_source', 'site');
+
+    $this->actingAs($user, 'web')->getJson("/api/v1/equipment/{$overridden->id}")
+        ->assertOk()
+        ->assertJsonPath('data.responsible.id', $generatorResponsible->id)
+        ->assertJsonPath('data.responsible_source', 'generator');
+});
+
+it('filters generators by their inherited site responsible', function () {
+    $user = User::factory()->create();
+    $siteResponsible = Employee::factory()->create();
+    $project = Project::factory()->create(['responsible_employee_id' => $siteResponsible->id]);
+    $matching = Equipment::factory()->create(['custodian_employee_id' => null]);
+    EquipmentProjectAssignment::factory()->for($matching)->for($project)->create(['ended_at' => null]);
+    Equipment::factory()->create();
+
+    $this->actingAs($user, 'web')
+        ->getJson('/api/v1/equipment?custodian_employee_id='.$siteResponsible->id)
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $matching->id);
+});
+
 it('combines advanced technical, identity, responsibility, and date filters', function () {
     $user = User::factory()->create();
     $custodian = Employee::factory()->create();
@@ -205,7 +242,40 @@ it('returns authenticated filter options with distinct projects and physical loc
         ->assertJsonPath('data.projects.0.id', $project->id)
         ->assertJsonPath('data.locations.0.id', $location->id)
         ->assertJsonPath('data.locations.0.project.name', 'BASSAM')
-        ->assertJsonPath('data.fuel_types.0', 'GASOIL');
+        ->assertJsonPath('data.fuel_types.0', 'GASOIL')
+        ->assertJsonPath('data.catalogs.0.is_active', true);
+});
+
+it('allows managers to remove equipment from the active inventory', function () {
+    $manager = User::factory()->create(['role' => UserRole::Manager]);
+    $equipment = Equipment::factory()->create();
+
+    $this->actingAs($manager, 'web')
+        ->deleteJson("/api/v1/equipment/{$equipment->id}")
+        ->assertNoContent();
+
+    expect($equipment->fresh()->is_active)->toBeFalse();
+    $this->assertDatabaseHas('equipment_changes', [
+        'equipment_id' => $equipment->id,
+        'actor_user_id' => $manager->id,
+        'change_type' => 'archived',
+    ]);
+
+    $this->actingAs($manager, 'web')
+        ->getJson('/api/v1/equipment')
+        ->assertOk()
+        ->assertJsonMissing(['id' => $equipment->id]);
+});
+
+it('returns 403 when a viewer tries to remove equipment', function () {
+    $viewer = User::factory()->create(['role' => UserRole::Viewer]);
+    $equipment = Equipment::factory()->create();
+
+    $this->actingAs($viewer, 'web')
+        ->deleteJson("/api/v1/equipment/{$equipment->id}")
+        ->assertForbidden();
+
+    expect($equipment->fresh()->is_active)->toBeTrue();
 });
 
 it('returns generator details without inventing missing values', function () {
@@ -321,6 +391,38 @@ it('allows a generator manager to change the assigned site and physical location
         ->assertJsonPath('data.current_project_assignment.project.id', $newProject->id);
 
     expect($assignment->fresh()->ended_at)->not->toBeNull();
+});
+
+it('returns 422 when a physical location belongs to a different site', function () {
+    $manager = User::factory()->create(['role' => UserRole::GeneratorManager]);
+    $equipment = Equipment::factory()->create();
+    GeneratorDetail::factory()->for($equipment)->create();
+    $selectedProject = Project::factory()->create();
+    $otherProject = Project::factory()->create();
+    $otherLocation = Location::factory()->for($otherProject)->create();
+
+    $payload = [
+        'brand' => null,
+        'model' => null,
+        'serial_number' => null,
+        'purchase_year' => null,
+        'condition' => null,
+        'operational_situation' => null,
+        'project_id' => $selectedProject->id,
+        'current_location_id' => $otherLocation->id,
+        'custodian_employee_id' => null,
+        'observations' => null,
+        'generator_details' => [
+            'apparent_power_kva' => null, 'active_power_kw' => null, 'phases' => null,
+            'voltage_rating' => null, 'frequency_hz' => null, 'current_rating' => null,
+            'fuel_type' => null, 'tank_capacity_litres' => null, 'current_engine_hours' => null,
+        ],
+    ];
+
+    $this->actingAs($manager, 'web')
+        ->patchJson("/api/v1/equipment/{$equipment->id}", $payload)
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['current_location_id']);
 });
 
 it('prevents a viewer from editing equipment', function () {

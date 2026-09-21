@@ -25,10 +25,15 @@ return [
     ],
     'string' => 'يجب أن يكون حقل :attribute نصًا.',
     'unique' => 'قيمة حقل :attribute مستخدمة بالفعل.',
+    'location_project_mismatch' => 'يجب أن ينتمي الموقع المحدد إلى المشروع المحدد.',
+    'equipment_location_project_mismatch' => 'يجب أن ينتمي الموقع المحدد إلى المشروع المحدد.',
 
     'attributes' => [
         'email' => 'البريد الإلكتروني',
+        'login' => 'اسم المستخدم أو البريد الإلكتروني',
+        'username' => 'اسم المستخدم',
         'password' => 'كلمة المرور',
+        'current_password' => 'كلمة المرور الحالية',
         'remember' => 'تذكرني',
         'maintenance_date' => 'تاريخ الصيانة',
         'engine_hours' => 'ساعات المحرك',
@@ -38,6 +43,7 @@ return [
         'condition' => 'الحالة',
         'operational_situation' => 'الوضع التشغيلي',
         'custodian_employee_id' => 'المسؤول',
+        'responsible_employee_id' => 'مسؤول الموقع',
         'generator_details' => 'المواصفات التقنية',
     ],
 ];

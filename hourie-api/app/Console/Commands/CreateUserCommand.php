@@ -21,7 +21,8 @@ class CreateUserCommand extends Command
     {
         $data = [
             'name' => trim((string) $this->ask(__('users.command.name'))),
-            'email' => Str::lower(trim((string) $this->ask(__('users.command.email')))),
+            'username' => Str::lower(trim((string) $this->ask(__('users.command.username')))),
+            'email' => Str::lower(trim((string) $this->ask(__('users.command.email_optional')))) ?: null,
             'password' => (string) $this->secret(__('users.command.password')),
             'password_confirmation' => (string) $this->secret(__('users.command.password_confirmation')),
             'role' => (string) $this->option('role'),
@@ -29,7 +30,8 @@ class CreateUserCommand extends Command
 
         $validator = Validator::make($data, [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+            'username' => ['required', 'string', 'min:3', 'max:50', 'regex:/^[a-z0-9._-]+$/', 'unique:users,username'],
+            'email' => ['nullable', 'string', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:12', 'confirmed'],
             'role' => ['required', Rule::enum(UserRole::class)],
         ]);
@@ -45,9 +47,11 @@ class CreateUserCommand extends Command
         DB::transaction(function () use ($data): void {
             $user = User::query()->create([
                 'name' => $data['name'],
+                'username' => $data['username'],
                 'email' => $data['email'],
                 'password' => $data['password'],
                 'role' => $data['role'],
+                'must_change_password' => true,
             ]);
 
             Employee::query()->create([

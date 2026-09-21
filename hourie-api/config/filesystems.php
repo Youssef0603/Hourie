@@ -15,6 +15,8 @@ return [
 
     'default' => env('FILESYSTEM_DISK', 'local'),
 
+    'equipment_images_disk' => env('EQUIPMENT_IMAGES_DISK', 'equipment-images'),
+
     /*
     |--------------------------------------------------------------------------
     | Filesystem Disks
@@ -43,6 +45,13 @@ return [
             'root' => storage_path('app/public'),
             'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
             'visibility' => 'public',
+            'throw' => false,
+            'report' => false,
+        ],
+
+        'equipment-images' => [
+            'driver' => 'local',
+            'root' => env('EQUIPMENT_IMAGES_ROOT', storage_path('app/equipment-images')),
             'throw' => false,
             'report' => false,
         ],
