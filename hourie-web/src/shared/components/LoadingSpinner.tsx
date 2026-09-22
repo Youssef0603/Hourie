@@ -8,7 +8,6 @@ export function LoadingSpinner({ label, compact = false, className = '' }: Loadi
   return (
     <span className={`loading-indicator${compact ? ' loading-indicator-compact' : ''}${className ? ` ${className}` : ''}`} role="status" aria-label={label} aria-live="polite">
       <span className="loading-spinner" aria-hidden="true" />
-      <span>{label}</span>
     </span>
   )
 }

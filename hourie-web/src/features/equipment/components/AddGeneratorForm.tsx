@@ -13,10 +13,9 @@ type AddGeneratorFormProps = {
   options: EquipmentFilterOptions
   initialProjectId?: number
   onCreated: (equipment: Equipment) => void
-  onCancel: () => void
 }
 
-export function AddGeneratorForm({ options, initialProjectId, onCreated, onCancel }: AddGeneratorFormProps) {
+export function AddGeneratorForm({ options, initialProjectId, onCreated }: AddGeneratorFormProps) {
   const defaultCondition = catalogOptions(options.catalogs, 'equipment_condition')[0]?.code ?? ''
   const [form, setForm] = useState({
     brand: '', model: '', serial_number: '', manufacture_year: '', condition: defaultCondition,
@@ -120,7 +119,7 @@ export function AddGeneratorForm({ options, initialProjectId, onCreated, onCance
         <div className="generator-photo-field field-wide"><span>{fr.images.optionalTitle}</span><input ref={photoInput} hidden multiple accept="image/jpeg,image/png,image/webp" type="file" onChange={(event) => setPhotos(Array.from(event.target.files ?? []))} /><button type="button" onClick={() => photoInput.current?.click()}><ActionIcon name="upload" /><span>{photos.length > 0 ? fr.images.selected(photos.length) : fr.images.addOnCreate}</span><small>{fr.images.formats}</small></button>{photos.length > 0 && <div className="selected-photo-list">{photos.map((photo) => <span key={`${photo.name}-${photo.lastModified}`}>{photo.name}</span>)}</div>}</div>
         <div className="generator-photo-field field-wide"><span>{fr.invoices.title}</span><input ref={invoiceInput} hidden multiple accept="application/pdf,.pdf" type="file" onChange={(event) => setInvoices(Array.from(event.target.files ?? []))} /><button type="button" onClick={() => invoiceInput.current?.click()}><ActionIcon name="upload" /><span>{invoices.length > 0 ? fr.invoices.count(invoices.length) : fr.invoices.add}</span><small>{fr.invoices.formats}</small></button>{invoices.length > 0 && <div className="selected-photo-list">{invoices.map((invoice) => <span key={`${invoice.name}-${invoice.lastModified}`}>{invoice.name}</span>)}</div>}</div>
       </div>
-      <div className="maintenance-form-actions"><button type="button" onClick={() => createdEquipment ? onCreated(createdEquipment) : onCancel()}>{fr.common.cancel}</button><button className="primary-button" type="submit" disabled={isSaving}>{isSaving ? <LoadingSpinner compact label={fr.common.saving} /> : createdEquipment ? fr.images.retry : fr.common.save}</button></div>
+      <div className="maintenance-form-actions"><button className="primary-button save-button" type="submit" disabled={isSaving}>{isSaving ? <LoadingSpinner compact label={fr.common.saving} /> : createdEquipment ? fr.images.retry : fr.common.save}</button></div>
     </form>
   )
 }

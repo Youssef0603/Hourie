@@ -160,8 +160,8 @@ html[dir='rtl'] .user-menu {
 }
 
 .primary-button .loading-spinner {
-  border-color: rgb(255 255 255 / 38%);
-  border-top-color: white;
+  border-color: var(--color-primary-soft);
+  border-top-color: var(--color-primary);
 }
 
 .authenticated-card {
@@ -203,12 +203,86 @@ html[dir='rtl'] .user-menu {
 }
 
 .secondary-button {
-  border: 1px solid var(--color-border);
-  color: var(--color-text-strong);
-  background: white;
+  border: 1px solid transparent;
+  color: var(--color-primary);
+  background: transparent;
 }
 
 .secondary-button:hover:not(:disabled) {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
+  border-color: transparent;
+  color: var(--color-primary-dark);
+  text-decoration: underline;
+}
+
+/* Text-only actions throughout the app. Structural controls keep their own
+   treatment: navigation on the red sidebar, selectable rows, and upload areas. */
+:is(.workspace-shell, .modal-backdrop, .login-page) button:not(
+  .language-switch,
+  .account-menu-button,
+  .site-card,
+  .catalog-list > button,
+  .maintenance-card-toggle,
+  .equipment-image-preview,
+  .generator-photo-field > button,
+  .workspace-sidebar button,
+  .searchable-select-button
+) {
+  border-color: transparent !important;
+  color: var(--color-primary) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+:is(.workspace-shell, .modal-backdrop, .login-page) button:not(
+  .language-switch,
+  .account-menu-button,
+  .site-card,
+  .catalog-list > button,
+  .maintenance-card-toggle,
+  .equipment-image-preview,
+  .generator-photo-field > button,
+  .workspace-sidebar button,
+  .searchable-select-button
+):is(:hover, :focus-visible):not(:disabled) {
+  color: var(--color-primary-dark) !important;
+  text-decoration: underline;
+}
+
+/* Saving is the one filled action; supporting controls stay text-only. */
+html :is(.workspace-shell, .modal-backdrop) button.save-button {
+  border-color: var(--color-primary) !important;
+  color: white !important;
+  background: var(--color-primary) !important;
+  box-shadow: none !important;
+  text-decoration: none;
+}
+
+html :is(.workspace-shell, .modal-backdrop) button.save-button:hover:not(:disabled),
+html :is(.workspace-shell, .modal-backdrop) button.save-button:focus-visible:not(:disabled) {
+  border-color: var(--color-primary-dark) !important;
+  color: white !important;
+  background: var(--color-primary-dark) !important;
+  text-decoration: none;
+}
+
+.save-button .loading-spinner {
+  border-color: rgb(255 255 255 / 38%);
+  border-top-color: white;
+}
+
+html :is(.workspace-shell, .modal-backdrop) button.import-excel-action,
+html :is(.workspace-shell, .modal-backdrop) button.table-refresh-button,
+html :is(.workspace-shell, .modal-backdrop) button.advanced-filter-toggle,
+html :is(.workspace-shell, .modal-backdrop) button.equipment-history-button,
+html :is(.workspace-shell, .modal-backdrop) .pagination button {
+  color: var(--color-text-strong) !important;
+}
+
+html :is(.workspace-shell, .modal-backdrop) button.import-excel-action:is(:hover, :focus-visible):not(:disabled),
+html :is(.workspace-shell, .modal-backdrop) button.table-refresh-button:is(:hover, :focus-visible):not(:disabled),
+html :is(.workspace-shell, .modal-backdrop) button.advanced-filter-toggle:is(:hover, :focus-visible):not(:disabled),
+html :is(.workspace-shell, .modal-backdrop) button.equipment-history-button:is(:hover, :focus-visible):not(:disabled),
+html :is(.workspace-shell, .modal-backdrop) .pagination button:is(:hover, :focus-visible):not(:disabled) {
+  color: var(--color-primary) !important;
 }

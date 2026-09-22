@@ -234,15 +234,16 @@
 }
 
 .primary-button {
-  border: 1px solid var(--color-primary);
-  color: white;
-  background: var(--color-primary);
-  box-shadow: 0 10px 24px rgb(211 18 69 / 18%);
+  border: 1px solid transparent;
+  color: var(--color-primary);
+  background: transparent;
+  box-shadow: none;
 }
 
 .primary-button:hover:not(:disabled) {
-  background: var(--color-primary-dark);
-  transform: translateY(-1px);
+  color: var(--color-primary-dark);
+  background: transparent;
+  text-decoration: underline;
 }
 
 .primary-button:focus-visible,
@@ -273,7 +274,7 @@
   margin: 1rem auto 0;
   border: 0;
   padding: 0.5rem;
-  color: var(--color-text-muted);
+  color: var(--color-primary);
   background: transparent;
   font: inherit;
   font-size: 0.875rem;

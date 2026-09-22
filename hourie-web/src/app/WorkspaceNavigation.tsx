@@ -1,3 +1,4 @@
+import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
 import type { AuthenticatedUser } from '../features/auth/types'
 import { fr, type Language } from '../i18n/fr'
 import { LanguageSwitch } from '../shared/components/LanguageSwitch'
@@ -28,17 +29,25 @@ export function WorkspaceHeader({ user, language, onToggleLanguage, onLogout, is
         </div>
         <div className="user-menu">
           <LanguageSwitch language={language} onToggle={onToggleLanguage} />
-          <div className="user-identity">
-            <span className="user-avatar" aria-hidden="true">{userInitials(user.name)}</span>
-            <div>
-              <strong>{user.name}</strong>
-              <span>{fr.roles[user.role]}</span>
+          <Menu>
+            <div className="account-menu">
+              <MenuButton className="account-menu-button" aria-label={`${user.name} — ${fr.roles[user.role]}`} title={user.name}>
+                <span className="user-avatar" aria-hidden="true">{userInitials(user.name)}</span>
+              </MenuButton>
+              <MenuItems anchor="bottom end" className="account-dropdown">
+                <div className="account-dropdown-identity">
+                  <strong>{user.name}</strong>
+                  <span>{fr.roles[user.role]}</span>
+                </div>
+                <MenuItem disabled={isLoggingOut}>
+                  <button className="account-logout" type="button" onClick={onLogout}>
+                    <ActionIcon name="logout" />
+                    {isLoggingOut ? <LoadingSpinner compact label={fr.auth.loggingOut} /> : fr.auth.logout}
+                  </button>
+                </MenuItem>
+              </MenuItems>
             </div>
-          </div>
-          <button className="logout-button" type="button" onClick={onLogout} disabled={isLoggingOut}>
-            <ActionIcon name="logout" />
-            {isLoggingOut ? <LoadingSpinner compact label={fr.auth.loggingOut} /> : <span>{fr.auth.logout}</span>}
-          </button>
+          </Menu>
         </div>
       </header>
   )

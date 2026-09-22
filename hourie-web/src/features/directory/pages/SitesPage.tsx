@@ -99,7 +99,7 @@ export function SitesPage({ canAdd, onOpenSite, catalogs, employees = [] }: Site
               <div className="site-location-fields field-wide"><div className="site-location-fields-heading"><span>{fr.directory.initialLocations}</span><button type="button" onClick={() => setLocations((current) => [...current, ''])}><ActionIcon name="add" />{fr.directory.addLocation}</button></div>{locations.map((location, index) => <div className="site-location-input" key={index}><input required aria-label={`${fr.directory.locationName} ${index + 1}`} placeholder={fr.directory.locationName} value={location} onChange={(event) => updateLocation(index, event.target.value)} />{locations.length > 1 && <button type="button" onClick={() => removeLocation(index)} aria-label={fr.common.delete}><ActionIcon name="close" /></button>}</div>)}</div>
               <label className="field-wide"><span>{fr.directory.siteNotes}</span><textarea rows={3} value={notes} onChange={(event) => setNotes(event.target.value)} /></label>
             </div>
-            <div className="maintenance-form-actions"><button type="button" onClick={() => setShowForm(false)}>{fr.common.cancel}</button><button className="primary-button" type="submit">{fr.common.save}</button></div>
+            <div className="maintenance-form-actions"><button className="primary-button save-button" type="submit">{fr.common.save}</button></div>
           </form>
         </Modal>
       )}

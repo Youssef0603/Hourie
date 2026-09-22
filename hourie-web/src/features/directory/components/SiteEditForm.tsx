@@ -11,11 +11,10 @@ import type { Site } from '../types'
 
 type EditableLocation = { id: number | null; name: string }
 
-export function SiteEditForm({ site, catalogs, employees, onCancel, onSaved }: {
+export function SiteEditForm({ site, catalogs, employees, onSaved }: {
   site: Site
   catalogs: CatalogOption[] | undefined
   employees: NamedReference[]
-  onCancel: () => void
   onSaved: (site: Site) => void
 }) {
   const [name, setName] = useState(site.name)
@@ -73,7 +72,7 @@ export function SiteEditForm({ site, catalogs, employees, onCancel, onSaved }: {
         <div className="site-location-fields field-wide"><div className="site-location-fields-heading"><span>{fr.directory.initialLocations}</span><button disabled={isSaving} type="button" onClick={() => setLocations((current) => [...current, { id: null, name: '' }])}><ActionIcon name="add" />{fr.directory.addLocation}</button></div>{locations.map((location, index) => <div className="site-location-input" key={location.id ?? `new-${index}`}><input required disabled={isSaving} aria-label={`${fr.directory.locationName} ${index + 1}`} value={location.name} onChange={(event) => setLocations((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, name: event.target.value } : item))} />{locations.length > 1 && <button disabled={isSaving} type="button" onClick={() => setLocations((current) => current.filter((_, itemIndex) => itemIndex !== index))} aria-label={fr.common.delete}><ActionIcon name="close" /></button>}</div>)}</div>
         <label className="field-wide"><span>{fr.directory.siteNotes}</span><textarea disabled={isSaving} rows={3} value={notes} onChange={(event) => setNotes(event.target.value)} /></label>
       </div>
-      <div className="maintenance-form-actions"><button type="button" disabled={isSaving} onClick={onCancel}>{fr.common.cancel}</button><button className="primary-button" type="submit" disabled={isSaving}>{isSaving ? <LoadingSpinner compact label={fr.common.saving} /> : fr.common.save}</button></div>
+      <div className="maintenance-form-actions"><button className="primary-button save-button" type="submit" disabled={isSaving}>{isSaving ? <LoadingSpinner compact label={fr.common.saving} /> : fr.common.save}</button></div>
     </form>
   )
 }

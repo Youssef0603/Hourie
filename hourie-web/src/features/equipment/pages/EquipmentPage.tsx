@@ -363,7 +363,7 @@ export function EquipmentPage({
             {isSiteView && <button className="table-refresh-button" type="button" onClick={() => setShowHistory('site')}><ActionIcon name="history" /><span>{fr.audit.button}</span></button>}
             {isSiteView && user.permissions.manage_sites && <button className="table-refresh-button" type="button" onClick={() => setShowEditSite(true)}><ActionIcon name="edit" /><span>{fr.common.edit}</span></button>}
             {isSiteView && user.permissions.manage_sites && <button className="danger-button" type="button" onClick={removeCurrentSite}><ActionIcon name="delete" /><span>{fr.directory.deleteSite}</span></button>}
-            {!isSiteView && user.permissions.manage_equipment && <button className="table-refresh-button" type="button" onClick={() => setShowImportGenerator(true)}><ActionIcon name="upload" /><span>{fr.equipment.importExcel}</span></button>}
+            {!isSiteView && user.permissions.manage_equipment && <button className="table-refresh-button import-excel-action" type="button" onClick={() => setShowImportGenerator(true)}><ActionIcon name="upload" /><span>{fr.equipment.importExcel}</span></button>}
             {user.permissions.manage_equipment && <button className="primary-button page-action compact-action" type="button" onClick={() => setShowAddGenerator((value) => !value)}><ActionIcon name={showAddGenerator ? 'close' : 'add'} /><span>{showAddGenerator ? fr.common.close : fr.equipment.addGenerator}</span></button>}
             <div className="inventory-count" aria-live="polite">
               <strong>{result?.meta.total ?? '—'}</strong>
@@ -378,9 +378,9 @@ export function EquipmentPage({
           </div>
         )}
 
-        {showAddGenerator && options && <Modal title={fr.equipment.addGenerator} size="wide" onClose={() => setShowAddGenerator(false)}><AddGeneratorForm options={options} initialProjectId={siteContext?.id} onCancel={() => setShowAddGenerator(false)} onCreated={(equipment) => { setShowAddGenerator(false); openEquipment(equipment.id); setFilters((current) => ({ ...current, page: 1 })); refreshInventory() }} /></Modal>}
+        {showAddGenerator && options && <Modal title={fr.equipment.addGenerator} size="wide" onClose={() => setShowAddGenerator(false)}><AddGeneratorForm options={options} initialProjectId={siteContext?.id} onCreated={(equipment) => { setShowAddGenerator(false); openEquipment(equipment.id); setFilters((current) => ({ ...current, page: 1 })); refreshInventory() }} /></Modal>}
         {showImportGenerator && <Modal title={fr.equipment.importTitle} onClose={() => setShowImportGenerator(false)}><ImportGeneratorForm onClose={() => setShowImportGenerator(false)} onImported={() => { refreshInventory(); refreshFilterOptions() }} /></Modal>}
-        {showEditSite && siteContext && <Modal title={fr.directory.editSite} size="wide" onClose={() => setShowEditSite(false)}><SiteEditForm site={siteContext} catalogs={options?.catalogs} employees={options?.employees ?? []} onCancel={() => setShowEditSite(false)} onSaved={(site) => { setSiteContext(site); setShowEditSite(false); refreshFilterOptions(); refreshInventory() }} /></Modal>}
+        {showEditSite && siteContext && <Modal title={fr.directory.editSite} size="wide" onClose={() => setShowEditSite(false)}><SiteEditForm site={siteContext} catalogs={options?.catalogs} employees={options?.employees ?? []} onSaved={(site) => { setSiteContext(site); setShowEditSite(false); refreshFilterOptions(); refreshInventory() }} /></Modal>}
 
         {!isSiteView && <MaintenanceWarningsPanel result={maintenanceWarnings} isLoading={isLoadingMaintenanceWarnings} error={maintenanceWarningError} onRefresh={() => { setIsLoadingMaintenanceWarnings(true); setMaintenanceWarningRefreshToken((current) => current + 1) }} onPageChange={(page) => { setIsLoadingMaintenanceWarnings(true); setMaintenanceWarningPage(page) }} onOpenEquipment={openEquipment} />}
 

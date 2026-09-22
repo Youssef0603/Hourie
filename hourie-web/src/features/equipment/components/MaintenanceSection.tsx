@@ -264,8 +264,7 @@ export function MaintenanceSection({
             <label className="field-wide"><span>{fr.equipment.observations}</span><textarea rows={3} value={form.observations} onChange={(event) => update('observations', event.target.value)} /></label>
           </div>
           <div className="maintenance-form-actions">
-            <button type="button" onClick={closeForm}>{fr.common.cancel}</button>
-            <button className="primary-button" type="submit" disabled={isSaving}>{isSaving ? <LoadingSpinner compact label={fr.common.saving} /> : fr.common.save}</button>
+            <button className="primary-button save-button" type="submit" disabled={isSaving}>{isSaving ? <LoadingSpinner compact label={fr.common.saving} /> : fr.common.save}</button>
           </div>
         </form>
         </Modal>

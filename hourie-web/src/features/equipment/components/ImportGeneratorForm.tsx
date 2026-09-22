@@ -56,8 +56,7 @@ export function ImportGeneratorForm({ onImported, onClose }: ImportGeneratorForm
       <input required type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={(event) => setFile(event.target.files?.[0] ?? null)} />
     </label>
     <div className="maintenance-form-actions">
-      <button type="button" onClick={onClose}>{fr.common.cancel}</button>
-      <button className="primary-button" type="submit" disabled={!file || isImporting}>{isImporting ? <LoadingSpinner compact label={fr.equipment.importing} /> : fr.equipment.importSubmit}</button>
+      <button className="primary-button import-excel-action" type="submit" disabled={!file || isImporting}>{isImporting ? <LoadingSpinner compact label={fr.equipment.importing} /> : fr.equipment.importSubmit}</button>
     </div>
   </form>
 }
