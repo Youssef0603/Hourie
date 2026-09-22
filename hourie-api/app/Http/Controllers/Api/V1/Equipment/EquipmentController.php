@@ -57,6 +57,7 @@ class EquipmentController extends Controller
             'maintenances.technician',
             'maintenances.createdBy',
             'images.uploader',
+            'invoices.uploader',
             'changes' => fn ($query) => $query->with('actor')->latest('occurred_at')->latest('id'),
         ]);
 

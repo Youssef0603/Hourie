@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\Equipment\EquipmentController;
 use App\Http\Controllers\Api\V1\Equipment\EquipmentFilterOptionsController;
 use App\Http\Controllers\Api\V1\Equipment\EquipmentImageController;
 use App\Http\Controllers\Api\V1\Equipment\EquipmentImportController;
+use App\Http\Controllers\Api\V1\Equipment\EquipmentInvoiceController;
 use App\Http\Controllers\Api\V1\Equipment\EquipmentMaintenanceController;
 use App\Http\Controllers\Api\V1\Equipment\MaintenanceWarningController;
 use App\Http\Controllers\Api\V1\HealthController;
@@ -42,6 +43,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', EnsureUserIsActive::class, Ensu
     Route::post('equipment/{equipment}/images', [EquipmentImageController::class, 'store']);
     Route::get('equipment/{equipment}/images/{image}/file', [EquipmentImageController::class, 'show'])->name('equipment.images.show');
     Route::delete('equipment/{equipment}/images/{image}', [EquipmentImageController::class, 'destroy']);
+    Route::post('equipment/{equipment}/invoices', [EquipmentInvoiceController::class, 'store']);
+    Route::get('equipment/{equipment}/invoices/{invoice}/file', [EquipmentInvoiceController::class, 'show'])->name('equipment.invoices.show');
+    Route::delete('equipment/{equipment}/invoices/{invoice}', [EquipmentInvoiceController::class, 'destroy']);
     Route::post('equipment/{equipment}/maintenances', [EquipmentMaintenanceController::class, 'store']);
     Route::patch('equipment/{equipment}/maintenances/{maintenance}', [EquipmentMaintenanceController::class, 'update']);
     Route::delete('equipment/{equipment}/maintenances/{maintenance}', [EquipmentMaintenanceController::class, 'destroy']);

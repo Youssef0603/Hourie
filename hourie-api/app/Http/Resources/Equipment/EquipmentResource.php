@@ -37,6 +37,18 @@ class EquipmentResource extends JsonResource
                 'size_bytes' => $image->size_bytes,
                 'created_at' => $image->created_at->toISOString(),
             ])),
+            'invoices' => $this->whenLoaded('invoices', fn () => $this->invoices->map(fn ($invoice) => [
+                'id' => $invoice->id,
+                'url' => route('equipment.invoices.show', [$this->resource, $invoice], false),
+                'original_name' => $invoice->original_name,
+                'mime_type' => $invoice->mime_type,
+                'size_bytes' => $invoice->size_bytes,
+                'uploaded_by' => $invoice->uploader === null ? null : [
+                    'id' => $invoice->uploader->id,
+                    'name' => $invoice->uploader->name,
+                ],
+                'created_at' => $invoice->created_at->toISOString(),
+            ])),
             'changes' => $this->whenLoaded('changes', fn () => $this->changes->map(fn ($change) => [
                 'id' => $change->id,
                 'type' => $change->change_type->value,

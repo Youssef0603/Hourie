@@ -1,10 +1,11 @@
-import { apiRequest, initializeCsrfProtection } from '../../shared/api/http'
+import { apiRequest, downloadAuthenticatedFile, initializeCsrfProtection } from '../../shared/api/http'
 import type {
   Equipment,
   EquipmentFilterOptions,
   EquipmentFilters,
   EquipmentImportResult,
   EquipmentImage,
+  EquipmentInvoice,
   EquipmentListResponse,
   CatalogOption,
   EquipmentMaintenance,
@@ -139,6 +140,26 @@ export async function uploadEquipmentImages(equipmentId: number, files: File[]):
 export async function deleteEquipmentImage(equipmentId: number, imageId: number): Promise<void> {
   await initializeCsrfProtection()
   await apiRequest<void>(`/api/v1/equipment/${equipmentId}/images/${imageId}`, { method: 'DELETE' })
+}
+
+export async function uploadEquipmentInvoices(equipmentId: number, files: File[]): Promise<EquipmentInvoice[]> {
+  await initializeCsrfProtection()
+  const form = new FormData()
+  files.forEach((file) => form.append('invoices[]', file))
+
+  return (await apiRequest<{ data: EquipmentInvoice[] }>(`/api/v1/equipment/${equipmentId}/invoices`, {
+    method: 'POST',
+    body: form,
+  })).data
+}
+
+export async function deleteEquipmentInvoice(equipmentId: number, invoiceId: number): Promise<void> {
+  await initializeCsrfProtection()
+  await apiRequest<void>(`/api/v1/equipment/${equipmentId}/invoices/${invoiceId}`, { method: 'DELETE' })
+}
+
+export async function downloadEquipmentInvoice(invoice: EquipmentInvoice): Promise<void> {
+  await downloadAuthenticatedFile(invoice.url, invoice.original_name)
 }
 
 export async function getEquipmentFilterOptions(): Promise<EquipmentFilterOptions> {

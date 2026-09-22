@@ -1,7 +1,7 @@
 import { useRef, useState, type FormEvent } from 'react'
 import { fr } from '../../../i18n/fr'
 import { ApiError } from '../../../shared/api/http'
-import { createEquipment, uploadEquipmentImages } from '../api'
+import { createEquipment, uploadEquipmentImages, uploadEquipmentInvoices } from '../api'
 import { locationOptionLabel } from '../locationLabel'
 import type { Equipment, EquipmentFilterOptions } from '../types'
 import { catalogLabel, catalogOptions } from '../catalogs'
@@ -26,8 +26,10 @@ export function AddGeneratorForm({ options, initialProjectId, onCreated, onCance
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [photos, setPhotos] = useState<File[]>([])
+  const [invoices, setInvoices] = useState<File[]>([])
   const [createdEquipment, setCreatedEquipment] = useState<Equipment | null>(null)
   const photoInput = useRef<HTMLInputElement>(null)
+  const invoiceInput = useRef<HTMLInputElement>(null)
   const physicalLocationOptions = options.locations.filter((location) =>
     location.parent_id !== null
     && (form.project_id === '' || String(location.project_id) === form.project_id),
@@ -56,6 +58,7 @@ export function AddGeneratorForm({ options, initialProjectId, onCreated, onCance
     setIsSaving(true)
     setError(null)
     let savedEquipment = createdEquipment
+    let uploadStage: 'photos' | 'invoices' | null = null
     try {
       const equipment = createdEquipment ?? await createEquipment({
         brand: text(form.brand), model: text(form.model), serial_number: text(form.serial_number),
@@ -72,10 +75,17 @@ export function AddGeneratorForm({ options, initialProjectId, onCreated, onCance
       })
       savedEquipment = equipment
       setCreatedEquipment(equipment)
+      uploadStage = 'photos'
       const images = photos.length > 0 ? await uploadEquipmentImages(equipment.id, photos) : equipment.images
-      onCreated({ ...equipment, images })
+      uploadStage = 'invoices'
+      const savedInvoices = invoices.length > 0 ? await uploadEquipmentInvoices(equipment.id, invoices) : equipment.invoices
+      onCreated({ ...equipment, images, invoices: savedInvoices })
     } catch (caught) {
-      const fallback = savedEquipment ? fr.images.createdUploadError : fr.equipment.createError
+      const fallback = !savedEquipment
+        ? fr.equipment.createError
+        : uploadStage === 'invoices'
+          ? fr.invoices.createdUploadError
+          : fr.images.createdUploadError
       setError(caught instanceof ApiError ? Object.values(caught.errors)[0]?.[0] ?? fallback : fallback)
     } finally {
       setIsSaving(false)
@@ -107,6 +117,7 @@ export function AddGeneratorForm({ options, initialProjectId, onCreated, onCance
         <label className="field-wide"><span>{fr.equipment.custodian}</span><select value={form.custodian_employee_id} onChange={(event) => update('custodian_employee_id', event.target.value)}><option value="">{selectedProject?.responsible ? fr.equipment.useSiteResponsible(selectedProject.responsible.name) : fr.equipment.noSiteResponsible}</option>{options.employees.map((employee) => <option key={employee.id} value={employee.id}>{employee.name}</option>)}</select></label>
         <label className="field-wide"><span>{fr.equipment.observations}</span><textarea rows={3} value={form.observations} onChange={(event) => update('observations', event.target.value)} /></label>
         <div className="generator-photo-field field-wide"><span>{fr.images.optionalTitle}</span><input ref={photoInput} hidden multiple accept="image/jpeg,image/png,image/webp" type="file" onChange={(event) => setPhotos(Array.from(event.target.files ?? []))} /><button type="button" onClick={() => photoInput.current?.click()}><ActionIcon name="upload" /><span>{photos.length > 0 ? fr.images.selected(photos.length) : fr.images.addOnCreate}</span><small>{fr.images.formats}</small></button>{photos.length > 0 && <div className="selected-photo-list">{photos.map((photo) => <span key={`${photo.name}-${photo.lastModified}`}>{photo.name}</span>)}</div>}</div>
+        <div className="generator-photo-field field-wide"><span>{fr.invoices.title}</span><input ref={invoiceInput} hidden multiple accept="application/pdf,.pdf" type="file" onChange={(event) => setInvoices(Array.from(event.target.files ?? []))} /><button type="button" onClick={() => invoiceInput.current?.click()}><ActionIcon name="upload" /><span>{invoices.length > 0 ? fr.invoices.count(invoices.length) : fr.invoices.add}</span><small>{fr.invoices.formats}</small></button>{invoices.length > 0 && <div className="selected-photo-list">{invoices.map((invoice) => <span key={`${invoice.name}-${invoice.lastModified}`}>{invoice.name}</span>)}</div>}</div>
       </div>
       <div className="maintenance-form-actions"><button type="button" onClick={() => createdEquipment ? onCreated(createdEquipment) : onCancel()}>{fr.common.cancel}</button><button className="primary-button" type="submit" disabled={isSaving}>{isSaving ? <LoadingSpinner compact label={fr.common.saving} /> : createdEquipment ? fr.images.retry : fr.common.save}</button></div>
     </form>

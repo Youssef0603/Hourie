@@ -87,3 +87,39 @@ export async function apiRequest<T>(
 
   return payload
 }
+
+export async function downloadAuthenticatedFile(
+  path: string,
+  filename: string,
+): Promise<void> {
+  const response = await fetch(path, {
+    credentials: 'include',
+    headers: {
+      Accept: 'application/pdf',
+      'Accept-Language': window.localStorage.getItem('hourie-language') === 'ar' ? 'ar' : 'fr',
+      'X-Requested-With': 'XMLHttpRequest',
+    },
+  })
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      window.dispatchEvent(new CustomEvent(unauthorizedEvent))
+    }
+
+    const payload = (await response.json().catch(() => ({}))) as ErrorPayload
+    throw new ApiError(
+      payload.message ?? `Request failed with status ${response.status}.`,
+      response.status,
+      payload.errors,
+    )
+  }
+
+  const objectUrl = window.URL.createObjectURL(await response.blob())
+  const link = document.createElement('a')
+  link.href = objectUrl
+  link.download = filename
+  document.body.append(link)
+  link.click()
+  link.remove()
+  window.setTimeout(() => window.URL.revokeObjectURL(objectUrl), 0)
+}

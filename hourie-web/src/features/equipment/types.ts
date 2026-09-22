@@ -110,6 +110,7 @@ export type Equipment = EquipmentSummary & {
   maintenances: EquipmentMaintenance[]
   changes: EquipmentChange[]
   images: EquipmentImage[]
+  invoices: EquipmentInvoice[]
 }
 
 export type EquipmentImage = {
@@ -121,9 +122,19 @@ export type EquipmentImage = {
   created_at: string
 }
 
+export type EquipmentInvoice = {
+  id: number
+  url: string
+  original_name: string
+  mime_type: string
+  size_bytes: number
+  uploaded_by: NamedReference | null
+  created_at: string
+}
+
 export type EquipmentChange = {
   id: number
-  type: 'initial_import' | 'identity_updated' | 'specifications_updated' | 'condition_changed' | 'operational_situation_changed' | 'location_changed' | 'custodian_changed' | 'project_assignment_changed' | 'maintenance_recorded' | 'maintenance_updated' | 'maintenance_deleted' | 'image_added' | 'image_deleted' | 'archived'
+  type: 'initial_import' | 'identity_updated' | 'specifications_updated' | 'condition_changed' | 'operational_situation_changed' | 'location_changed' | 'custodian_changed' | 'project_assignment_changed' | 'maintenance_recorded' | 'maintenance_updated' | 'maintenance_deleted' | 'image_added' | 'image_deleted' | 'invoice_added' | 'invoice_deleted' | 'archived'
   source: 'import' | 'manual' | 'transfer' | 'maintenance'
   actor: NamedReference | null
   occurred_at: string

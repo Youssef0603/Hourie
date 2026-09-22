@@ -3,6 +3,7 @@ set -euo pipefail
 
 backup_root="${HOURIE_BACKUP_ROOT:-/var/backups/hourie}"
 images_root="${EQUIPMENT_IMAGES_ROOT:-/var/www/hourie/shared/equipment-images}"
+documents_root="${EQUIPMENT_DOCUMENTS_ROOT:-/var/www/hourie/shared/equipment-documents}"
 retention_days="${HOURIE_BACKUP_RETENTION_DAYS:-30}"
 timestamp="$(date -u +%Y%m%dT%H%M%SZ)"
 
@@ -10,7 +11,7 @@ timestamp="$(date -u +%Y%m%dT%H%M%SZ)"
 : "${MYSQL_USER:?MYSQL_USER is required}"
 : "${MYSQL_PASSWORD:?MYSQL_PASSWORD is required}"
 
-mkdir -p "${backup_root}"
+mkdir -p "${backup_root}" "${images_root}" "${documents_root}"
 
 MYSQL_PWD="${MYSQL_PASSWORD}" mysqldump \
     --host="${MYSQL_HOST:-127.0.0.1}" \
@@ -22,4 +23,5 @@ MYSQL_PWD="${MYSQL_PASSWORD}" mysqldump \
     "${MYSQL_DATABASE}" | gzip > "${backup_root}/database-${timestamp}.sql.gz"
 
 tar -C "${images_root}" -czf "${backup_root}/equipment-images-${timestamp}.tar.gz" .
+tar -C "${documents_root}" -czf "${backup_root}/equipment-documents-${timestamp}.tar.gz" .
 find "${backup_root}" -type f -mtime "+${retention_days}" -delete

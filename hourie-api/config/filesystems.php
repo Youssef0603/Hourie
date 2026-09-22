@@ -16,6 +16,7 @@ return [
     'default' => env('FILESYSTEM_DISK', 'local'),
 
     'equipment_images_disk' => env('EQUIPMENT_IMAGES_DISK', 'equipment-images'),
+    'equipment_documents_disk' => env('EQUIPMENT_DOCUMENTS_DISK', 'equipment-documents'),
 
     /*
     |--------------------------------------------------------------------------
@@ -52,6 +53,13 @@ return [
         'equipment-images' => [
             'driver' => 'local',
             'root' => env('EQUIPMENT_IMAGES_ROOT', storage_path('app/equipment-images')),
+            'throw' => false,
+            'report' => false,
+        ],
+
+        'equipment-documents' => [
+            'driver' => 'local',
+            'root' => env('EQUIPMENT_DOCUMENTS_ROOT', storage_path('app/equipment-documents')),
             'throw' => false,
             'report' => false,
         ],

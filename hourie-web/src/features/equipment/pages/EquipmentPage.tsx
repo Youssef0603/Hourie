@@ -6,6 +6,7 @@ import { ImportGeneratorForm } from '../components/ImportGeneratorForm'
 import { MaintenanceSection } from '../components/MaintenanceSection'
 import { MaintenanceWarningsPanel } from '../components/MaintenanceWarningsPage'
 import { EquipmentImages } from '../components/EquipmentImages'
+import { EquipmentInvoices } from '../components/EquipmentInvoices'
 import { CatalogsPage } from '../components/CatalogsPage'
 import { PeoplePage, SitesPage } from '../../directory/pages/DirectoryPages'
 import { SiteEditForm } from '../../directory/components/SiteEditForm'
@@ -577,7 +578,7 @@ export function EquipmentPage({
                         catalogs={options?.catalogs ?? []}
                         onEditingChange={setIsEditingEquipment}
                         onChanged={(equipment) => { setSelected(equipment); refreshInventory() }}
-                        imageEditor={<EquipmentImages equipment={selected} canManage onChanged={async () => { setSelected(await getEquipmentItem(selected.id)) }} />}
+                        imageEditor={<><EquipmentImages equipment={selected} canManage onChanged={async () => { setSelected(await getEquipmentItem(selected.id)) }} /><EquipmentInvoices equipment={selected} canManage onChanged={async () => { setSelected(await getEquipmentItem(selected.id)) }} /></>}
                       />
                     )}
                     {!isEditingEquipment && user.permissions.delete_equipment && <button className="danger-button detail-delete-button" type="button" onClick={removeSelectedEquipment}><ActionIcon name="delete" />{fr.equipment.deleteGenerator}</button>}
@@ -621,6 +622,7 @@ export function EquipmentPage({
                     <p className="observations">{displayedValue(selected.observations)}</p>
                   </section>
                   {!isEditingEquipment && <EquipmentImages equipment={selected} canManage={false} onChanged={async () => { setSelected(await getEquipmentItem(selected.id)) }} />}
+                  {!isEditingEquipment && <EquipmentInvoices equipment={selected} canManage={false} onChanged={async () => { setSelected(await getEquipmentItem(selected.id)) }} />}
                   <MaintenanceSection
                     equipment={selected}
                     employees={options?.employees ?? []}

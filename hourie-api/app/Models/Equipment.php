@@ -86,6 +86,11 @@ class Equipment extends Model
         return $this->hasMany(EquipmentImage::class)->orderBy('sort_order')->orderBy('id');
     }
 
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(EquipmentInvoice::class)->latest()->latest('id');
+    }
+
     public function scopeEffectiveResponsible(Builder $query, int $employeeId): Builder
     {
         return $query->where(function (Builder $query) use ($employeeId): void {
