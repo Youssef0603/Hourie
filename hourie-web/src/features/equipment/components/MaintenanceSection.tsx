@@ -12,6 +12,7 @@ import type {
   MaintenancePayload,
 } from '../types'
 import { LoadingSpinner } from '../../../shared/components/LoadingSpinner'
+import { SearchableSelect } from '../../../shared/components/SearchableSelect'
 import { catalogBadgeStyle, catalogLabel, catalogOptions } from '../catalogs'
 
 type MaintenanceSectionProps = {
@@ -60,6 +61,11 @@ const emptyForm: FormState = {
   cost: '',
   observations: '',
 }
+
+const yesNoOptions = [
+  { value: 'true', label: fr.common.yes },
+  { value: 'false', label: fr.common.no },
+]
 
 function nullableString(value: string) {
   const trimmed = value.trim()
@@ -231,14 +237,10 @@ export function MaintenanceSection({
           <div className="maintenance-form-grid">
             <label><span>{fr.maintenance.date}</span><input required type="date" value={form.maintenance_date} onChange={(event) => update('maintenance_date', event.target.value)} /></label>
             <label><span>{fr.equipment.engineHours}</span><input min="0" step="0.01" type="number" value={form.engine_hours} onChange={(event) => update('engine_hours', event.target.value)} placeholder="1250,50" /></label>
-            <label><span>{fr.maintenance.interventionType}</span><select required value={form.intervention_type} onChange={(event) => update('intervention_type', event.target.value)}><option value="">{fr.common.toComplete}</option>{currentTypeIsUnavailable && <option value={form.intervention_type}>{catalogLabel(catalogs, 'maintenance_type', form.intervention_type)}</option>}{maintenanceTypes.map((option) => <option key={option.code} value={option.code}>{catalogLabel(catalogs, 'maintenance_type', option.code)}</option>)}</select></label>
+            <label><span>{fr.maintenance.interventionType}</span><SearchableSelect required ariaLabel={fr.maintenance.interventionType} value={form.intervention_type} onChange={(value) => update('intervention_type', value)} placeholder={fr.common.toComplete} options={[...(currentTypeIsUnavailable ? [{ value: form.intervention_type, label: catalogLabel(catalogs, 'maintenance_type', form.intervention_type) }] : []), ...maintenanceTypes.map((option) => ({ value: option.code, label: catalogLabel(catalogs, 'maintenance_type', option.code) }))]} /></label>
             <label>
               <span>{fr.maintenance.oil_changed}</span>
-              <select value={form.oil_changed} onChange={(event) => update('oil_changed', event.target.value)}>
-                <option value="">{fr.common.notProvided}</option>
-                <option value="true">{fr.common.yes}</option>
-                <option value="false">{fr.common.no}</option>
-              </select>
+              <SearchableSelect searchable={false} ariaLabel={fr.maintenance.oil_changed} value={form.oil_changed} onChange={(value) => update('oil_changed', value)} placeholder={fr.common.notProvided} options={yesNoOptions} />
             </label>
             {form.oil_changed === 'true' && (
               <label>
@@ -249,17 +251,13 @@ export function MaintenanceSection({
             {(['oil_filter_changed', 'fuel_filter_changed', 'air_filter_changed'] as const).map((field) => (
               <label key={field}>
                 <span>{fr.maintenance[field]}</span>
-                <select value={form[field]} onChange={(event) => update(field, event.target.value)}>
-                  <option value="">{fr.common.notProvided}</option>
-                  <option value="true">{fr.common.yes}</option>
-                  <option value="false">{fr.common.no}</option>
-                </select>
+                <SearchableSelect searchable={false} ariaLabel={fr.maintenance[field]} value={form[field]} onChange={(value) => update(field, value)} placeholder={fr.common.notProvided} options={yesNoOptions} />
               </label>
             ))}
             {(['battery_serviced', 'coolant_serviced'] as const).map((field) => (
-              <label key={field}><span>{field === 'battery_serviced' ? fr.maintenance.battery : fr.maintenance.coolant}</span><select value={form[field]} onChange={(event) => update(field, event.target.value)}><option value="">{fr.common.notProvided}</option><option value="true">{fr.common.yes}</option><option value="false">{fr.common.no}</option></select></label>
+              <label key={field}><span>{field === 'battery_serviced' ? fr.maintenance.battery : fr.maintenance.coolant}</span><SearchableSelect searchable={false} ariaLabel={field === 'battery_serviced' ? fr.maintenance.battery : fr.maintenance.coolant} value={form[field]} onChange={(value) => update(field, value)} placeholder={fr.common.notProvided} options={yesNoOptions} /></label>
             ))}
-            <label><span>{fr.maintenance.linkedTechnician}</span><select value={form.technician_employee_id} onChange={(event) => { update('technician_employee_id', event.target.value); if (event.target.value !== '') { update('technician_name', ''); update('external_technician_phone', '') } }}><option value="">{fr.common.notProvided}</option>{employees.map((employee) => <option key={employee.id} value={employee.id}>{employee.name}</option>)}</select></label>
+            <label><span>{fr.maintenance.linkedTechnician}</span><SearchableSelect ariaLabel={fr.maintenance.linkedTechnician} value={form.technician_employee_id} onChange={(value) => { update('technician_employee_id', value); if (value !== '') { update('technician_name', ''); update('external_technician_phone', '') } }} placeholder={fr.common.notProvided} options={employees.map((employee) => ({ value: String(employee.id), label: employee.name }))} /></label>
             {form.technician_employee_id === '' && <><label><span>{fr.maintenance.technicianName}</span><input value={form.technician_name} onChange={(event) => update('technician_name', event.target.value)} /></label><label><span>{fr.maintenance.technicianPhone}</span><input type="tel" value={form.external_technician_phone} onChange={(event) => update('external_technician_phone', event.target.value)} placeholder="+225 07 00 00 00 00" /></label></>}
             <label><span>{fr.maintenance.nextDue}</span><input type="date" min={form.maintenance_date || undefined} value={form.next_maintenance_date} onChange={(event) => update('next_maintenance_date', event.target.value)} /></label>
             <label><span>{fr.maintenance.cost} (FCFA)</span><input min="0" step="0.01" type="number" value={form.cost} onChange={(event) => update('cost', event.target.value)} /></label>

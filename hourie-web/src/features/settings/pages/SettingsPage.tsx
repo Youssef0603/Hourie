@@ -4,12 +4,12 @@ import { ActionIcon } from '../../../shared/components/ActionIcon'
 import { Modal } from '../../../shared/components/Modal'
 import { LoadingSpinner } from '../../../shared/components/LoadingSpinner'
 import { ApiError } from '../../../shared/api/http'
-import { deleteCatalogOption, getCatalogOptions, saveCatalogOption } from '../api'
-import type { CatalogOption } from '../types'
+import { deleteCatalogOption, getCatalogOptions, saveCatalogOption } from '../../equipment/api'
+import type { CatalogOption } from '../../equipment/types'
 
 const groups: CatalogOption['group'][] = ['equipment_condition', 'operational_situation', 'maintenance_type', 'fuel_type', 'project_status']
 
-export function CatalogsPage({ onChanged }: { onChanged: () => void }) {
+export function SettingsPage({ onChanged }: { onChanged: () => void }) {
   const [items, setItems] = useState<CatalogOption[]>([])
   const [group, setGroup] = useState<CatalogOption['group']>('equipment_condition')
   const [editing, setEditing] = useState<CatalogOption | null | undefined>()

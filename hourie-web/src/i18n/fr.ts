@@ -61,6 +61,8 @@ const french = {
     yes: 'Oui',
     minimum: 'Minimum',
     maximum: 'Maximum',
+    showOptions: 'Afficher les options',
+    noMatches: 'Aucun résultat',
   },
   equipment: {
     section: 'Inventaire',
@@ -435,6 +437,8 @@ const arabic = {
     yes: 'نعم',
     minimum: 'الحد الأدنى',
     maximum: 'الحد الأقصى',
+    showOptions: 'عرض الخيارات',
+    noMatches: 'لا توجد نتائج',
   },
   equipment: {
     section: 'المخزون',

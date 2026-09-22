@@ -3,6 +3,7 @@ import { fr } from '../../../i18n/fr'
 import { ApiError } from '../../../shared/api/http'
 import { ActionIcon } from '../../../shared/components/ActionIcon'
 import { LoadingSpinner } from '../../../shared/components/LoadingSpinner'
+import { SearchableSelect } from '../../../shared/components/SearchableSelect'
 import { catalogLabel, catalogOptions } from '../../equipment/catalogs'
 import type { CatalogOption, NamedReference } from '../../equipment/types'
 import { updateSite } from '../api'
@@ -34,6 +35,10 @@ export function SiteEditForm({ site, catalogs, employees, onCancel, onSaved }: {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (!responsibleEmployeeId) {
+      setError(fr.directory.selectResponsible)
+      return
+    }
     setIsSaving(true)
     setError(null)
 
@@ -60,8 +65,8 @@ export function SiteEditForm({ site, catalogs, employees, onCancel, onSaved }: {
       {error && <div className="form-alert" role="alert">{error}</div>}
       <div className="maintenance-form-grid site-form-grid">
         <label><span>{fr.directory.siteName}</span><input required disabled={isSaving} value={name} onChange={(event) => setName(event.target.value)} /></label>
-        <label><span>{fr.directory.siteStatus}</span><select disabled={isSaving} value={status} onChange={(event) => setStatus(event.target.value)}>{currentStatusIsUnavailable && <option value={status}>{catalogLabel(catalogs, 'project_status', status)}</option>}{availableStatuses.map((option) => <option key={option.code} value={option.code}>{catalogLabel(catalogs, 'project_status', option.code)}</option>)}</select></label>
-        <label><span>{fr.directory.siteResponsible}</span><select required disabled={isSaving} value={responsibleEmployeeId} onChange={(event) => setResponsibleEmployeeId(event.target.value)}><option value="">{fr.directory.selectResponsible}</option>{employees.map((employee) => <option key={employee.id} value={employee.id}>{employee.name}</option>)}</select></label>
+        <label><span>{fr.directory.siteStatus}</span><SearchableSelect ariaLabel={fr.directory.siteStatus} disabled={isSaving} value={status} onChange={setStatus} placeholder={fr.common.toComplete} includeEmpty={false} options={[...(currentStatusIsUnavailable ? [{ value: status, label: catalogLabel(catalogs, 'project_status', status) }] : []), ...availableStatuses.map((option) => ({ value: option.code, label: catalogLabel(catalogs, 'project_status', option.code) }))]} /></label>
+        <label><span>{fr.directory.siteResponsible}</span><SearchableSelect ariaLabel={fr.directory.siteResponsible} required disabled={isSaving} value={responsibleEmployeeId} onChange={setResponsibleEmployeeId} placeholder={fr.directory.selectResponsible} options={employees.map((employee) => ({ value: String(employee.id), label: employee.name }))} /></label>
         <label><span>{fr.directory.siteAddress}</span><input disabled={isSaving} value={address} onChange={(event) => setAddress(event.target.value)} /></label>
         <label><span>{fr.directory.startDate}</span><input disabled={isSaving} type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} /></label>
         <label><span>{fr.directory.expectedEndDate}</span><input disabled={isSaving} type="date" min={startDate || undefined} value={expectedEndDate} onChange={(event) => setExpectedEndDate(event.target.value)} /></label>

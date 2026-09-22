@@ -426,20 +426,44 @@ html[dir='rtl'] .sidebar-toggle svg {
 
 .inventory-panel {
   overflow: hidden;
-  border: 1px solid var(--color-border);
-  border-radius: 0.7rem;
+  border: 1px solid #e9ebef;
+  border-radius: 0.8rem;
   background: white;
-  box-shadow: 0 4px 16px rgb(18 20 24 / 4%);
+  box-shadow: 0 8px 30px rgb(18 20 24 / 3%);
 }
 
 .filter-bar {
   display: grid;
-  grid-template-columns: minmax(16rem, 1fr) auto;
-  align-items: end;
-  gap: 0.6rem;
-  border-bottom: 1px solid var(--color-border);
-  padding: 0.7rem 0.8rem;
-  background: #fafafa;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 1.1rem 1.2rem 0.65rem;
+  background: white;
+}
+
+.search-field > span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.filter-bar .search-field input {
+  height: 2.75rem;
+  border-color: #d9dde4;
+  border-radius: 999px;
+  padding-inline: 2.65rem 1rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='none'%3E%3Ccircle cx='8.8' cy='8.8' r='5.6' stroke='%236a707b' stroke-width='1.7'/%3E%3Cpath d='m13 13 4 4' stroke='%236a707b' stroke-width='1.7' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: left 0.9rem center;
+  background-size: 1rem;
+  font-size: 0.8rem;
+}
+
+html[dir='rtl'] .filter-bar .search-field input {
+  background-position: right 0.9rem center;
 }
 
 .filter-toolbar-actions {
@@ -1391,10 +1415,11 @@ html[dir='rtl'] .directory-form select {
 .people-table-wrap,
 .site-inventory-wrap {
   overflow-x: auto;
-  border: 1px solid var(--color-border);
-  border-radius: 0.65rem;
+  border: 1px solid #e9ebef;
+  border-radius: 0.8rem;
+  padding: 0.85rem 1.2rem 1.3rem;
   background: white;
-  box-shadow: 0 3px 12px rgb(18 20 24 / 4%);
+  box-shadow: 0 8px 30px rgb(18 20 24 / 3%);
 }
 
 .people-table {
@@ -1425,12 +1450,12 @@ html[dir='rtl'] .directory-form select {
 }
 
 .people-table th {
-  padding: 0.6rem 0.75rem;
-  color: var(--color-text-muted);
-  background: #f7f7f8;
-  font-size: 0.61rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  border-bottom: 1px solid #dfe2e7;
+  padding: 0.85rem 0.75rem;
+  color: var(--color-text-strong);
+  background: white;
+  font-size: 0.73rem;
+  font-weight: 650;
   text-align: start;
   white-space: nowrap;
 }
@@ -1447,12 +1472,16 @@ html[dir='rtl'] .directory-form select {
 }
 
 .people-table td {
-  border-top: 1px solid #ececef;
-  padding: 0.65rem 0.75rem;
+  border-bottom: 1px solid #e9ebef;
+  padding: 0.72rem 0.75rem;
   color: var(--color-text-strong);
-  font-size: 0.74rem;
+  font-size: 0.76rem;
   text-align: start;
   vertical-align: middle;
+}
+
+.people-table tbody tr:last-child td {
+  border-bottom: 0;
 }
 
 .people-table th:last-child,
@@ -1469,7 +1498,7 @@ html[dir='rtl'] .directory-form select {
 .people-table tbody tr:hover,
 .people-table tbody tr:focus {
   outline: none;
-  background: #faf3f5;
+  background: #f8f9fb;
 }
 
 .person-identity {
@@ -1834,8 +1863,9 @@ html[dir='rtl'] .filter-bar select {
 
 .equipment-table-wrap {
   position: relative;
-  min-height: 20rem;
+  min-height: 15rem;
   overflow-x: auto;
+  margin-inline: 1.2rem;
 }
 
 .equipment-table {
@@ -1845,23 +1875,27 @@ html[dir='rtl'] .filter-bar select {
 }
 
 .equipment-table th {
-  padding: 0.6rem 0.75rem;
-  color: var(--color-text-muted);
-  background: #f7f7f8;
-  font-size: 0.61rem;
-  letter-spacing: 0.06em;
+  border-bottom: 1px solid #dfe2e7;
+  padding: 0.85rem 0.75rem;
+  color: var(--color-text-strong);
+  background: white;
+  font-size: 0.71rem;
+  font-weight: 650;
   text-align: start;
-  text-transform: uppercase;
   white-space: nowrap;
 }
 
 .equipment-table td {
-  border-top: 1px solid #eee9eb;
-  padding: 0.66rem 0.75rem;
+  border-bottom: 1px solid #e9ebef;
+  padding: 0.72rem 0.75rem;
   color: var(--color-text-strong);
   font-size: 0.76rem;
   line-height: 1.25;
   white-space: nowrap;
+}
+
+.equipment-table tbody tr:last-child td {
+  border-bottom: 0;
 }
 
 .equipment-table tbody tr {
@@ -1872,7 +1906,7 @@ html[dir='rtl'] .filter-bar select {
 .equipment-table tbody tr:hover,
 .equipment-table tbody tr:focus {
   outline: none;
-  background: #faf3f5;
+  background: #f8f9fb;
 }
 
 .primary-cell,
@@ -1927,15 +1961,23 @@ html[dir='rtl'] .filter-bar select {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  border-top: 1px solid var(--color-border);
-  padding: 0.85rem 1rem;
-  font-size: 0.78rem;
+  padding: 0.85rem 1.2rem 1.1rem;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
 }
 
 .pagination > div {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+}
+
+.pagination button {
+  border-color: transparent;
+  border-radius: 0.35rem;
+  padding: 0.4rem 0.55rem;
+  background: transparent;
+  font-size: 0.73rem;
 }
 
 .pagination button:disabled {
@@ -2880,6 +2922,96 @@ html[dir='rtl'] .maintenance-form-grid select {
   grid-column: 1 / -1;
 }
 
+.searchable-select {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+.searchable-select .searchable-select-input {
+  width: 100%;
+  padding-inline-end: 2.5rem;
+}
+
+.searchable-select .searchable-select-input[readonly] {
+  cursor: pointer;
+}
+
+.searchable-select-button {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  display: grid;
+  width: 2.5rem;
+  place-items: center;
+  border: 0;
+  padding: 0;
+  color: var(--color-text-strong);
+  background: transparent;
+  cursor: pointer;
+}
+
+.searchable-select-button:disabled {
+  cursor: not-allowed;
+}
+
+.searchable-select-button svg {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.searchable-select-options {
+  z-index: 100;
+  width: var(--input-width);
+  max-width: calc(100vw - 1rem);
+  max-height: min(40svh, 17rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--color-border);
+  border-radius: var(--control-radius);
+  padding: 0.25rem;
+  color: var(--color-text-strong);
+  background: white;
+  box-shadow: 0 10px 28px rgb(18 20 24 / 18%);
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+
+.searchable-select-option,
+.searchable-select-empty {
+  border-radius: 0.3rem;
+  padding: 0.55rem 0.65rem;
+}
+
+.searchable-select-option {
+  cursor: pointer;
+}
+
+.searchable-select-option[data-focus] {
+  color: var(--color-primary-dark);
+  background: var(--color-primary-soft);
+}
+
+.searchable-select-option[data-selected] {
+  font-weight: 700;
+}
+
+.searchable-select-empty {
+  color: var(--color-text-muted);
+}
+
+@media (max-width: 720px) {
+  .searchable-select .searchable-select-input,
+  .searchable-select-options {
+    font-size: 1rem;
+  }
+}
+
 .maintenance-form-actions {
   justify-content: flex-end;
   margin-top: 0.7rem;
@@ -3260,15 +3392,15 @@ html[dir='rtl'] .maintenance-form-grid select {
   }
 
   .filter-bar {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: 1fr;
   }
 
   .search-field {
-    grid-column: span 2;
+    grid-column: auto;
   }
 
   .filter-toolbar-actions {
-    grid-column: span 2;
+    grid-column: auto;
   }
 
   .advanced-filter-panel {
