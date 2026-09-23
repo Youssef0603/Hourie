@@ -18,10 +18,11 @@ type AddGeneratorFormProps = {
 export function AddGeneratorForm({ options, initialProjectId, onCreated }: AddGeneratorFormProps) {
   const defaultCondition = catalogOptions(options.catalogs, 'equipment_condition')[0]?.code ?? ''
   const [form, setForm] = useState({
-    brand: '', model: '', serial_number: '', manufacture_year: '', condition: defaultCondition,
+    brand: '', model: '', serial_number: '', manufacture_year: '', purchase_date: '', condition: defaultCondition,
     operational_situation: '', project_id: initialProjectId?.toString() ?? '', current_location_id: '', custodian_employee_id: '',
     apparent_power_kva: '', active_power_kw: '', phases: '', voltage_rating: '', frequency_hz: '',
     current_rating: '', fuel_type: '', tank_capacity_litres: '', current_engine_hours: '', observations: '',
+    purchase_price_fcfa: '',
   })
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -62,7 +63,7 @@ export function AddGeneratorForm({ options, initialProjectId, onCreated }: AddGe
     try {
       const equipment = createdEquipment ?? await createEquipment({
         brand: text(form.brand), model: text(form.model), serial_number: text(form.serial_number),
-        manufacture_year: number(form.manufacture_year), condition: text(form.condition),
+        manufacture_year: number(form.manufacture_year), purchase_date: text(form.purchase_date), condition: text(form.condition),
         operational_situation: text(form.operational_situation),
         project_id: number(form.project_id), current_location_id: number(form.current_location_id),
         custodian_employee_id: number(form.custodian_employee_id), observations: text(form.observations),
@@ -71,6 +72,7 @@ export function AddGeneratorForm({ options, initialProjectId, onCreated }: AddGe
           phases: text(form.phases), voltage_rating: text(form.voltage_rating), frequency_hz: number(form.frequency_hz),
           current_rating: text(form.current_rating), fuel_type: text(form.fuel_type),
           tank_capacity_litres: number(form.tank_capacity_litres), current_engine_hours: number(form.current_engine_hours),
+          purchase_price_fcfa: number(form.purchase_price_fcfa),
         },
       })
       savedEquipment = equipment
@@ -101,6 +103,7 @@ export function AddGeneratorForm({ options, initialProjectId, onCreated }: AddGe
         <label><span>{fr.equipment.model}</span><input required value={form.model} onChange={(event) => update('model', event.target.value)} /></label>
         <label><span>{fr.equipment.serialNumber}</span><input value={form.serial_number} onChange={(event) => update('serial_number', event.target.value)} /></label>
         <label><span>{fr.equipment.manufactureYear}</span><input type="number" min="1900" max="2100" value={form.manufacture_year} onChange={(event) => update('manufacture_year', event.target.value)} /></label>
+        <label><span>{fr.equipment.purchaseDate}</span><input type="date" value={form.purchase_date} onChange={(event) => update('purchase_date', event.target.value)} /></label>
         <label><span>{fr.equipment.apparentPower}</span><input type="number" min="0" step="0.01" value={form.apparent_power_kva} onChange={(event) => update('apparent_power_kva', event.target.value)} /></label>
         <label><span>{fr.equipment.activePower}</span><input type="number" min="0" step="0.01" value={form.active_power_kw} onChange={(event) => update('active_power_kw', event.target.value)} /></label>
         <label><span>{fr.equipment.phases}</span><input value={form.phases} onChange={(event) => update('phases', event.target.value)} /></label>
@@ -110,6 +113,7 @@ export function AddGeneratorForm({ options, initialProjectId, onCreated }: AddGe
         <label><span>{fr.equipment.fuel}</span><SearchableSelect ariaLabel={fr.equipment.fuel} value={form.fuel_type} onChange={(value) => update('fuel_type', value)} placeholder={fr.common.toComplete} options={catalogOptions(options.catalogs, 'fuel_type').map((option) => ({ value: option.code, label: catalogLabel(options.catalogs, 'fuel_type', option.code) }))} /></label>
         <label><span>{fr.equipment.tank}</span><input type="number" min="0" step="0.01" value={form.tank_capacity_litres} onChange={(event) => update('tank_capacity_litres', event.target.value)} /></label>
         <label className="field-wide"><span>{fr.equipment.engineHours}</span><input type="number" min="0" step="0.01" value={form.current_engine_hours} onChange={(event) => update('current_engine_hours', event.target.value)} /></label>
+        <label><span>{fr.equipment.purchasePrice}</span><input type="number" min="0" step="1" value={form.purchase_price_fcfa} onChange={(event) => update('purchase_price_fcfa', event.target.value)} /></label>
         <label><span>{fr.equipment.condition}</span><SearchableSelect ariaLabel={fr.equipment.condition} value={form.condition} onChange={(value) => update('condition', value)} placeholder={fr.common.toComplete} includeEmpty={false} options={catalogOptions(options.catalogs, 'equipment_condition').map((option) => ({ value: option.code, label: catalogLabel(options.catalogs, 'equipment_condition', option.code) }))} /></label>
         <label><span>{fr.equipment.situation}</span><SearchableSelect ariaLabel={fr.equipment.situation} value={form.operational_situation} onChange={(value) => update('operational_situation', value)} placeholder={fr.common.toComplete} options={catalogOptions(options.catalogs, 'operational_situation').map((option) => ({ value: option.code, label: catalogLabel(options.catalogs, 'operational_situation', option.code) }))} /></label>
         <label><span>{fr.equipment.project}</span><SearchableSelect ariaLabel={fr.equipment.project} value={form.project_id} onChange={updateProject} placeholder={fr.common.toComplete} options={options.projects.map((project) => ({ value: String(project.id), label: project.name }))} /></label>

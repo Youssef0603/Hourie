@@ -26,28 +26,28 @@ it('returns a stable paginated equipment list for an authenticated user', functi
     $user = User::factory()->create();
     $category = EquipmentCategory::factory()->create(['code' => 'generator']);
     Equipment::factory()->count(3)->for($category, 'category')->sequence(
-        ['asset_code' => 'A.H-003'],
-        ['asset_code' => 'A.H-001'],
-        ['asset_code' => 'A.H-002'],
+        ['asset_code' => 'A.H-003', 'manufacture_year' => 2003],
+        ['asset_code' => 'A.H-001', 'manufacture_year' => 2001],
+        ['asset_code' => 'A.H-002', 'manufacture_year' => 2002],
     )->create();
 
     $response = $this
         ->actingAs($user, 'web')
-        ->getJson('/api/v1/equipment?per_page=2&sort=created_at_asc');
+        ->getJson('/api/v1/equipment?per_page=2&sort=manufacture_year_asc');
 
     $response
         ->assertOk()
         ->assertJsonCount(2, 'data')
-        ->assertJsonPath('data.0.asset_code', 'A.H-003')
-        ->assertJsonPath('data.1.asset_code', 'A.H-001')
+        ->assertJsonPath('data.0.asset_code', 'A.H-001')
+        ->assertJsonPath('data.1.asset_code', 'A.H-002')
         ->assertJsonPath('meta.total', 3)
         ->assertJsonPath('meta.per_page', 2);
 });
 
-it('sorts newest generators first and exposes a three digit display id', function () {
+it('defaults to manufacturing-year sorting and exposes a three digit display id', function () {
     $user = User::factory()->create();
-    Equipment::factory()->create(['created_at' => '2026-01-01', 'asset_code' => 'OLD']);
-    $newest = Equipment::factory()->create(['created_at' => '2026-02-01', 'asset_code' => 'NEW']);
+    Equipment::factory()->create(['manufacture_year' => 2015, 'asset_code' => 'OLD']);
+    $newest = Equipment::factory()->create(['manufacture_year' => 2025, 'asset_code' => 'NEW']);
 
     $this
         ->actingAs($user, 'web')
@@ -185,7 +185,6 @@ it('combines advanced technical, identity, responsibility, and date filters', fu
         'model' => 'KD110',
         'serial_number' => 'SERIAL-ADVANCED',
         'manufacture_year' => 2024,
-        'created_at' => '2026-06-15 10:00:00',
     ]);
     GeneratorDetail::factory()->for($matching)->create([
         'apparent_power_kva' => 150,
@@ -208,8 +207,6 @@ it('combines advanced technical, identity, responsibility, and date filters', fu
         'serial_number' => 'ADVANCED',
         'manufacture_year_from' => 2020,
         'manufacture_year_to' => 2025,
-        'created_from' => '2026-01-01',
-        'created_to' => '2026-12-31',
         'apparent_power_kva_min' => 100,
         'apparent_power_kva_max' => 200,
         'active_power_kw_min' => 100,
@@ -338,6 +335,7 @@ it('allows a generator manager to fill every inventory field without changing th
         'model' => 'B165',
         'serial_number' => '34LNGLH0009',
         'manufacture_year' => 2023,
+        'purchase_date' => '2024-05-20',
         'condition' => 'functional',
         'operational_situation' => 'in_use',
         'custodian_employee_id' => $custodian->id,
@@ -352,6 +350,7 @@ it('allows a generator manager to fill every inventory field without changing th
             'fuel_type' => 'GASOIL',
             'tank_capacity_litres' => 470,
             'current_engine_hours' => 1250.5,
+            'purchase_price_fcfa' => 18500000,
         ],
     ];
 
@@ -361,12 +360,15 @@ it('allows a generator manager to fill every inventory field without changing th
         ->assertOk()
         ->assertJsonPath('data.asset_code', 'A.H-001')
         ->assertJsonPath('data.brand', 'KOHLER')
+        ->assertJsonPath('data.purchase_date', '2024-05-20')
         ->assertJsonPath('data.custodian.name', 'Jean Responsable')
-        ->assertJsonPath('data.generator_details.current_rating', '216');
+        ->assertJsonPath('data.generator_details.current_rating', '216')
+        ->assertJsonPath('data.generator_details.purchase_price_fcfa', '18500000.00');
 
     $this->assertDatabaseHas('equipment', [
         'id' => $equipment->id,
         'asset_code' => 'A.H-001',
+        'purchase_date' => '2024-05-20',
         'custodian_employee_id' => $custodian->id,
     ]);
     $this->assertDatabaseHas('equipment_changes', [

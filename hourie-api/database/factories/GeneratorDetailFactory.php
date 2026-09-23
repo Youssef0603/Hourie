@@ -29,6 +29,7 @@ class GeneratorDetailFactory extends Factory
             'fuel_type' => 'GASOIL',
             'tank_capacity_litres' => null,
             'current_engine_hours' => null,
+            'purchase_price_fcfa' => null,
         ];
     }
 }

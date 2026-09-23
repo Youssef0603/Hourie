@@ -25,6 +25,7 @@ type FormState = {
   model: string
   serial_number: string
   manufacture_year: string
+  purchase_date: string
   condition: string
   operational_situation: string
   project_id: string
@@ -40,6 +41,7 @@ type FormState = {
   fuel_type: string
   tank_capacity_litres: string
   current_engine_hours: string
+  purchase_price_fcfa: string
 }
 
 function initialForm(equipment: Equipment): FormState {
@@ -50,6 +52,7 @@ function initialForm(equipment: Equipment): FormState {
     model: equipment.model ?? '',
     serial_number: equipment.serial_number ?? '',
     manufacture_year: equipment.manufacture_year?.toString() ?? '',
+    purchase_date: equipment.purchase_date ?? '',
     condition: equipment.condition ?? '',
     operational_situation: equipment.operational_situation ?? '',
     project_id: equipment.current_project_assignment?.project.id.toString() ?? '',
@@ -65,6 +68,7 @@ function initialForm(equipment: Equipment): FormState {
     fuel_type: details?.fuel_type ?? '',
     tank_capacity_litres: details?.tank_capacity_litres ?? '',
     current_engine_hours: details?.current_engine_hours ?? '',
+    purchase_price_fcfa: details?.purchase_price_fcfa ?? '',
   }
 }
 
@@ -117,6 +121,7 @@ export function EquipmentEditForm({ equipment, employees, projects, locations, c
         model: text(form.model),
         serial_number: text(form.serial_number),
         manufacture_year: number(form.manufacture_year),
+        purchase_date: text(form.purchase_date),
         condition: text(form.condition),
         operational_situation: text(form.operational_situation),
         project_id: number(form.project_id),
@@ -133,6 +138,7 @@ export function EquipmentEditForm({ equipment, employees, projects, locations, c
           fuel_type: text(form.fuel_type),
           tank_capacity_litres: number(form.tank_capacity_litres),
           current_engine_hours: number(form.current_engine_hours),
+          purchase_price_fcfa: number(form.purchase_price_fcfa),
         },
       })
       onChanged(updated)
@@ -161,6 +167,7 @@ export function EquipmentEditForm({ equipment, employees, projects, locations, c
         <label><span>{fr.equipment.model}</span><input value={form.model} onChange={(event) => update('model', event.target.value)} /></label>
         <label><span>{fr.equipment.serialNumber}</span><input value={form.serial_number} onChange={(event) => update('serial_number', event.target.value)} /></label>
         <label><span>{fr.equipment.manufactureYear}</span><input min="1900" max="2100" type="number" value={form.manufacture_year} onChange={(event) => update('manufacture_year', event.target.value)} /></label>
+        <label><span>{fr.equipment.purchaseDate}</span><input type="date" value={form.purchase_date} onChange={(event) => update('purchase_date', event.target.value)} /></label>
         <label><span>{fr.equipment.condition}</span><SearchableSelect ariaLabel={fr.equipment.condition} value={form.condition} onChange={(value) => update('condition', value)} placeholder={fr.common.notProvided} options={catalogOptions(catalogs, 'equipment_condition').map((option) => ({ value: option.code, label: catalogLabel(catalogs, 'equipment_condition', option.code) }))} /></label>
         <label><span>{fr.equipment.situation}</span><SearchableSelect ariaLabel={fr.equipment.situation} value={form.operational_situation} onChange={(value) => update('operational_situation', value)} placeholder={fr.common.notProvided} options={catalogOptions(catalogs, 'operational_situation').map((option) => ({ value: option.code, label: catalogLabel(catalogs, 'operational_situation', option.code) }))} /></label>
         <label><span>{fr.equipment.project}</span><SearchableSelect ariaLabel={fr.equipment.project} value={form.project_id} onChange={updateProject} placeholder={fr.common.notProvided} options={projects.map((project) => ({ value: String(project.id), label: project.name }))} /></label>
@@ -175,6 +182,7 @@ export function EquipmentEditForm({ equipment, employees, projects, locations, c
         <label><span>{fr.equipment.fuel}</span><SearchableSelect ariaLabel={fr.equipment.fuel} value={form.fuel_type} onChange={(value) => update('fuel_type', value)} placeholder={fr.common.notProvided} options={[...(currentFuelIsUnavailable ? [{ value: form.fuel_type, label: form.fuel_type }] : []), ...availableFuelTypes.map((option) => ({ value: option.code, label: catalogLabel(catalogs, 'fuel_type', option.code) }))]} /></label>
         <label><span>{fr.equipment.tank}</span><input min="0" step="0.01" type="number" value={form.tank_capacity_litres} onChange={(event) => update('tank_capacity_litres', event.target.value)} /></label>
         <label className="field-wide"><span>{fr.equipment.engineHours}</span><input min="0" step="0.01" type="number" value={form.current_engine_hours} onChange={(event) => update('current_engine_hours', event.target.value)} /></label>
+        <label><span>{fr.equipment.purchasePrice}</span><input min="0" step="1" type="number" value={form.purchase_price_fcfa} onChange={(event) => update('purchase_price_fcfa', event.target.value)} /></label>
         <label className="field-wide"><span>{fr.equipment.observations}</span><textarea rows={4} value={form.observations} onChange={(event) => update('observations', event.target.value)} /></label>
       </div>
       {imageEditor}

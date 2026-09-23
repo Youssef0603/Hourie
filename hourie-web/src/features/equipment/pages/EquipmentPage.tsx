@@ -2,11 +2,13 @@ import { useEffect, useRef, useState } from 'react'
 import type { AuthenticatedUser } from '../../auth/types'
 import { AddGeneratorForm } from '../components/AddGeneratorForm'
 import { ImportGeneratorForm } from '../components/ImportGeneratorForm'
-import { MaintenanceWarningsPanel } from '../components/MaintenanceWarningsPage'
 import { EquipmentDetailPanel } from '../components/EquipmentDetailPanel'
 import { EquipmentInventoryTable } from '../components/EquipmentInventoryTable'
 import { SettingsPage } from '../../settings/pages/SettingsPage'
 import { EquipmentFilterDrawer } from '../components/EquipmentFilterDrawer'
+import { AssetCategoryCards } from '../components/AssetCategoryCards'
+import { AssetInventoryView } from '../components/AssetInventoryView'
+import type { AssetView } from '../assetCategories'
 import { advancedFilterKeys, initialFilters } from '../filters'
 import { PeoplePage } from '../../directory/pages/PeoplePage'
 import { SitesPage } from '../../directory/pages/SitesPage'
@@ -23,7 +25,6 @@ import {
   getEquipment,
   getEquipmentFilterOptions,
   getEquipmentItem,
-  getMaintenanceWarnings,
 } from '../api'
 import { parseWorkspaceRoute, workspacePath, type WorkspaceRoute } from '../../../app/routes'
 import type {
@@ -31,7 +32,6 @@ import type {
   EquipmentFilterOptions,
   EquipmentFilters,
   EquipmentListResponse,
-  MaintenanceWarningResponse,
 } from '../types'
 import './equipment-page.css'
 
@@ -62,9 +62,11 @@ export function EquipmentPage({
   const [pathname, setPathname] = useState(() => window.location.pathname)
   const route = parseWorkspaceRoute(pathname)
   const previousSiteId = useRef(route.siteId)
+  const previousAssetCategory = useRef(route.section === 'assets' ? route.assetCategory : 'generator')
   const activeSection = route.section
   const [filters, setFilters] = useState(() => ({
     ...initialFilters,
+    category: route.section === 'assets' ? route.assetCategory === 'all' ? '' : route.assetCategory : 'generator',
     project_id: route.siteId ? String(route.siteId) : '',
   }))
   const [search, setSearch] = useState('')
@@ -83,11 +85,6 @@ export function EquipmentPage({
   const [showEditSite, setShowEditSite] = useState(false)
   const [siteContext, setSiteContext] = useState<Site | null>(null)
   const [refreshToken, setRefreshToken] = useState(0)
-  const [maintenanceWarnings, setMaintenanceWarnings] = useState<MaintenanceWarningResponse | null>(null)
-  const [maintenanceWarningPage, setMaintenanceWarningPage] = useState(1)
-  const [maintenanceWarningRefreshToken, setMaintenanceWarningRefreshToken] = useState(0)
-  const [isLoadingMaintenanceWarnings, setIsLoadingMaintenanceWarnings] = useState(true)
-  const [maintenanceWarningError, setMaintenanceWarningError] = useState<string | null>(null)
 
   useEffect(() => {
     const canonicalPath = workspacePath(parseWorkspaceRoute(window.location.pathname))
@@ -101,11 +98,14 @@ export function EquipmentPage({
     let cancelled = false
     const currentRoute = parseWorkspaceRoute(pathname)
     if (currentRoute.section === 'catalogs' && !user.permissions.manage_sites) {
-      navigate('/generators', true)
+      navigate('/assets/generator', true)
       return
     }
     const wasSiteId = previousSiteId.current
     previousSiteId.current = currentRoute.siteId
+    const currentCategory = currentRoute.section === 'assets' ? currentRoute.assetCategory : 'generator'
+    const wasAssetCategory = previousAssetCategory.current
+    previousAssetCategory.current = currentCategory
     // The browser history is an external source of navigation state.
     setShowHistory(null)
     setShowEditSite(false)
@@ -121,7 +121,7 @@ export function EquipmentPage({
       if (wasSiteId !== currentRoute.siteId) {
         setIsLoading(true)
         setResult(null)
-        setFilters({ ...initialFilters, project_id: String(currentRoute.siteId) })
+        setFilters({ ...initialFilters, category: 'generator', project_id: String(currentRoute.siteId) })
       }
       getSite(currentRoute.siteId).then((site) => {
         if (!cancelled) setSiteContext(site)
@@ -133,10 +133,11 @@ export function EquipmentPage({
       })
     } else {
       setSiteContext(null)
-      if (wasSiteId !== null) {
+      if (wasSiteId !== null || wasAssetCategory !== currentCategory) {
         setIsLoading(true)
         setResult(null)
-        setFilters({ ...initialFilters })
+        setSearch('')
+        setFilters({ ...initialFilters, category: currentCategory === 'all' ? '' : currentCategory })
       }
     }
 
@@ -161,11 +162,15 @@ export function EquipmentPage({
   }
 
   function navigateSection(section: WorkspaceRoute['section']) {
-    navigate(section === 'catalogs' ? '/settings' : `/${section}`)
+    navigate(section === 'catalogs' ? '/settings' : section === 'assets' || section === 'generators' ? '/assets/generator' : `/${section}`)
+  }
+
+  function navigateAsset(category: AssetView) {
+    navigate(`/assets/${category}`)
   }
 
   function closeEquipment() {
-    navigate(route.siteId ? `/sites/${route.siteId}` : '/generators')
+    navigate(route.siteId ? `/sites/${route.siteId}` : route.section === 'assets' ? `/assets/${route.assetCategory}` : '/assets/generator')
   }
 
   useEffect(() => {
@@ -217,28 +222,6 @@ export function EquipmentPage({
     }
   }, [filters, refreshToken])
 
-  useEffect(() => {
-    let cancelled = false
-
-    getMaintenanceWarnings(maintenanceWarningPage)
-      .then((warnings) => {
-        if (!cancelled) {
-          setMaintenanceWarnings(warnings)
-          setMaintenanceWarningError(null)
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setMaintenanceWarningError(fr.maintenanceWarnings.loadError)
-      })
-      .finally(() => {
-        if (!cancelled) setIsLoadingMaintenanceWarnings(false)
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [maintenanceWarningPage, maintenanceWarningRefreshToken])
-
   function refreshInventory() {
     setIsLoading(true)
     setError(null)
@@ -275,13 +258,13 @@ export function EquipmentPage({
   }
 
   function openEquipment(id: number) {
-    navigate(route.siteId ? `/sites/${route.siteId}/generators/${id}` : `/generators/${id}`)
+    navigate(route.siteId ? `/sites/${route.siteId}/generators/${id}` : route.section === 'assets' ? `/assets/${route.assetCategory}/${id}` : `/assets/generator/${id}`)
   }
 
   const isSiteView = siteContext !== null
   const hasFilters = Object.entries(filters).some(
     ([key, value]) =>
-      !['page', 'per_page', 'sort', ...(isSiteView ? ['project_id'] : [])].includes(key)
+      !['page', 'per_page', 'sort', 'category', ...(isSiteView ? ['project_id'] : [])].includes(key)
       && value !== '',
   )
   const advancedFilterCount = advancedFilterKeys.filter((key) => filters[key] !== '').length
@@ -295,7 +278,7 @@ export function EquipmentPage({
     setSearch('')
     setIsLoading(true)
     setResult(null)
-    setFilters({ ...initialFilters, project_id: String(site.id) })
+    setFilters({ ...initialFilters, category: 'generator', project_id: String(site.id) })
   }
 
   function closeSiteInventory() {
@@ -307,11 +290,11 @@ export function EquipmentPage({
     setResult(null)
     // Always create a new filter object. Reusing `initialFilters` can make
     // React skip the state change, leaving `isLoading` stuck without a request.
-    setFilters({ ...initialFilters })
+    setFilters({ ...initialFilters, category: 'generator' })
   }
 
   async function removeSelectedEquipment() {
-    if (!selected || !window.confirm(fr.equipment.deleteConfirmation)) return
+    if (!selected || !window.confirm(selected.category.code === 'generator' ? fr.equipment.deleteConfirmation : fr.assets.deleteConfirmation)) return
 
     try {
       await deleteEquipment(selected.id)
@@ -343,7 +326,7 @@ export function EquipmentPage({
       <WorkspaceHeader user={user} language={language} onToggleLanguage={onToggleLanguage} onLogout={onLogout} isLoggingOut={isLoggingOut} />
 
       <div className={`workspace-layout${isSidebarCollapsed ? ' sidebar-collapsed' : ''}`}>
-        <WorkspaceSidebar user={user} activeSection={activeSection} isSidebarCollapsed={isSidebarCollapsed} onToggleSidebar={() => setIsSidebarCollapsed((value) => !value)} onNavigate={navigateSection} />
+        <WorkspaceSidebar user={user} language={language} activeSection={activeSection} activeAssetCategory={activeSection === 'assets' ? route.assetCategory : 'generator'} isSidebarCollapsed={isSidebarCollapsed} onToggleSidebar={() => setIsSidebarCollapsed((value) => !value)} onNavigate={navigateSection} onNavigateAsset={navigateAsset} />
 
       {(activeSection === 'generators' || isSiteView) ? <main className="equipment-page">
         {isSiteView && <nav className="breadcrumbs" aria-label={fr.navigation.breadcrumbs}>
@@ -355,7 +338,7 @@ export function EquipmentPage({
         </nav>}
         <section className="page-heading">
           <div>
-            {!isSiteView && <p className="section-label">{fr.equipment.section}</p>}
+            {!isSiteView && <p className="section-label">{fr.navigation.assets}</p>}
             {isSiteView ? <div className="site-page-title-row"><button className="table-refresh-button" type="button" onClick={() => navigateSection('sites')}><ActionIcon name="collapse" /><span>{fr.navigation.sites}</span></button><h1>{siteContext.name}</h1></div> : <h1>{fr.equipment.title}</h1>}
             {(!isSiteView || siteContext?.address) && <p>{isSiteView ? siteContext?.address : fr.equipment.subtitle}</p>}
           </div>
@@ -364,7 +347,6 @@ export function EquipmentPage({
             {isSiteView && user.permissions.manage_sites && <button className="table-refresh-button" type="button" onClick={() => setShowEditSite(true)}><ActionIcon name="edit" /><span>{fr.common.edit}</span></button>}
             {isSiteView && user.permissions.manage_sites && <button className="danger-button" type="button" onClick={removeCurrentSite}><ActionIcon name="delete" /><span>{fr.directory.deleteSite}</span></button>}
             {!isSiteView && user.permissions.manage_equipment && <button className="table-refresh-button import-excel-action" type="button" onClick={() => setShowImportGenerator(true)}><ActionIcon name="upload" /><span>{fr.equipment.importExcel}</span></button>}
-            {user.permissions.manage_equipment && <button className="primary-button page-action compact-action" type="button" onClick={() => setShowAddGenerator((value) => !value)}><ActionIcon name={showAddGenerator ? 'close' : 'add'} /><span>{showAddGenerator ? fr.common.close : fr.equipment.addGenerator}</span></button>}
             <div className="inventory-count" aria-live="polite">
               <strong>{result?.meta.total ?? '—'}</strong>
               <span>{fr.equipment.items}</span>
@@ -382,8 +364,7 @@ export function EquipmentPage({
         {showImportGenerator && <Modal title={fr.equipment.importTitle} onClose={() => setShowImportGenerator(false)}><ImportGeneratorForm onClose={() => setShowImportGenerator(false)} onImported={() => { refreshInventory(); refreshFilterOptions() }} /></Modal>}
         {showEditSite && siteContext && <Modal title={fr.directory.editSite} size="wide" onClose={() => setShowEditSite(false)}><SiteEditForm site={siteContext} catalogs={options?.catalogs} employees={options?.employees ?? []} onSaved={(site) => { setSiteContext(site); setShowEditSite(false); refreshFilterOptions(); refreshInventory() }} /></Modal>}
 
-        {!isSiteView && <MaintenanceWarningsPanel result={maintenanceWarnings} isLoading={isLoadingMaintenanceWarnings} error={maintenanceWarningError} onRefresh={() => { setIsLoadingMaintenanceWarnings(true); setMaintenanceWarningRefreshToken((current) => current + 1) }} onPageChange={(page) => { setIsLoadingMaintenanceWarnings(true); setMaintenanceWarningPage(page) }} onOpenEquipment={openEquipment} />}
-
+        {!isSiteView && <AssetCategoryCards selected="generator" language={language} onSelect={navigateAsset} />}
         <section className="inventory-panel" aria-label={fr.equipment.title}>
           <div className="filter-bar">
             <label className="search-field">
@@ -401,6 +382,7 @@ export function EquipmentPage({
                 <span>{fr.equipment.filters}</span>
                 {hasFilters && <strong>{advancedFilterCount || 1}</strong>}
               </button>
+              {user.permissions.manage_equipment && <button className="table-refresh-button table-add-button" type="button" onClick={() => setShowAddGenerator(true)} aria-label={fr.equipment.addGenerator} title={fr.equipment.addGenerator}><ActionIcon name="add" /></button>}
               <button className="table-refresh-button filter-refresh-button" type="button" onClick={refreshInventory} aria-label={fr.common.refresh} title={fr.common.refresh}><ActionIcon name="refresh" /></button>
               {hasFilters && (
                 <button
@@ -410,7 +392,7 @@ export function EquipmentPage({
                     setIsLoading(true)
                     setError(null)
                     setSearch('')
-                    setFilters({ ...initialFilters, project_id: isSiteView ? String(siteContext?.id) : '' })
+                    setFilters({ ...initialFilters, category: 'generator', project_id: isSiteView ? String(siteContext?.id) : '' })
                   }}
                 >
                   {fr.equipment.clearFilters}
@@ -422,7 +404,6 @@ export function EquipmentPage({
           <EquipmentInventoryTable
             result={result}
             isLoading={isLoading}
-            language={language}
             options={options}
             onOpenEquipment={openEquipment}
             onChangePage={changePage}
@@ -437,11 +418,12 @@ export function EquipmentPage({
           onProjectChange={updateProjectFilter}
           onClose={() => setShowFilterDrawer(false)}
         />}
-      </main> : activeSection === 'sites' ? <SitesPage canAdd={user.permissions.manage_sites} catalogs={options?.catalogs} employees={options?.employees} onOpenSite={openSiteInventory} /> : activeSection === 'catalogs' ? <SettingsPage onChanged={refreshFilterOptions} /> : <PeoplePage canAdd={user.permissions.manage_users} canManageManagerAccounts={user.role === 'manager'} catalogs={options?.catalogs} />}
+      </main> : activeSection === 'assets' ? <AssetInventoryView category={route.assetCategory} language={language} options={options} filters={filters} search={search} result={result} isLoading={isLoading} error={error} canManage={user.permissions.manage_equipment} onSearchChange={setSearch} onFilterChange={updateFilter} onSelectCategory={navigateAsset} onRefresh={refreshInventory} onPageChange={changePage} onOpen={openEquipment} onCreated={(equipment) => { refreshInventory(); openEquipment(equipment.id) }} /> : activeSection === 'sites' ? <SitesPage canAdd={user.permissions.manage_sites} catalogs={options?.catalogs} employees={options?.employees} onOpenSite={openSiteInventory} /> : activeSection === 'catalogs' ? <SettingsPage onChanged={refreshFilterOptions} /> : <PeoplePage canAdd={user.permissions.manage_users} canManageManagerAccounts={user.role === 'manager'} catalogs={options?.catalogs} />}
       </div>
 
-      {(activeSection === 'generators' || isSiteView) && <EquipmentDetailPanel
+      {(activeSection === 'generators' || activeSection === 'assets' || isSiteView) && <EquipmentDetailPanel
         user={user}
+        language={language}
         selected={selected}
         options={options}
         isLoadingDetail={isLoadingDetail}
@@ -454,8 +436,6 @@ export function EquipmentPage({
         onRefreshSelected={async () => { if (selected) setSelected(await getEquipmentItem(selected.id)) }}
         onMaintenanceChanged={async () => {
           if (selected) setSelected(await getEquipmentItem(selected.id))
-          setMaintenanceWarningPage(1)
-          setMaintenanceWarningRefreshToken((current) => current + 1)
         }}
       />}
       {showHistory && <Modal title={fr.audit.title} onClose={() => setShowHistory(null)}>

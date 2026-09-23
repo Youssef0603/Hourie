@@ -27,6 +27,9 @@ return [
     'unique' => 'قيمة حقل :attribute مستخدمة بالفعل.',
     'location_project_mismatch' => 'يجب أن ينتمي الموقع المحدد إلى المشروع المحدد.',
     'equipment_location_project_mismatch' => 'يجب أن ينتمي الموقع المحدد إلى المشروع المحدد.',
+    'transfer_source_changed' => 'تغير التعيين الحالي. حدّث الصفحة قبل نقل المولد.',
+    'transfer_destination_same' => 'يجب أن يختلف الموقع الوجهة عن الموقع الحالي.',
+    'only_generators_transferable' => 'يمكن نقل المولدات فقط باستخدام هذا الإجراء.',
 
     'attributes' => [
         'email' => 'البريد الإلكتروني',

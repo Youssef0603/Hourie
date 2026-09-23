@@ -10,6 +10,7 @@ type EquipmentInvoicesProps = {
   equipment: Equipment
   canManage: boolean
   onChanged: () => Promise<void>
+  title?: string
 }
 
 function formatSize(bytes: number) {
@@ -22,7 +23,7 @@ function formatDate(value: string) {
   return new Intl.DateTimeFormat(activeLanguage === 'ar' ? 'ar' : 'fr-FR', { dateStyle: 'medium' }).format(new Date(value))
 }
 
-export function EquipmentInvoices({ equipment, canManage, onChanged }: EquipmentInvoicesProps) {
+export function EquipmentInvoices({ equipment, canManage, onChanged, title = fr.invoices.title }: EquipmentInvoicesProps) {
   const input = useRef<HTMLInputElement>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [deletingId, setDeletingId] = useState<number | null>(null)
@@ -76,7 +77,7 @@ export function EquipmentInvoices({ equipment, canManage, onChanged }: Equipment
   return (
     <section className="equipment-invoices-section">
       <div className="section-heading-row">
-        <div><h3>{fr.invoices.title}</h3><p>{fr.invoices.count(equipment.invoices.length)}</p></div>
+        <div><h3>{title}</h3><p>{fr.invoices.count(equipment.invoices.length)}</p></div>
         {canManage && <><input ref={input} hidden multiple accept="application/pdf,.pdf" type="file" onChange={upload} /><button className="invoice-upload-button" type="button" disabled={isUploading} onClick={() => input.current?.click()}><ActionIcon name="upload" />{isUploading ? <LoadingSpinner compact label={fr.invoices.uploading} /> : fr.invoices.add}</button></>}
       </div>
       {canManage && <p className="invoice-format-hint">{fr.invoices.formats}</p>}

@@ -40,6 +40,13 @@ class UpdateEmployeeRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'phone_number' => ['nullable', 'string', 'max:30'],
+            'passport_number' => [
+                'nullable',
+                'string',
+                'max:100',
+                Rule::unique('employees', 'passport_number')->ignore($employee?->id),
+            ],
+            'employment_date' => ['nullable', 'date_format:Y-m-d', 'before_or_equal:today'],
             'username' => [
                 $hasAccount ? 'required' : 'nullable',
                 'string',
@@ -77,6 +84,12 @@ class UpdateEmployeeRequest extends FormRequest
         if ($this->has('email')) {
             $this->merge([
                 'email' => Str::lower($this->string('email')->trim()->toString()) ?: null,
+            ]);
+        }
+
+        if ($this->has('passport_number')) {
+            $this->merge([
+                'passport_number' => Str::upper($this->string('passport_number')->trim()->toString()) ?: null,
             ]);
         }
     }

@@ -51,6 +51,8 @@ export type SiteDetails = Site & {
 export type Employee = {
   id: number
   phone_number: string | null
+  passport_number: string | null
+  employment_date: string | null
   name: string
   is_active: boolean
   equipment_in_custody_count: number
@@ -64,15 +66,20 @@ export type EmployeeDetails = Employee & {
 export type CreateEmployeePayload = {
   name: string
   phone_number: string | null
+  passport_number: string | null
+  employment_date: string | null
+  create_account: boolean
   email: string | null
-  role: 'manager' | 'cms_manager' | 'generator_manager' | 'viewer'
-  password: string
-  password_confirmation: string
+  role: 'manager' | 'cms_manager' | 'generator_manager' | 'viewer' | null
+  password: string | null
+  password_confirmation: string | null
 }
 
 export type UpdateEmployeePayload = {
   name: string
   phone_number: string | null
+  passport_number: string | null
+  employment_date: string | null
   username: string | null
   email: string | null
   role: 'manager' | 'cms_manager' | 'generator_manager' | 'viewer'

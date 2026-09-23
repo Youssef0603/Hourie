@@ -101,6 +101,17 @@ export async function saveEquipment(
   return response.data
 }
 
+export async function transferEquipment(
+  id: number,
+  payload: { from_project_id: number | null; to_project_id: number; to_location_id: number },
+): Promise<Equipment> {
+  await initializeCsrfProtection()
+  return (await apiRequest<{ data: Equipment }>(`/api/v1/equipment/${id}/transfer`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })).data
+}
+
 export async function createEquipment(
   payload: Record<string, unknown>,
 ): Promise<Equipment> {

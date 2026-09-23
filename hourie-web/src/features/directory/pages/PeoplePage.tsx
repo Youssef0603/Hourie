@@ -51,6 +51,9 @@ export function PeoplePage({
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [passportNumber, setPassportNumber] = useState("");
+  const [employmentDate, setEmploymentDate] = useState("");
+  const [createAccount, setCreateAccount] = useState(false);
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<
     "manager" | "cms_manager" | "generator_manager" | "viewer"
@@ -76,6 +79,7 @@ export function PeoplePage({
             person.user?.username,
             person.user?.email,
             person.phone_number,
+            person.passport_number,
           ]
             .filter(Boolean)
             .join(" "),
@@ -103,7 +107,7 @@ export function PeoplePage({
     event.preventDefault();
     setError(null);
 
-    if (!canManageManagerAccounts && role === "manager") {
+    if (createAccount && !canManageManagerAccounts && role === "manager") {
       setRole("viewer");
       return;
     }
@@ -112,14 +116,20 @@ export function PeoplePage({
       await createEmployee({
         name: name.trim(),
         phone_number: phoneNumber.trim() || null,
-        email: email.trim() || null,
-        role,
-        password,
-        password_confirmation: passwordConfirmation,
+        passport_number: passportNumber.trim() || null,
+        employment_date: employmentDate || null,
+        create_account: createAccount,
+        email: createAccount ? email.trim() || null : null,
+        role: createAccount ? role : null,
+        password: createAccount ? password : null,
+        password_confirmation: createAccount ? passwordConfirmation : null,
       });
       await refreshPeople();
       setName("");
       setPhoneNumber("");
+      setPassportNumber("");
+      setEmploymentDate("");
+      setCreateAccount(false);
       setEmail("");
       setRole("viewer");
       setPassword("");
@@ -183,7 +193,7 @@ export function PeoplePage({
       <DirectoryHeading
         title={fr.directory.people}
         subtitle={fr.directory.peopleSubtitle}
-        canAdd={canAdd}
+        canAdd={false}
         showForm={showForm}
         onToggle={() => setShowForm((value) => !value)}
         addLabel={fr.directory.addPerson}
@@ -199,93 +209,67 @@ export function PeoplePage({
           onClose={() => setShowForm(false)}
         >
           <form
-            className="directory-form people-form modal-directory-form"
+            className={`directory-form people-form modal-directory-form${createAccount ? '' : ' personnel-only-form'}`}
             onSubmit={submit}
           >
-            <p className="account-form-hint">{fr.directory.credentialsHint}</p>
             {error && (
               <div className="form-alert account-form-alert" role="alert">
                 {error}
               </div>
             )}
-            <label>
-              <span>{fr.directory.fullName}</span>
-              <input
-                required
-                autoComplete="name"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-              />
-            </label>
-            <label>
-              <span>{fr.directory.phoneNumber}</span>
-              <input
-                type="tel"
-                autoComplete="tel"
-                value={phoneNumber}
-                onChange={(event) => setPhoneNumber(event.target.value)}
-                placeholder="+225 07 00 00 00 00"
-              />
-            </label>
-            <label>
-              <span>{fr.directory.username}</span>
-              <input
-                className="generated-username"
-                readOnly
-                tabIndex={-1}
-                value={generatedUsername(name)}
-                placeholder={fr.directory.usernameGeneratedPlaceholder}
-              />
-              <small>{fr.directory.usernameGeneratedHint}</small>
-            </label>
-            <label>
-              <span>{fr.directory.optionalEmail}</span>
-              <input
-                type="email"
-                autoComplete="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                placeholder="nom@hourie.ci"
-              />
-            </label>
-            <label>
-              <span>{fr.directory.accountRole}</span>
-              <SearchableSelect
-                ariaLabel={fr.directory.accountRole}
-                value={role}
-                onChange={(value) => setRole(value as typeof role)}
-                placeholder={fr.directory.accountRole}
-                includeEmpty={false}
-                options={roleEntries.map(([value, label]) => ({
-                  value,
-                  label,
-                }))}
-              />
-            </label>
-            <label>
-              <span>{fr.directory.temporaryPassword}</span>
-              <input
-                required
-                minLength={12}
-                type="password"
-                autoComplete="new-password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-              />
-            </label>
-            <label>
-              <span>{fr.directory.confirmPassword}</span>
-              <input
-                required
-                minLength={12}
-                type="password"
-                autoComplete="new-password"
-                value={passwordConfirmation}
-                onChange={(event) =>
-                  setPasswordConfirmation(event.target.value)
-                }
-              />
-            </label>
+            <section className="people-form-section">
+              <h3>{fr.directory.personalInformation}</h3>
+              <div className="people-form-fields">
+                <label>
+                  <span>{fr.directory.fullName}</span>
+                  <input required autoComplete="name" value={name} onChange={(event) => setName(event.target.value)} />
+                </label>
+                <label>
+                  <span>{fr.directory.phoneNumber}</span>
+                  <input type="tel" autoComplete="tel" value={phoneNumber} onChange={(event) => setPhoneNumber(event.target.value)} placeholder="+225 07 00 00 00 00" />
+                </label>
+                <label>
+                  <span>{fr.directory.passportNumber}</span>
+                  <input value={passportNumber} onChange={(event) => setPassportNumber(event.target.value)} />
+                </label>
+                <label>
+                  <span>{fr.directory.employmentDate}</span>
+                  <input type="date" max={new Date().toISOString().slice(0, 10)} value={employmentDate} onChange={(event) => setEmploymentDate(event.target.value)} />
+                </label>
+              </div>
+            </section>
+            <section className={`people-form-section account-access-section${createAccount ? ' has-account' : ''}`}>
+              {createAccount && <h3>{fr.directory.accountAccess}</h3>}
+              <label className="account-access-toggle">
+                <input type="checkbox" checked={createAccount} onChange={(event) => setCreateAccount(event.target.checked)} />
+                <span>{fr.directory.createAccount}</span>
+              </label>
+              {createAccount && <><p className="account-form-hint">{fr.directory.credentialsHint}</p>
+              <div className="people-form-fields">
+                <label>
+                  <span>{fr.directory.username}</span>
+                  <input className="generated-username" readOnly tabIndex={-1} value={generatedUsername(name)} placeholder={fr.directory.usernameGeneratedPlaceholder} />
+                  <small>{fr.directory.usernameGeneratedHint}</small>
+                </label>
+                <label>
+                  <span>{fr.directory.optionalEmail}</span>
+                  <input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="nom@hourie.ci" />
+                </label>
+                <label>
+                  <span>{fr.directory.accountRole}</span>
+                  <SearchableSelect ariaLabel={fr.directory.accountRole} value={role} onChange={(value) => setRole(value as typeof role)} placeholder={fr.directory.accountRole} includeEmpty={false} options={roleEntries.map(([value, label]) => ({ value, label }))} />
+                </label>
+                <label>
+                  <span>{fr.directory.temporaryPassword}</span>
+                  <input required minLength={12} type="password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} />
+                </label>
+                <label className="field-wide">
+                  <span>{fr.directory.confirmPassword}</span>
+                  <input required minLength={12} type="password" autoComplete="new-password" value={passwordConfirmation} onChange={(event) => setPasswordConfirmation(event.target.value)} />
+                </label>
+              </div>
+              </>}
+            </section>
             <div className="maintenance-form-actions">
               <button className="primary-button save-button" type="submit">
                 {fr.common.save}
@@ -306,6 +290,17 @@ export function PeoplePage({
             />
           </label>
           <div className="filter-toolbar-actions">
+            {canAdd && (
+              <button
+                className="table-refresh-button table-add-button"
+                type="button"
+                onClick={() => setShowForm(true)}
+                aria-label={fr.directory.addPerson}
+                title={fr.directory.addPerson}
+              >
+                <ActionIcon name="add" />
+              </button>
+            )}
             <button
               className="table-refresh-button filter-refresh-button"
               type="button"
@@ -497,6 +492,14 @@ function PersonDetail({
             <dd>{person.phone_number ?? fr.common.notAssigned}</dd>
           </div>
           <div>
+            <dt>{fr.directory.passportNumber}</dt>
+            <dd>{person.passport_number ?? fr.common.notAssigned}</dd>
+          </div>
+          <div>
+            <dt>{fr.directory.employmentDate}</dt>
+            <dd>{person.employment_date ?? fr.common.notAssigned}</dd>
+          </div>
+          <div>
             <dt>{fr.directory.role}</dt>
             <dd>
               {person.user ? fr.roles[person.user.role] : fr.common.notAssigned}
@@ -505,11 +508,11 @@ function PersonDetail({
           <div>
             <dt>{fr.directory.accountStatus}</dt>
             <dd>
-              <span
-                className={`account-status ${person.is_active ? "active" : "inactive"}`}
-              >
-                {person.is_active ? fr.directory.active : fr.directory.inactive}
-              </span>
+              {person.user ? (
+                <span className={`account-status ${person.is_active ? "active" : "inactive"}`}>
+                  {person.is_active ? fr.directory.active : fr.directory.inactive}
+                </span>
+              ) : fr.directory.noSystemAccess}
             </dd>
           </div>
         </dl>
@@ -599,6 +602,8 @@ function EditPersonForm({
 }) {
   const [name, setName] = useState(person.name);
   const [phoneNumber, setPhoneNumber] = useState(person.phone_number ?? "");
+  const [passportNumber, setPassportNumber] = useState(person.passport_number ?? "");
+  const [employmentDate, setEmploymentDate] = useState(person.employment_date ?? "");
   const [username, setUsername] = useState(person.user?.username ?? "");
   const [email, setEmail] = useState(person.user?.email ?? "");
   const [role, setRole] = useState<
@@ -622,6 +627,8 @@ function EditPersonForm({
         await updateEmployee(person.id, {
           name: name.trim(),
           phone_number: phoneNumber.trim() || null,
+          passport_number: passportNumber.trim() || null,
+          employment_date: employmentDate || null,
           username: username.trim() || null,
           email: email.trim() || null,
           role,
@@ -645,82 +652,31 @@ function EditPersonForm({
       className="directory-form people-form modal-directory-form person-edit-form"
       onSubmit={submit}
     >
-      <p className="account-form-hint">{fr.directory.editCredentialsHint}</p>
       {formError && (
         <div className="form-alert account-form-alert" role="alert">
           {formError}
         </div>
       )}
-      <label>
-        <span>{fr.directory.fullName}</span>
-        <input
-          required
-          autoComplete="name"
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-        />
-      </label>
-      <label>
-        <span>{fr.directory.phoneNumber}</span>
-        <input
-          type="tel"
-          autoComplete="tel"
-          value={phoneNumber}
-          onChange={(event) => setPhoneNumber(event.target.value)}
-        />
-      </label>
-      <label>
-        <span>{fr.directory.username}</span>
-        <input
-          required={person.user !== null}
-          minLength={3}
-          autoComplete="username"
-          value={username}
-          onChange={(event) => setUsername(event.target.value.toLowerCase())}
-        />
-      </label>
-      <label>
-        <span>{fr.directory.optionalEmail}</span>
-        <input
-          type="email"
-          autoComplete="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-        />
-      </label>
-      <label>
-        <span>{fr.directory.accountRole}</span>
-        <SearchableSelect
-          ariaLabel={fr.directory.accountRole}
-          value={role}
-          onChange={(value) => setRole(value as typeof role)}
-          placeholder={fr.directory.accountRole}
-          includeEmpty={false}
-          options={roleEntries.map(([value, label]) => ({ value, label }))}
-        />
-      </label>
-      <label>
-        <span>{fr.directory.newPassword}</span>
-        <input
-          minLength={12}
-          required={!person.user && username !== ""}
-          type="password"
-          autoComplete="new-password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-        />
-      </label>
-      <label>
-        <span>{fr.directory.confirmNewPassword}</span>
-        <input
-          minLength={12}
-          required={password !== ""}
-          type="password"
-          autoComplete="new-password"
-          value={passwordConfirmation}
-          onChange={(event) => setPasswordConfirmation(event.target.value)}
-        />
-      </label>
+      <section className="people-form-section">
+        <h3>{fr.directory.personalInformation}</h3>
+        <div className="people-form-fields">
+          <label><span>{fr.directory.fullName}</span><input required autoComplete="name" value={name} onChange={(event) => setName(event.target.value)} /></label>
+          <label><span>{fr.directory.phoneNumber}</span><input type="tel" autoComplete="tel" value={phoneNumber} onChange={(event) => setPhoneNumber(event.target.value)} /></label>
+          <label><span>{fr.directory.passportNumber}</span><input value={passportNumber} onChange={(event) => setPassportNumber(event.target.value)} /></label>
+          <label><span>{fr.directory.employmentDate}</span><input type="date" max={new Date().toISOString().slice(0, 10)} value={employmentDate} onChange={(event) => setEmploymentDate(event.target.value)} /></label>
+        </div>
+      </section>
+      <section className="people-form-section">
+        <h3>{fr.directory.accountAccess}</h3>
+        <p className="account-form-hint">{fr.directory.editCredentialsHint}</p>
+        <div className="people-form-fields">
+          <label><span>{fr.directory.username}</span><input required={person.user !== null} minLength={3} autoComplete="username" value={username} onChange={(event) => setUsername(event.target.value.toLowerCase())} /></label>
+          <label><span>{fr.directory.optionalEmail}</span><input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} /></label>
+          <label><span>{fr.directory.accountRole}</span><SearchableSelect ariaLabel={fr.directory.accountRole} value={role} onChange={(value) => setRole(value as typeof role)} placeholder={fr.directory.accountRole} includeEmpty={false} options={roleEntries.map(([value, label]) => ({ value, label }))} /></label>
+          <label><span>{fr.directory.newPassword}</span><input minLength={12} required={!person.user && username !== ""} type="password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} /></label>
+          <label className="field-wide"><span>{fr.directory.confirmNewPassword}</span><input minLength={12} required={password !== ""} type="password" autoComplete="new-password" value={passwordConfirmation} onChange={(event) => setPasswordConfirmation(event.target.value)} /></label>
+        </div>
+      </section>
       <div className="maintenance-form-actions">
         <button
           className="primary-button save-button"

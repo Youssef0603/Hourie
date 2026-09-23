@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
 import type { AuthenticatedUser } from '../features/auth/types'
 import { fr, type Language } from '../i18n/fr'
@@ -7,6 +8,8 @@ import { ActionIcon } from '../shared/components/ActionIcon'
 import { LoadingSpinner } from '../shared/components/LoadingSpinner'
 import hourieLogo from '../assets/hourie-logo.svg'
 import type { WorkspaceRoute } from './routes'
+import { assetCategories, assetCategoryLabel, type AssetView } from '../features/equipment/assetCategories'
+import { AssetCategoryIcon } from '../features/equipment/components/AssetCategoryIcon'
 
 function userInitials(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean)
@@ -53,13 +56,17 @@ export function WorkspaceHeader({ user, language, onToggleLanguage, onLogout, is
   )
 }
 
-export function WorkspaceSidebar({ user, activeSection, isSidebarCollapsed, onToggleSidebar, onNavigate }: {
+export function WorkspaceSidebar({ user, language, activeSection, activeAssetCategory, isSidebarCollapsed, onToggleSidebar, onNavigate, onNavigateAsset }: {
   user: AuthenticatedUser
+  language: Language
   activeSection: WorkspaceRoute['section']
+  activeAssetCategory: AssetView
   isSidebarCollapsed: boolean
   onToggleSidebar: () => void
   onNavigate: (section: WorkspaceRoute['section']) => void
+  onNavigateAsset: (category: AssetView) => void
 }) {
+  const [isAssetsExpanded, setIsAssetsExpanded] = useState(false)
   return (
         <aside className="workspace-sidebar">
           <div className="sidebar-heading">
@@ -71,7 +78,20 @@ export function WorkspaceSidebar({ user, activeSection, isSidebarCollapsed, onTo
           <nav aria-label={fr.navigation.title}>
             <div className="sidebar-navigation-group">
               <p className="sidebar-group-label">{fr.navigation.inventory}</p>
-              <button title={fr.navigation.generators} className={`sidebar-child ${activeSection === 'generators' ? 'active' : ''}`} type="button" onClick={() => onNavigate('generators')}><NavigationIcon name="generators" /><span className="nav-label">{fr.navigation.generators}</span></button>
+              <div className={`sidebar-assets-heading${activeSection === 'generators' || activeSection === 'assets' ? ' active-group' : ''}`}>
+                <button title={fr.navigation.assets} className="sidebar-assets-toggle" type="button" onClick={() => { onNavigateAsset('generator'); setIsAssetsExpanded(true) }}>
+                  <AssetCategoryIcon category="all" /><span className="nav-label">{fr.navigation.assets}</span>
+                </button>
+                <button className="sidebar-assets-chevron" type="button" onClick={() => setIsAssetsExpanded((value) => !value)} aria-label={isAssetsExpanded ? fr.navigation.collapse : fr.navigation.expand} aria-expanded={isAssetsExpanded} aria-controls="sidebar-asset-categories">
+                  <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m7.5 5 5 5-5 5" /></svg>
+                </button>
+              </div>
+              <div id="sidebar-asset-categories" className={`sidebar-asset-disclosure${isAssetsExpanded ? ' expanded' : ''}`} aria-hidden={!isAssetsExpanded} inert={!isAssetsExpanded}>
+                <div className="sidebar-asset-children">
+                  <button title={fr.navigation.generators} className={`sidebar-child${activeSection === 'generators' ? ' active' : ''}`} type="button" onClick={() => onNavigateAsset('generator')}><AssetCategoryIcon category="generator" /><span className="nav-label">{fr.navigation.generators}</span></button>
+                  {assetCategories.map((category) => <button key={category.code} title={assetCategoryLabel(category.code, language)} className={`sidebar-child${activeSection === 'assets' && activeAssetCategory === category.code ? ' active' : ''}`} type="button" onClick={() => onNavigateAsset(category.code)}><AssetCategoryIcon category={category.code} /><span className="nav-label">{assetCategoryLabel(category.code, language)}</span></button>)}
+                </div>
+              </div>
             </div>
             <button title={fr.navigation.sites} className={activeSection === 'sites' ? 'active' : ''} type="button" onClick={() => onNavigate('sites')}><NavigationIcon name="sites" /><span className="nav-label">{fr.navigation.sites}</span></button>
             <button title={fr.navigation.people} className={activeSection === 'people' ? 'active' : ''} type="button" onClick={() => onNavigate('people')}><NavigationIcon name="people" /><span className="nav-label">{fr.navigation.people}</span></button>

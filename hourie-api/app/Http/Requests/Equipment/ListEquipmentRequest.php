@@ -26,7 +26,7 @@ class ListEquipmentRequest extends FormRequest
     {
         return [
             'q' => ['nullable', 'string', 'max:100'],
-            'category' => ['nullable', 'string', 'max:50', 'exists:equipment_categories,code'],
+            'category' => ['nullable', 'string', 'max:50'],
             'condition' => ['nullable', Rule::exists('catalog_options', 'code')->where('group', 'equipment_condition')],
             'operational_situation' => ['nullable', Rule::exists('catalog_options', 'code')->where('group', 'operational_situation')],
             'project_id' => ['nullable', 'integer', 'exists:projects,id'],
@@ -37,8 +37,6 @@ class ListEquipmentRequest extends FormRequest
             'serial_number' => ['nullable', 'string', 'max:255'],
             'manufacture_year_from' => ['nullable', 'integer', 'min:1900', 'max:2100'],
             'manufacture_year_to' => ['nullable', 'integer', 'min:1900', 'max:2100', 'gte:manufacture_year_from'],
-            'created_from' => ['nullable', 'date_format:Y-m-d'],
-            'created_to' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:created_from'],
             'apparent_power_kva_min' => ['nullable', 'numeric', 'min:0'],
             'apparent_power_kva_max' => ['nullable', 'numeric', 'min:0', 'gte:apparent_power_kva_min'],
             'active_power_kw_min' => ['nullable', 'numeric', 'min:0'],
@@ -53,11 +51,11 @@ class ListEquipmentRequest extends FormRequest
             'voltage_rating' => ['nullable', 'string', 'max:100'],
             'current_rating' => ['nullable', 'string', 'max:100'],
             'fuel_type' => ['nullable', 'string', 'max:100'],
+            'asset_field' => ['nullable', 'string', 'max:100'],
+            'asset_value' => ['nullable', 'string', 'max:100', 'required_with:asset_field'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
             'page' => ['nullable', 'integer', 'min:1'],
             'sort' => ['nullable', Rule::in([
-                'created_at_desc',
-                'created_at_asc',
                 'manufacture_year_desc',
                 'manufacture_year_asc',
             ])],

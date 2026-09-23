@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Equipment;
 
 use App\Models\Equipment;
+use App\Models\EquipmentCategory;
 use App\Models\Location;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -20,28 +21,51 @@ class UpdateEquipmentRequest extends FormRequest
     /** @return array<string, ValidationRule|array<mixed>|string> */
     public function rules(): array
     {
-        return [
+        $equipment = $this->route('equipment');
+        $categoryCode = $equipment instanceof Equipment
+            ? $equipment->category()->value('code')
+            : $this->input('category_code', 'generator');
+        $isGenerator = $categoryCode === 'generator' || ! array_key_exists($categoryCode, EquipmentCategory::ASSET_CATEGORIES);
+        $rules = [
             'brand' => ['present', 'nullable', 'string', 'max:255'],
             'model' => ['present', 'nullable', 'string', 'max:255'],
             'serial_number' => ['present', 'nullable', 'string', 'max:255'],
             'manufacture_year' => ['present', 'nullable', 'integer', 'min:1900', 'max:'.((int) date('Y') + 1)],
+            'purchase_date' => ['sometimes', 'nullable', 'date_format:Y-m-d'],
             'condition' => ['present', 'nullable', $this->activeCatalogOption('equipment_condition')],
             'operational_situation' => ['present', 'nullable', $this->activeCatalogOption('operational_situation')],
             'project_id' => ['sometimes', 'nullable', 'integer', Rule::exists('projects', 'id')->where('is_active', true)],
             'current_location_id' => ['sometimes', 'nullable', 'integer', Rule::exists('locations', 'id')->where('is_active', true)],
             'custodian_employee_id' => ['present', 'nullable', 'integer', Rule::exists('employees', 'id')->where('is_active', true)],
             'observations' => ['present', 'nullable', 'string'],
-            'generator_details' => ['required', 'array'],
-            'generator_details.apparent_power_kva' => ['present', 'nullable', 'numeric', 'min:0'],
-            'generator_details.active_power_kw' => ['present', 'nullable', 'numeric', 'min:0'],
-            'generator_details.phases' => ['present', 'nullable', 'string', 'max:50'],
-            'generator_details.voltage_rating' => ['present', 'nullable', 'string', 'max:100'],
-            'generator_details.frequency_hz' => ['present', 'nullable', 'numeric', 'min:0'],
-            'generator_details.current_rating' => ['present', 'nullable', 'string', 'max:100'],
-            'generator_details.fuel_type' => ['present', 'nullable', $this->activeCatalogOption('fuel_type')],
-            'generator_details.tank_capacity_litres' => ['present', 'nullable', 'numeric', 'min:0'],
-            'generator_details.current_engine_hours' => ['present', 'nullable', 'numeric', 'min:0'],
         ];
+
+        if (! $isGenerator) {
+            $rules['generator_details'] = ['prohibited'];
+            $fields = EquipmentCategory::ASSET_CATEGORIES[$categoryCode]['fields'] ?? [];
+            $rules['asset_details'] = ['required', 'array:'.implode(',', array_keys($fields))];
+
+            foreach ($fields as $field => $type) {
+                $rules['asset_details.'.$field] = $type === 'number'
+                    ? ['present', 'nullable', 'numeric', 'min:0']
+                    : ['present', 'nullable', 'string', 'max:255'];
+            }
+        } else {
+            $rules['asset_details'] = ['prohibited'];
+            $rules['generator_details'] = ['required', 'array'];
+            $rules['generator_details.apparent_power_kva'] = ['present', 'nullable', 'numeric', 'min:0'];
+            $rules['generator_details.active_power_kw'] = ['present', 'nullable', 'numeric', 'min:0'];
+            $rules['generator_details.phases'] = ['present', 'nullable', 'string', 'max:50'];
+            $rules['generator_details.voltage_rating'] = ['present', 'nullable', 'string', 'max:100'];
+            $rules['generator_details.frequency_hz'] = ['present', 'nullable', 'numeric', 'min:0'];
+            $rules['generator_details.current_rating'] = ['present', 'nullable', 'string', 'max:100'];
+            $rules['generator_details.fuel_type'] = ['present', 'nullable', $this->activeCatalogOption('fuel_type')];
+            $rules['generator_details.tank_capacity_litres'] = ['present', 'nullable', 'numeric', 'min:0'];
+            $rules['generator_details.current_engine_hours'] = ['present', 'nullable', 'numeric', 'min:0'];
+            $rules['generator_details.purchase_price_fcfa'] = ['sometimes', 'nullable', 'numeric', 'min:0', 'max:9999999999999.99'];
+        }
+
+        return $rules;
     }
 
     /** @return array<int, callable(Validator): void> */

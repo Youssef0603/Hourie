@@ -14,6 +14,9 @@ return [
     'location_cycle' => 'Une localisation ne peut pas être placée sous elle-même ou sous l’un de ses descendants.',
     'location_project_mismatch' => 'La localisation parente doit appartenir au même projet.',
     'equipment_location_project_mismatch' => 'La localisation sélectionnée doit appartenir au projet sélectionné.',
+    'transfer_source_changed' => 'L’affectation actuelle a changé. Rechargez la fiche avant de transférer le générateur.',
+    'transfer_destination_same' => 'Le site de destination doit être différent du site actuel.',
+    'only_generators_transferable' => 'Seuls les générateurs peuvent être transférés avec cette action.',
     'max' => [
         'numeric' => 'Le champ :attribute ne doit pas dépasser :max.',
         'string' => 'Le champ :attribute ne doit pas dépasser :max caractères.',

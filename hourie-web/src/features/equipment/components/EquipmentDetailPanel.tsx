@@ -1,17 +1,23 @@
+import { useState } from 'react'
 import type { AuthenticatedUser } from '../../auth/types'
-import { fr } from '../../../i18n/fr'
+import { fr, type Language } from '../../../i18n/fr'
 import { ActionIcon } from '../../../shared/components/ActionIcon'
 import { LoadingSpinner } from '../../../shared/components/LoadingSpinner'
+import { Modal } from '../../../shared/components/Modal'
 import { EquipmentEditForm } from './EquipmentEditForm'
+import { AssetForm } from './AssetForm'
+import { assetCategory, assetFieldLabel, isAssetCategoryCode } from '../assetCategories'
 import { EquipmentImages } from './EquipmentImages'
 import { EquipmentInvoices } from './EquipmentInvoices'
 import { MaintenanceSection } from './MaintenanceSection'
 import { catalogBadgeStyle, catalogLabel } from '../catalogs'
 import { displayedValue, locationName, measurement } from '../equipmentDisplay'
 import type { Equipment, EquipmentFilterOptions } from '../types'
+import { GeneratorTransferForm } from './GeneratorTransferForm'
 
 type EquipmentDetailPanelProps = {
   user: AuthenticatedUser
+  language: Language
   selected: Equipment | null
   options: EquipmentFilterOptions | null
   isLoadingDetail: boolean
@@ -26,10 +32,14 @@ type EquipmentDetailPanelProps = {
 }
 
 export function EquipmentDetailPanel({
-  user, selected, options, isLoadingDetail, isEditingEquipment, onClose, onDelete,
+  user, language, selected, options, isLoadingDetail, isEditingEquipment, onClose, onDelete,
   onShowHistory, onEditingChange, onChanged, onRefreshSelected, onMaintenanceChanged,
 }: EquipmentDetailPanelProps) {
+  const [showTransfer, setShowTransfer] = useState(false)
   if (!selected && !isLoadingDetail) return null
+  const categoryCode = selected?.category.code ?? 'generator'
+  const isOtherAsset = isAssetCategoryCode(categoryCode)
+  const assetDefinition = isOtherAsset ? assetCategory(categoryCode) : null
 
   return (
         <div className="detail-backdrop" onMouseDown={() => !isLoadingDetail && onClose()}>
@@ -37,7 +47,7 @@ export function EquipmentDetailPanel({
             className="detail-panel"
             role="dialog"
             aria-modal="true"
-            aria-label={fr.equipment.details}
+            aria-label={isOtherAsset ? fr.assets.details : fr.equipment.details}
             aria-live="polite"
             onMouseDown={(event) => event.stopPropagation()}
           >
@@ -56,7 +66,10 @@ export function EquipmentDetailPanel({
                 <div className="detail-content">
                   <div className={`detail-primary-actions${isEditingEquipment ? ' editing' : ''}`}>
                     {user.permissions.manage_equipment && (
-                      <EquipmentEditForm
+                      isOtherAsset && selected && options ? (
+                        isEditingEquipment ? <AssetForm key={selected.id} categoryCode={categoryCode} language={language} options={options} equipment={selected} onSaved={(equipment) => { onChanged(equipment); onEditingChange(false) }} onCancel={() => onEditingChange(false)} />
+                          : <button className="equipment-edit-button" type="button" onClick={() => onEditingChange(true)}><ActionIcon name="edit" />{fr.assets.edit}</button>
+                      ) : <EquipmentEditForm
                         key={selected.id}
                         equipment={selected}
                         employees={options?.employees ?? []}
@@ -68,7 +81,8 @@ export function EquipmentDetailPanel({
                         imageEditor={<><EquipmentImages equipment={selected} canManage onChanged={async () => { await onRefreshSelected() }} /><EquipmentInvoices equipment={selected} canManage onChanged={async () => { await onRefreshSelected() }} /></>}
                       />
                     )}
-                    {!isEditingEquipment && user.permissions.delete_equipment && <button className="danger-button detail-delete-button" type="button" onClick={onDelete}><ActionIcon name="delete" />{fr.equipment.deleteGenerator}</button>}
+                    {!isEditingEquipment && user.permissions.delete_equipment && <button className="danger-button detail-delete-button" type="button" onClick={onDelete}><ActionIcon name="delete" />{isOtherAsset ? fr.assets.delete : fr.equipment.deleteGenerator}</button>}
+                    {!isEditingEquipment && !isOtherAsset && options && user.permissions.manage_equipment && <button className="equipment-transfer-button" type="button" onClick={() => setShowTransfer(true)}><ActionIcon name="location" />{fr.equipment.transfer}</button>}
                     {!isEditingEquipment && <button className="equipment-history-button" type="button" onClick={() => onShowHistory()}><ActionIcon name="history" />{fr.audit.button}</button>}
                   </div>
                   <section>
@@ -84,11 +98,13 @@ export function EquipmentDetailPanel({
                     <dl>
                       <div><dt>{fr.equipment.serialNumber}</dt><dd>{displayedValue(selected.serial_number)}</dd></div>
                       <div><dt>{fr.equipment.manufactureYear}</dt><dd>{displayedValue(selected.manufacture_year)}</dd></div>
+                      <div><dt>{fr.equipment.purchaseDate}</dt><dd>{displayedValue(selected.purchase_date)}</dd></div>
                       <div><dt>{fr.equipment.condition}</dt><dd>{selected.condition ? <span className={`status-badge status-${selected.condition}`} style={catalogBadgeStyle(options?.catalogs, 'equipment_condition', selected.condition)}>{catalogLabel(options?.catalogs, 'equipment_condition', selected.condition)}</span> : fr.common.notProvided}</dd></div>
                       <div><dt>{fr.equipment.situation}</dt><dd>{selected.operational_situation ? <span className="status-badge" style={catalogBadgeStyle(options?.catalogs, 'operational_situation', selected.operational_situation)}>{catalogLabel(options?.catalogs, 'operational_situation', selected.operational_situation)}</span> : fr.common.notProvided}</dd></div>
                     </dl>
                   </section>
-                  {selected.generator_details && (
+                  {isOtherAsset && assetDefinition && <section><h3>{fr.assets.specifications}</h3><dl>{assetDefinition.fields.map((field) => <div key={field.key}><dt>{assetFieldLabel(field, language)}</dt><dd>{selected.asset_details?.[field.key] == null ? fr.common.notProvided : `${selected.asset_details[field.key]}${field.unit ? ` ${field.unit}` : ''}`}</dd></div>)}</dl></section>}
+                  {!isOtherAsset && selected.generator_details && (
                     <section>
                       <h3>{fr.equipment.technicalDetails}</h3>
                       <dl>
@@ -101,6 +117,7 @@ export function EquipmentDetailPanel({
                         <div><dt>{fr.equipment.fuel}</dt><dd>{selected.generator_details.fuel_type ? <span className="status-badge" style={catalogBadgeStyle(options?.catalogs, 'fuel_type', selected.generator_details.fuel_type)}>{catalogLabel(options?.catalogs, 'fuel_type', selected.generator_details.fuel_type)}</span> : fr.common.notProvided}</dd></div>
                         <div><dt>{fr.equipment.tank}</dt><dd>{displayedValue(selected.generator_details.tank_capacity_litres)}</dd></div>
                         <div><dt>{fr.equipment.engineHours}</dt><dd>{displayedValue(selected.generator_details.current_engine_hours)}</dd></div>
+                        <div><dt>{fr.equipment.purchasePrice}</dt><dd>{selected.generator_details.purchase_price_fcfa === null ? fr.common.notProvided : `${Number(selected.generator_details.purchase_price_fcfa).toLocaleString('fr-FR')} FCFA`}</dd></div>
                       </dl>
                     </section>
                   )}
@@ -108,9 +125,10 @@ export function EquipmentDetailPanel({
                     <h3>{fr.equipment.observations}</h3>
                     <p className="observations">{displayedValue(selected.observations)}</p>
                   </section>
-                  {!isEditingEquipment && <EquipmentImages equipment={selected} canManage={false} onChanged={async () => { await onRefreshSelected() }} />}
-                  {!isEditingEquipment && <EquipmentInvoices equipment={selected} canManage={false} onChanged={async () => { await onRefreshSelected() }} />}
-                  <MaintenanceSection
+                  {selected.review_flags.length > 0 && <section><h3>{fr.assets.reviewNotes}</h3><ul>{selected.review_flags.map((flag) => <li key={flag}>{flag}</li>)}</ul></section>}
+                  {(!isEditingEquipment || isOtherAsset) && <EquipmentImages equipment={selected} canManage={isOtherAsset && isEditingEquipment && user.permissions.manage_equipment} title={isOtherAsset ? fr.assets.photos : undefined} onChanged={async () => { await onRefreshSelected() }} />}
+                  {(!isEditingEquipment || isOtherAsset) && <EquipmentInvoices equipment={selected} canManage={isOtherAsset && isEditingEquipment && user.permissions.manage_equipment} title={isOtherAsset ? fr.assets.invoices : undefined} onChanged={async () => { await onRefreshSelected() }} />}
+                  {!isOtherAsset && <MaintenanceSection
                     equipment={selected}
                     employees={options?.employees ?? []}
                     canManage={user.permissions.manage_maintenance}
@@ -119,8 +137,9 @@ export function EquipmentDetailPanel({
                     onChanged={async () => {
                       await onMaintenanceChanged()
                     }}
-                  />
+                  />}
                 </div>
+                {showTransfer && options && <Modal title={fr.equipment.transferTitle} onClose={() => setShowTransfer(false)}><GeneratorTransferForm equipment={selected} options={options} onTransferred={(equipment) => { setShowTransfer(false); onChanged(equipment) }} /></Modal>}
               </>
             )}
           </aside>

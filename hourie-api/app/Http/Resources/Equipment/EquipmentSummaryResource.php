@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Equipment;
 
+use App\Models\EquipmentCategory;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -18,7 +19,6 @@ class EquipmentSummaryResource extends JsonResource
             'id' => $this->id,
             'display_id' => str_pad((string) $this->id, 3, '0', STR_PAD_LEFT),
             'asset_code' => $this->asset_code,
-            'created_at' => $this->created_at?->toISOString(),
             'category' => $this->whenLoaded('category', fn () => [
                 'id' => $this->category->id,
                 'code' => $this->category->code,
@@ -28,6 +28,9 @@ class EquipmentSummaryResource extends JsonResource
             'model' => $this->model,
             'serial_number' => $this->serial_number,
             'manufacture_year' => $this->manufacture_year,
+            'purchase_date' => $this->purchase_date?->toDateString(),
+            'asset_details' => $this->asset_details,
+            'review_flags' => $this->review_flags ?? [],
             'condition' => $this->condition,
             'operational_situation' => $this->operational_situation,
             'current_location' => $this->whenLoaded('currentLocation', function (): ?array {
@@ -94,7 +97,11 @@ class EquipmentSummaryResource extends JsonResource
     private function effectiveResponsibleSource(): ?string
     {
         if ($this->custodian !== null) {
-            return 'generator';
+            $categoryCode = $this->category?->code;
+
+            return $categoryCode === 'generator' || ! isset(EquipmentCategory::ASSET_CATEGORIES[$categoryCode])
+                ? 'generator'
+                : 'asset';
         }
 
         return $this->currentProjectAssignment?->project?->responsible === null ? null : 'site';

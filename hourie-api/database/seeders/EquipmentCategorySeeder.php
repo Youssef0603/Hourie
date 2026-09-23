@@ -12,9 +12,11 @@ class EquipmentCategorySeeder extends Seeder
      */
     public function run(): void
     {
-        EquipmentCategory::query()->updateOrCreate(
-            ['code' => 'generator'],
-            ['name' => 'Générateurs', 'is_active' => true],
-        );
+        foreach (EquipmentCategory::ASSET_CATEGORIES as $code => $definition) {
+            EquipmentCategory::query()->updateOrCreate(
+                ['code' => $code],
+                ['name' => $definition['name'], 'is_active' => true],
+            );
+        }
     }
 }

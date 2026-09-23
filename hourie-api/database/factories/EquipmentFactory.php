@@ -28,6 +28,7 @@ class EquipmentFactory extends Factory
             'model' => fake()->bothify('MODEL-###'),
             'serial_number' => fake()->unique()->bothify('SN-########'),
             'manufacture_year' => fake()->numberBetween(2015, 2026),
+            'purchase_date' => null,
             'condition' => EquipmentCondition::Functional,
             'operational_situation' => null,
             'observations' => null,

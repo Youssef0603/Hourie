@@ -224,6 +224,7 @@ html[dir='rtl'] .user-menu {
   .maintenance-card-toggle,
   .equipment-image-preview,
   .generator-photo-field > button,
+  .asset-category-card,
   .workspace-sidebar button,
   .searchable-select-button
 ) {
@@ -242,6 +243,7 @@ html[dir='rtl'] .user-menu {
   .maintenance-card-toggle,
   .equipment-image-preview,
   .generator-photo-field > button,
+  .asset-category-card,
   .workspace-sidebar button,
   .searchable-select-button
 ):is(:hover, :focus-visible):not(:disabled) {

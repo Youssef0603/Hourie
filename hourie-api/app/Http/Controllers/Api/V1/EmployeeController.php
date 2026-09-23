@@ -27,7 +27,7 @@ class EmployeeController extends Controller
             ->where('is_active', true)
             ->with('user:id,username,email,role')
             ->orderBy('name')
-            ->get(['id', 'user_id', 'name', 'phone_number', 'is_active']);
+            ->get(['id', 'user_id', 'name', 'phone_number', 'passport_number', 'employment_date', 'is_active']);
 
         $responsibilityCounts = Equipment::query()
             ->leftJoin('equipment_project_assignments', function ($join): void {
@@ -58,19 +58,25 @@ class EmployeeController extends Controller
         $data = $request->validated();
 
         $employee = DB::transaction(function () use ($data): Employee {
-            $user = User::query()->create([
-                'name' => $data['name'],
-                'username' => $this->generateUsername($data['name']),
-                'email' => $data['email'] ?? null,
-                'role' => $data['role'],
-                'password' => $data['password'],
-                'must_change_password' => true,
-            ]);
+            $user = null;
+
+            if ($data['create_account']) {
+                $user = User::query()->create([
+                    'name' => $data['name'],
+                    'username' => $this->generateUsername($data['name']),
+                    'email' => $data['email'] ?? null,
+                    'role' => $data['role'],
+                    'password' => $data['password'],
+                    'must_change_password' => true,
+                ]);
+            }
 
             return Employee::query()->create([
-                'user_id' => $user->id,
+                'user_id' => $user?->id,
                 'name' => $data['name'],
                 'phone_number' => $data['phone_number'] ?? null,
+                'passport_number' => $data['passport_number'] ?? null,
+                'employment_date' => $data['employment_date'] ?? null,
                 'is_active' => true,
             ]);
         });
@@ -109,6 +115,8 @@ class EmployeeController extends Controller
             $employee->update([
                 'name' => $data['name'],
                 'phone_number' => $data['phone_number'] ?? null,
+                'passport_number' => $data['passport_number'] ?? null,
+                'employment_date' => $data['employment_date'] ?? null,
             ]);
 
             $accountData = [

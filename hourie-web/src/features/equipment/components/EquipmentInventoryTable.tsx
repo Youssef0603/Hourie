@@ -1,4 +1,4 @@
-import { fr, type Language } from '../../../i18n/fr'
+import { fr } from '../../../i18n/fr'
 import { LoadingSpinner } from '../../../shared/components/LoadingSpinner'
 import { catalogBadgeStyle, catalogLabel } from '../catalogs'
 import { locationName, measurement } from '../equipmentDisplay'
@@ -7,14 +7,13 @@ import type { EquipmentFilterOptions, EquipmentListResponse } from '../types'
 type EquipmentInventoryTableProps = {
   result: EquipmentListResponse | null
   isLoading: boolean
-  language: Language
   options: EquipmentFilterOptions | null
   onOpenEquipment: (id: number) => void
   onChangePage: (page: number) => void
 }
 
 export function EquipmentInventoryTable({
-  result, isLoading, language, options, onOpenEquipment, onChangePage,
+  result, isLoading, options, onOpenEquipment, onChangePage,
 }: EquipmentInventoryTableProps) {
   return <>
           <div className="equipment-table-wrap">
@@ -22,7 +21,6 @@ export function EquipmentInventoryTable({
               <thead>
                 <tr>
                   <th>{fr.equipment.number}</th>
-                  <th>{fr.equipment.addedOn}</th>
                   <th>{fr.equipment.identification}</th>
                   <th>{fr.equipment.apparentPowerShort}</th>
                   <th>{fr.equipment.activePowerShort}</th>
@@ -47,7 +45,6 @@ export function EquipmentInventoryTable({
                     }}
                   >
                     <td><strong>{equipment.display_id}</strong><span className="secondary-cell">{equipment.asset_code}</span></td>
-                    <td>{new Intl.DateTimeFormat(language === 'ar' ? 'ar' : 'fr-FR').format(new Date(equipment.created_at))}</td>
                     <td>
                       <span className="primary-cell">
                         {[equipment.brand, equipment.model].filter(Boolean).join(' ') || fr.common.notProvided}

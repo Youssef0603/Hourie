@@ -70,6 +70,84 @@ it('allows CMS managers to create personnel and non-manager accounts', function 
         ->assertJsonPath('data.permissions.manage_manager_accounts', false);
 });
 
+it('creates personnel without a system account when requested', function () {
+    $manager = User::factory()->create(['role' => UserRole::Manager]);
+
+    $response = $this->actingAs($manager, 'web')->postJson('/api/v1/employees', [
+        'name' => 'Kouamé Adou',
+        'phone_number' => '+225 07 00 00 00 00',
+        'passport_number' => 'CI-70001',
+        'employment_date' => '2024-01-15',
+        'create_account' => false,
+    ])->assertCreated()
+        ->assertJsonPath('data.name', 'Kouamé Adou')
+        ->assertJsonPath('data.user', null);
+
+    $this->assertDatabaseHas('employees', [
+        'id' => $response->json('data.id'),
+        'user_id' => null,
+        'passport_number' => 'CI-70001',
+    ]);
+    expect(User::query()->count())->toBe(1);
+});
+
+it('stores and updates personnel passport and employment information', function () {
+    $manager = User::factory()->create(['role' => UserRole::Manager]);
+
+    $response = $this->actingAs($manager, 'web')->postJson('/api/v1/employees', [
+        'name' => 'Mariam Kouassi',
+        'phone_number' => null,
+        'passport_number' => ' ci-45879 ',
+        'employment_date' => '2026-01-15',
+        'email' => null,
+        'role' => 'viewer',
+        'password' => 'Temporary-2026',
+        'password_confirmation' => 'Temporary-2026',
+    ])->assertCreated()
+        ->assertJsonPath('data.passport_number', 'CI-45879')
+        ->assertJsonPath('data.employment_date', '2026-01-15');
+
+    $employeeId = $response->json('data.id');
+    $employee = Employee::query()->findOrFail($employeeId);
+
+    $this->actingAs($manager, 'web')->patchJson("/api/v1/employees/{$employeeId}", [
+        'name' => 'Mariam Kouassi',
+        'phone_number' => null,
+        'passport_number' => 'CI-90001',
+        'employment_date' => '2026-02-01',
+        'username' => $employee->user->username,
+        'email' => null,
+        'role' => 'viewer',
+        'password' => null,
+        'password_confirmation' => null,
+    ])->assertOk()
+        ->assertJsonPath('data.passport_number', 'CI-90001')
+        ->assertJsonPath('data.employment_date', '2026-02-01');
+
+    $this->assertDatabaseHas('employees', [
+        'id' => $employeeId,
+        'passport_number' => 'CI-90001',
+    ]);
+    expect($employee->fresh()->employment_date?->toDateString())->toBe('2026-02-01');
+});
+
+it('rejects duplicate passport numbers and future employment dates', function () {
+    $manager = User::factory()->create(['role' => UserRole::Manager]);
+    Employee::factory()->create(['passport_number' => 'CI-45879']);
+
+    $this->actingAs($manager, 'web')->postJson('/api/v1/employees', [
+        'name' => 'Mariam Kouassi',
+        'phone_number' => null,
+        'passport_number' => 'ci-45879',
+        'employment_date' => '2999-01-01',
+        'email' => null,
+        'role' => 'viewer',
+        'password' => 'Temporary-2026',
+        'password_confirmation' => 'Temporary-2026',
+    ])->assertUnprocessable()
+        ->assertJsonValidationErrors(['passport_number', 'employment_date']);
+});
+
 it('allows CMS managers to edit and remove non-manager personnel accounts', function () {
     $cmsManager = User::factory()->create(['role' => UserRole::CmsManager]);
     $account = User::factory()->create(['role' => UserRole::Viewer]);

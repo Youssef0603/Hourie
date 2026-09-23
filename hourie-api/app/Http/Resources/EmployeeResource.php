@@ -15,6 +15,8 @@ class EmployeeResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'phone_number' => $this->phone_number,
+            'passport_number' => $this->passport_number,
+            'employment_date' => $this->employment_date?->format('Y-m-d'),
             'is_active' => $this->is_active,
             'equipment_in_custody_count' => $this->when(
                 array_key_exists('equipment_in_custody_count', $this->resource->getAttributes()),

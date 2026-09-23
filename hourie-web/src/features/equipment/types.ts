@@ -21,12 +21,14 @@ export type EquipmentSummary = {
   id: number
   display_id: string
   asset_code: string
-  created_at: string
   category: NamedReference & { code: string }
   brand: string | null
   model: string | null
   serial_number: string | null
   manufacture_year: number | null
+  purchase_date: string | null
+  asset_details: Record<string, string | number | null> | null
+  review_flags: string[]
   condition: EquipmentCondition | null
   operational_situation: OperationalSituation | null
   current_location: (NamedReference & {
@@ -39,7 +41,7 @@ export type EquipmentSummary = {
   } | null
   custodian: NamedReference | null
   responsible: NamedReference | null
-  responsible_source: 'site' | 'generator' | null
+  responsible_source: 'site' | 'generator' | 'asset' | null
   power: {
     apparent_kva: string | null
     active_kw: string | null
@@ -57,6 +59,7 @@ export type GeneratorDetails = {
   fuel_type: string | null
   tank_capacity_litres: string | null
   current_engine_hours: string | null
+  purchase_price_fcfa: string | null
 }
 
 export type EquipmentMaintenance = {
@@ -153,8 +156,6 @@ export type EquipmentFilters = {
   serial_number: string
   manufacture_year_from: string
   manufacture_year_to: string
-  created_from: string
-  created_to: string
   apparent_power_kva_min: string
   apparent_power_kva_max: string
   active_power_kw_min: string
@@ -169,9 +170,11 @@ export type EquipmentFilters = {
   voltage_rating: string
   current_rating: string
   fuel_type: string
+  asset_field: string
+  asset_value: string
   page: number
   per_page: number
-  sort: 'created_at_desc' | 'created_at_asc' | 'manufacture_year_desc' | 'manufacture_year_asc'
+  sort: 'manufacture_year_desc' | 'manufacture_year_asc'
 }
 
 export type EquipmentListResponse = {

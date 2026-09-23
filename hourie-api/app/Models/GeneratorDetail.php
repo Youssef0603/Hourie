@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'fuel_type',
     'tank_capacity_litres',
     'current_engine_hours',
+    'purchase_price_fcfa',
 ])]
 class GeneratorDetail extends Model
 {
@@ -42,6 +43,7 @@ class GeneratorDetail extends Model
             'frequency_hz' => 'decimal:2',
             'tank_capacity_litres' => 'decimal:2',
             'current_engine_hours' => 'decimal:2',
+            'purchase_price_fcfa' => 'decimal:2',
         ];
     }
 }

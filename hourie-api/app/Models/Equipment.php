@@ -20,9 +20,12 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'model',
     'serial_number',
     'manufacture_year',
+    'purchase_date',
     'condition',
     'operational_situation',
     'observations',
+    'asset_details',
+    'review_flags',
     'is_active',
 ])]
 class Equipment extends Model
@@ -111,7 +114,10 @@ class Equipment extends Model
     {
         return [
             'manufacture_year' => 'integer',
+            'purchase_date' => 'date:Y-m-d',
             'is_active' => 'boolean',
+            'asset_details' => 'array',
+            'review_flags' => 'array',
         ];
     }
 }

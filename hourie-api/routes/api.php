@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\Equipment\EquipmentImageController;
 use App\Http\Controllers\Api\V1\Equipment\EquipmentImportController;
 use App\Http\Controllers\Api\V1\Equipment\EquipmentInvoiceController;
 use App\Http\Controllers\Api\V1\Equipment\EquipmentMaintenanceController;
+use App\Http\Controllers\Api\V1\Equipment\EquipmentTransferController;
 use App\Http\Controllers\Api\V1\Equipment\MaintenanceWarningController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\SiteController;
@@ -38,6 +39,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', EnsureUserIsActive::class, Ensu
     Route::post('equipment-imports', [EquipmentImportController::class, 'store'])
         ->name('equipment.imports.store');
     Route::apiResource('equipment', EquipmentController::class)->only(['index', 'store', 'show', 'update', 'destroy']);
+    Route::post('equipment/{equipment}/transfer', EquipmentTransferController::class)
+        ->name('equipment.transfer');
     Route::get('maintenance-warnings', MaintenanceWarningController::class)
         ->name('maintenance-warnings.index');
     Route::post('equipment/{equipment}/images', [EquipmentImageController::class, 'store']);

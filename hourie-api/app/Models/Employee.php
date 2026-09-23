@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['user_id', 'name', 'phone_number', 'is_active'])]
+#[Fillable(['user_id', 'name', 'phone_number', 'passport_number', 'employment_date', 'is_active'])]
 class Employee extends Model
 {
     /** @use HasFactory<EmployeeFactory> */
@@ -29,6 +29,7 @@ class Employee extends Model
     {
         return [
             'is_active' => 'boolean',
+            'employment_date' => 'date',
         ];
     }
 }

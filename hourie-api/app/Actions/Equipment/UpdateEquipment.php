@@ -19,13 +19,14 @@ class UpdateEquipment
             $equipment->loadMissing('generatorDetails', 'currentProjectAssignment.project', 'currentLocation');
             $previousValues = [
                 'equipment' => $equipment->only([
-                    'brand', 'model', 'serial_number', 'manufacture_year', 'condition',
+                    'brand', 'model', 'serial_number', 'manufacture_year', 'purchase_date', 'condition',
                     'operational_situation', 'current_location_id', 'custodian_employee_id', 'observations',
                 ]),
                 'project_id' => $equipment->currentProjectAssignment?->project_id,
                 'generator_details' => $equipment->generatorDetails?->toArray(),
+                'asset_details' => $equipment->asset_details,
             ];
-            $generatorDetails = $data['generator_details'];
+            $generatorDetails = $data['generator_details'] ?? null;
             $hasProjectUpdate = array_key_exists('project_id', $data);
             $projectId = $data['project_id'] ?? null;
             unset($data['generator_details'], $data['project_id']);
@@ -43,10 +44,12 @@ class UpdateEquipment
                     ]);
                 }
             }
-            $equipment->generatorDetails()->updateOrCreate(
-                ['equipment_id' => $equipment->id],
-                $generatorDetails,
-            );
+            if ($generatorDetails !== null) {
+                $equipment->generatorDetails()->updateOrCreate(
+                    ['equipment_id' => $equipment->id],
+                    $generatorDetails,
+                );
+            }
 
             $equipment->refresh()->load('generatorDetails', 'currentProjectAssignment.project', 'currentLocation');
             EquipmentChange::query()->create([
@@ -57,11 +60,12 @@ class UpdateEquipment
                 'previous_values' => $previousValues,
                 'new_values' => [
                     'equipment' => $equipment->only([
-                        'brand', 'model', 'serial_number', 'manufacture_year', 'condition',
+                        'brand', 'model', 'serial_number', 'manufacture_year', 'purchase_date', 'condition',
                         'operational_situation', 'current_location_id', 'custodian_employee_id', 'observations',
                     ]),
                     'project_id' => $equipment->currentProjectAssignment?->project_id,
                     'generator_details' => $equipment->generatorDetails?->toArray(),
+                    'asset_details' => $equipment->asset_details,
                 ],
                 'occurred_at' => now(),
             ]);

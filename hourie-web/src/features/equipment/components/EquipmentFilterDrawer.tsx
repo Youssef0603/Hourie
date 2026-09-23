@@ -26,7 +26,7 @@ export function EquipmentFilterDrawer({ filters, options, isSiteView, physicalLo
           <label><span>{fr.equipment.situation}</span><SearchableSelect ariaLabel={fr.equipment.situation} value={filters.operational_situation} onChange={(value) => onChange('operational_situation', value)} placeholder={fr.common.all} options={catalogOptions(options?.catalogs, 'operational_situation').map((option) => ({ value: option.code, label: catalogLabel(options?.catalogs, 'operational_situation', option.code) }))} /></label>
           {!isSiteView && <label><span>{fr.equipment.project}</span><SearchableSelect ariaLabel={fr.equipment.project} value={filters.project_id} onChange={onProjectChange} placeholder={fr.common.all} options={(options?.projects ?? []).map((project) => ({ value: String(project.id), label: project.name }))} /></label>}
           <label><span>{fr.equipment.location}</span><SearchableSelect ariaLabel={fr.equipment.location} value={filters.location_id} onChange={(value) => onChange('location_id', value)} placeholder={fr.common.all} options={physicalLocationOptions.map((location) => ({ value: String(location.id), label: filters.project_id === '' ? locationOptionLabel(location) : location.name }))} /></label>
-          <label><span>{fr.equipment.sort}</span><SearchableSelect ariaLabel={fr.equipment.sort} value={filters.sort} onChange={(value) => onChange('sort', value)} placeholder={fr.equipment.addedNewestFirst} includeEmpty={false} options={[{ value: 'created_at_desc', label: fr.equipment.addedNewestFirst }, { value: 'created_at_asc', label: fr.equipment.addedOldestFirst }, { value: 'manufacture_year_desc', label: fr.equipment.manufacturedNewestFirst }, { value: 'manufacture_year_asc', label: fr.equipment.manufacturedOldestFirst }]} /></label>
+          <label><span>{fr.equipment.sort}</span><SearchableSelect ariaLabel={fr.equipment.sort} value={filters.sort} onChange={(value) => onChange('sort', value)} placeholder={fr.equipment.manufacturedNewestFirst} includeEmpty={false} options={[{ value: 'manufacture_year_desc', label: fr.equipment.manufacturedNewestFirst }, { value: 'manufacture_year_asc', label: fr.equipment.manufacturedOldestFirst }]} /></label>
         </div></fieldset>
         <AdvancedEquipmentFilters filters={filters} options={options} onChange={onChange} />
       </div>
@@ -45,8 +45,6 @@ function AdvancedEquipmentFilters({ filters, options, onChange }: Pick<Equipment
       <label><span>{fr.equipment.custodian}</span><SearchableSelect ariaLabel={fr.equipment.custodian} value={filters.custodian_employee_id} onChange={(value) => onChange('custodian_employee_id', value)} placeholder={fr.common.all} options={(options?.employees ?? []).map((employee) => ({ value: String(employee.id), label: employee.name }))} /></label>
       <label><span>{fr.equipment.yearFrom}</span><input type="number" min="1900" max="2100" {...field('manufacture_year_from')} /></label>
       <label><span>{fr.equipment.yearTo}</span><input type="number" min="1900" max="2100" {...field('manufacture_year_to')} /></label>
-      <label><span>{fr.equipment.addedFrom}</span><input type="date" {...field('created_from')} /></label>
-      <label><span>{fr.equipment.addedTo}</span><input type="date" {...field('created_to')} /></label>
     </div></fieldset>
     <fieldset><legend>{fr.equipment.powerFilters}</legend><div className="advanced-filter-grid">
       <RangeInputs label={fr.equipment.apparentPower} minimum={field('apparent_power_kva_min')} maximum={field('apparent_power_kva_max')} />

@@ -18,15 +18,17 @@ class CreateEquipment
     public function handle(array $data, User $actor): Equipment
     {
         return DB::transaction(function () use ($actor, $data): Equipment {
+            $categoryCode = $data['category_code'] ?? 'generator';
+            $definition = EquipmentCategory::ASSET_CATEGORIES[$categoryCode];
             $category = EquipmentCategory::query()->firstOrCreate(
-                ['code' => 'generator'],
-                ['name' => 'Générateurs', 'is_active' => true],
+                ['code' => $categoryCode],
+                ['name' => $definition['name'], 'is_active' => true],
             );
 
-            $generatorDetails = $data['generator_details'];
+            $generatorDetails = $data['generator_details'] ?? null;
             $projectId = $data['project_id'] ?? null;
             $requestedAssetCode = $data['asset_code'] ?? null;
-            unset($data['generator_details'], $data['project_id'], $data['asset_code']);
+            unset($data['category_code'], $data['generator_details'], $data['project_id'], $data['asset_code']);
 
             $equipment = Equipment::query()->create([
                 ...$data,
@@ -35,9 +37,11 @@ class CreateEquipment
                 'is_active' => true,
             ]);
             $equipment->update([
-                'asset_code' => $requestedAssetCode ?: 'GEN-'.str_pad((string) $equipment->id, 3, '0', STR_PAD_LEFT),
+                'asset_code' => $requestedAssetCode ?: $definition['prefix'].'-'.str_pad((string) $equipment->id, 3, '0', STR_PAD_LEFT),
             ]);
-            $equipment->generatorDetails()->create($generatorDetails);
+            if ($generatorDetails !== null) {
+                $equipment->generatorDetails()->create($generatorDetails);
+            }
 
             if ($projectId !== null) {
                 EquipmentProjectAssignment::query()->create([
@@ -55,6 +59,7 @@ class CreateEquipment
                 'new_values' => [
                     'equipment' => $equipment->fresh()->toArray(),
                     'generator_details' => $equipment->generatorDetails()->first()?->toArray(),
+                    'asset_details' => $equipment->asset_details,
                     'project_id' => $projectId,
                 ],
                 'occurred_at' => now(),

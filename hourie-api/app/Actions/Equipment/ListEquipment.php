@@ -3,6 +3,7 @@
 namespace App\Actions\Equipment;
 
 use App\Models\Equipment;
+use App\Models\EquipmentCategory;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -24,7 +25,9 @@ class ListEquipment
         ];
         $hasGeneratorFilters = collect($generatorFilterKeys)
             ->contains(fn (string $key): bool => isset($filters[$key]) && $filters[$key] !== '');
-        $sort = $filters['sort'] ?? 'created_at_desc';
+        $sort = $filters['sort'] ?? 'manufacture_year_desc';
+        $assetField = $filters['asset_field'] ?? null;
+        $categoryFields = EquipmentCategory::ASSET_CATEGORIES[$filters['category'] ?? '']['fields'] ?? [];
 
         return Equipment::query()
             ->where('is_active', true)
@@ -45,11 +48,15 @@ class ListEquipment
                         ->orWhere('brand', 'like', $pattern)
                         ->orWhere('model', 'like', $pattern)
                         ->orWhere('serial_number', 'like', $pattern)
+                        ->orWhere('asset_details', 'like', $pattern)
                         ->orWhere('observations', 'like', $pattern);
                 });
             })
             ->when($filters['category'] ?? null, function (Builder $query, string $category): void {
                 $query->whereHas('category', fn (Builder $query) => $query->where('code', $category));
+            })
+            ->when($assetField !== null && isset($categoryFields[$assetField]) && ! empty($filters['asset_value']), function (Builder $query) use ($assetField, $filters): void {
+                $query->where('asset_details->'.$assetField, 'like', '%'.trim($filters['asset_value']).'%');
             })
             ->when($filters['condition'] ?? null, fn (Builder $query, string $condition) => $query->where('condition', $condition))
             ->when(
@@ -66,8 +73,6 @@ class ListEquipment
             ->when($filters['serial_number'] ?? null, fn (Builder $query, string $value) => $query->where('serial_number', 'like', '%'.trim($value).'%'))
             ->when(isset($filters['manufacture_year_from']), fn (Builder $query) => $query->where('manufacture_year', '>=', $filters['manufacture_year_from']))
             ->when(isset($filters['manufacture_year_to']), fn (Builder $query) => $query->where('manufacture_year', '<=', $filters['manufacture_year_to']))
-            ->when($filters['created_from'] ?? null, fn (Builder $query, string $date) => $query->whereDate('created_at', '>=', $date))
-            ->when($filters['created_to'] ?? null, fn (Builder $query, string $date) => $query->whereDate('created_at', '<=', $date))
             ->when($hasGeneratorFilters, function (Builder $query) use ($filters): void {
                 $query->whereHas('generatorDetails', function (Builder $query) use ($filters): void {
                     $rangeFilters = [
@@ -94,8 +99,6 @@ class ListEquipment
                     }
                 });
             })
-            ->when($sort === 'created_at_asc', fn (Builder $query) => $query->orderBy('created_at')->orderBy('id'))
-            ->when($sort === 'created_at_desc', fn (Builder $query) => $query->orderByDesc('created_at')->orderByDesc('id'))
             ->when($sort === 'manufacture_year_asc', fn (Builder $query) => $query
                 ->orderByRaw('CASE WHEN manufacture_year IS NULL THEN 1 ELSE 0 END')
                 ->orderBy('manufacture_year')

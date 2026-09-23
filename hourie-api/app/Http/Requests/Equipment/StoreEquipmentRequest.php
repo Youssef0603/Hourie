@@ -3,6 +3,8 @@
 namespace App\Http\Requests\Equipment;
 
 use App\Models\Equipment;
+use App\Models\EquipmentCategory;
+use Illuminate\Validation\Rule;
 
 class StoreEquipmentRequest extends UpdateEquipmentRequest
 {
@@ -15,6 +17,7 @@ class StoreEquipmentRequest extends UpdateEquipmentRequest
     {
         return [
             ...parent::rules(),
+            'category_code' => ['sometimes', 'string', Rule::in(array_keys(EquipmentCategory::ASSET_CATEGORIES))],
             'asset_code' => ['nullable', 'string', 'max:100', 'unique:equipment,asset_code'],
         ];
     }
