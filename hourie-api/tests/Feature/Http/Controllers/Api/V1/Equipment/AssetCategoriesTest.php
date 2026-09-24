@@ -21,8 +21,6 @@ function carPayload(): array
         'custodian_employee_id' => null,
         'observations' => null,
         'asset_details' => [
-            'registration_number' => 'AB-1234',
-            'vehicle_type' => 'Pickup',
             'fuel_type' => 'Diesel',
             'odometer_km' => 42000,
         ],
@@ -36,15 +34,15 @@ it('creates and lists a car without generator details', function () {
         ->postJson('/api/v1/equipment', carPayload())
         ->assertCreated()
         ->assertJsonPath('data.category.code', 'car')
-        ->assertJsonPath('data.asset_details.registration_number', 'AB-1234')
+        ->assertJsonPath('data.asset_details.fuel_type', 'Diesel')
         ->assertJsonPath('data.generator_details', null);
 
     $id = $response->json('data.id');
-    expect($response->json('data.asset_code'))->toBe('VOI-'.str_pad((string) $id, 3, '0', STR_PAD_LEFT));
+    expect($response->json('data.asset_code'))->toBe('A.H-VOI-'.str_pad((string) $id, 3, '0', STR_PAD_LEFT));
     $this->assertDatabaseHas('equipment', ['id' => $id, 'brand' => 'Toyota']);
     $this->assertDatabaseHas('equipment_categories', ['code' => 'car']);
 
-    $this->actingAs($manager, 'web')->getJson('/api/v1/equipment?category=car&asset_field=registration_number&asset_value=AB-1234')
+    $this->actingAs($manager, 'web')->getJson('/api/v1/equipment?category=car&asset_field=fuel_type&asset_value=Diesel')
         ->assertOk()
         ->assertJsonCount(1, 'data')
         ->assertJsonPath('data.0.id', $id);

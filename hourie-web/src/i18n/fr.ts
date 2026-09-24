@@ -78,7 +78,7 @@ const french = {
     location: 'Localisation physique',
     locationShort: 'Loc.',
     clearFilters: 'Effacer les filtres',
-    assetCode: 'Code générateur',
+    assetCode: 'Code de l’actif',
     brand: 'Marque',
     model: 'Modèle',
     identification: 'Identification',
@@ -187,8 +187,6 @@ const french = {
     valueFilter: 'Valeur recherchée',
     searchPlaceholder: 'Code, marque, modèle, série ou caractéristique',
     noResults: 'Aucun actif ne correspond à ces critères.',
-    review: 'À vérifier',
-    reviewNotes: 'Données à vérifier',
     photos: 'Photos de l’actif',
     invoices: 'Factures de l’actif',
   },
@@ -264,7 +262,7 @@ const french = {
   },
   catalogs: {
     section: 'Configuration', title: 'Listes et statuts', subtitle: 'Gérez les valeurs utilisées dans les formulaires sans modifier l’application.', add: 'Ajouter une valeur', edit: 'Modifier la valeur', code: 'Code technique', labelFr: 'Libellé français', labelAr: 'Libellé arabe', color: 'Couleur', enabled: 'Valeur active', deleteConfirmation: 'Supprimer cette valeur des listes disponibles ?', loadError: 'Impossible de charger les listes et statuts.', saveError: 'Impossible d’enregistrer cette valeur.',
-    groups: { equipment_condition: 'États des générateurs', operational_situation: 'Situations', maintenance_type: 'Types d’intervention', fuel_type: 'Carburants', project_status: 'Statuts des sites' },
+    groups: { equipment_condition: 'État des actifs', operational_situation: 'Situations', maintenance_type: 'Types d’intervention', fuel_type: 'Carburants', project_status: 'Statuts des sites' },
   },
   maintenance: {
     title: 'Historique de maintenance',
@@ -491,7 +489,7 @@ const arabic = {
     location: 'الموقع الفعلي',
     locationShort: 'الموقع',
     clearFilters: 'مسح عوامل التصفية',
-    assetCode: 'رمز المولد',
+    assetCode: 'رمز الأصل',
     brand: 'العلامة التجارية',
     model: 'الطراز',
     identification: 'بيانات التعريف',
@@ -599,8 +597,6 @@ const arabic = {
     valueFilter: 'القيمة المطلوبة',
     searchPlaceholder: 'الرمز أو العلامة أو الطراز أو الرقم التسلسلي أو المواصفات',
     noResults: 'لا يوجد أصل يطابق هذه المعايير.',
-    review: 'يحتاج إلى مراجعة',
-    reviewNotes: 'بيانات تحتاج إلى مراجعة',
     photos: 'صور الأصل',
     invoices: 'فواتير الأصل',
   },
@@ -676,7 +672,7 @@ const arabic = {
   },
   catalogs: {
     section: 'الإعدادات', title: 'القوائم والحالات', subtitle: 'إدارة القيم المستخدمة في النماذج دون تعديل التطبيق.', add: 'إضافة قيمة', edit: 'تعديل القيمة', code: 'الرمز التقني', labelFr: 'التسمية الفرنسية', labelAr: 'التسمية العربية', color: 'اللون', enabled: 'قيمة مفعلة', deleteConfirmation: 'هل تريد حذف هذه القيمة من القوائم المتاحة؟', loadError: 'تعذر تحميل القوائم والحالات.', saveError: 'تعذر حفظ هذه القيمة.',
-    groups: { equipment_condition: 'حالات المولدات', operational_situation: 'الوضعيات', maintenance_type: 'أنواع التدخل', fuel_type: 'أنواع الوقود', project_status: 'حالات المواقع' },
+    groups: { equipment_condition: 'حالة الأصول', operational_situation: 'الوضعيات', maintenance_type: 'أنواع التدخل', fuel_type: 'أنواع الوقود', project_status: 'حالات المواقع' },
   },
   maintenance: {
     title: 'سجل الصيانة',

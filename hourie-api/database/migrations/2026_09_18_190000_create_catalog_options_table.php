@@ -25,9 +25,11 @@ return new class extends Migration
 
         $now = now();
         $rows = [
-            ['equipment_condition', 'functional', 'Fonctionnel', 'يعمل', '#237a4b'],
-            ['equipment_condition', 'defective', 'Défectueux', 'معطل', '#a36213'],
-            ['equipment_condition', 'beyond_repair', 'Irréparable', 'غير قابل للإصلاح', '#a12a36'],
+            ['equipment_condition', 'very_good', 'Très bon', 'جيد جداً', '#237a4b'],
+            ['equipment_condition', 'good', 'Bon', 'جيد', '#4b8f68'],
+            ['equipment_condition', 'to_monitor', 'À surveiller', 'يحتاج إلى متابعة', '#a36213'],
+            ['equipment_condition', 'defective', 'Défectueux', 'معطل', '#c27012'],
+            ['equipment_condition', 'out_of_service', 'Hors service', 'خارج الخدمة', '#a12a36'],
             ['operational_situation', 'in_use', 'En service', 'قيد الاستخدام', '#237a4b'],
             ['operational_situation', 'in_reserve', 'En réserve', 'احتياطي', '#526070'],
             ['operational_situation', 'under_maintenance', 'En maintenance', 'قيد الصيانة', '#a36213'],

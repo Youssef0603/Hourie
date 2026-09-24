@@ -91,7 +91,7 @@ it('filters equipment by search, category, condition, situation, project, and lo
         ->create([
             'asset_code' => 'A.H-001',
             'brand' => 'KHOLER',
-            'condition' => EquipmentCondition::Functional,
+            'condition' => EquipmentCondition::Good,
             'operational_situation' => OperationalSituation::InUse,
         ]);
     EquipmentProjectAssignment::factory()->for($matching)->for($vridi)->create();
@@ -103,7 +103,7 @@ it('filters equipment by search, category, condition, situation, project, and lo
     $query = http_build_query([
         'q' => 'KHOLER',
         'category' => 'generator',
-        'condition' => 'functional',
+        'condition' => 'good',
         'operational_situation' => 'in_use',
         'project_id' => $vridi->id,
         'location_id' => $base->id,
@@ -336,7 +336,7 @@ it('allows a generator manager to fill every inventory field without changing th
         'serial_number' => '34LNGLH0009',
         'manufacture_year' => 2023,
         'purchase_date' => '2024-05-20',
-        'condition' => 'functional',
+        'condition' => 'good',
         'operational_situation' => 'in_use',
         'custodian_employee_id' => $custodian->id,
         'observations' => 'Essai en charge validé.',
@@ -469,7 +469,7 @@ it('allows a generator manager to add a generator with an automatic code and com
         'model' => 'KD110',
         'serial_number' => 'SERIAL-NEW',
         'manufacture_year' => 2026,
-        'condition' => 'functional',
+        'condition' => 'good',
         'operational_situation' => 'in_reserve',
         'custodian_employee_id' => null,
         'observations' => 'Nouveau groupe.',
@@ -498,5 +498,5 @@ it('allows a generator manager to add a generator with an automatic code and com
 
     $id = $response->json('data.id');
     expect($response->json('data.display_id'))->toBe(str_pad((string) $id, 3, '0', STR_PAD_LEFT));
-    expect($response->json('data.asset_code'))->toBe('GEN-'.str_pad((string) $id, 3, '0', STR_PAD_LEFT));
+    expect($response->json('data.asset_code'))->toBe('A.H-GEN-'.str_pad((string) $id, 3, '0', STR_PAD_LEFT));
 });

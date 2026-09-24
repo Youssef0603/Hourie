@@ -27,7 +27,6 @@ class CreateEquipment
 
             $generatorDetails = $data['generator_details'] ?? null;
             $projectId = $data['project_id'] ?? null;
-            $requestedAssetCode = $data['asset_code'] ?? null;
             unset($data['category_code'], $data['generator_details'], $data['project_id'], $data['asset_code']);
 
             $equipment = Equipment::query()->create([
@@ -37,7 +36,7 @@ class CreateEquipment
                 'is_active' => true,
             ]);
             $equipment->update([
-                'asset_code' => $requestedAssetCode ?: $definition['prefix'].'-'.str_pad((string) $equipment->id, 3, '0', STR_PAD_LEFT),
+                'asset_code' => EquipmentCategory::assetCode($categoryCode, $equipment->id),
             ]);
             if ($generatorDetails !== null) {
                 $equipment->generatorDetails()->create($generatorDetails);

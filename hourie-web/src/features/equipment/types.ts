@@ -28,7 +28,6 @@ export type EquipmentSummary = {
   manufacture_year: number | null
   purchase_date: string | null
   asset_details: Record<string, string | number | null> | null
-  review_flags: string[]
   condition: EquipmentCondition | null
   operational_situation: OperationalSituation | null
   current_location: (NamedReference & {

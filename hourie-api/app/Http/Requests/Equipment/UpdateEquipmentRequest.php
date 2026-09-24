@@ -47,8 +47,8 @@ class UpdateEquipmentRequest extends FormRequest
 
             foreach ($fields as $field => $type) {
                 $rules['asset_details.'.$field] = $type === 'number'
-                    ? ['present', 'nullable', 'numeric', 'min:0']
-                    : ['present', 'nullable', 'string', 'max:255'];
+                    ? ['sometimes', 'nullable', 'numeric', 'min:0']
+                    : ['sometimes', 'nullable', 'string', 'max:255'];
             }
         } else {
             $rules['asset_details'] = ['prohibited'];

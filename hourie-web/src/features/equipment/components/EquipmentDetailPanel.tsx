@@ -103,7 +103,15 @@ export function EquipmentDetailPanel({
                       <div><dt>{fr.equipment.situation}</dt><dd>{selected.operational_situation ? <span className="status-badge" style={catalogBadgeStyle(options?.catalogs, 'operational_situation', selected.operational_situation)}>{catalogLabel(options?.catalogs, 'operational_situation', selected.operational_situation)}</span> : fr.common.notProvided}</dd></div>
                     </dl>
                   </section>
-                  {isOtherAsset && assetDefinition && <section><h3>{fr.assets.specifications}</h3><dl>{assetDefinition.fields.map((field) => <div key={field.key}><dt>{assetFieldLabel(field, language)}</dt><dd>{selected.asset_details?.[field.key] == null ? fr.common.notProvided : `${selected.asset_details[field.key]}${field.unit ? ` ${field.unit}` : ''}`}</dd></div>)}</dl></section>}
+                  {isOtherAsset && assetDefinition && <section><h3>{fr.assets.specifications}</h3><dl>{assetDefinition.fields.map((field) => {
+                    const value = selected.asset_details?.[field.key]
+                    const isCost = field.key === 'purchase_price' || field.key === 'shipping_cost'
+                    const display = value === null || value === undefined || value === ''
+                      ? isCost ? '0' : fr.common.notProvided
+                      : `${value}${field.unit ? ` ${field.unit}` : ''}`
+
+                    return <div key={field.key}><dt>{assetFieldLabel(field, language)}</dt><dd>{display}</dd></div>
+                  })}</dl></section>}
                   {!isOtherAsset && selected.generator_details && (
                     <section>
                       <h3>{fr.equipment.technicalDetails}</h3>
@@ -125,7 +133,6 @@ export function EquipmentDetailPanel({
                     <h3>{fr.equipment.observations}</h3>
                     <p className="observations">{displayedValue(selected.observations)}</p>
                   </section>
-                  {selected.review_flags.length > 0 && <section><h3>{fr.assets.reviewNotes}</h3><ul>{selected.review_flags.map((flag) => <li key={flag}>{flag}</li>)}</ul></section>}
                   {(!isEditingEquipment || isOtherAsset) && <EquipmentImages equipment={selected} canManage={isOtherAsset && isEditingEquipment && user.permissions.manage_equipment} title={isOtherAsset ? fr.assets.photos : undefined} onChanged={async () => { await onRefreshSelected() }} />}
                   {(!isEditingEquipment || isOtherAsset) && <EquipmentInvoices equipment={selected} canManage={isOtherAsset && isEditingEquipment && user.permissions.manage_equipment} title={isOtherAsset ? fr.assets.invoices : undefined} onChanged={async () => { await onRefreshSelected() }} />}
                   {!isOtherAsset && <MaintenanceSection

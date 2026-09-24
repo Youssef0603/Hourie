@@ -55,7 +55,7 @@ class ImportGeneratorInventory
 
             $seenAssetCodes[$assetCode] = true;
 
-            if (Equipment::query()->where('asset_code', $assetCode)->exists()) {
+            if (EquipmentImportRow::query()->where('source_asset_code', $assetCode)->exists()) {
                 $errors[$rowNumber] = __('imports.errors.asset_code_exists', ['code' => $assetCode]);
 
                 continue;
@@ -139,7 +139,7 @@ class ImportGeneratorInventory
                     'equipment_category_id' => $category->id,
                     'current_location_id' => $location?->id,
                     'custodian_employee_id' => null,
-                    'asset_code' => $assetCode,
+                    'asset_code' => 'pending-'.str()->uuid(),
                     'brand' => $data['brand'],
                     'model' => $data['model'],
                     'serial_number' => $data['serial_number'],
@@ -149,6 +149,7 @@ class ImportGeneratorInventory
                     'observations' => $data['observations'],
                     'is_active' => true,
                 ]);
+                $equipment->update(['asset_code' => EquipmentCategory::assetCode('generator', $equipment->id)]);
 
                 GeneratorDetail::query()->create([
                     'equipment_id' => $equipment->id,
@@ -238,7 +239,7 @@ class ImportGeneratorInventory
     private function normalize(array $row, array &$warnings): array
     {
         $condition = match (mb_strtoupper(trim((string) ($row['Q'] ?? '')))) {
-            'FONCTIONNE' => 'functional',
+            'FONCTIONNE' => 'good',
             'DEFFECT' => 'defective',
             '' => null,
             default => $this->warningValue($warnings, 'unknown_condition'),

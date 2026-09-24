@@ -67,21 +67,20 @@ export function AssetInventoryView({ category, language, options, filters, searc
       <div className="equipment-table-wrap">
         <table className="equipment-table asset-inventory-table">
           <thead><tr>
-            <th>{fr.equipment.assetCode}</th>
+            <th>{fr.equipment.number}</th>
             {category === 'all' && <th>{fr.equipment.category}</th>}
             <th>{fr.equipment.identification}</th>
             {fields.map((field) => <th key={field.key}>{assetFieldLabel(field, language)}</th>)}
-            <th>{fr.equipment.condition}</th><th>{fr.equipment.project}</th><th>{fr.equipment.locationShort}</th><th>{fr.assets.review}</th>
+            <th>{fr.equipment.condition}</th><th>{fr.equipment.project}</th><th>{fr.equipment.locationShort}</th>
           </tr></thead>
           <tbody>{!isLoading && result?.data.map((item) => <tr key={item.id} tabIndex={0} onClick={() => onOpen(item.id)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onOpen(item.id) } }}>
-            <td><strong>{item.asset_code}</strong></td>
+            <td><strong>{item.display_id}</strong><span className="secondary-cell">{item.asset_code}</span></td>
             {category === 'all' && <td>{item.category.code === 'generator' ? fr.navigation.generators : isAssetCategoryCode(item.category.code) ? assetCategoryLabel(item.category.code, language) : item.category.name}</td>}
             <td><span className="primary-cell">{[item.brand, item.model].filter(Boolean).join(' ') || fr.common.notProvided}</span><span className="secondary-cell">{item.serial_number ?? fr.common.notProvided}</span></td>
             {fields.map((field) => <td key={field.key}>{item.asset_details?.[field.key] == null ? fr.common.notProvided : `${item.asset_details[field.key]}${field.unit ? ` ${field.unit}` : ''}`}</td>)}
             <td>{item.condition ? <span className="status-badge" style={catalogBadgeStyle(options?.catalogs, 'equipment_condition', item.condition)}>{catalogLabel(options?.catalogs, 'equipment_condition', item.condition)}</span> : fr.common.notProvided}</td>
             <td>{item.current_project_assignment?.project.name ?? fr.common.notProvided}</td>
             <td>{locationName(item)}</td>
-            <td>{item.review_flags.length > 0 ? <span className="status-badge asset-review-badge">{fr.assets.review}</span> : '—'}</td>
           </tr>)}</tbody>
         </table>
         {isLoading && <div className="table-state"><LoadingSpinner label={fr.common.loading} /></div>}

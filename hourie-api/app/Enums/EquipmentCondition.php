@@ -4,7 +4,9 @@ namespace App\Enums;
 
 enum EquipmentCondition: string
 {
-    case Functional = 'functional';
+    case VeryGood = 'very_good';
+    case Good = 'good';
+    case ToMonitor = 'to_monitor';
     case Defective = 'defective';
-    case BeyondRepair = 'beyond_repair';
+    case OutOfService = 'out_of_service';
 }

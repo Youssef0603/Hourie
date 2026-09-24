@@ -25,7 +25,7 @@ it('keeps current physical location separate from project assignment', function 
         ->create([
             'asset_code' => 'A.H-0010',
             'manufacture_year' => 2023,
-            'condition' => EquipmentCondition::Functional,
+            'condition' => EquipmentCondition::Good,
             'operational_situation' => null,
         ]);
     EquipmentProjectAssignment::factory()
@@ -55,18 +55,18 @@ it('stores generator specifications outside the shared equipment record', functi
 
 it('records an equipment change without becoming the current source of truth', function () {
     $equipment = Equipment::factory()->create([
-        'condition' => EquipmentCondition::Functional,
+        'condition' => EquipmentCondition::Good,
     ]);
     EquipmentChange::factory()->for($equipment)->create([
         'change_type' => EquipmentChangeType::ConditionChanged,
         'source' => EquipmentChangeSource::Manual,
         'previous_values' => ['condition' => 'defective'],
-        'new_values' => ['condition' => 'functional'],
+        'new_values' => ['condition' => 'good'],
     ]);
 
     $change = $equipment->changes()->firstOrFail();
 
-    expect($equipment->fresh()->condition)->toBe(EquipmentCondition::Functional->value);
+    expect($equipment->fresh()->condition)->toBe(EquipmentCondition::Good->value);
     expect($change->previous_values)->toBe(['condition' => 'defective']);
-    expect($change->new_values)->toBe(['condition' => 'functional']);
+    expect($change->new_values)->toBe(['condition' => 'good']);
 });

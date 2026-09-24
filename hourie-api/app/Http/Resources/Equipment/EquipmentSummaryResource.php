@@ -30,7 +30,6 @@ class EquipmentSummaryResource extends JsonResource
             'manufacture_year' => $this->manufacture_year,
             'purchase_date' => $this->purchase_date?->toDateString(),
             'asset_details' => $this->asset_details,
-            'review_flags' => $this->review_flags ?? [],
             'condition' => $this->condition,
             'operational_situation' => $this->operational_situation,
             'current_location' => $this->whenLoaded('currentLocation', function (): ?array {
