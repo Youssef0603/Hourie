@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { fr } from '../../../i18n/fr'
 import { ApiError } from '../../../shared/api/http'
 import { ActionIcon } from '../../../shared/components/ActionIcon'
+import { formatMoney } from '../../../shared/formatMoney'
 import { Modal } from '../../../shared/components/Modal'
 import { deleteMaintenance, saveMaintenance } from '../api'
 import type {
@@ -308,7 +309,7 @@ export function MaintenanceSection({
                       <div><dt>{fr.maintenance.technicianName}</dt><dd>{maintenance.technician?.name ?? value(maintenance.technician_name)}</dd></div>
                       {!maintenance.technician && <div><dt>{fr.maintenance.technicianPhone}</dt><dd>{value(maintenance.external_technician_phone)}</dd></div>}
                       <div><dt>{fr.maintenance.nextDue}</dt><dd>{value(maintenance.next_maintenance_date)}</dd></div>
-                      <div><dt>{fr.maintenance.cost}</dt><dd>{maintenance.cost ? `${maintenance.cost} FCFA` : fr.common.notProvided}</dd></div>
+                      <div><dt>{fr.maintenance.cost}</dt><dd>{maintenance.cost === null ? fr.common.notProvided : formatMoney(maintenance.cost, maintenance.cost_currency ?? 'FCFA')}</dd></div>
                     </dl>
                     <p>{value(maintenance.observations)}</p>
                     <small>{fr.maintenance.recordedBy(maintenance.created_by.name)}</small>

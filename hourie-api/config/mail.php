@@ -115,4 +115,19 @@ return [
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Car inspection reminder recipients
+    |--------------------------------------------------------------------------
+    |
+    | A comma-separated, explicit list. Keeping this separate from user roles
+    | prevents a reminder test from emailing every manager in the system.
+    |
+    */
+
+    'inspection_reminder_recipients' => array_values(array_filter(array_map(
+        'trim',
+        explode(',', (string) env('INSPECTION_REMINDER_RECIPIENTS', '')),
+    ))),
+
 ];

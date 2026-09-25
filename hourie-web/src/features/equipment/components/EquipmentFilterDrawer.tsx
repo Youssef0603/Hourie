@@ -19,7 +19,7 @@ type EquipmentFilterDrawerProps = {
 export function EquipmentFilterDrawer({ filters, options, isSiteView, physicalLocationOptions, onChange, onProjectChange, onClose }: EquipmentFilterDrawerProps) {
   return <div className="filter-drawer-backdrop" onMouseDown={onClose}>
     <aside className="filter-drawer" role="dialog" aria-modal="true" aria-label={fr.equipment.filters} onMouseDown={(event) => event.stopPropagation()}>
-      <header><div><p className="section-label">{fr.equipment.section}</p><h2>{fr.equipment.filters}</h2></div><button type="button" onClick={onClose} aria-label={fr.common.close}><ActionIcon name="close" /></button></header>
+      <header><div><p className="section-label">{fr.assets.title}</p><h2>{fr.equipment.filters}</h2></div><button type="button" onClick={onClose} aria-label={fr.common.close}><ActionIcon name="close" /></button></header>
       <div className="filter-drawer-content">
         <fieldset className="drawer-basic-filters"><legend>{fr.equipment.filters}</legend><div className="advanced-filter-grid">
           <label><span>{fr.equipment.condition}</span><SearchableSelect ariaLabel={fr.equipment.condition} value={filters.condition} onChange={(value) => onChange('condition', value)} placeholder={fr.common.all} options={catalogOptions(options?.catalogs, 'equipment_condition').map((option) => ({ value: option.code, label: catalogLabel(options?.catalogs, 'equipment_condition', option.code) }))} /></label>

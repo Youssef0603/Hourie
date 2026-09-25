@@ -3,6 +3,7 @@
 use App\Enums\UserRole;
 use App\Models\Equipment;
 use App\Models\EquipmentCategory;
+use App\Models\Location;
 use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 
@@ -14,13 +15,15 @@ function carPayload(): array
         'category_code' => 'car',
         'brand' => 'Toyota',
         'model' => 'Hilux',
-        'serial_number' => null,
+        'serial_number' => '1234 AB 01',
         'manufacture_year' => 2022,
         'condition' => null,
         'operational_situation' => null,
         'custodian_employee_id' => null,
         'observations' => null,
         'asset_details' => [
+            'chassis_number' => 'JTEBX3FJ50K123456',
+            'inspection_date' => '2026-10-15',
             'fuel_type' => 'Diesel',
             'odometer_km' => 42000,
         ],
@@ -34,6 +37,9 @@ it('creates and lists a car without generator details', function () {
         ->postJson('/api/v1/equipment', carPayload())
         ->assertCreated()
         ->assertJsonPath('data.category.code', 'car')
+        ->assertJsonPath('data.serial_number', '1234 AB 01')
+        ->assertJsonPath('data.asset_details.chassis_number', 'JTEBX3FJ50K123456')
+        ->assertJsonPath('data.asset_details.inspection_date', '2026-10-15')
         ->assertJsonPath('data.asset_details.fuel_type', 'Diesel')
         ->assertJsonPath('data.generator_details', null);
 
@@ -47,9 +53,27 @@ it('creates and lists a car without generator details', function () {
         ->assertJsonCount(1, 'data')
         ->assertJsonPath('data.0.id', $id);
 
+    $this->actingAs($manager, 'web')->getJson('/api/v1/equipment?category=car&asset_field=fuel_type&asset_value=diesel')
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $id);
+
     $this->actingAs($manager, 'web')->getJson('/api/v1/equipment?category=generator')
         ->assertOk()
         ->assertJsonCount(0, 'data');
+});
+
+it('allows a car to be assigned to an enterprise location without a site', function () {
+    $manager = User::factory()->create(['role' => UserRole::GeneratorManager]);
+    $office = Location::query()->where('name', 'BUREAU')->where('location_type', 'company_location')->firstOrFail();
+    $payload = carPayload();
+    $payload['current_location_id'] = $office->id;
+
+    $this->actingAs($manager, 'web')
+        ->postJson('/api/v1/equipment', $payload)
+        ->assertCreated()
+        ->assertJsonPath('data.current_location.name', 'BUREAU')
+        ->assertJsonPath('data.current_project_assignment', null);
 });
 
 it('updates only the fields supported by the asset category', function () {

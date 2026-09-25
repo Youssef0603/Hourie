@@ -21,12 +21,12 @@ export function EquipmentInventoryTable({
               <thead>
                 <tr>
                   <th>{fr.equipment.number}</th>
-                  <th>{fr.equipment.identification}</th>
+                  <th>{fr.equipment.brand}</th>
+                  <th>{fr.equipment.model}</th>
                   <th>{fr.equipment.apparentPowerShort}</th>
                   <th>{fr.equipment.activePowerShort}</th>
                   <th>{fr.equipment.fuel}</th>
                   <th>{fr.equipment.condition}</th>
-                  <th>{fr.equipment.situation}</th>
                   <th>{fr.equipment.project}</th>
                   <th>{fr.equipment.locationShort}</th>
                 </tr>
@@ -45,12 +45,8 @@ export function EquipmentInventoryTable({
                     }}
                   >
                     <td><strong>{equipment.display_id}</strong><span className="secondary-cell">{equipment.asset_code}</span></td>
-                    <td>
-                      <span className="primary-cell">
-                        {[equipment.brand, equipment.model].filter(Boolean).join(' ') || fr.common.notProvided}
-                      </span>
-                      <span className="secondary-cell">{equipment.category.name}</span>
-                    </td>
+                    <td>{equipment.brand ?? fr.common.notProvided}</td>
+                    <td>{equipment.model ?? fr.common.notProvided}</td>
                     <td>{measurement(equipment.power?.apparent_kva, 'kVA')}</td>
                     <td>{measurement(equipment.power?.active_kw, 'kW')}</td>
                     <td>{equipment.fuel_type ? <span className="status-badge" style={catalogBadgeStyle(options?.catalogs, 'fuel_type', equipment.fuel_type)}>{catalogLabel(options?.catalogs, 'fuel_type', equipment.fuel_type)}</span> : fr.common.notProvided}</td>
@@ -59,7 +55,6 @@ export function EquipmentInventoryTable({
                         {equipment.condition ? catalogLabel(options?.catalogs, 'equipment_condition', equipment.condition) : fr.common.notProvided}
                       </span>
                     </td>
-                    <td>{equipment.operational_situation ? <span className="status-badge" style={catalogBadgeStyle(options?.catalogs, 'operational_situation', equipment.operational_situation)}>{catalogLabel(options?.catalogs, 'operational_situation', equipment.operational_situation)}</span> : fr.common.notProvided}</td>
                     <td>{equipment.current_project_assignment?.project.name ?? fr.common.notProvided}</td>
                     <td>{locationName(equipment)}</td>
                   </tr>

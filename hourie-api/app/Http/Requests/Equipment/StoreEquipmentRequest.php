@@ -17,6 +17,8 @@ class StoreEquipmentRequest extends UpdateEquipmentRequest
     {
         return [
             ...parent::rules(),
+            'brand' => ['required', 'string', 'max:255'],
+            'model' => ['nullable', 'string', 'max:255'],
             'category_code' => ['sometimes', 'string', Rule::in(array_keys(EquipmentCategory::ASSET_CATEGORIES))],
             'asset_code' => ['nullable', 'string', 'max:100', 'unique:equipment,asset_code'],
         ];

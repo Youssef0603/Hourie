@@ -24,14 +24,14 @@ class UpdateSiteRequest extends FormRequest
         $site = $this->route('site');
 
         return [
-            'name' => ['required', 'string', 'max:255', Rule::unique('projects', 'name')->ignore($site)],
+            'name' => ['required', 'string', 'max:255', Rule::unique('projects', 'name')->where('is_active', true)->ignore($site)],
             'status' => ['required', $this->projectStatusRule()],
-            'responsible_employee_id' => ['required', 'integer', Rule::exists('employees', 'id')->where('is_active', true)],
+            'responsible_employee_id' => ['nullable', 'integer', Rule::exists('employees', 'id')->where('is_active', true)],
             'address' => ['nullable', 'string', 'max:255'],
             'start_date' => ['nullable', 'date'],
             'expected_end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
             'notes' => ['nullable', 'string'],
-            'locations' => ['required', 'array', 'min:1', 'max:20'],
+            'locations' => ['present', 'array', 'max:20'],
             'locations.*.id' => ['nullable', 'integer', Rule::exists('locations', 'id')->where(fn ($query) => $query->where('project_id', $site?->id)->whereNotNull('parent_id'))],
             'locations.*.name' => ['required', 'string', 'max:255', 'distinct:ignore_case'],
         ];

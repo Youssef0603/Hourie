@@ -31,10 +31,9 @@ export function AddGeneratorForm({ options, initialProjectId, onCreated }: AddGe
   const [createdEquipment, setCreatedEquipment] = useState<Equipment | null>(null)
   const photoInput = useRef<HTMLInputElement>(null)
   const invoiceInput = useRef<HTMLInputElement>(null)
-  const physicalLocationOptions = options.locations.filter((location) =>
-    location.parent_id !== null
-    && (form.project_id === '' || String(location.project_id) === form.project_id),
-  )
+  const physicalLocationOptions = options.locations.filter((location) => form.project_id
+    ? location.parent_id !== null && String(location.project_id) === form.project_id
+    : location.location_type === 'company_location' && location.project_id === null)
   const selectedProject = options.projects.find((project) => String(project.id) === form.project_id)
 
   function update(name: keyof typeof form, value: string) {
@@ -100,7 +99,7 @@ export function AddGeneratorForm({ options, initialProjectId, onCreated }: AddGe
       {error && <div className="form-alert" role="alert">{error}</div>}
       <div className="maintenance-form-grid">
         <label><span>{fr.equipment.brand}</span><input required value={form.brand} onChange={(event) => update('brand', event.target.value)} /></label>
-        <label><span>{fr.equipment.model}</span><input required value={form.model} onChange={(event) => update('model', event.target.value)} /></label>
+        <label><span>{fr.equipment.model}</span><input value={form.model} onChange={(event) => update('model', event.target.value)} /></label>
         <label><span>{fr.equipment.serialNumber}</span><input value={form.serial_number} onChange={(event) => update('serial_number', event.target.value)} /></label>
         <label><span>{fr.equipment.manufactureYear}</span><input type="number" min="1900" max="2100" value={form.manufacture_year} onChange={(event) => update('manufacture_year', event.target.value)} /></label>
         <label><span>{fr.equipment.purchaseDate}</span><input type="date" value={form.purchase_date} onChange={(event) => update('purchase_date', event.target.value)} /></label>

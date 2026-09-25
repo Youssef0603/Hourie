@@ -17,14 +17,14 @@ class StoreSiteRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255', 'unique:projects,name'],
+            'name' => ['required', 'string', 'max:255', Rule::unique('projects', 'name')->where('is_active', true)],
             'status' => ['required', Rule::exists('catalog_options', 'code')->where(fn ($query) => $query->where('group', 'project_status')->where('is_active', true))],
-            'responsible_employee_id' => ['required', 'integer', Rule::exists('employees', 'id')->where('is_active', true)],
+            'responsible_employee_id' => ['nullable', 'integer', Rule::exists('employees', 'id')->where('is_active', true)],
             'address' => ['nullable', 'string', 'max:255'],
             'start_date' => ['nullable', 'date'],
             'expected_end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
             'notes' => ['nullable', 'string'],
-            'locations' => ['required', 'array', 'min:1', 'max:20'],
+            'locations' => ['present', 'array', 'max:20'],
             'locations.*' => ['required', 'string', 'max:255', 'distinct:ignore_case'],
         ];
     }

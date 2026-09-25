@@ -39,7 +39,7 @@ class SiteController extends Controller
                 'name' => $data['name'],
                 'code' => null,
                 'status' => $data['status'],
-                'responsible_employee_id' => $data['responsible_employee_id'],
+                'responsible_employee_id' => $data['responsible_employee_id'] ?? null,
                 'address' => $data['address'] ?? null,
                 'start_date' => $data['start_date'] ?? null,
                 'expected_end_date' => $data['expected_end_date'] ?? null,
@@ -134,7 +134,7 @@ class SiteController extends Controller
             $site->update([
                 'name' => $data['name'],
                 'status' => $data['status'],
-                'responsible_employee_id' => $data['responsible_employee_id'],
+                'responsible_employee_id' => $data['responsible_employee_id'] ?? null,
                 'address' => $data['address'] ?? null,
                 'start_date' => $data['start_date'] ?? null,
                 'expected_end_date' => $data['expected_end_date'] ?? null,

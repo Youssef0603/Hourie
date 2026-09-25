@@ -90,7 +90,7 @@ it('imports generator rows with standardized codes, nulls, provenance, and separ
     expect(EquipmentImportRow::query()->where('source_asset_code', 'A.H-0011')->exists())->toBeFalse();
 
     expect(Project::query()->count())->toBe(2);
-    expect(Location::query()->count())->toBe(4);
+    expect(Location::query()->whereNotNull('project_id')->count())->toBe(4);
     expect(EquipmentProjectAssignment::query()->count())->toBe(2);
     expect(EquipmentImport::query()->count())->toBe(1);
 });
@@ -110,4 +110,24 @@ it('rejects duplicate asset codes before writing any import data', function () {
 
     expect(Equipment::query()->count())->toBe(0);
     expect(EquipmentImport::query()->count())->toBe(0);
+});
+
+it('imports garage base into the garage company location instead of a site', function () {
+    $rows = [
+        4 => [
+            'A' => '1',
+            'B' => 'A.H-020',
+            'C' => 'GARAGE BASE',
+            'E' => 'KOHLER',
+            'F' => '40 KVA',
+        ],
+    ];
+
+    app(ImportGeneratorInventory::class)->handle('Groupes.xlsx', str_repeat('c', 64), $rows);
+
+    $generator = Equipment::query()->firstOrFail();
+    expect($generator->currentProjectAssignment)->toBeNull();
+    expect($generator->currentLocation?->name)->toBe('GARAGE');
+    expect($generator->currentLocation?->location_type)->toBe('company_location');
+    expect(Project::query()->where('name', 'GARAGE BASE')->exists())->toBeFalse();
 });

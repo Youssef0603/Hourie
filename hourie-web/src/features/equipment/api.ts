@@ -19,6 +19,10 @@ export async function getEquipment(
   const params = new URLSearchParams()
 
   Object.entries(filters).forEach(([key, value]) => {
+    if ((key === 'asset_field' || key === 'asset_value') && (!filters.asset_field || !filters.asset_value)) {
+      return
+    }
+
     if (value !== '') {
       params.set(key, String(value))
     }
@@ -130,6 +134,19 @@ export async function importEquipment(file: File): Promise<EquipmentImportResult
   form.append('file', file)
 
   const response = await apiRequest<{ data: EquipmentImportResult }>('/api/v1/equipment-imports', {
+    method: 'POST',
+    body: form,
+  })
+
+  return response.data
+}
+
+export async function importAssetInventory(file: File): Promise<EquipmentImportResult> {
+  await initializeCsrfProtection()
+  const form = new FormData()
+  form.append('file', file)
+
+  const response = await apiRequest<{ data: EquipmentImportResult }>('/api/v1/asset-imports', {
     method: 'POST',
     body: form,
   })

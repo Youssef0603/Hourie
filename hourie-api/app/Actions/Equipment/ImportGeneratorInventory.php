@@ -23,6 +23,13 @@ use Illuminate\Validation\ValidationException;
 
 class ImportGeneratorInventory
 {
+    /** @var array<string, string> */
+    private const COMPANY_LOCATION_NAMES = [
+        'BUREAU' => 'BUREAU',
+        'GARAGE' => 'GARAGE',
+        'GARAGE BASE' => 'GARAGE',
+    ];
+
     /** @var array<string, array<string, string>> */
     private array $activeCatalogCodes = [];
 
@@ -313,6 +320,17 @@ class ImportGeneratorInventory
     {
         if ($projectName === null) {
             return [null, null];
+        }
+
+        $normalizedName = mb_strtoupper(preg_replace('/\s+/', ' ', trim($projectName)) ?? '');
+        $companyLocationName = self::COMPANY_LOCATION_NAMES[$normalizedName] ?? null;
+        if ($companyLocationName !== null) {
+            $location = Location::query()->firstOrCreate(
+                ['project_id' => null, 'parent_id' => null, 'name' => $companyLocationName],
+                ['location_type' => 'company_location', 'is_active' => true],
+            );
+
+            return [null, $location];
         }
 
         $project = Project::query()->firstOrCreate(

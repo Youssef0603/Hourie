@@ -24,6 +24,7 @@ const textOrNull = (value: string) => value.trim() === '' ? null : value.trim()
 
 export function AssetForm({ categoryCode, language, options, equipment, onSaved, onCancel }: AssetFormProps) {
   const category = assetCategory(categoryCode)
+  const isCar = categoryCode === 'car'
   const [form, setForm] = useState({
     brand: equipment?.brand ?? '',
     model: equipment?.model ?? '',
@@ -40,15 +41,19 @@ export function AssetForm({ categoryCode, language, options, equipment, onSaved,
   const [details, setDetails] = useState<Record<string, string>>(() => Object.fromEntries(
     (category?.fields ?? []).map((field) => [field.key, String(equipment?.asset_details?.[field.key] ?? '')]),
   ))
+  const [priceCurrencies, setPriceCurrencies] = useState({
+    purchase_price: String(equipment?.asset_details?.purchase_price_currency ?? 'XOF'),
+    shipping_cost: String(equipment?.asset_details?.shipping_cost_currency ?? 'XOF'),
+  })
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
   if (!category) return null
 
-  const locations = options.locations.filter((location) => location.parent_id !== null && (!form.project_id || String(location.project_id) === form.project_id))
+  const locations = options.locations.filter((location) => form.project_id
+    ? location.parent_id !== null && String(location.project_id) === form.project_id
+    : location.location_type === 'company_location' && location.project_id === null)
   const selectedProject = options.projects.find((project) => String(project.id) === form.project_id)
   const update = (key: keyof typeof form, value: string) => setForm((current) => ({ ...current, [key]: value }))
-
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setIsSaving(true)
@@ -63,7 +68,7 @@ export function AssetForm({ categoryCode, language, options, equipment, onSaved,
       operational_situation: textOrNull(form.operational_situation),
       project_id: numberOrNull(form.project_id), current_location_id: numberOrNull(form.current_location_id),
       custodian_employee_id: numberOrNull(form.custodian_employee_id), observations: textOrNull(form.observations),
-      asset_details: assetDetails,
+      asset_details: { ...assetDetails, purchase_price_currency: priceCurrencies.purchase_price, shipping_cost_currency: priceCurrencies.shipping_cost },
     }
 
     try {
@@ -78,23 +83,23 @@ export function AssetForm({ categoryCode, language, options, equipment, onSaved,
   }
 
   return <form className="generator-create-form asset-form" onSubmit={submit}>
+    {onCancel && <div className="maintenance-form-heading"><strong>{fr.assets.edit}</strong><button type="button" onClick={onCancel} aria-label={fr.common.close}><ActionIcon name="close" /></button></div>}
     {error && <div className="form-alert" role="alert">{error}</div>}
     <div className="maintenance-form-grid">
-      <label><span>{fr.equipment.brand}</span><input value={form.brand} onChange={(event) => update('brand', event.target.value)} /></label>
-      <label><span>{fr.equipment.model}</span><input value={form.model} onChange={(event) => update('model', event.target.value)} /></label>
-      <label><span>{fr.equipment.serialNumber}</span><input value={form.serial_number} onChange={(event) => update('serial_number', event.target.value)} /></label>
+      <label><span>{fr.equipment.brand}</span><input required value={form.brand} onChange={(event) => update('brand', event.target.value)} /></label>
+      <label><span>{fr.equipment.model}</span><input required value={form.model} onChange={(event) => update('model', event.target.value)} /></label>
+      <label><span>{isCar ? fr.equipment.registrationNumber : fr.equipment.serialNumber}</span><input value={form.serial_number} onChange={(event) => update('serial_number', event.target.value)} /></label>
       <label><span>{fr.equipment.manufactureYear}</span><input type="number" min="1900" max="2100" value={form.manufacture_year} onChange={(event) => update('manufacture_year', event.target.value)} /></label>
       <label><span>{fr.equipment.purchaseDate}</span><input type="date" value={form.purchase_date} onChange={(event) => update('purchase_date', event.target.value)} /></label>
-      {category.fields.map((field) => <label key={field.key}><span>{assetFieldLabel(field, language)}</span><input type={field.type} min={field.type === 'number' ? '0' : undefined} step={field.type === 'number' ? 'any' : undefined} value={details[field.key] ?? ''} onChange={(event) => setDetails((current) => ({ ...current, [field.key]: event.target.value }))} /></label>)}
+      {category.fields.map((field) => <label key={field.key}><span>{assetFieldLabel(field, language)}</span>{field.key === 'purchase_price' || field.key === 'shipping_cost' ? <span className="price-input"><input type="number" min="0" step="any" value={details[field.key] ?? ''} onChange={(event) => setDetails((current) => ({ ...current, [field.key]: event.target.value }))} /><SearchableSelect ariaLabel={`${assetFieldLabel(field, language)} currency`} value={priceCurrencies[field.key]} onChange={(value) => setPriceCurrencies((current) => ({ ...current, [field.key]: value }))} placeholder="FCFA" includeEmpty={false} options={[{ value: 'XOF', label: 'FCFA' }, { value: 'EUR', label: 'EUR' }, { value: 'USD', label: 'USD' }]} /></span> : <input type={field.type} min={field.type === 'number' ? '0' : undefined} step={field.type === 'number' ? 'any' : undefined} value={details[field.key] ?? ''} onChange={(event) => setDetails((current) => ({ ...current, [field.key]: event.target.value }))} />}</label>)}
       <label><span>{fr.equipment.condition}</span><SearchableSelect ariaLabel={fr.equipment.condition} value={form.condition} onChange={(value) => update('condition', value)} placeholder={fr.common.toComplete} options={catalogOptions(options.catalogs, 'equipment_condition').map((option) => ({ value: option.code, label: catalogLabel(options.catalogs, 'equipment_condition', option.code) }))} /></label>
       <label><span>{fr.equipment.situation}</span><SearchableSelect ariaLabel={fr.equipment.situation} value={form.operational_situation} onChange={(value) => update('operational_situation', value)} placeholder={fr.common.toComplete} options={catalogOptions(options.catalogs, 'operational_situation').map((option) => ({ value: option.code, label: catalogLabel(options.catalogs, 'operational_situation', option.code) }))} /></label>
       <label><span>{fr.equipment.project}</span><SearchableSelect ariaLabel={fr.equipment.project} value={form.project_id} onChange={(value) => setForm((current) => ({ ...current, project_id: value, current_location_id: '' }))} placeholder={fr.common.toComplete} options={options.projects.map((project) => ({ value: String(project.id), label: project.name }))} /></label>
       <label><span>{fr.equipment.location}</span><SearchableSelect ariaLabel={fr.equipment.location} value={form.current_location_id} onChange={(value) => update('current_location_id', value)} placeholder={fr.common.toComplete} options={locations.map((location) => ({ value: String(location.id), label: form.project_id ? location.name : locationOptionLabel(location) }))} /></label>
-      <label className="field-wide"><span>{fr.equipment.custodian}</span><SearchableSelect ariaLabel={fr.equipment.custodian} value={form.custodian_employee_id} onChange={(value) => update('custodian_employee_id', value)} placeholder={selectedProject?.responsible ? fr.equipment.useSiteResponsible(selectedProject.responsible.name) : fr.equipment.noSiteResponsible} options={options.employees.map((employee) => ({ value: String(employee.id), label: employee.name }))} /></label>
+      <label className="field-wide"><span>{isCar ? fr.equipment.assignedTo : fr.equipment.custodian}</span><SearchableSelect ariaLabel={isCar ? fr.equipment.assignedTo : fr.equipment.custodian} value={form.custodian_employee_id} onChange={(value) => update('custodian_employee_id', value)} placeholder={selectedProject?.responsible ? fr.equipment.useSiteResponsible(selectedProject.responsible.name) : fr.equipment.noSiteResponsible} options={options.employees.map((employee) => ({ value: String(employee.id), label: employee.name }))} /></label>
       <label className="field-wide"><span>{fr.equipment.observations}</span><textarea rows={3} value={form.observations} onChange={(event) => update('observations', event.target.value)} /></label>
     </div>
     <div className="maintenance-form-actions">
-      {onCancel && <button type="button" onClick={onCancel} aria-label={fr.common.close}><ActionIcon name="close" /></button>}
       <button className="primary-button save-button" type="submit" disabled={isSaving}>{isSaving ? <LoadingSpinner compact label={fr.common.saving} /> : fr.common.save}</button>
     </div>
   </form>

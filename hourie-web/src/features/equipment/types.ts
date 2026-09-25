@@ -215,6 +215,8 @@ export type EquipmentImportResult = {
   summary: {
     imported_rows: number
     warning_rows: number
+    skipped_rows?: number
+    categories?: Record<string, number>
   }
 }
 

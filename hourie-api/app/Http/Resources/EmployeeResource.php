@@ -31,6 +31,10 @@ class EmployeeResource extends JsonResource
             'equipment_in_custody' => EquipmentSummaryResource::collection(
                 $this->whenLoaded('equipmentInCustody'),
             ),
+            'assigned_sites' => $this->whenLoaded('responsibleProjects', fn () => $this->responsibleProjects
+                ->where('is_active', true)
+                ->map(fn ($project) => ['id' => $project->id, 'name' => $project->name])
+                ->values()),
         ];
     }
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
 import type { AuthenticatedUser } from '../features/auth/types'
 import { fr, type Language } from '../i18n/fr'
@@ -67,6 +67,13 @@ export function WorkspaceSidebar({ user, language, activeSection, activeAssetCat
   onNavigateAsset: (category: AssetView) => void
 }) {
   const [isAssetsExpanded, setIsAssetsExpanded] = useState(false)
+
+  useEffect(() => {
+    if (activeSection === 'assets' || activeSection === 'generators') {
+      setIsAssetsExpanded(true)
+    }
+  }, [activeSection, activeAssetCategory])
+
   return (
         <aside className="workspace-sidebar">
           <div className="sidebar-heading">
@@ -79,7 +86,7 @@ export function WorkspaceSidebar({ user, language, activeSection, activeAssetCat
             <div className="sidebar-navigation-group">
               <p className="sidebar-group-label">{fr.navigation.inventory}</p>
               <div className={`sidebar-assets-heading${activeSection === 'generators' || activeSection === 'assets' ? ' active-group' : ''}`}>
-                <button title={fr.navigation.assets} className="sidebar-assets-toggle" type="button" onClick={() => { onNavigateAsset('generator'); setIsAssetsExpanded(true) }}>
+                <button title={fr.navigation.assets} className="sidebar-assets-toggle" type="button" onClick={() => { onNavigateAsset('all'); setIsAssetsExpanded(true) }}>
                   <AssetCategoryIcon category="all" /><span className="nav-label">{fr.navigation.assets}</span>
                 </button>
                 <button className="sidebar-assets-chevron" type="button" onClick={() => setIsAssetsExpanded((value) => !value)} aria-label={isAssetsExpanded ? fr.navigation.collapse : fr.navigation.expand} aria-expanded={isAssetsExpanded} aria-controls="sidebar-asset-categories">
@@ -88,14 +95,15 @@ export function WorkspaceSidebar({ user, language, activeSection, activeAssetCat
               </div>
               <div id="sidebar-asset-categories" className={`sidebar-asset-disclosure${isAssetsExpanded ? ' expanded' : ''}`} aria-hidden={!isAssetsExpanded} inert={!isAssetsExpanded}>
                 <div className="sidebar-asset-children">
-                  <button title={fr.navigation.generators} className={`sidebar-child${activeSection === 'generators' ? ' active' : ''}`} type="button" onClick={() => onNavigateAsset('generator')}><AssetCategoryIcon category="generator" /><span className="nav-label">{fr.navigation.generators}</span></button>
+                  <button title={fr.assets.all} className={`sidebar-child${activeSection === 'assets' && activeAssetCategory === 'all' ? ' active' : ''}`} type="button" onClick={() => onNavigateAsset('all')}><AssetCategoryIcon category="all" /><span className="nav-label">{fr.assets.all}</span></button>
+                  <button title={fr.navigation.generators} className={`sidebar-child${activeAssetCategory === 'generator' ? ' active' : ''}`} type="button" onClick={() => onNavigateAsset('generator')}><AssetCategoryIcon category="generator" /><span className="nav-label">{fr.navigation.generators}</span></button>
                   {assetCategories.map((category) => <button key={category.code} title={assetCategoryLabel(category.code, language)} className={`sidebar-child${activeSection === 'assets' && activeAssetCategory === category.code ? ' active' : ''}`} type="button" onClick={() => onNavigateAsset(category.code)}><AssetCategoryIcon category={category.code} /><span className="nav-label">{assetCategoryLabel(category.code, language)}</span></button>)}
                 </div>
               </div>
             </div>
             <button title={fr.navigation.sites} className={activeSection === 'sites' ? 'active' : ''} type="button" onClick={() => onNavigate('sites')}><NavigationIcon name="sites" /><span className="nav-label">{fr.navigation.sites}</span></button>
             <button title={fr.navigation.people} className={activeSection === 'people' ? 'active' : ''} type="button" onClick={() => onNavigate('people')}><NavigationIcon name="people" /><span className="nav-label">{fr.navigation.people}</span></button>
-            {user.permissions.manage_sites && <button title={fr.navigation.settings} className={activeSection === 'catalogs' ? 'active' : ''} type="button" onClick={() => onNavigate('catalogs')}><NavigationIcon name="settings" /><span className="nav-label">{fr.navigation.settings}</span></button>}
+            {user.permissions.manage_sites && <button title={fr.navigation.settings} className={`sidebar-settings-link${activeSection === 'catalogs' ? ' active' : ''}`} type="button" onClick={() => onNavigate('catalogs')}><NavigationIcon name="settings" /><span className="nav-label">{fr.navigation.settings}</span></button>}
           </nav>
         </aside>
   )

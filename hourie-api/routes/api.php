@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Api\V1\Auth\PasswordController;
 use App\Http\Controllers\Api\V1\CatalogOptionController;
 use App\Http\Controllers\Api\V1\EmployeeController;
+use App\Http\Controllers\Api\V1\Equipment\AssetImportController;
 use App\Http\Controllers\Api\V1\Equipment\EquipmentController;
 use App\Http\Controllers\Api\V1\Equipment\EquipmentFilterOptionsController;
 use App\Http\Controllers\Api\V1\Equipment\EquipmentImageController;
@@ -38,6 +39,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', EnsureUserIsActive::class, Ensu
         ->name('equipment.filter-options');
     Route::post('equipment-imports', [EquipmentImportController::class, 'store'])
         ->name('equipment.imports.store');
+    Route::post('asset-imports', [AssetImportController::class, 'store'])
+        ->name('assets.imports.store');
     Route::apiResource('equipment', EquipmentController::class)->only(['index', 'store', 'show', 'update', 'destroy']);
     Route::post('equipment/{equipment}/transfer', EquipmentTransferController::class)
         ->name('equipment.transfer');

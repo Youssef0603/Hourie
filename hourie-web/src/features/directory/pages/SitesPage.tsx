@@ -28,7 +28,7 @@ export function SitesPage({ canAdd, onOpenSite, catalogs, employees = [] }: Site
   const [expectedEndDate, setExpectedEndDate] = useState('')
   const [notes, setNotes] = useState('')
   const [responsibleEmployeeId, setResponsibleEmployeeId] = useState('')
-  const [locations, setLocations] = useState([''])
+  const [locations, setLocations] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -40,10 +40,6 @@ export function SitesPage({ canAdd, onOpenSite, catalogs, employees = [] }: Site
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)
-    if (!responsibleEmployeeId) {
-      setError(fr.directory.selectResponsible)
-      return
-    }
     try {
       const site = await createSite({
         name: name.trim(),
@@ -52,7 +48,7 @@ export function SitesPage({ canAdd, onOpenSite, catalogs, employees = [] }: Site
         start_date: startDate || null,
         expected_end_date: expectedEndDate || null,
         notes: notes.trim() || null,
-        responsible_employee_id: Number(responsibleEmployeeId),
+        responsible_employee_id: responsibleEmployeeId === '' ? null : Number(responsibleEmployeeId),
         locations: locations.map((location) => location.trim()).filter(Boolean),
       })
       setSites((current) => [...current, site].sort((a, b) => a.name.localeCompare(b.name)))
@@ -63,7 +59,7 @@ export function SitesPage({ canAdd, onOpenSite, catalogs, employees = [] }: Site
       setExpectedEndDate('')
       setNotes('')
       setResponsibleEmployeeId('')
-      setLocations([''])
+      setLocations([])
       setShowForm(false)
     } catch (caught) {
       setError(caught instanceof ApiError ? Object.values(caught.errors)[0]?.[0] ?? fr.directory.saveError : fr.directory.saveError)
@@ -92,11 +88,11 @@ export function SitesPage({ canAdd, onOpenSite, catalogs, employees = [] }: Site
             <div className="maintenance-form-grid site-form-grid">
               <label><span>{fr.directory.siteName}</span><input required value={name} onChange={(event) => setName(event.target.value)} /></label>
               <label><span>{fr.directory.siteStatus}</span><SearchableSelect ariaLabel={fr.directory.siteStatus} value={selectedProjectStatus} onChange={(value) => setStatus(value as ProjectStatus)} placeholder={fr.common.toComplete} includeEmpty={false} options={projectStatusOptions.map((option) => ({ value: option.code, label: catalogLabel(catalogs, 'project_status', option.code) }))} /></label>
-              <label><span>{fr.directory.siteResponsible}</span><SearchableSelect ariaLabel={fr.directory.siteResponsible} required value={responsibleEmployeeId} onChange={setResponsibleEmployeeId} placeholder={fr.directory.selectResponsible} options={employees.map((employee) => ({ value: String(employee.id), label: employee.name }))} /></label>
+              <label><span>{fr.directory.siteResponsible}</span><SearchableSelect ariaLabel={fr.directory.siteResponsible} value={responsibleEmployeeId} onChange={setResponsibleEmployeeId} placeholder={fr.directory.selectResponsible} options={employees.map((employee) => ({ value: String(employee.id), label: employee.name }))} /></label>
               <label><span>{fr.directory.siteAddress}</span><input value={address} onChange={(event) => setAddress(event.target.value)} /></label>
               <label><span>{fr.directory.startDate}</span><input type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} /></label>
               <label><span>{fr.directory.expectedEndDate}</span><input type="date" min={startDate || undefined} value={expectedEndDate} onChange={(event) => setExpectedEndDate(event.target.value)} /></label>
-              <div className="site-location-fields field-wide"><div className="site-location-fields-heading"><span>{fr.directory.initialLocations}</span><button type="button" onClick={() => setLocations((current) => [...current, ''])}><ActionIcon name="add" />{fr.directory.addLocation}</button></div>{locations.map((location, index) => <div className="site-location-input" key={index}><input required aria-label={`${fr.directory.locationName} ${index + 1}`} placeholder={fr.directory.locationName} value={location} onChange={(event) => updateLocation(index, event.target.value)} />{locations.length > 1 && <button type="button" onClick={() => removeLocation(index)} aria-label={fr.common.delete}><ActionIcon name="close" /></button>}</div>)}</div>
+              <div className="site-location-fields field-wide"><div className="site-location-fields-heading"><span>{fr.directory.initialLocations}</span><button type="button" onClick={() => setLocations((current) => [...current, ''])}><ActionIcon name="add" />{fr.directory.addLocation}</button></div><div className="site-location-list">{locations.map((location, index) => <div className="site-location-input" key={index}><input required aria-label={`${fr.directory.locationName} ${index + 1}`} placeholder={fr.directory.locationName} value={location} onChange={(event) => updateLocation(index, event.target.value)} /><button type="button" onClick={() => removeLocation(index)} aria-label={fr.common.delete}><ActionIcon name="close" /></button></div>)}</div></div>
               <label className="field-wide"><span>{fr.directory.siteNotes}</span><textarea rows={3} value={notes} onChange={(event) => setNotes(event.target.value)} /></label>
             </div>
             <div className="maintenance-form-actions"><button className="primary-button save-button" type="submit">{fr.common.save}</button></div>
@@ -115,7 +111,7 @@ export function SitesPage({ canAdd, onOpenSite, catalogs, employees = [] }: Site
             <p className={`site-card-address${site.address ? '' : ' empty'}`} aria-hidden={!site.address}>{site.address || '\u00a0'}</p>
             <p className="site-card-responsible">{fr.directory.siteResponsible}: <strong>{site.responsible?.name ?? fr.common.notAssigned}</strong></p>
             <div className="site-card-metrics">
-              <div><span className="site-metric-icon"><NavigationIcon name="generators" /></span><span><strong>{site.active_equipment_count}</strong><small>{fr.directory.assignedGenerators}</small></span></div>
+              <div><span className="site-metric-icon"><NavigationIcon name="generators" /></span><span><strong>{site.active_equipment_count}</strong><small>{fr.directory.assignedAssets}</small></span></div>
               <div><span className="site-metric-icon"><ActionIcon name="location" /></span><span><strong>{physicalLocations.length}</strong><small>{fr.directory.locations}</small></span></div>
             </div>
             <footer className="site-card-footer">

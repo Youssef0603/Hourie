@@ -225,6 +225,7 @@ html[dir='rtl'] .user-menu {
   .equipment-image-preview,
   .generator-photo-field > button,
   .asset-category-card,
+  .person-directory-card,
   .workspace-sidebar button,
   .searchable-select-button
 ) {
@@ -244,6 +245,7 @@ html[dir='rtl'] .user-menu {
   .equipment-image-preview,
   .generator-photo-field > button,
   .asset-category-card,
+  .person-directory-card,
   .workspace-sidebar button,
   .searchable-select-button
 ):is(:hover, :focus-visible):not(:disabled) {
@@ -271,6 +273,11 @@ html :is(.workspace-shell, .modal-backdrop) button.save-button:focus-visible:not
 .save-button .loading-spinner {
   border-color: rgb(255 255 255 / 38%);
   border-top-color: white;
+}
+
+html :is(.workspace-shell, .modal-backdrop) label:has(> input:required, > select:required) > span::after {
+  content: ' *';
+  color: var(--color-primary);
 }
 
 html :is(.workspace-shell, .modal-backdrop) button.import-excel-action,

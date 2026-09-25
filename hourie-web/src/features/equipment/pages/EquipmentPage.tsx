@@ -6,9 +6,8 @@ import { EquipmentDetailPanel } from '../components/EquipmentDetailPanel'
 import { EquipmentInventoryTable } from '../components/EquipmentInventoryTable'
 import { SettingsPage } from '../../settings/pages/SettingsPage'
 import { EquipmentFilterDrawer } from '../components/EquipmentFilterDrawer'
-import { AssetCategoryCards } from '../components/AssetCategoryCards'
 import { AssetInventoryView } from '../components/AssetInventoryView'
-import type { AssetView } from '../assetCategories'
+import { assetCategoryLabel, isAssetCategoryCode, type AssetView } from '../assetCategories'
 import { advancedFilterKeys, initialFilters } from '../filters'
 import { PeoplePage } from '../../directory/pages/PeoplePage'
 import { SitesPage } from '../../directory/pages/SitesPage'
@@ -49,6 +48,19 @@ function auditDate(value: string) {
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(new Date(value))
+}
+
+function equipmentAuditLabel(type: Equipment['changes'][number]['type'], categoryCode: string, language: Language): string {
+  if (categoryCode === 'generator') return fr.audit.equipmentActions[type]
+
+  const category = isAssetCategoryCode(categoryCode) ? assetCategoryLabel(categoryCode, language) : fr.assets.title
+
+  if (type === 'initial_import') return fr.audit.assetImported(category)
+  if (type === 'identity_updated') return fr.audit.assetIdentityUpdated(category)
+  if (type === 'specifications_updated') return fr.audit.assetSpecificationsUpdated(category)
+  if (type === 'archived') return fr.audit.assetArchived(category)
+
+  return fr.audit.equipmentActions[type]
 }
 
 export function EquipmentPage({
@@ -162,7 +174,7 @@ export function EquipmentPage({
   }
 
   function navigateSection(section: WorkspaceRoute['section']) {
-    navigate(section === 'catalogs' ? '/settings' : section === 'assets' || section === 'generators' ? '/assets/generator' : `/${section}`)
+    navigate(section === 'catalogs' ? '/settings' : section === 'assets' ? '/assets' : section === 'generators' ? '/assets/generator' : `/${section}`)
   }
 
   function navigateAsset(category: AssetView) {
@@ -264,7 +276,7 @@ export function EquipmentPage({
   const isSiteView = siteContext !== null
   const hasFilters = Object.entries(filters).some(
     ([key, value]) =>
-      !['page', 'per_page', 'sort', 'category', ...(isSiteView ? ['project_id'] : [])].includes(key)
+      !['page', 'per_page', 'sort', 'q', 'category', ...(isSiteView ? ['project_id'] : [])].includes(key)
       && value !== '',
   )
   const advancedFilterCount = advancedFilterKeys.filter((key) => filters[key] !== '').length
@@ -326,7 +338,7 @@ export function EquipmentPage({
       <WorkspaceHeader user={user} language={language} onToggleLanguage={onToggleLanguage} onLogout={onLogout} isLoggingOut={isLoggingOut} />
 
       <div className={`workspace-layout${isSidebarCollapsed ? ' sidebar-collapsed' : ''}`}>
-        <WorkspaceSidebar user={user} language={language} activeSection={activeSection} activeAssetCategory={activeSection === 'assets' ? route.assetCategory : 'generator'} isSidebarCollapsed={isSidebarCollapsed} onToggleSidebar={() => setIsSidebarCollapsed((value) => !value)} onNavigate={navigateSection} onNavigateAsset={navigateAsset} />
+        <WorkspaceSidebar user={user} language={language} activeSection={activeSection} activeAssetCategory={activeSection === 'assets' ? route.assetCategory : activeSection === 'generators' ? 'generator' : 'all'} isSidebarCollapsed={isSidebarCollapsed} onToggleSidebar={() => setIsSidebarCollapsed((value) => !value)} onNavigate={navigateSection} onNavigateAsset={navigateAsset} />
 
       {(activeSection === 'generators' || isSiteView) ? <main className="equipment-page">
         {isSiteView && <nav className="breadcrumbs" aria-label={fr.navigation.breadcrumbs}>
@@ -364,18 +376,19 @@ export function EquipmentPage({
         {showImportGenerator && <Modal title={fr.equipment.importTitle} onClose={() => setShowImportGenerator(false)}><ImportGeneratorForm onClose={() => setShowImportGenerator(false)} onImported={() => { refreshInventory(); refreshFilterOptions() }} /></Modal>}
         {showEditSite && siteContext && <Modal title={fr.directory.editSite} size="wide" onClose={() => setShowEditSite(false)}><SiteEditForm site={siteContext} catalogs={options?.catalogs} employees={options?.employees ?? []} onSaved={(site) => { setSiteContext(site); setShowEditSite(false); refreshFilterOptions(); refreshInventory() }} /></Modal>}
 
-        {!isSiteView && <AssetCategoryCards selected="generator" language={language} onSelect={navigateAsset} />}
         <section className="inventory-panel" aria-label={fr.equipment.title}>
           <div className="filter-bar">
-            <label className="search-field">
-              <span>{fr.equipment.search}</span>
+            <div className="search-field">
+              <label htmlFor="equipment-search">{fr.equipment.search}</label>
               <input
+                id="equipment-search"
                 type="search"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder={fr.equipment.searchPlaceholder}
               />
-            </label>
+              {search !== '' && <button className="search-clear-button" type="button" onClick={() => setSearch('')} aria-label={fr.common.clearSearch}><ActionIcon name="close" /></button>}
+            </div>
             <div className="filter-toolbar-actions">
               <button className={`advanced-filter-toggle${showFilterDrawer ? ' active' : ''}`} type="button" onClick={() => setShowFilterDrawer(true)} aria-expanded={showFilterDrawer}>
                 <ActionIcon name="filter" />
@@ -391,8 +404,7 @@ export function EquipmentPage({
                   onClick={() => {
                     setIsLoading(true)
                     setError(null)
-                    setSearch('')
-                    setFilters({ ...initialFilters, category: 'generator', project_id: isSiteView ? String(siteContext?.id) : '' })
+                    setFilters({ ...initialFilters, q: search, category: 'generator', project_id: isSiteView ? String(siteContext?.id) : '' })
                   }}
                 >
                   {fr.equipment.clearFilters}
@@ -418,7 +430,7 @@ export function EquipmentPage({
           onProjectChange={updateProjectFilter}
           onClose={() => setShowFilterDrawer(false)}
         />}
-      </main> : activeSection === 'assets' ? <AssetInventoryView category={route.assetCategory} language={language} options={options} filters={filters} search={search} result={result} isLoading={isLoading} error={error} canManage={user.permissions.manage_equipment} onSearchChange={setSearch} onFilterChange={updateFilter} onSelectCategory={navigateAsset} onRefresh={refreshInventory} onPageChange={changePage} onOpen={openEquipment} onCreated={(equipment) => { refreshInventory(); openEquipment(equipment.id) }} /> : activeSection === 'sites' ? <SitesPage canAdd={user.permissions.manage_sites} catalogs={options?.catalogs} employees={options?.employees} onOpenSite={openSiteInventory} /> : activeSection === 'catalogs' ? <SettingsPage onChanged={refreshFilterOptions} /> : <PeoplePage canAdd={user.permissions.manage_users} canManageManagerAccounts={user.role === 'manager'} catalogs={options?.catalogs} />}
+      </main> : activeSection === 'assets' ? <AssetInventoryView category={route.assetCategory} language={language} options={options} filters={filters} search={search} result={result} isLoading={isLoading} error={error} canManage={user.permissions.manage_equipment} onSearchChange={setSearch} onFilterChange={updateFilter} onRefresh={refreshInventory} onPageChange={changePage} onOpen={openEquipment} onCreated={(equipment) => { refreshInventory(); openEquipment(equipment.id) }} onClearFilters={() => { setIsLoading(true); setError(null); setFilters({ ...initialFilters, q: search, category: route.assetCategory === 'all' ? filters.category : route.assetCategory }) }} onCategorySelect={(selectedCategory) => { setIsLoading(true); setError(null); setSearch(''); setFilters({ ...initialFilters, category: selectedCategory === 'all' ? '' : selectedCategory }) }} /> : activeSection === 'sites' ? <SitesPage canAdd={user.permissions.manage_sites} catalogs={options?.catalogs} employees={options?.employees} onOpenSite={openSiteInventory} /> : activeSection === 'catalogs' ? <SettingsPage onChanged={refreshFilterOptions} /> : <PeoplePage canAdd={user.permissions.manage_users} canManageManagerAccounts={user.role === 'manager'} catalogs={options?.catalogs} />}
       </div>
 
       {(activeSection === 'generators' || activeSection === 'assets' || isSiteView) && <EquipmentDetailPanel
@@ -441,7 +453,7 @@ export function EquipmentPage({
       {showHistory && <Modal title={fr.audit.title} onClose={() => setShowHistory(null)}>
         {showHistory === 'equipment'
           ? selected && selected.changes.length > 0
-            ? <div className="audit-list audit-modal-list">{selected.changes.map((change) => <article key={change.id}><span className="audit-dot" aria-hidden="true" /><div><strong>{fr.audit.equipmentActions[change.type]}</strong><p>{fr.audit.by(change.actor?.name ?? fr.audit.system)} · <time dateTime={change.occurred_at}>{auditDate(change.occurred_at)}</time></p></div></article>)}</div>
+            ? <div className="audit-list audit-modal-list">{selected.changes.map((change) => <article key={change.id}><span className="audit-dot" aria-hidden="true" /><div><strong>{equipmentAuditLabel(change.type, selected.category.code, language)}</strong><p>{fr.audit.by(change.actor?.name ?? fr.audit.system)} · <time dateTime={change.occurred_at}>{auditDate(change.occurred_at)}</time></p></div></article>)}</div>
             : <p className="audit-empty">{fr.audit.empty}</p>
           : siteContext?.changes?.length
             ? <div className="audit-list audit-modal-list">{siteContext.changes.map((change) => <article key={change.id}><span className="audit-dot" aria-hidden="true" /><div><strong>{fr.audit.siteActions[change.action]}</strong><p>{fr.audit.by(change.actor?.name ?? fr.audit.system)} · <time dateTime={change.occurred_at}>{auditDate(change.occurred_at)}</time></p></div></article>)}</div>

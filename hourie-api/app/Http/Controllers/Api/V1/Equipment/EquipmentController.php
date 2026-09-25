@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1\Equipment;
 
 use App\Actions\Equipment\CreateEquipment;
 use App\Actions\Equipment\ListEquipment;
+use App\Actions\Equipment\SendCarInspectionReminder;
 use App\Actions\Equipment\UpdateEquipment;
 use App\Enums\EquipmentChangeSource;
 use App\Enums\EquipmentChangeType;
@@ -24,9 +25,10 @@ use Illuminate\Support\Facades\Gate;
 
 class EquipmentController extends Controller
 {
-    public function store(StoreEquipmentRequest $request, CreateEquipment $createEquipment): JsonResponse
+    public function store(StoreEquipmentRequest $request, CreateEquipment $createEquipment, SendCarInspectionReminder $sendCarInspectionReminder): JsonResponse
     {
         $equipment = $createEquipment->handle($request->validated(), $request->user());
+        $sendCarInspectionReminder->handle($equipment);
 
         return (new EquipmentResource($this->loadDetails($equipment)))
             ->response()
@@ -67,8 +69,10 @@ class EquipmentController extends Controller
         UpdateEquipmentRequest $request,
         Equipment $equipment,
         UpdateEquipment $updateEquipment,
+        SendCarInspectionReminder $sendCarInspectionReminder,
     ): EquipmentResource {
         $equipment = $updateEquipment->handle($equipment, $request->validated(), $request->user());
+        $sendCarInspectionReminder->handle($equipment);
 
         return new EquipmentResource($this->loadDetails($equipment));
     }

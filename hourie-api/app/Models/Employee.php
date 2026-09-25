@@ -25,6 +25,11 @@ class Employee extends Model
         return $this->hasMany(Equipment::class, 'custodian_employee_id');
     }
 
+    public function responsibleProjects(): HasMany
+    {
+        return $this->hasMany(Project::class, 'responsible_employee_id');
+    }
+
     protected function casts(): array
     {
         return [

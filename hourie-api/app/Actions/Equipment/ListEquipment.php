@@ -49,14 +49,17 @@ class ListEquipment
                         ->orWhere('model', 'like', $pattern)
                         ->orWhere('serial_number', 'like', $pattern)
                         ->orWhere('asset_details', 'like', $pattern)
-                        ->orWhere('observations', 'like', $pattern);
+                        ->orWhere('observations', 'like', $pattern)
+                        ->orWhereHas('custodian', fn (Builder $custodianQuery) => $custodianQuery
+                            ->whereRaw('LOWER(name) like ?', ['%'.mb_strtolower(trim($search)).'%']));
                 });
             })
             ->when($filters['category'] ?? null, function (Builder $query, string $category): void {
                 $query->whereHas('category', fn (Builder $query) => $query->where('code', $category));
             })
             ->when($assetField !== null && isset($categoryFields[$assetField]) && ! empty($filters['asset_value']), function (Builder $query) use ($assetField, $filters): void {
-                $query->where('asset_details->'.$assetField, 'like', '%'.trim($filters['asset_value']).'%');
+                $column = $query->getQuery()->getGrammar()->wrap('asset_details->'.$assetField);
+                $query->whereRaw("LOWER({$column}) like ?", ['%'.strtolower(trim($filters['asset_value'])).'%']);
             })
             ->when($filters['condition'] ?? null, fn (Builder $query, string $condition) => $query->where('condition', $condition))
             ->when(

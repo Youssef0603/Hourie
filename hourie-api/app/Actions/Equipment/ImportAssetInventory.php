@@ -11,7 +11,6 @@ use App\Models\EquipmentCategory;
 use App\Models\EquipmentChange;
 use App\Models\EquipmentImport;
 use App\Models\EquipmentImportRow;
-use App\Models\GeneratorDetail;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -33,6 +32,7 @@ class ImportAssetInventory
             ]);
             $imported = 0;
             $skipped = 0;
+            $skippedGenerators = 0;
             $categories = [];
 
             foreach ($rows as $rowNumber => $row) {
@@ -42,12 +42,21 @@ class ImportAssetInventory
 
                 $data = $this->normalize($row);
                 $categories[$data['category_code']] = ($categories[$data['category_code']] ?? 0) + 1;
+
+                if ($data['category_code'] === 'generator') {
+                    $this->recordRow($import, $rowNumber, $row, null, EquipmentImportRowStatus::Skipped, null, ['generator_rows_must_be_imported_from_groupes']);
+                    $skipped++;
+                    $skippedGenerators++;
+
+                    continue;
+                }
+
                 $existing = $data['serial_number'] === null ? null : Equipment::query()
                     ->whereRaw('lower(serial_number) = ?', [mb_strtolower($data['serial_number'])])
                     ->first();
 
                 if ($existing !== null) {
-                    $this->recordRow($import, $rowNumber, $row, $data['source_code'], EquipmentImportRowStatus::Skipped, $existing, ['duplicate_existing_asset']);
+                    $this->recordRow($import, $rowNumber, $row, null, EquipmentImportRowStatus::Skipped, $existing, ['duplicate_existing_asset']);
                     $skipped++;
 
                     continue;
@@ -73,26 +82,24 @@ class ImportAssetInventory
                 ]);
                 $equipment->update(['asset_code' => EquipmentCategory::assetCode($data['category_code'], $equipment->id)]);
 
-                if ($data['generator_details'] !== null) {
-                    GeneratorDetail::query()->create(['equipment_id' => $equipment->id, ...$data['generator_details']]);
-                }
-
                 EquipmentChange::query()->create([
                     'equipment_id' => $equipment->id,
                     'actor_user_id' => $actor?->id,
                     'equipment_import_id' => $import->id,
                     'change_type' => EquipmentChangeType::InitialImport,
                     'source' => EquipmentChangeSource::Import,
-                    'new_values' => ['equipment' => $equipment->fresh()->toArray(), 'source_code' => $data['source_code']],
+                    'new_values' => ['equipment' => $equipment->fresh()->toArray()],
                     'occurred_at' => $importedAt,
                 ]);
-                $this->recordRow($import, $rowNumber, $row, $data['source_code'], EquipmentImportRowStatus::Imported, $equipment);
+                $this->recordRow($import, $rowNumber, $row, null, EquipmentImportRowStatus::Imported, $equipment);
                 $imported++;
             }
 
             $import->update(['status' => EquipmentImportStatus::Completed, 'imported_at' => $importedAt, 'summary' => [
                 'imported_rows' => $imported,
                 'skipped_rows' => $skipped,
+                'skipped_generator_rows' => $skippedGenerators,
+                'warning_rows' => 0,
                 'categories' => $categories,
             ]]);
 
@@ -103,7 +110,7 @@ class ImportAssetInventory
     /** @param array<string, string|null> $row */
     private function isInventoryRow(int $rowNumber, array $row): bool
     {
-        return $rowNumber > 5 && $this->text($row['D'] ?? null) !== null && $this->text($row['E'] ?? null) !== null;
+        return $rowNumber > 5 && $this->text($row['E'] ?? null) !== null;
     }
 
     /** @param array<string, string|null> $row @return array<string, mixed> */
@@ -113,30 +120,32 @@ class ImportAssetInventory
         $typeLower = mb_strtolower((string) $type);
         $categoryCode = match (true) {
             $typeLower === 'generator' => 'generator',
+            $typeLower === 'mobile crane' => 'tower_crane',
             $this->text($row['B'] ?? null) === 'Formwork' => 'formwork_scaffolding',
             in_array($typeLower, ['car', 'utility car'], true) => 'car',
             in_array($typeLower, ['hauler', 'road tractor', 'trailor', 'trailer', 'crane truck'], true) => 'truck_dumper',
             default => 'equipment',
         };
-        $sourceCode = $this->text($row['D'] ?? null) ?? 'SOURCE';
         $commonDetails = [
             'counter_at_purchase' => $this->text($row['R'] ?? null),
             'purchase_price' => $this->text($row['S'] ?? null),
+            'purchase_price_currency' => $this->currency($row['S'] ?? null, $row['N'] ?? null),
             'shipping_cost' => $this->text($row['T'] ?? null),
+            'shipping_cost_currency' => $this->currency($row['T'] ?? null, $row['N'] ?? null),
             'official_document_type' => $this->text($row['L'] ?? null),
             'official_document_location' => $this->text($row['M'] ?? null),
         ];
         $assetDetails = match ($categoryCode) {
             'car' => [...$commonDetails, 'fuel_type' => null, 'odometer_km' => null],
             'truck_dumper' => [...$commonDetails, 'vehicle_type' => $type, 'payload_tonnes' => null, 'fuel_type' => null, 'odometer_km' => null],
+            'tower_crane' => [...$commonDetails, 'crane_type' => $type, 'sub_category' => $this->text($row['C'] ?? null)],
             'formwork_scaffolding' => [...$commonDetails, 'system_type' => $type, 'quantity' => $this->numberFromText($row['J'] ?? null), 'unit' => $this->unit($row['J'] ?? null), 'sub_category' => $this->text($row['C'] ?? null)],
             'generator' => null,
-            default => [...$commonDetails, 'equipment_type' => $type, 'sub_category' => $this->text($row['C'] ?? null), 'capacity' => null, 'power_source' => null],
+            default => [...$commonDetails, 'equipment_type' => $type, 'sub_category' => $this->text($row['C'] ?? null), 'power_source' => null],
         };
 
         return [
             'category_code' => $categoryCode,
-            'source_code' => $sourceCode,
             'brand' => $this->text($row['F'] ?? null),
             'model' => $this->text($row['H'] ?? null),
             'serial_number' => $this->text($row['J'] ?? null),
@@ -144,17 +153,18 @@ class ImportAssetInventory
             'purchase_date' => $this->date($row['Q'] ?? null),
             'condition' => $this->condition($row['O'] ?? null),
             'asset_details' => $assetDetails,
-            'generator_details' => $categoryCode === 'generator' ? ['apparent_power_kva' => $this->kva($row['H'] ?? null)] : null,
-            'observations' => 'Code source : '.$sourceCode.($this->text($row['N'] ?? null) === null ? '' : "\nLocalisation source : ".$this->text($row['N'])),
+            'observations' => $this->text($row['N'] ?? null) === null ? null : 'Localisation source : '.$this->text($row['N'] ?? null),
         ];
     }
 
     /** @param array<string, string|null> $row @param array<int, string>|null $messages */
-    private function recordRow(EquipmentImport $import, int $rowNumber, array $row, string $sourceCode, EquipmentImportRowStatus $status, Equipment $equipment, ?array $messages = null): void
+    private function recordRow(EquipmentImport $import, int $rowNumber, array $row, ?string $sourceCode, EquipmentImportRowStatus $status, ?Equipment $equipment, ?array $messages = null): void
     {
+        unset($row['D']);
+
         EquipmentImportRow::query()->create([
             'equipment_import_id' => $import->id,
-            'equipment_id' => $equipment->id,
+            'equipment_id' => $equipment?->id,
             'sheet_name' => self::SHEET_NAME,
             'row_number' => $rowNumber,
             'source_asset_code' => $sourceCode,
@@ -184,8 +194,10 @@ class ImportAssetInventory
         if ($value === null) {
             return null;
         }
-        if (preg_match('/^\d{2}-\d{2}-\d{4}$/', $value) === 1) {
-            return \DateTimeImmutable::createFromFormat('!d-m-Y', $value)?->format('Y-m-d');
+        if (preg_match('/^\d{1,2}[\/-]\d{1,2}[\/-]\d{4}$/', $value) === 1) {
+            $date = str_replace('/', '-', $value);
+
+            return \DateTimeImmutable::createFromFormat('!j-n-Y', $date)?->format('Y-m-d');
         }
 
         return ctype_digit($value) && (int) $value > 20000 && (int) $value < 60000 ? (new \DateTimeImmutable('1899-12-30'))->modify("+{$value} days")->format('Y-m-d') : null;
@@ -216,5 +228,13 @@ class ImportAssetInventory
     private function condition(?string $value): ?string
     {
         return mb_strtolower((string) $this->text($value)) === 'very good' ? 'very_good' : null;
+    }
+
+    private function currency(?string $value, ?string $source = null): string
+    {
+        $value = mb_strtoupper((string) $value);
+
+        return str_contains($value, 'EUR') || str_contains($value, 'EURO') || str_contains(mb_strtoupper((string) $source), 'AUSTRIA') || str_contains(mb_strtoupper((string) $source), 'ANTWERP') ? 'EUR'
+            : (str_contains($value, 'USD') || str_contains($value, 'DOLLAR') ? 'USD' : 'XOF');
     }
 }

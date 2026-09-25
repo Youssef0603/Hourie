@@ -88,7 +88,10 @@ class EmployeeController extends Controller
 
     public function show(Employee $employee): EmployeeResource
     {
-        $employee->load('user:id,username,email,role');
+        $employee->load([
+            'user:id,username,email,role',
+            'responsibleProjects:id,name,responsible_employee_id,is_active',
+        ]);
         $equipment = Equipment::query()
             ->effectiveResponsible($employee->id)
             ->with([

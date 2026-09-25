@@ -42,13 +42,19 @@ class UpdateEquipmentRequest extends FormRequest
 
         if (! $isGenerator) {
             $rules['generator_details'] = ['prohibited'];
-            $fields = EquipmentCategory::ASSET_CATEGORIES[$categoryCode]['fields'] ?? [];
+            $fields = [
+                ...(EquipmentCategory::ASSET_CATEGORIES[$categoryCode]['fields'] ?? []),
+                'purchase_price_currency' => 'text',
+                'shipping_cost_currency' => 'text',
+            ];
             $rules['asset_details'] = ['required', 'array:'.implode(',', array_keys($fields))];
 
             foreach ($fields as $field => $type) {
-                $rules['asset_details.'.$field] = $type === 'number'
-                    ? ['sometimes', 'nullable', 'numeric', 'min:0']
-                    : ['sometimes', 'nullable', 'string', 'max:255'];
+                $rules['asset_details.'.$field] = match ($type) {
+                    'number' => ['sometimes', 'nullable', 'numeric', 'min:0'],
+                    'date' => ['sometimes', 'nullable', 'date_format:Y-m-d'],
+                    default => ['sometimes', 'nullable', 'string', 'max:255'],
+                };
             }
         } else {
             $rules['asset_details'] = ['prohibited'];
@@ -89,6 +95,14 @@ class UpdateEquipmentRequest extends FormRequest
             }
 
             $locationProjectId = Location::query()->whereKey($locationId)->value('project_id');
+            if ($locationProjectId === null) {
+                if ($projectId !== null) {
+                    $validator->errors()->add('current_location_id', __('validation.equipment_location_project_mismatch'));
+                }
+
+                return;
+            }
+
             if ($projectId === null || (int) $locationProjectId !== (int) $projectId) {
                 $validator->errors()->add('current_location_id', __('validation.equipment_location_project_mismatch'));
             }

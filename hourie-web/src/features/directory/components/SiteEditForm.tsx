@@ -34,10 +34,6 @@ export function SiteEditForm({ site, catalogs, employees, onSaved }: {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!responsibleEmployeeId) {
-      setError(fr.directory.selectResponsible)
-      return
-    }
     setIsSaving(true)
     setError(null)
 
@@ -49,7 +45,7 @@ export function SiteEditForm({ site, catalogs, employees, onSaved }: {
         start_date: startDate || null,
         expected_end_date: expectedEndDate || null,
         notes: notes.trim() || null,
-        responsible_employee_id: Number(responsibleEmployeeId),
+        responsible_employee_id: responsibleEmployeeId === '' ? null : Number(responsibleEmployeeId),
         locations: locations.map((location) => ({ ...location, name: location.name.trim() })),
       }))
     } catch (caught) {
@@ -65,11 +61,11 @@ export function SiteEditForm({ site, catalogs, employees, onSaved }: {
       <div className="maintenance-form-grid site-form-grid">
         <label><span>{fr.directory.siteName}</span><input required disabled={isSaving} value={name} onChange={(event) => setName(event.target.value)} /></label>
         <label><span>{fr.directory.siteStatus}</span><SearchableSelect ariaLabel={fr.directory.siteStatus} disabled={isSaving} value={status} onChange={setStatus} placeholder={fr.common.toComplete} includeEmpty={false} options={[...(currentStatusIsUnavailable ? [{ value: status, label: catalogLabel(catalogs, 'project_status', status) }] : []), ...availableStatuses.map((option) => ({ value: option.code, label: catalogLabel(catalogs, 'project_status', option.code) }))]} /></label>
-        <label><span>{fr.directory.siteResponsible}</span><SearchableSelect ariaLabel={fr.directory.siteResponsible} required disabled={isSaving} value={responsibleEmployeeId} onChange={setResponsibleEmployeeId} placeholder={fr.directory.selectResponsible} options={employees.map((employee) => ({ value: String(employee.id), label: employee.name }))} /></label>
+        <label><span>{fr.directory.siteResponsible}</span><SearchableSelect ariaLabel={fr.directory.siteResponsible} disabled={isSaving} value={responsibleEmployeeId} onChange={setResponsibleEmployeeId} placeholder={fr.directory.selectResponsible} options={employees.map((employee) => ({ value: String(employee.id), label: employee.name }))} /></label>
         <label><span>{fr.directory.siteAddress}</span><input disabled={isSaving} value={address} onChange={(event) => setAddress(event.target.value)} /></label>
         <label><span>{fr.directory.startDate}</span><input disabled={isSaving} type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} /></label>
         <label><span>{fr.directory.expectedEndDate}</span><input disabled={isSaving} type="date" min={startDate || undefined} value={expectedEndDate} onChange={(event) => setExpectedEndDate(event.target.value)} /></label>
-        <div className="site-location-fields field-wide"><div className="site-location-fields-heading"><span>{fr.directory.initialLocations}</span><button disabled={isSaving} type="button" onClick={() => setLocations((current) => [...current, { id: null, name: '' }])}><ActionIcon name="add" />{fr.directory.addLocation}</button></div>{locations.map((location, index) => <div className="site-location-input" key={location.id ?? `new-${index}`}><input required disabled={isSaving} aria-label={`${fr.directory.locationName} ${index + 1}`} value={location.name} onChange={(event) => setLocations((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, name: event.target.value } : item))} />{locations.length > 1 && <button disabled={isSaving} type="button" onClick={() => setLocations((current) => current.filter((_, itemIndex) => itemIndex !== index))} aria-label={fr.common.delete}><ActionIcon name="close" /></button>}</div>)}</div>
+        <div className="site-location-fields field-wide"><div className="site-location-fields-heading"><span>{fr.directory.initialLocations}</span><button disabled={isSaving} type="button" onClick={() => setLocations((current) => [...current, { id: null, name: '' }])}><ActionIcon name="add" />{fr.directory.addLocation}</button></div><div className="site-location-list">{locations.map((location, index) => <div className="site-location-input" key={location.id ?? `new-${index}`}><input required disabled={isSaving} aria-label={`${fr.directory.locationName} ${index + 1}`} value={location.name} onChange={(event) => setLocations((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, name: event.target.value } : item))} /><button disabled={isSaving} type="button" onClick={() => setLocations((current) => current.filter((_, itemIndex) => itemIndex !== index))} aria-label={fr.common.delete}><ActionIcon name="close" /></button></div>)}</div></div>
         <label className="field-wide"><span>{fr.directory.siteNotes}</span><textarea disabled={isSaving} rows={3} value={notes} onChange={(event) => setNotes(event.target.value)} /></label>
       </div>
       <div className="maintenance-form-actions"><button className="primary-button save-button" type="submit" disabled={isSaving}>{isSaving ? <LoadingSpinner compact label={fr.common.saving} /> : fr.common.save}</button></div>

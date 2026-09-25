@@ -87,10 +87,9 @@ export function EquipmentEditForm({ equipment, employees, projects, locations, c
   const [form, setForm] = useState(() => initialForm(equipment))
   const availableFuelTypes = catalogOptions(catalogs, 'fuel_type')
   const currentFuelIsUnavailable = form.fuel_type !== '' && !availableFuelTypes.some((option) => option.code === form.fuel_type)
-  const physicalLocationOptions = locations.filter((location) =>
-    location.parent_id !== null
-    && (form.project_id === '' || String(location.project_id) === form.project_id),
-  )
+  const physicalLocationOptions = locations.filter((location) => form.project_id
+    ? location.parent_id !== null && String(location.project_id) === form.project_id
+    : location.location_type === 'company_location' && location.project_id === null)
   const selectedProject = projects.find((project) => String(project.id) === form.project_id)
 
   function update(name: keyof FormState, value: string) {

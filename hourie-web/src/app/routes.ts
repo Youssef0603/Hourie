@@ -17,7 +17,7 @@ export function parseWorkspaceRoute(pathname: string): WorkspaceRoute {
   if (parts[0] === 'generators' && (parts.length === 1 || (id(parts[1]) && parts.length === 2))) {
     return { section: 'generators', siteId: null, equipmentId: id(parts[1]) }
   }
-  if (parts[0] === 'assets' && parts.length === 1) return { section: 'generators', siteId: null, equipmentId: null }
+  if (parts[0] === 'assets' && parts.length === 1) return { section: 'assets', assetCategory: 'all', siteId: null, equipmentId: null }
   if (parts[0] === 'assets' && parts[1] === 'generator' && (parts.length === 2 || (id(parts[2]) && parts.length === 3))) {
     return { section: 'generators', siteId: null, equipmentId: id(parts[2]) }
   }

@@ -45,6 +45,20 @@ it('allows CMS managers to add sites', function () {
     ])->assertCreated();
 });
 
+it('allows CMS managers to add a site without physical locations', function () {
+    $cmsManager = User::factory()->create(['role' => UserRole::CmsManager]);
+
+    $this->actingAs($cmsManager, 'web')->postJson('/api/v1/sites', [
+        'name' => 'YOPOUGON',
+        'status' => 'active',
+        'locations' => [],
+    ])->assertCreated()
+        ->assertJsonPath('data.name', 'YOPOUGON');
+
+    $site = Project::query()->where('name', 'YOPOUGON')->firstOrFail();
+    expect($site->locations()->whereNotNull('parent_id')->count())->toBe(0);
+});
+
 it('allows CMS managers to create personnel and non-manager accounts', function () {
     $cmsManager = User::factory()->create(['role' => UserRole::CmsManager]);
 
@@ -412,6 +426,23 @@ it('allows CMS managers to remove a site without deleting its generators', funct
     ]);
 });
 
+it('allows a site name to be reused after the prior site was archived', function () {
+    $cmsManager = User::factory()->create(['role' => UserRole::CmsManager]);
+    Project::factory()->create(['name' => 'Bingerville', 'is_active' => false]);
+    $site = Project::factory()->create(['name' => 'Bengerville', 'status' => 'active']);
+    $parent = Location::factory()->for($site)->create(['parent_id' => null, 'location_type' => 'project_site']);
+    $location = Location::factory()->for($site)->create(['parent_id' => $parent->id, 'name' => 'BASE']);
+
+    $this->actingAs($cmsManager, 'web')->patchJson("/api/v1/sites/{$site->id}", [
+        'name' => 'Bingerville',
+        'status' => 'active',
+        'locations' => [
+            ['id' => $location->id, 'name' => 'BASE'],
+        ],
+    ])->assertOk()
+        ->assertJsonPath('data.name', 'Bingerville');
+});
+
 it('allows CMS managers to edit a site, its locations, and records the actor', function () {
     $cmsManager = User::factory()->create(['role' => UserRole::CmsManager]);
     $responsible = Employee::factory()->create(['name' => 'Responsable chantier']);
@@ -464,7 +495,9 @@ it('includes generators inherited from a site in personnel responsibility', func
         ->assertOk()
         ->assertJsonPath('data.equipment_in_custody_count', 1)
         ->assertJsonPath('data.equipment_in_custody.0.asset_code', 'GEN-SITE')
-        ->assertJsonPath('data.equipment_in_custody.0.responsible_source', 'site');
+        ->assertJsonPath('data.equipment_in_custody.0.responsible_source', 'site')
+        ->assertJsonPath('data.assigned_sites.0.id', $site->id)
+        ->assertJsonPath('data.assigned_sites.0.name', $site->name);
 });
 
 it('requires an active employee as the site responsible', function () {

@@ -36,7 +36,7 @@ export type CreateSitePayload = {
   start_date: string | null
   expected_end_date: string | null
   notes: string | null
-  responsible_employee_id: number
+  responsible_employee_id: number | null
   locations: string[]
 }
 
@@ -61,6 +61,7 @@ export type Employee = {
 
 export type EmployeeDetails = Employee & {
   equipment_in_custody: EquipmentSummary[]
+  assigned_sites: Array<{ id: number; name: string }>
 }
 
 export type CreateEmployeePayload = {

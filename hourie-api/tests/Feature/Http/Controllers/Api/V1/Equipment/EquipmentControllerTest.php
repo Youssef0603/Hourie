@@ -119,6 +119,19 @@ it('filters equipment by search, category, condition, situation, project, and lo
         ->assertJsonPath('data.0.current_project_assignment.project.name', 'VRIDI');
 });
 
+it('finds a car by its assigned driver name', function () {
+    $user = User::factory()->create();
+    $driver = Employee::factory()->create(['name' => 'Aminata Traoré']);
+    $category = EquipmentCategory::factory()->create(['code' => 'car']);
+    $car = Equipment::factory()->for($category, 'category')->for($driver, 'custodian')->create();
+
+    $this->actingAs($user, 'web')
+        ->getJson('/api/v1/equipment?category=car&q=aminata')
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $car->id);
+});
+
 it('returns physical locations and Excel power values in the inventory list', function () {
     $user = User::factory()->create();
     $project = Project::factory()->create(['name' => 'BASSAM']);
@@ -256,7 +269,7 @@ it('returns authenticated filter options with distinct projects and physical loc
         ->actingAs($user, 'web')
         ->getJson('/api/v1/equipment-filter-options')
         ->assertOk()
-        ->assertJsonPath('data.categories.0.id', $category->id)
+        ->assertJsonFragment(['id' => $category->id, 'code' => 'generator', 'name' => 'Générateurs'])
         ->assertJsonPath('data.projects.0.id', $project->id)
         ->assertJsonPath('data.locations.0.id', $location->id)
         ->assertJsonPath('data.locations.0.project.name', 'BASSAM')

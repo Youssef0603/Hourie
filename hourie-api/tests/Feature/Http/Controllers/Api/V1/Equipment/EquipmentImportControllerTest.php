@@ -11,6 +11,10 @@ it('requires authentication to import equipment', function () {
     $this->postJson('/api/v1/equipment-imports')->assertUnauthorized();
 });
 
+it('requires authentication to import the multi-category asset inventory', function () {
+    $this->postJson('/api/v1/asset-imports')->assertUnauthorized();
+});
+
 it('prevents a viewer from importing equipment', function () {
     $viewer = User::factory()->create(['role' => UserRole::Viewer]);
 
@@ -28,6 +32,18 @@ it('accepts only xlsx inventory files', function () {
     $this
         ->actingAs($manager, 'web')
         ->postJson('/api/v1/equipment-imports', [
+            'file' => UploadedFile::fake()->create('inventory.csv', 10, 'text/csv'),
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('file');
+});
+
+it('accepts only xlsx files for the multi-category asset inventory', function () {
+    $manager = User::factory()->create(['role' => UserRole::Manager]);
+
+    $this
+        ->actingAs($manager, 'web')
+        ->postJson('/api/v1/asset-imports', [
             'file' => UploadedFile::fake()->create('inventory.csv', 10, 'text/csv'),
         ])
         ->assertUnprocessable()

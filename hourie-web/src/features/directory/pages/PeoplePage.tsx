@@ -14,7 +14,6 @@ import { ApiError } from "../../../shared/api/http";
 import { LoadingSpinner } from "../../../shared/components/LoadingSpinner";
 import type { CatalogOption } from "../../equipment/types";
 import { catalogBadgeStyle, catalogLabel } from "../../equipment/catalogs";
-import { DirectoryHeading } from "../components/DirectoryHeading";
 import { SearchableSelect } from "../../../shared/components/SearchableSelect";
 
 type PeoplePageProps = {
@@ -38,6 +37,15 @@ function normalizeSearch(value: string) {
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLocaleLowerCase();
+}
+
+function personInitials(name: string) {
+  return name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("");
 }
 
 export function PeoplePage({
@@ -190,14 +198,12 @@ export function PeoplePage({
 
   return (
     <main className="directory-page">
-      <DirectoryHeading
-        title={fr.directory.people}
-        subtitle={fr.directory.peopleSubtitle}
-        canAdd={false}
-        showForm={showForm}
-        onToggle={() => setShowForm((value) => !value)}
-        addLabel={fr.directory.addPerson}
-      />
+      <section className="people-page-heading">
+        <div>
+          <h1>{fr.directory.people}</h1>
+          <p>{fr.directory.peopleRegistered(people.length)}</p>
+        </div>
+      </section>
       {error && (
         <div className="form-alert" role="alert">
           {error}
@@ -278,7 +284,7 @@ export function PeoplePage({
           </form>
         </Modal>
       )}
-      <div className="people-table-wrap">
+      <section className="people-directory-panel">
         <div className="filter-bar people-filter-bar">
           <label className="search-field">
             <span>{fr.equipment.search}</span>
@@ -290,17 +296,7 @@ export function PeoplePage({
             />
           </label>
           <div className="filter-toolbar-actions">
-            {canAdd && (
-              <button
-                className="table-refresh-button table-add-button"
-                type="button"
-                onClick={() => setShowForm(true)}
-                aria-label={fr.directory.addPerson}
-                title={fr.directory.addPerson}
-              >
-                <ActionIcon name="add" />
-              </button>
-            )}
+            {canAdd && <button className="table-refresh-button table-add-button" type="button" onClick={() => setShowForm(true)} aria-label={fr.directory.addPerson} title={fr.directory.addPerson}><ActionIcon name="add" /></button>}
             <button
               className="table-refresh-button filter-refresh-button"
               type="button"
@@ -313,85 +309,29 @@ export function PeoplePage({
             </button>
           </div>
         </div>
-        <table className="people-table">
-          <colgroup>
-            <col className="people-name-column" />
-            <col className="people-contact-column" />
-            <col className="people-phone-column" />
-            <col className="people-role-column" />
-            <col className="people-count-column" />
-          </colgroup>
-          <thead>
-            <tr>
-              <th>{fr.directory.fullName}</th>
-              <th>{fr.directory.username}</th>
-              <th>{fr.directory.phoneNumber}</th>
-              <th>{fr.directory.role}</th>
-              <th>{fr.directory.assignedEquipment}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {!isRefreshing &&
-              visiblePeople.map((person) => (
-                <tr
-                  key={person.id}
-                  tabIndex={0}
-                  onClick={() => openPerson(person.id)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault();
-                      openPerson(person.id);
-                    }
-                  }}
-                >
-                  <td>
-                    <div className="person-identity">
-                      <span className="person-avatar">
-                        {person.name.slice(0, 1).toUpperCase()}
-                      </span>
-                      <strong>{person.name}</strong>
-                    </div>
-                  </td>
-                  <td>
-                    <strong>
-                      {person.user?.username ?? fr.common.notAssigned}
-                    </strong>
-                    {person.user?.email && (
-                      <span className="secondary-cell">
-                        {person.user.email}
-                      </span>
-                    )}
-                  </td>
-                  <td>{person.phone_number ?? fr.common.notAssigned}</td>
-                  <td>
-                    {person.user
-                      ? fr.roles[person.user.role]
-                      : fr.common.notAssigned}
-                  </td>
-                  <td>
-                    <span className="assignment-count">
-                      {person.equipment_in_custody_count}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            {!isRefreshing && visiblePeople.length === 0 && (
-              <tr className="people-empty-row">
-                <td colSpan={5}>
-                  {searchTerm
-                    ? fr.directory.noPeopleMatching
-                    : fr.directory.noPeople}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+        {!isRefreshing && <div className="people-card-grid">
+          {visiblePeople.map((person) => <button className="person-directory-card" type="button" key={person.id} onClick={() => openPerson(person.id)}>
+            <div className="person-directory-card-main">
+              <span className="person-directory-avatar">{personInitials(person.name)}</span>
+              <span className="person-directory-identity">
+                <strong>{person.name}</strong>
+                <span>{person.user ? fr.roles[person.user.role] : fr.directory.noSystemAccess}</span>
+                {person.user?.username && <small>@{person.user.username}</small>}
+              </span>
+            </div>
+            <span className="person-directory-card-footer">
+              <span className="person-directory-phone">{person.phone_number ?? fr.common.notAssigned}</span>
+              <span className={`person-system-access${person.user ? ' has-access' : ''}`}>{person.user ? fr.directory.hasSystemAccess : fr.directory.noSystemAccess}</span>
+            </span>
+          </button>)}
+        </div>}
+        {!isRefreshing && visiblePeople.length === 0 && <p className="people-card-empty">{searchTerm ? fr.directory.noPeopleMatching : fr.directory.noPeople}</p>}
         {isRefreshing && (
           <div className="table-state people-table-state">
             <LoadingSpinner label={fr.common.loading} />
           </div>
         )}
-      </div>
+      </section>
       {(isLoadingPerson || selectedPerson) && (
         <Modal
           title={
@@ -517,17 +457,13 @@ function PersonDetail({
           </div>
         </dl>
       </section>
-      <section>
-        <div className="section-heading-row">
-          <div>
-            <h3>{fr.directory.assignedEquipment}</h3>
-            <p>
-              {fr.directory.custodyCount(person.equipment_in_custody_count)}
-            </p>
-          </div>
-        </div>
-        {person.equipment_in_custody.length > 0 ? (
-          <div className="site-inventory-wrap">
+      {person.assigned_sites.length > 0 && <section>
+        <h3>{fr.directory.assignedSites}</h3>
+        <ul className="person-assigned-sites">{person.assigned_sites.map((site) => <li key={site.id}>{site.name}</li>)}</ul>
+      </section>}
+      {person.equipment_in_custody.length > 0 && <section>
+        <h3>{fr.directory.assignedEquipment}</h3>
+        <div className="site-inventory-wrap">
             <table className="equipment-table person-inventory-table">
               <thead>
                 <tr>
@@ -582,11 +518,8 @@ function PersonDetail({
                 ))}
               </tbody>
             </table>
-          </div>
-        ) : (
-          <p>{fr.directory.noGenerators}</p>
-        )}
-      </section>
+        </div>
+      </section>}
     </div>
   );
 }

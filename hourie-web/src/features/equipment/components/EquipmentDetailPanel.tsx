@@ -14,6 +14,7 @@ import { catalogBadgeStyle, catalogLabel } from '../catalogs'
 import { displayedValue, locationName, measurement } from '../equipmentDisplay'
 import type { Equipment, EquipmentFilterOptions } from '../types'
 import { GeneratorTransferForm } from './GeneratorTransferForm'
+import { formatMoney } from '../../../shared/formatMoney'
 
 type EquipmentDetailPanelProps = {
   user: AuthenticatedUser
@@ -90,13 +91,15 @@ export function EquipmentDetailPanel({
                     <dl>
                       <div><dt>{fr.equipment.project}</dt><dd>{selected.current_project_assignment?.project.name ?? fr.common.notProvided}</dd></div>
                       <div><dt>{fr.equipment.location}</dt><dd>{locationName(selected)}</dd></div>
-                      <div><dt>{fr.equipment.custodian}</dt><dd>{selected.responsible ? <>{selected.responsible.name}{selected.responsible_source === 'site' && <small className="responsibility-source">{fr.equipment.inheritedFromSite}</small>}</> : fr.common.notProvided}</dd></div>
+                      <div><dt>{categoryCode === 'car' ? fr.equipment.assignedTo : fr.equipment.custodian}</dt><dd>{selected.responsible ? <>{selected.responsible.name}{selected.responsible_source === 'site' && <small className="responsibility-source">{fr.equipment.inheritedFromSite}</small>}</> : fr.common.notProvided}</dd></div>
                     </dl>
                   </section>
                   <section>
                     <h3>{fr.equipment.identification}</h3>
                     <dl>
-                      <div><dt>{fr.equipment.serialNumber}</dt><dd>{displayedValue(selected.serial_number)}</dd></div>
+                      <div><dt>{categoryCode === 'car' ? fr.equipment.registrationNumber : fr.equipment.serialNumber}</dt><dd>{displayedValue(selected.serial_number)}</dd></div>
+                      {isOtherAsset && <div><dt>{fr.equipment.model}</dt><dd>{displayedValue(selected.model)}</dd></div>}
+                      {!isOtherAsset && <div><dt>{fr.equipment.model}</dt><dd>{displayedValue(selected.model)}</dd></div>}
                       <div><dt>{fr.equipment.manufactureYear}</dt><dd>{displayedValue(selected.manufacture_year)}</dd></div>
                       <div><dt>{fr.equipment.purchaseDate}</dt><dd>{displayedValue(selected.purchase_date)}</dd></div>
                       <div><dt>{fr.equipment.condition}</dt><dd>{selected.condition ? <span className={`status-badge status-${selected.condition}`} style={catalogBadgeStyle(options?.catalogs, 'equipment_condition', selected.condition)}>{catalogLabel(options?.catalogs, 'equipment_condition', selected.condition)}</span> : fr.common.notProvided}</dd></div>
@@ -107,8 +110,10 @@ export function EquipmentDetailPanel({
                     const value = selected.asset_details?.[field.key]
                     const isCost = field.key === 'purchase_price' || field.key === 'shipping_cost'
                     const display = value === null || value === undefined || value === ''
-                      ? isCost ? '0' : fr.common.notProvided
-                      : `${value}${field.unit ? ` ${field.unit}` : ''}`
+                      ? fr.common.notProvided
+                      : isCost
+                        ? formatMoney(value, priceCurrencyLabel(selected.asset_details?.[`${field.key}_currency`]))
+                        : `${value}${field.unit ? ` ${field.unit}` : ''}`
 
                     return <div key={field.key}><dt>{assetFieldLabel(field, language)}</dt><dd>{display}</dd></div>
                   })}</dl></section>}
@@ -125,7 +130,7 @@ export function EquipmentDetailPanel({
                         <div><dt>{fr.equipment.fuel}</dt><dd>{selected.generator_details.fuel_type ? <span className="status-badge" style={catalogBadgeStyle(options?.catalogs, 'fuel_type', selected.generator_details.fuel_type)}>{catalogLabel(options?.catalogs, 'fuel_type', selected.generator_details.fuel_type)}</span> : fr.common.notProvided}</dd></div>
                         <div><dt>{fr.equipment.tank}</dt><dd>{displayedValue(selected.generator_details.tank_capacity_litres)}</dd></div>
                         <div><dt>{fr.equipment.engineHours}</dt><dd>{displayedValue(selected.generator_details.current_engine_hours)}</dd></div>
-                        <div><dt>{fr.equipment.purchasePrice}</dt><dd>{selected.generator_details.purchase_price_fcfa === null ? fr.common.notProvided : `${Number(selected.generator_details.purchase_price_fcfa).toLocaleString('fr-FR')} FCFA`}</dd></div>
+                        <div><dt>{fr.equipment.purchasePrice}</dt><dd>{selected.generator_details.purchase_price_fcfa === null ? fr.common.notProvided : formatMoney(selected.generator_details.purchase_price_fcfa)}</dd></div>
                       </dl>
                     </section>
                   )}
@@ -152,4 +157,8 @@ export function EquipmentDetailPanel({
           </aside>
         </div>
   )
+}
+
+function priceCurrencyLabel(currency: unknown): string {
+  return currency === 'EUR' || currency === 'USD' ? currency : 'FCFA'
 }
