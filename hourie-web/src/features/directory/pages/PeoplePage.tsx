@@ -337,9 +337,9 @@ export function PeoplePage({
           title={
             isEditingPerson
               ? fr.directory.editPerson
-              : (selectedPerson?.name ?? fr.directory.personDetails)
+              : fr.directory.personSheet
           }
-          size="wide"
+          size={isEditingPerson ? "wide" : "person"}
           onClose={closePerson}
         >
           {isLoadingPerson ? (
@@ -392,76 +392,51 @@ function PersonDetail({
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const [showAssignedAssets, setShowAssignedAssets] = useState(false);
+  const employmentDate = person.employment_date
+    ? new Intl.DateTimeFormat("fr-FR").format(new Date(`${person.employment_date}T00:00:00`))
+    : fr.common.notAssigned;
+
   return (
     <div className="person-detail">
-      <section>
-        <div className="person-detail-heading">
-          <h3>{fr.directory.contactInformation}</h3>
-          {canEdit && (
-            <div className="detail-actions">
-              <button
-                className="equipment-edit-button"
-                type="button"
-                onClick={onEdit}
-              >
-                <ActionIcon name="edit" />
-                {fr.common.edit}
-              </button>
-              <button
-                className="danger-button"
-                type="button"
-                onClick={onDelete}
-              >
-                <ActionIcon name="delete" />
-                {fr.directory.deletePerson}
-              </button>
-            </div>
-          )}
+      <section className="person-profile-summary">
+        <div className="person-profile-identity">
+          <span className="person-profile-avatar">{personInitials(person.name)}</span>
+          <div>
+            <h3>{person.name}</h3>
+            <p>{person.user ? fr.roles[person.user.role] : fr.directory.noSystemAccess}</p>
+            {person.user?.username && <small>@{person.user.username}</small>}
+          </div>
+          {canEdit && <button className="person-delete-action" type="button" onClick={onDelete} aria-label={fr.directory.deletePerson} title={fr.directory.deletePerson}><ActionIcon name="delete" /></button>}
         </div>
-        <dl>
-          <div>
-            <dt>{fr.directory.username}</dt>
-            <dd>{person.user?.username ?? fr.common.notAssigned}</dd>
-          </div>
-          <div>
-            <dt>{fr.directory.email}</dt>
-            <dd>{person.user?.email ?? fr.common.notAssigned}</dd>
-          </div>
+        <dl className="person-profile-facts">
           <div>
             <dt>{fr.directory.phoneNumber}</dt>
             <dd>{person.phone_number ?? fr.common.notAssigned}</dd>
           </div>
           <div>
-            <dt>{fr.directory.passportNumber}</dt>
-            <dd>{person.passport_number ?? fr.common.notAssigned}</dd>
+            <dt>{fr.directory.assignedAssets}</dt>
+            <dd>{fr.directory.assetCount(person.equipment_in_custody.length)}</dd>
           </div>
           <div>
             <dt>{fr.directory.employmentDate}</dt>
-            <dd>{person.employment_date ?? fr.common.notAssigned}</dd>
+            <dd>{employmentDate}</dd>
           </div>
           <div>
-            <dt>{fr.directory.role}</dt>
-            <dd>
-              {person.user ? fr.roles[person.user.role] : fr.common.notAssigned}
-            </dd>
+            <dt>{fr.directory.passportNumber}</dt>
+            <dd>{person.passport_number ?? fr.common.notAssigned}</dd>
           </div>
-          <div>
-            <dt>{fr.directory.accountStatus}</dt>
-            <dd>
-              {person.user ? (
-                <span className={`account-status ${person.is_active ? "active" : "inactive"}`}>
-                  {person.is_active ? fr.directory.active : fr.directory.inactive}
-                </span>
-              ) : fr.directory.noSystemAccess}
-            </dd>
+          <div className="person-profile-email">
+            <dt>{fr.directory.email}</dt>
+            <dd>{person.user?.email ?? fr.common.notAssigned}</dd>
           </div>
         </dl>
+        <div className="person-profile-actions">
+          {canEdit && <button className="person-detail-action primary" type="button" onClick={onEdit}><ActionIcon name="edit" />{fr.common.edit}</button>}
+          <button className="person-detail-action" type="button" disabled={person.equipment_in_custody.length === 0} onClick={() => setShowAssignedAssets((visible) => !visible)}>{showAssignedAssets ? fr.directory.hideAssignedAssets : fr.directory.viewAssignedAssets}</button>
+        </div>
       </section>
-      {person.assigned_sites.length > 0 && <section>
-        <h3>{fr.directory.assignedSites}</h3>
-        <ul className="person-assigned-sites">{person.assigned_sites.map((site) => <li key={site.id}>{site.name}</li>)}</ul>
-      </section>}
-      {person.equipment_in_custody.length > 0 && <section>
+      {showAssignedAssets && person.equipment_in_custody.length > 0 && <section className="person-assigned-assets-section">
         <h3>{fr.directory.assignedEquipment}</h3>
         <div className="site-inventory-wrap">
             <table className="equipment-table person-inventory-table">

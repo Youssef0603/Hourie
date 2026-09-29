@@ -22,7 +22,6 @@ export const assetCategories: Array<{ code: AssetCategoryCode; labelFr: string; 
   { code: 'equipment', labelFr: 'Matériel', labelAr: 'المعدات', fields: [
     { key: 'equipment_type', labelFr: 'Type de matériel', labelAr: 'نوع المعدات', type: 'text' },
     { key: 'sub_category', labelFr: 'Sous-catégorie', labelAr: 'الفئة الفرعية', type: 'text' },
-    { key: 'power_source', labelFr: 'Source d’énergie', labelAr: 'مصدر الطاقة', type: 'text' },
     { key: 'counter_at_purchase', labelFr: 'Compteur à l’achat', labelAr: 'العداد عند الشراء', type: 'text' },
     { key: 'purchase_price', labelFr: 'Prix d’achat', labelAr: 'سعر الشراء', type: 'text' },
     { key: 'shipping_cost', labelFr: 'Coût d’expédition', labelAr: 'تكلفة الشحن', type: 'text' },

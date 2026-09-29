@@ -10,6 +10,7 @@ use App\Models\Equipment;
 use App\Models\EquipmentChange;
 use App\Models\EquipmentInvoice;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -48,16 +49,22 @@ class EquipmentInvoiceController extends Controller
         ], 201);
     }
 
-    public function show(Equipment $equipment, EquipmentInvoice $invoice): StreamedResponse
+    public function show(Request $request, Equipment $equipment, EquipmentInvoice $invoice): StreamedResponse
     {
         Gate::authorize('view', $equipment);
         abort_unless($invoice->equipment_id === $equipment->id, 404);
 
-        return Storage::disk($invoice->disk)->download($invoice->path, $invoice->original_name, [
+        $headers = [
             'Content-Type' => 'application/pdf',
             'Cache-Control' => 'private, no-store',
             'X-Content-Type-Options' => 'nosniff',
-        ]);
+        ];
+
+        if ($request->boolean('preview')) {
+            return Storage::disk($invoice->disk)->response($invoice->path, $invoice->original_name, $headers, 'inline');
+        }
+
+        return Storage::disk($invoice->disk)->download($invoice->path, $invoice->original_name, $headers);
     }
 
     public function destroy(Equipment $equipment, EquipmentInvoice $invoice): JsonResponse

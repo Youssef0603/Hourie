@@ -141,14 +141,15 @@ class ImportAssetInventory
             'tower_crane' => [...$commonDetails, 'crane_type' => $type, 'sub_category' => $this->text($row['C'] ?? null)],
             'formwork_scaffolding' => [...$commonDetails, 'system_type' => $type, 'quantity' => $this->numberFromText($row['J'] ?? null), 'unit' => $this->unit($row['J'] ?? null), 'sub_category' => $this->text($row['C'] ?? null)],
             'generator' => null,
-            default => [...$commonDetails, 'equipment_type' => $type, 'sub_category' => $this->text($row['C'] ?? null), 'power_source' => null],
+            default => [...$commonDetails, 'equipment_type' => $type, 'sub_category' => $this->text($row['C'] ?? null)],
         };
 
         return [
             'category_code' => $categoryCode,
             'brand' => $this->text($row['F'] ?? null),
             'model' => $this->text($row['H'] ?? null),
-            'serial_number' => $this->text($row['J'] ?? null),
+            // Formwork rows use column J for a quantity (for example, "671 m2"), not a serial number.
+            'serial_number' => $categoryCode === 'formwork_scaffolding' ? null : $this->text($row['J'] ?? null),
             'manufacture_year' => $this->year($row['I'] ?? null),
             'purchase_date' => $this->date($row['Q'] ?? null),
             'condition' => $this->condition($row['O'] ?? null),

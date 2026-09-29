@@ -1,15 +1,17 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { fr } from '../../../i18n/fr'
 import { ApiError } from '../../../shared/api/http'
+import { ActionIcon } from '../../../shared/components/ActionIcon'
 import { LoadingSpinner } from '../../../shared/components/LoadingSpinner'
 import { SearchableSelect } from '../../../shared/components/SearchableSelect'
 import { transferEquipment } from '../api'
 import type { Equipment, EquipmentFilterOptions } from '../types'
 
-export function GeneratorTransferForm({ equipment, options, onTransferred }: {
+export function GeneratorTransferForm({ equipment, options, onTransferred, onCancel }: {
   equipment: Equipment
   options: EquipmentFilterOptions
   onTransferred: (equipment: Equipment) => void
+  onCancel: () => void
 }) {
   const currentProjectId = equipment.current_project_assignment?.project.id ?? null
   const currentProjectName = equipment.current_project_assignment?.project.name ?? fr.common.notAssigned
@@ -55,12 +57,15 @@ export function GeneratorTransferForm({ equipment, options, onTransferred }: {
   }
 
   return <form className="maintenance-form generator-transfer-form" onSubmit={submit}>
+    <div className="transfer-equipment-summary">
+      <span><ActionIcon name="specifications" /></span>
+      <div><strong>{[equipment.brand, equipment.model].filter(Boolean).join(' ') || equipment.asset_code}</strong><small>{equipment.asset_code}</small><p>{fr.equipment.transferFrom}: <b>{currentProjectName}</b></p></div>
+    </div>
     {error && <div className="form-alert" role="alert">{error}</div>}
     <div className="maintenance-form-grid">
-      <label><span>{fr.equipment.transferFrom}</span><SearchableSelect ariaLabel={fr.equipment.transferFrom} value={currentProjectId === null ? '' : String(currentProjectId)} onChange={() => undefined} placeholder={currentProjectName} includeEmpty={currentProjectId === null} options={currentProjectId === null ? [] : [{ value: String(currentProjectId), label: currentProjectName }]} searchable={false} disabled /></label>
-      <label><span>{fr.equipment.transferTo}</span><SearchableSelect ariaLabel={fr.equipment.transferTo} value={destinationProjectId} onChange={(value) => { setDestinationProjectId(value); setDestinationLocationId('') }} placeholder={fr.equipment.selectDestination} includeEmpty={false} options={destinationProjects.map((project) => ({ value: String(project.id), label: project.name }))} /></label>
-      <label><span>{fr.equipment.destinationLocation}</span><SearchableSelect ariaLabel={fr.equipment.destinationLocation} value={destinationLocationId} onChange={setDestinationLocationId} placeholder={fr.common.notProvided} required disabled={destinationProjectId === ''} options={destinationLocations.map((location) => ({ value: String(location.id), label: location.name }))} /></label>
+      <label className="field-wide"><span>{fr.equipment.transferTo} <em>*</em></span><SearchableSelect ariaLabel={fr.equipment.transferTo} value={destinationProjectId} onChange={(value) => { setDestinationProjectId(value); setDestinationLocationId('') }} placeholder={fr.equipment.selectDestination} includeEmpty={false} options={destinationProjects.map((project) => ({ value: String(project.id), label: project.name }))} /></label>
+      {destinationProjectId !== '' && <label className="field-wide"><span>{fr.equipment.destinationLocation} <em>*</em></span><SearchableSelect ariaLabel={fr.equipment.destinationLocation} value={destinationLocationId} onChange={setDestinationLocationId} placeholder={fr.common.notProvided} required options={destinationLocations.map((location) => ({ value: String(location.id), label: location.name }))} /></label>}
     </div>
-    <div className="maintenance-form-actions"><button className="primary-button save-button" type="submit" disabled={isSaving || destinationProjectId === '' || destinationLocationId === ''}>{isSaving ? <LoadingSpinner compact label={fr.common.saving} /> : fr.equipment.confirmTransfer}</button></div>
+    <div className="transfer-form-actions"><button className="transfer-cancel-button" type="button" onClick={onCancel}>{fr.common.cancel}</button><button className="primary-button save-button transfer-submit-button" type="submit" disabled={isSaving || destinationProjectId === '' || destinationLocationId === ''}><ActionIcon name="transfer" />{isSaving ? <LoadingSpinner compact label={fr.common.saving} /> : fr.equipment.confirmTransfer}</button></div>
   </form>
 }

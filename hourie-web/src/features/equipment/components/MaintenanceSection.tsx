@@ -3,7 +3,6 @@ import { fr } from '../../../i18n/fr'
 import { ApiError } from '../../../shared/api/http'
 import { ActionIcon } from '../../../shared/components/ActionIcon'
 import { formatMoney } from '../../../shared/formatMoney'
-import { Modal } from '../../../shared/components/Modal'
 import { deleteMaintenance, saveMaintenance } from '../api'
 import type {
   Equipment,
@@ -23,6 +22,7 @@ type MaintenanceSectionProps = {
   canDelete: boolean
   onChanged: () => Promise<void>
   catalogs: EquipmentFilterOptions['catalogs']
+  hideHeading?: boolean
 }
 
 type FormState = {
@@ -62,11 +62,6 @@ const emptyForm: FormState = {
   cost: '',
   observations: '',
 }
-
-const yesNoOptions = [
-  { value: 'true', label: fr.common.yes },
-  { value: 'false', label: fr.common.no },
-]
 
 function nullableString(value: string) {
   const trimmed = value.trim()
@@ -118,9 +113,11 @@ export function MaintenanceSection({
   canDelete,
   onChanged,
   catalogs,
+  hideHeading = false,
 }: MaintenanceSectionProps) {
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<number | undefined>()
+  const [technicianMode, setTechnicianMode] = useState<'internal' | 'external'>('internal')
   const [expandedIds, setExpandedIds] = useState<Set<number>>(
     () => new Set(equipment.maintenances[0] ? [equipment.maintenances[0].id] : []),
   )
@@ -138,6 +135,7 @@ export function MaintenanceSection({
     setEditingId(undefined)
     setForm(emptyForm)
     setFormError(null)
+    setTechnicianMode('internal')
     setShowForm(true)
   }
 
@@ -146,6 +144,7 @@ export function MaintenanceSection({
     setEditingId(maintenance.id)
     setForm(maintenanceForm(maintenance))
     setFormError(null)
+    setTechnicianMode(maintenance.technician ? 'internal' : 'external')
     setShowForm(true)
   }
 
@@ -162,6 +161,13 @@ export function MaintenanceSection({
     setShowForm(false)
     setEditingId(undefined)
     setFormError(null)
+  }
+
+  function changeTechnicianMode(mode: 'internal' | 'external') {
+    setTechnicianMode(mode)
+    setForm((current) => mode === 'internal'
+      ? { ...current, technician_name: '', external_technician_phone: '' }
+      : { ...current, technician_employee_id: '' })
   }
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
@@ -217,7 +223,7 @@ export function MaintenanceSection({
 
   return (
     <section className="maintenance-section">
-      <div className="section-heading-row">
+      {!hideHeading && <div className="section-heading-row">
         <div>
           <h3>{fr.maintenance.title}</h3>
           <p>{fr.maintenance.count(equipment.maintenances.length)}</p>
@@ -228,38 +234,39 @@ export function MaintenanceSection({
             <span>{fr.maintenance.add}</span>
           </button>
         )}
-      </div>
+      </div>}
+      {hideHeading && <div className="maintenance-section-toolbar"><span>{fr.maintenance.count(equipment.maintenances.length)}</span>{canManage && <button className="maintenance-add" type="button" onClick={startCreate}><ActionIcon name="add" /><span>{fr.maintenance.add}</span></button>}</div>}
 
       {formError && <div className="form-alert" role="alert">{formError}</div>}
 
       {showForm && (
-        <Modal title={editingId ? fr.maintenance.editTitle : fr.maintenance.addTitle} size="wide" onClose={closeForm}>
-        <form className="maintenance-form modal-form" onSubmit={submit}>
+        <form className="maintenance-form maintenance-inline-form" onSubmit={submit}>
+          <div className="maintenance-form-heading"><strong>{editingId ? fr.maintenance.editTitle : fr.maintenance.addTitle}</strong><button type="button" onClick={closeForm} aria-label={fr.common.close}><ActionIcon name="close" /></button></div>
           <div className="maintenance-form-grid">
             <label><span>{fr.maintenance.date}</span><input required type="date" value={form.maintenance_date} onChange={(event) => update('maintenance_date', event.target.value)} /></label>
             <label><span>{fr.equipment.engineHours}</span><input min="0" step="0.01" type="number" value={form.engine_hours} onChange={(event) => update('engine_hours', event.target.value)} placeholder="1250,50" /></label>
-            <label><span>{fr.maintenance.interventionType}</span><SearchableSelect required ariaLabel={fr.maintenance.interventionType} value={form.intervention_type} onChange={(value) => update('intervention_type', value)} placeholder={fr.common.toComplete} options={[...(currentTypeIsUnavailable ? [{ value: form.intervention_type, label: catalogLabel(catalogs, 'maintenance_type', form.intervention_type) }] : []), ...maintenanceTypes.map((option) => ({ value: option.code, label: catalogLabel(catalogs, 'maintenance_type', option.code) }))]} /></label>
-            <label>
-              <span>{fr.maintenance.oil_changed}</span>
-              <SearchableSelect searchable={false} ariaLabel={fr.maintenance.oil_changed} value={form.oil_changed} onChange={(value) => update('oil_changed', value)} placeholder={fr.common.notProvided} options={yesNoOptions} />
-            </label>
+            <label className="field-wide"><span>{fr.maintenance.interventionType} <em>*</em></span><SearchableSelect required ariaLabel={fr.maintenance.interventionType} value={form.intervention_type} onChange={(value) => update('intervention_type', value)} placeholder={fr.common.toComplete} options={[...(currentTypeIsUnavailable ? [{ value: form.intervention_type, label: catalogLabel(catalogs, 'maintenance_type', form.intervention_type) }] : []), ...maintenanceTypes.map((option) => ({ value: option.code, label: catalogLabel(catalogs, 'maintenance_type', option.code) }))]} /></label>
+            <fieldset className="maintenance-operations field-wide">
+              <legend>{fr.maintenance.operations}</legend>
+              <div>{([
+                ['oil_changed', fr.maintenance.oil_changed],
+                ['oil_filter_changed', fr.maintenance.oil_filter_changed],
+                ['fuel_filter_changed', fr.maintenance.fuel_filter_changed],
+                ['air_filter_changed', fr.maintenance.air_filter_changed],
+                ['battery_serviced', fr.maintenance.battery],
+                ['coolant_serviced', fr.maintenance.coolant],
+              ] as const).map(([field, label]) => <label key={field} className="maintenance-checkbox"><input type="checkbox" checked={form[field] === 'true'} onChange={(event) => update(field, String(event.target.checked))} /><span>{label}</span></label>)}</div>
+            </fieldset>
             {form.oil_changed === 'true' && (
               <label>
                 <span>{fr.maintenance.oilQuantity}</span>
                 <input required min="0.01" step="0.01" type="number" value={form.oil_quantity_litres} onChange={(event) => update('oil_quantity_litres', event.target.value)} placeholder="18,50" />
               </label>
             )}
-            {(['oil_filter_changed', 'fuel_filter_changed', 'air_filter_changed'] as const).map((field) => (
-              <label key={field}>
-                <span>{fr.maintenance[field]}</span>
-                <SearchableSelect searchable={false} ariaLabel={fr.maintenance[field]} value={form[field]} onChange={(value) => update(field, value)} placeholder={fr.common.notProvided} options={yesNoOptions} />
-              </label>
-            ))}
-            {(['battery_serviced', 'coolant_serviced'] as const).map((field) => (
-              <label key={field}><span>{field === 'battery_serviced' ? fr.maintenance.battery : fr.maintenance.coolant}</span><SearchableSelect searchable={false} ariaLabel={field === 'battery_serviced' ? fr.maintenance.battery : fr.maintenance.coolant} value={form[field]} onChange={(value) => update(field, value)} placeholder={fr.common.notProvided} options={yesNoOptions} /></label>
-            ))}
-            <label><span>{fr.maintenance.linkedTechnician}</span><SearchableSelect ariaLabel={fr.maintenance.linkedTechnician} value={form.technician_employee_id} onChange={(value) => { update('technician_employee_id', value); if (value !== '') { update('technician_name', ''); update('external_technician_phone', '') } }} placeholder={fr.common.notProvided} options={employees.map((employee) => ({ value: String(employee.id), label: employee.name }))} /></label>
-            {form.technician_employee_id === '' && <><label><span>{fr.maintenance.technicianName}</span><input value={form.technician_name} onChange={(event) => update('technician_name', event.target.value)} /></label><label><span>{fr.maintenance.technicianPhone}</span><input type="tel" value={form.external_technician_phone} onChange={(event) => update('external_technician_phone', event.target.value)} placeholder="+225 07 00 00 00 00" /></label></>}
+            <div className="maintenance-technician field-wide"><span>{fr.maintenance.technician}</span><div className="maintenance-technician-mode"><button className={technicianMode === 'internal' ? 'active' : ''} type="button" onClick={() => changeTechnicianMode('internal')}>{fr.maintenance.internalTechnician}</button><button className={technicianMode === 'external' ? 'active' : ''} type="button" onClick={() => changeTechnicianMode('external')}>{fr.maintenance.externalTechnician}</button></div></div>
+            {technicianMode === 'internal'
+              ? <label className="field-wide"><span>{fr.maintenance.linkedTechnician}</span><SearchableSelect ariaLabel={fr.maintenance.linkedTechnician} value={form.technician_employee_id} onChange={(value) => update('technician_employee_id', value)} placeholder={fr.common.notProvided} options={employees.map((employee) => ({ value: String(employee.id), label: employee.name }))} /></label>
+              : <><label><span>{fr.maintenance.technicianName}</span><input value={form.technician_name} onChange={(event) => update('technician_name', event.target.value)} /></label><label><span>{fr.maintenance.technicianPhone}</span><input type="tel" value={form.external_technician_phone} onChange={(event) => update('external_technician_phone', event.target.value)} placeholder="+225 07 00 00 00 00" /></label></>}
             <label><span>{fr.maintenance.nextDue}</span><input type="date" min={form.maintenance_date || undefined} value={form.next_maintenance_date} onChange={(event) => update('next_maintenance_date', event.target.value)} /></label>
             <label><span>{fr.maintenance.cost} (FCFA)</span><input min="0" step="0.01" type="number" value={form.cost} onChange={(event) => update('cost', event.target.value)} /></label>
             <label className="field-wide"><span>{fr.equipment.observations}</span><textarea rows={3} value={form.observations} onChange={(event) => update('observations', event.target.value)} /></label>
@@ -268,10 +275,9 @@ export function MaintenanceSection({
             <button className="primary-button save-button" type="submit" disabled={isSaving}>{isSaving ? <LoadingSpinner compact label={fr.common.saving} /> : fr.common.save}</button>
           </div>
         </form>
-        </Modal>
       )}
 
-      {equipment.maintenances.length === 0 ? (
+      {!showForm && (equipment.maintenances.length === 0 ? (
         <p className="maintenance-empty">{fr.maintenance.empty}</p>
       ) : (
         <div className="maintenance-list">
@@ -319,7 +325,7 @@ export function MaintenanceSection({
             )
           })}
         </div>
-      )}
+      ))}
     </section>
   )
 }

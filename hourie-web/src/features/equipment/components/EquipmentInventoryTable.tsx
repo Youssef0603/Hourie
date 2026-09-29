@@ -1,5 +1,6 @@
-import { fr } from '../../../i18n/fr'
+import { fr, type Language } from '../../../i18n/fr'
 import { LoadingSpinner } from '../../../shared/components/LoadingSpinner'
+import { assetCategoryLabel, isAssetCategoryCode } from '../assetCategories'
 import { catalogBadgeStyle, catalogLabel } from '../catalogs'
 import { locationName, measurement } from '../equipmentDisplay'
 import type { EquipmentFilterOptions, EquipmentListResponse } from '../types'
@@ -10,11 +11,51 @@ type EquipmentInventoryTableProps = {
   options: EquipmentFilterOptions | null
   onOpenEquipment: (id: number) => void
   onChangePage: (page: number) => void
+  mixedCategories?: boolean
+  language?: Language
 }
 
 export function EquipmentInventoryTable({
-  result, isLoading, options, onOpenEquipment, onChangePage,
+  result, isLoading, options, onOpenEquipment, onChangePage, mixedCategories = false, language = 'fr',
 }: EquipmentInventoryTableProps) {
+  if (mixedCategories) {
+    return <>
+      <div className="equipment-table-wrap">
+        <table className="equipment-table asset-inventory-table">
+          <thead><tr>
+            <th>{fr.equipment.number}</th>
+            <th>{fr.equipment.category}</th>
+            <th>{fr.equipment.brand}</th>
+            <th>{fr.equipment.model}</th>
+            <th>{fr.equipment.condition}</th>
+            <th>{fr.equipment.locationShort}</th>
+          </tr></thead>
+          <tbody>{!isLoading && result?.data.map((equipment) => <tr
+            key={equipment.id}
+            tabIndex={0}
+            onClick={() => onOpenEquipment(equipment.id)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault()
+                onOpenEquipment(equipment.id)
+              }
+            }}
+          >
+            <td><strong>{equipment.display_id}</strong><span className="secondary-cell">{equipment.asset_code}</span></td>
+            <td>{equipment.category.code === 'generator' ? fr.navigation.generators : isAssetCategoryCode(equipment.category.code) ? assetCategoryLabel(equipment.category.code, language) : equipment.category.name}</td>
+            <td>{equipment.brand ?? fr.common.notProvided}</td>
+            <td>{equipment.model ?? fr.common.notProvided}</td>
+            <td>{equipment.condition ? <span className="status-badge" style={catalogBadgeStyle(options?.catalogs, 'equipment_condition', equipment.condition)}>{catalogLabel(options?.catalogs, 'equipment_condition', equipment.condition)}</span> : fr.common.notProvided}</td>
+            <td>{locationName(equipment)}</td>
+          </tr>)}</tbody>
+        </table>
+        {isLoading && <div className="table-state"><LoadingSpinner label={fr.common.loading} /></div>}
+        {!isLoading && result?.data.length === 0 && <div className="table-state">{fr.assets.noResults}</div>}
+      </div>
+      {result && result.meta.last_page > 1 && <nav className="pagination" aria-label={fr.equipment.pagination}><span>{fr.equipment.results(result.meta.from, result.meta.to, result.meta.total)}</span><div><button type="button" disabled={result.meta.current_page === 1 || isLoading} onClick={() => onChangePage(result.meta.current_page - 1)}>{fr.common.previous}</button><span>{fr.equipment.page(result.meta.current_page, result.meta.last_page)}</span><button type="button" disabled={result.meta.current_page === result.meta.last_page || isLoading} onClick={() => onChangePage(result.meta.current_page + 1)}>{fr.common.next}</button></div></nav>}
+    </>
+  }
+
   return <>
           <div className="equipment-table-wrap">
             <table className="equipment-table">

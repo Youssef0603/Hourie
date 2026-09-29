@@ -169,6 +169,25 @@ export type EquipmentFilters = {
   voltage_rating: string
   current_rating: string
   fuel_type: string
+  equipment_type: string
+  sub_category: string
+  asset_fuel_type: string
+  inspection_status: '' | 'expired' | 'upcoming'
+  odometer_km_min: string
+  odometer_km_max: string
+  unassigned: string
+  bungalow_type: string
+  bungalow_group: '' | 'office' | 'sanitary' | 'guard'
+  air_conditioning: string
+  with_toilet: string
+  with_shower: string
+  supplier: string
+  length_m_min: string
+  length_m_max: string
+  width_m_min: string
+  width_m_max: string
+  height_m_min: string
+  height_m_max: string
   asset_field: string
   asset_value: string
   page: number
@@ -221,7 +240,7 @@ export type EquipmentImportResult = {
 }
 
 export type EquipmentFilterOptions = {
-  categories: Array<NamedReference & { code: string }>
+  categories: Array<NamedReference & { code: string; equipment_count: number }>
   projects: Array<NamedReference & { code: string | null; responsible: NamedReference | null }>
   locations: Array<NamedReference & {
     project_id: number | null
@@ -232,4 +251,5 @@ export type EquipmentFilterOptions = {
   employees: NamedReference[]
   fuel_types: string[]
   catalogs: CatalogOption[]
+  asset_filter_values: Record<string, Record<string, string[]>>
 }

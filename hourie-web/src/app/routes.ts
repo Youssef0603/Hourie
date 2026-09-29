@@ -4,7 +4,7 @@ export type WorkspaceRoute =
   | { section: 'generators'; equipmentId: number | null; siteId: null }
   | { section: 'assets'; assetCategory: AssetCategoryCode | 'all'; equipmentId: number | null; siteId: null }
   | { section: 'sites'; equipmentId: number | null; siteId: number | null }
-  | { section: 'people' | 'catalogs'; equipmentId: null; siteId: null }
+  | { section: 'people' | 'catalogs' | 'insurance'; equipmentId: null; siteId: null }
 
 export function parseWorkspaceRoute(pathname: string): WorkspaceRoute {
   const parts = pathname.split('/').filter(Boolean)
@@ -25,6 +25,7 @@ export function parseWorkspaceRoute(pathname: string): WorkspaceRoute {
     return { section: 'assets', assetCategory: parts[1] as AssetCategoryCode | 'all', siteId: null, equipmentId: id(parts[2]) }
   }
   if (parts[0] === 'people' && parts.length === 1) return { section: 'people', siteId: null, equipmentId: null }
+  if (parts[0] === 'insurance' && parts.length === 1) return { section: 'insurance', siteId: null, equipmentId: null }
   if (parts[0] === 'settings' && parts.length === 1) return { section: 'catalogs', siteId: null, equipmentId: null }
 
   return { section: 'generators', siteId: null, equipmentId: null }
@@ -35,5 +36,6 @@ export function workspacePath(route: WorkspaceRoute): string {
   if (route.section === 'generators') return `/assets/generator${route.equipmentId ? `/${route.equipmentId}` : ''}`
   if (route.section === 'assets') return `/assets/${route.assetCategory}${route.equipmentId ? `/${route.equipmentId}` : ''}`
   if (route.section === 'catalogs') return '/settings'
+  if (route.section === 'insurance') return '/insurance'
   return `/${route.section}`
 }

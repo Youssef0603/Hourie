@@ -101,6 +101,7 @@ export function WorkspaceSidebar({ user, language, activeSection, activeAssetCat
                 </div>
               </div>
             </div>
+            <button title="Assurances" className={activeSection === 'insurance' ? 'active' : ''} type="button" onClick={() => onNavigate('insurance')}><NavigationIcon name="insurance" /><span className="nav-label">Assurances</span></button>
             <button title={fr.navigation.sites} className={activeSection === 'sites' ? 'active' : ''} type="button" onClick={() => onNavigate('sites')}><NavigationIcon name="sites" /><span className="nav-label">{fr.navigation.sites}</span></button>
             <button title={fr.navigation.people} className={activeSection === 'people' ? 'active' : ''} type="button" onClick={() => onNavigate('people')}><NavigationIcon name="people" /><span className="nav-label">{fr.navigation.people}</span></button>
             {user.permissions.manage_sites && <button title={fr.navigation.settings} className={`sidebar-settings-link${activeSection === 'catalogs' ? ' active' : ''}`} type="button" onClick={() => onNavigate('catalogs')}><NavigationIcon name="settings" /><span className="nav-label">{fr.navigation.settings}</span></button>}

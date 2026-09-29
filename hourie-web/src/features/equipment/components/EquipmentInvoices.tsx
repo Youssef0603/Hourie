@@ -2,8 +2,9 @@ import { useRef, useState, type ChangeEvent } from 'react'
 import { activeLanguage, fr } from '../../../i18n/fr'
 import { ApiError } from '../../../shared/api/http'
 import { ActionIcon } from '../../../shared/components/ActionIcon'
+import { DocumentUploadDropzone } from '../../../shared/components/DocumentUploadDropzone'
 import { LoadingSpinner } from '../../../shared/components/LoadingSpinner'
-import { deleteEquipmentInvoice, downloadEquipmentInvoice, uploadEquipmentInvoices } from '../api'
+import { deleteEquipmentInvoice, downloadEquipmentInvoice, previewEquipmentInvoice, uploadEquipmentInvoices } from '../api'
 import type { Equipment, EquipmentInvoice } from '../types'
 
 type EquipmentInvoicesProps = {
@@ -11,6 +12,7 @@ type EquipmentInvoicesProps = {
   canManage: boolean
   onChanged: () => Promise<void>
   title?: string
+  hideHeading?: boolean
 }
 
 function formatSize(bytes: number) {
@@ -23,15 +25,14 @@ function formatDate(value: string) {
   return new Intl.DateTimeFormat(activeLanguage === 'ar' ? 'ar' : 'fr-FR', { dateStyle: 'medium' }).format(new Date(value))
 }
 
-export function EquipmentInvoices({ equipment, canManage, onChanged, title = fr.invoices.title }: EquipmentInvoicesProps) {
+export function EquipmentInvoices({ equipment, canManage, onChanged, title = fr.invoices.title, hideHeading = false }: EquipmentInvoicesProps) {
   const input = useRef<HTMLInputElement>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [deletingId, setDeletingId] = useState<number | null>(null)
   const [downloadingId, setDownloadingId] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  async function upload(event: ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(event.target.files ?? [])
+  async function uploadFiles(files: File[]) {
     if (files.length === 0) return
 
     setError(null)
@@ -45,6 +46,10 @@ export function EquipmentInvoices({ equipment, canManage, onChanged, title = fr.
       setIsUploading(false)
       if (input.current) input.current.value = ''
     }
+  }
+
+  function upload(event: ChangeEvent<HTMLInputElement>) {
+    void uploadFiles(Array.from(event.target.files ?? []))
   }
 
   async function remove(invoice: EquipmentInvoice) {
@@ -74,15 +79,23 @@ export function EquipmentInvoices({ equipment, canManage, onChanged, title = fr.
     }
   }
 
+  function openPreview(invoice: EquipmentInvoice) {
+    setError(null)
+    if (!previewEquipmentInvoice(invoice)) setError(fr.invoices.previewError)
+  }
+
   return (
     <section className="equipment-invoices-section">
-      <div className="section-heading-row">
+      {!hideHeading && <div className="section-heading-row">
         <div><h3>{title}</h3><p>{fr.invoices.count(equipment.invoices.length)}</p></div>
         {canManage && <><input ref={input} hidden multiple accept="application/pdf,.pdf" type="file" onChange={upload} /><button className="invoice-upload-button" type="button" disabled={isUploading} onClick={() => input.current?.click()}><ActionIcon name="upload" />{isUploading ? <LoadingSpinner compact label={fr.invoices.uploading} /> : fr.invoices.add}</button></>}
-      </div>
-      {canManage && <p className="invoice-format-hint">{fr.invoices.formats}</p>}
+      </div>}
+      {hideHeading && canManage && <input ref={input} hidden multiple accept="application/pdf,.pdf" type="file" onChange={upload} />}
+      {hideHeading && equipment.invoices.length > 0 && canManage && <div className="detail-section-actions"><button className="detail-upload-button" type="button" disabled={isUploading} onClick={() => input.current?.click()}><ActionIcon name="add" />{isUploading ? <LoadingSpinner compact label={fr.invoices.uploading} /> : fr.invoices.addOne}</button></div>}
+      {canManage && !hideHeading && <p className="invoice-format-hint">{fr.invoices.formats}</p>}
+      {canManage && !hideHeading && equipment.invoices.length === 0 && <DocumentUploadDropzone title={isUploading ? fr.invoices.uploading : fr.invoices.add} description={fr.invoices.formats} disabled={isUploading} onFiles={(files) => void uploadFiles(files)} />}
       {error && <div className="form-alert" role="alert">{error}</div>}
-      {equipment.invoices.length > 0 ? <div className="invoice-list">{equipment.invoices.map((invoice) => <article key={invoice.id}><span className="invoice-pdf-badge">PDF</span><div><strong>{invoice.original_name}</strong><p>{formatSize(invoice.size_bytes)} · {formatDate(invoice.created_at)}{invoice.uploaded_by ? ` · ${fr.invoices.uploadedBy(invoice.uploaded_by.name)}` : ''}</p></div><button className="invoice-download-button" type="button" disabled={downloadingId === invoice.id} onClick={() => download(invoice)}>{downloadingId === invoice.id ? <LoadingSpinner compact label={fr.common.loading} /> : <><ActionIcon name="expand" />{fr.invoices.download}</>}</button>{canManage && <button className="invoice-delete-button" type="button" disabled={deletingId === invoice.id} onClick={() => remove(invoice)} aria-label={fr.common.delete}>{deletingId === invoice.id ? <LoadingSpinner compact label={fr.common.loading} /> : <ActionIcon name="delete" />}</button>}</article>)}</div> : <p className="equipment-images-empty">{fr.invoices.empty}</p>}
+      {equipment.invoices.length > 0 ? <div className="invoice-list">{equipment.invoices.map((invoice) => <article key={invoice.id}><button className="invoice-preview-button" type="button" onClick={() => openPreview(invoice)}><span className="invoice-pdf-badge">PDF</span><span><strong>{invoice.original_name}</strong><small>{formatSize(invoice.size_bytes)} · {formatDate(invoice.created_at)}{invoice.uploaded_by ? ` · ${fr.invoices.uploadedBy(invoice.uploaded_by.name)}` : ''}</small></span></button><button className="invoice-download-button" type="button" disabled={downloadingId === invoice.id} onClick={() => download(invoice)}>{downloadingId === invoice.id ? <LoadingSpinner compact label={fr.common.loading} /> : <><ActionIcon name="expand" />{fr.invoices.download}</>}</button>{canManage && <button className="invoice-delete-button" type="button" disabled={deletingId === invoice.id} onClick={() => remove(invoice)} aria-label={fr.common.delete}>{deletingId === invoice.id ? <LoadingSpinner compact label={fr.common.loading} /> : <ActionIcon name="delete" />}</button>}</article>)}</div> : hideHeading ? <div className="detail-media-empty"><ActionIcon name="invoice" /><p>{fr.invoices.empty}</p>{canManage && <button className="detail-upload-button" type="button" disabled={isUploading} onClick={() => input.current?.click()}><ActionIcon name="add" />{isUploading ? <LoadingSpinner compact label={fr.invoices.uploading} /> : fr.invoices.addOne}</button>}</div> : <p className="equipment-images-empty">{fr.invoices.empty}</p>}
     </section>
   )
 }

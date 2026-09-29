@@ -18,11 +18,50 @@ class EquipmentFilterOptionsController extends Controller
     {
         Gate::authorize('viewAny', Equipment::class);
 
+        $assetFilterFields = [
+            'equipment' => ['equipment_type', 'sub_category', 'brand'],
+            'car' => ['fuel_type'],
+            'truck_dumper' => ['vehicle_type', 'fuel_type'],
+            'portacabin' => ['bungalow_type', 'air_conditioning', 'supplier'],
+        ];
+        $assetFilterValues = [];
+
+        Equipment::query()
+            ->where('is_active', true)
+            ->with('category:id,code')
+            ->get(['id', 'equipment_category_id', 'brand', 'asset_details'])
+            ->each(function (Equipment $equipment) use (&$assetFilterValues, $assetFilterFields): void {
+                $category = $equipment->category?->code;
+                if ($category === null || ! isset($assetFilterFields[$category])) {
+                    return;
+                }
+
+                $details = $equipment->asset_details ?? [];
+
+                foreach ($assetFilterFields[$category] as $field) {
+                    $value = trim((string) ($field === 'brand' ? $equipment->brand : ($details[$field] ?? '')));
+                    if ($value !== '') {
+                        $assetFilterValues[$category][$field][mb_strtolower($value)] = $value;
+                    }
+                }
+            });
+
+        foreach ($assetFilterValues as $category => $fields) {
+            foreach ($fields as $field => $values) {
+                natcasesort($values);
+                $assetFilterValues[$category][$field] = array_values($values);
+            }
+        }
+
         return response()->json([
             'data' => [
                 'categories' => EquipmentCategory::query()
+                    ->select(['id', 'code', 'name'])
+                    ->withCount([
+                        'equipment as equipment_count' => fn ($query) => $query->where('is_active', true),
+                    ])
                     ->orderBy('name')
-                    ->get(['id', 'code', 'name']),
+                    ->get(),
                 'projects' => Project::query()
                     ->with('responsible:id,name')
                     ->where('is_active', true)
@@ -39,6 +78,7 @@ class EquipmentFilterOptionsController extends Controller
                     ->get(['id', 'name']),
                 'fuel_types' => CatalogOption::query()->where('group', 'fuel_type')->where('is_active', true)->orderBy('sort_order')->pluck('code')->values(),
                 'catalogs' => CatalogOption::query()->orderBy('sort_order')->get(['id', 'group', 'code', 'label_fr', 'label_ar', 'color', 'sort_order', 'is_active']),
+                'asset_filter_values' => $assetFilterValues,
             ],
         ]);
     }

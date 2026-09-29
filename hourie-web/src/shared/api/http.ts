@@ -92,6 +92,17 @@ export async function downloadAuthenticatedFile(
   path: string,
   filename: string,
 ): Promise<void> {
+  const objectUrl = await getAuthenticatedFileObjectUrl(path)
+  const link = document.createElement('a')
+  link.href = objectUrl
+  link.download = filename
+  document.body.append(link)
+  link.click()
+  link.remove()
+  window.setTimeout(() => window.URL.revokeObjectURL(objectUrl), 0)
+}
+
+export async function getAuthenticatedFileObjectUrl(path: string): Promise<string> {
   const response = await fetch(path, {
     credentials: 'include',
     headers: {
@@ -114,12 +125,5 @@ export async function downloadAuthenticatedFile(
     )
   }
 
-  const objectUrl = window.URL.createObjectURL(await response.blob())
-  const link = document.createElement('a')
-  link.href = objectUrl
-  link.download = filename
-  document.body.append(link)
-  link.click()
-  link.remove()
-  window.setTimeout(() => window.URL.revokeObjectURL(objectUrl), 0)
+  return window.URL.createObjectURL(await response.blob())
 }

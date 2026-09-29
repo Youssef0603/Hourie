@@ -52,3 +52,23 @@ it('imports the Excel model without storing its source code', function () {
     expect($equipment->observations)->toBeNull();
     expect(EquipmentImportRow::query()->sole()->raw_data)->not->toHaveKey('D');
 });
+
+it('does not use a formwork quantity as a serial number', function () {
+    $actor = User::factory()->create(['role' => UserRole::GeneratorManager]);
+
+    app(ImportAssetInventory::class)->handle('2026 equipment.xlsx', 'asset-workbook-formwork-hash', [
+        6 => [
+            'B' => 'Formwork',
+            'C' => 'Doka',
+            'E' => 'Aluframax + Accessories + Props',
+            'F' => 'Doka',
+            'H' => 'Aluframax',
+            'J' => '671 m2',
+        ],
+    ], $actor);
+
+    $equipment = Equipment::query()->sole();
+
+    expect($equipment->serial_number)->toBeNull();
+    expect($equipment->asset_details)->toMatchArray(['quantity' => 671.0, 'unit' => 'm2']);
+});

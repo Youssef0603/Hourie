@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\V1\Equipment\EquipmentMaintenanceController;
 use App\Http\Controllers\Api\V1\Equipment\EquipmentTransferController;
 use App\Http\Controllers\Api\V1\Equipment\MaintenanceWarningController;
 use App\Http\Controllers\Api\V1\HealthController;
+use App\Http\Controllers\Api\V1\InsurancePolicyController;
 use App\Http\Controllers\Api\V1\SiteController;
 use App\Http\Middleware\EnsurePasswordWasChanged;
 use App\Http\Middleware\EnsureUserIsActive;
@@ -57,4 +58,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', EnsureUserIsActive::class, Ensu
     Route::delete('equipment/{equipment}/maintenances/{maintenance}', [EquipmentMaintenanceController::class, 'destroy']);
     Route::apiResource('sites', SiteController::class)->only(['index', 'store', 'show', 'update', 'destroy']);
     Route::apiResource('employees', EmployeeController::class)->only(['index', 'store', 'show', 'update', 'destroy']);
+    Route::post('insurance-policies/{insurancePolicy}/documents', [InsurancePolicyController::class, 'storeDocuments']);
+    Route::get('insurance-policies/{insurancePolicy}/documents/{document}/file', [InsurancePolicyController::class, 'showDocument']);
+    Route::apiResource('insurance-policies', InsurancePolicyController::class);
 });

@@ -76,6 +76,47 @@ class ListEquipment
             ->when($filters['serial_number'] ?? null, fn (Builder $query, string $value) => $query->where('serial_number', 'like', '%'.trim($value).'%'))
             ->when(isset($filters['manufacture_year_from']), fn (Builder $query) => $query->where('manufacture_year', '>=', $filters['manufacture_year_from']))
             ->when(isset($filters['manufacture_year_to']), fn (Builder $query) => $query->where('manufacture_year', '<=', $filters['manufacture_year_to']))
+            ->when($filters['equipment_type'] ?? null, fn (Builder $query, string $value) => $this->whereAssetText($query, 'equipment_type', $value))
+            ->when($filters['sub_category'] ?? null, fn (Builder $query, string $value) => $this->whereAssetText($query, 'sub_category', $value))
+            ->when($filters['asset_fuel_type'] ?? null, fn (Builder $query, string $value) => $this->whereAssetText($query, 'fuel_type', $value))
+            ->when($filters['bungalow_type'] ?? null, fn (Builder $query, string $value) => $this->whereAssetText($query, 'bungalow_type', $value))
+            ->when($filters['air_conditioning'] ?? null, fn (Builder $query, string $value) => $this->whereAssetText($query, 'air_conditioning', $value))
+            ->when($filters['supplier'] ?? null, fn (Builder $query, string $value) => $this->whereAssetText($query, 'supplier', $value))
+            ->when($filters['unassigned'] ?? false, fn (Builder $query) => $query->whereDoesntHave('currentProjectAssignment'))
+            ->when($filters['inspection_status'] ?? null, function (Builder $query, string $status): void {
+                $today = now()->toDateString();
+                $limit = now()->addDays(30)->toDateString();
+                $column = "JSON_UNQUOTE(JSON_EXTRACT(asset_details, '$.inspection_date'))";
+
+                if ($status === 'expired') {
+                    $query->whereRaw("{$column} <> '' and {$column} < ?", [$today]);
+                } else {
+                    $query->whereRaw("{$column} >= ? and {$column} <= ?", [$today, $limit]);
+                }
+            })
+            ->when($filters['with_toilet'] ?? false, fn (Builder $query) => $this->whereAssetNumber($query, 'toilet_count', '>', 0))
+            ->when($filters['with_shower'] ?? false, fn (Builder $query) => $this->whereAssetNumber($query, 'shower_count', '>', 0))
+            ->when($filters['bungalow_group'] ?? null, function (Builder $query, string $group): void {
+                $patterns = match ($group) {
+                    'office' => ['%bureau%', '%flatpack%'],
+                    'sanitary' => ['%toilette%', '%wc%', '%douche%'],
+                    'guard' => ['%guérite%', '%guerite%'],
+                };
+                $column = "LOWER(JSON_UNQUOTE(JSON_EXTRACT(asset_details, '$.bungalow_type')))";
+                $query->where(function (Builder $query) use ($patterns, $column): void {
+                    foreach ($patterns as $pattern) {
+                        $query->orWhereRaw("{$column} like ?", [$pattern]);
+                    }
+                });
+            })
+            ->when(isset($filters['odometer_km_min']), fn (Builder $query) => $this->whereAssetNumber($query, 'odometer_km', '>=', $filters['odometer_km_min']))
+            ->when(isset($filters['odometer_km_max']), fn (Builder $query) => $this->whereAssetNumber($query, 'odometer_km', '<=', $filters['odometer_km_max']))
+            ->when(isset($filters['length_m_min']), fn (Builder $query) => $this->whereAssetNumber($query, 'length_m', '>=', $filters['length_m_min']))
+            ->when(isset($filters['length_m_max']), fn (Builder $query) => $this->whereAssetNumber($query, 'length_m', '<=', $filters['length_m_max']))
+            ->when(isset($filters['width_m_min']), fn (Builder $query) => $this->whereAssetNumber($query, 'width_m', '>=', $filters['width_m_min']))
+            ->when(isset($filters['width_m_max']), fn (Builder $query) => $this->whereAssetNumber($query, 'width_m', '<=', $filters['width_m_max']))
+            ->when(isset($filters['height_m_min']), fn (Builder $query) => $this->whereAssetNumber($query, 'height_m', '>=', $filters['height_m_min']))
+            ->when(isset($filters['height_m_max']), fn (Builder $query) => $this->whereAssetNumber($query, 'height_m', '<=', $filters['height_m_max']))
             ->when($hasGeneratorFilters, function (Builder $query) use ($filters): void {
                 $query->whereHas('generatorDetails', function (Builder $query) use ($filters): void {
                     $rangeFilters = [
@@ -112,5 +153,21 @@ class ListEquipment
                 ->orderByDesc('id'))
             ->paginate((int) ($filters['per_page'] ?? 20))
             ->withQueryString();
+    }
+
+    private function whereAssetText(Builder $query, string $field, string $value): Builder
+    {
+        return $query->whereRaw(
+            "LOWER(JSON_UNQUOTE(JSON_EXTRACT(asset_details, '$.{$field}'))) like ?",
+            ['%'.mb_strtolower(trim($value)).'%'],
+        );
+    }
+
+    private function whereAssetNumber(Builder $query, string $field, string $operator, int|float|string $value): Builder
+    {
+        return $query->whereRaw(
+            "CAST(JSON_UNQUOTE(JSON_EXTRACT(asset_details, '$.{$field}')) AS DECIMAL(18, 4)) {$operator} ?",
+            [$value],
+        );
     }
 }

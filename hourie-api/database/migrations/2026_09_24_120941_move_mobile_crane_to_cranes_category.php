@@ -71,7 +71,6 @@ return new class extends Migration
                     'equipment_type' => $details['crane_type'] ?? null,
                     'sub_category' => $details['sub_category'] ?? null,
                     'capacity' => null,
-                    'power_source' => null,
                     'counter_at_purchase' => $details['counter_at_purchase'] ?? null,
                     'purchase_price' => $details['purchase_price'] ?? null,
                     'shipping_cost' => $details['shipping_cost'] ?? null,

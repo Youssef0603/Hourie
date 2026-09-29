@@ -190,6 +190,14 @@ export async function downloadEquipmentInvoice(invoice: EquipmentInvoice): Promi
   await downloadAuthenticatedFile(invoice.url, invoice.original_name)
 }
 
+export function previewEquipmentInvoice(invoice: EquipmentInvoice): boolean {
+  const url = new URL(invoice.url, window.location.origin)
+  url.searchParams.set('preview', '1')
+  const previewWindow = window.open(url.toString(), '_blank')
+  if (previewWindow) previewWindow.opener = null
+  return previewWindow !== null
+}
+
 export async function getEquipmentFilterOptions(): Promise<EquipmentFilterOptions> {
   const response = await apiRequest<{ data: EquipmentFilterOptions }>(
     '/api/v1/equipment-filter-options',
