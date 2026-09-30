@@ -113,6 +113,23 @@ export type Equipment = EquipmentSummary & {
   changes: EquipmentChange[]
   images: EquipmentImage[]
   invoices: EquipmentInvoice[]
+  insurance_policies: EquipmentInsurancePolicy[]
+}
+
+export type EquipmentInsurancePolicy = {
+  id: number
+  policy_number: string
+  source: string | null
+  starts_on: string | null
+  ends_on: string | null
+  total_amount: string | number | null
+  documents: Array<{
+    id: number
+    url: string
+    original_name: string
+    mime_type: string
+    size_bytes: number
+  }>
 }
 
 export type EquipmentImage = {
@@ -153,6 +170,7 @@ export type EquipmentFilters = {
   brand: string
   model: string
   serial_number: string
+  chassis_number: string
   manufacture_year_from: string
   manufacture_year_to: string
   apparent_power_kva_min: string

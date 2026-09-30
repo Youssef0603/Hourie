@@ -19,7 +19,7 @@ class EquipmentCategory extends Model
         'generator' => ['name' => 'Générateurs', 'prefix' => 'GEN', 'fields' => []],
         'tower_crane' => ['name' => 'Grues', 'prefix' => 'GR', 'fields' => ['crane_type' => 'text', 'sub_category' => 'text', 'counter_at_purchase' => 'text', 'purchase_price' => 'text', 'shipping_cost' => 'text', 'official_document_type' => 'text', 'official_document_location' => 'text']],
         'hoist' => ['name' => 'Monte-charges', 'prefix' => 'MCH', 'fields' => ['load_capacity_kg' => 'number', 'lifting_height_m' => 'number', 'platform_length_m' => 'number']],
-        'equipment' => ['name' => 'Matériel', 'prefix' => 'MAT', 'fields' => ['equipment_type' => 'text', 'sub_category' => 'text', 'counter_at_purchase' => 'text', 'purchase_price' => 'text', 'shipping_cost' => 'text', 'official_document_type' => 'text', 'official_document_location' => 'text']],
+        'equipment' => ['name' => 'Matériel', 'prefix' => 'MAT', 'fields' => ['chassis_number' => 'text', 'equipment_type' => 'text', 'sub_category' => 'text', 'counter_at_purchase' => 'text', 'purchase_price' => 'text', 'shipping_cost' => 'text', 'official_document_type' => 'text', 'official_document_location' => 'text']],
         'formwork_scaffolding' => ['name' => 'Coffrage et échafaudage', 'prefix' => 'COF', 'fields' => ['system_type' => 'text', 'quantity' => 'number', 'unit' => 'text', 'sub_category' => 'text', 'purchase_price' => 'text', 'shipping_cost' => 'text', 'official_document_type' => 'text', 'official_document_location' => 'text']],
         'portacabin' => ['name' => 'Bungalows', 'prefix' => 'BUN', 'fields' => [
             'bungalow_type' => 'text',
@@ -44,7 +44,7 @@ class EquipmentCategory extends Model
             'official_document_location' => 'text',
         ]],
         'car' => ['name' => 'Voitures', 'prefix' => 'VOI', 'fields' => ['chassis_number' => 'text', 'inspection_date' => 'date', 'fuel_type' => 'text', 'odometer_km' => 'number', 'counter_at_purchase' => 'text', 'purchase_price' => 'text', 'shipping_cost' => 'text', 'official_document_type' => 'text', 'official_document_location' => 'text']],
-        'truck_dumper' => ['name' => 'Camions et bennes', 'prefix' => 'CAM', 'fields' => ['vehicle_type' => 'text', 'payload_tonnes' => 'number', 'fuel_type' => 'text', 'odometer_km' => 'number', 'counter_at_purchase' => 'text', 'purchase_price' => 'text', 'shipping_cost' => 'text', 'official_document_type' => 'text', 'official_document_location' => 'text']],
+        'truck_dumper' => ['name' => 'Camions et bennes', 'prefix' => 'CAM', 'fields' => ['chassis_number' => 'text', 'vehicle_type' => 'text', 'payload_tonnes' => 'number', 'fuel_type' => 'text', 'odometer_km' => 'number', 'counter_at_purchase' => 'text', 'purchase_price' => 'text', 'shipping_cost' => 'text', 'official_document_type' => 'text', 'official_document_location' => 'text']],
     ];
 
     public static function assetCode(string $categoryCode, int $equipmentId): string

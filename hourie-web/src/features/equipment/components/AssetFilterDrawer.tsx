@@ -59,18 +59,21 @@ export function AssetFilterDrawer({ categoryCode, fields, filters, language, opt
 
 function CategorySpecificAssetFilters({ categoryCode, filters, options, onChange }: Pick<AssetFilterDrawerProps, 'categoryCode' | 'filters' | 'options' | 'onChange'>) {
   const values = options?.asset_filter_values?.[categoryCode ?? ''] ?? {}
+  const input = (name: keyof EquipmentFilters) => ({ value: String(filters[name]), onChange: (event: ChangeEvent<HTMLInputElement>) => onChange(name, event.target.value) })
   const select = (label: string, name: keyof EquipmentFilters, field: string) => <label><span>{label}</span><SearchableSelect ariaLabel={label} value={String(filters[name])} onChange={(value) => onChange(name, value)} placeholder={fr.common.all} options={(values[field] ?? []).map((value) => ({ value, label: value }))} /></label>
   const fuelOptions = [...new Map([...(values.fuel_type ?? []), ...(options?.fuel_types ?? [])].map((value) => [value.toLocaleLowerCase(), value])).values()]
   const range = (label: string, minimum: keyof EquipmentFilters, maximum: keyof EquipmentFilters, unit = '') => <div className="range-filter"><span>{label}{unit && <small className="range-filter-unit">({unit})</small>}</span><div><input type="number" min="0" value={String(filters[minimum])} onChange={(event) => onChange(minimum, event.target.value)} placeholder={fr.common.minimum} /><input type="number" min="0" value={String(filters[maximum])} onChange={(event) => onChange(maximum, event.target.value)} placeholder={fr.common.maximum} /></div></div>
   const booleanSelect = (label: string, name: keyof EquipmentFilters, selectedLabel: string) => <label><span>{label}</span><SearchableSelect ariaLabel={label} value={String(filters[name])} onChange={(value) => onChange(name, value)} placeholder={fr.common.all} options={[{ value: '1', label: selectedLabel }]} /></label>
 
   if (categoryCode === 'equipment') return <fieldset><legend>{fr.assets.materialFilters}</legend><div className="advanced-filter-grid">
+    <label><span>N° de châssis</span><input {...input('chassis_number')} placeholder="Rechercher un châssis" /></label>
     {select(fr.assets.equipmentType, 'equipment_type', 'equipment_type')}
     {select(fr.assets.subCategory, 'sub_category', 'sub_category')}
     {select(fr.equipment.brand, 'brand', 'brand')}
   </div></fieldset>
 
   if (categoryCode === 'car' || categoryCode === 'truck_dumper') return <fieldset><legend>{fr.assets.vehicleFilters}</legend><div className="advanced-filter-grid">
+    <label><span>N° de châssis</span><input {...input('chassis_number')} placeholder="Rechercher un châssis" /></label>
     <label><span>{fr.equipment.fuel}</span><SearchableSelect ariaLabel={fr.equipment.fuel} value={filters.asset_fuel_type} onChange={(value) => onChange('asset_fuel_type', value)} placeholder={fr.common.all} options={fuelOptions.map((value) => ({ value, label: value }))} /></label>
     {categoryCode === 'car' && <label><span>{fr.assets.inspection}</span><SearchableSelect ariaLabel={fr.assets.inspection} value={filters.inspection_status} onChange={(value) => onChange('inspection_status', value)} placeholder={fr.common.all} options={[{ value: 'expired', label: fr.assets.inspectionExpired }, { value: 'upcoming', label: fr.assets.inspectionUpcoming }]} /></label>}
     {range(fr.assets.odometer, 'odometer_km_min', 'odometer_km_max', 'km')}

@@ -5,6 +5,7 @@ namespace App\Actions\Equipment;
 use App\Mail\CarInspectionReminder;
 use App\Models\Equipment;
 use App\Models\EquipmentInspectionReminder;
+use App\Models\ApplicationSetting;
 use Carbon\CarbonImmutable;
 use Carbon\Exceptions\InvalidFormatException;
 use Illuminate\Support\Collection;
@@ -63,7 +64,7 @@ class SendCarInspectionReminder
     /** @return Collection<int, string> */
     public function recipients(): Collection
     {
-        return collect(config('mail.inspection_reminder_recipients', []))
+        return collect(ApplicationSetting::reminderRecipients())
             ->filter(fn (mixed $email): bool => is_string($email) && filter_var($email, FILTER_VALIDATE_EMAIL) !== false)
             ->unique()
             ->values();

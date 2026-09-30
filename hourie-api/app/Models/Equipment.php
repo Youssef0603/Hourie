@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 #[Fillable([
     'equipment_category_id',
@@ -96,6 +97,11 @@ class Equipment extends Model
     public function inspectionReminders(): HasMany
     {
         return $this->hasMany(EquipmentInspectionReminder::class);
+    }
+
+    public function insurancePolicies(): BelongsToMany
+    {
+        return $this->belongsToMany(InsurancePolicy::class, 'insurance_policy_equipment');
     }
 
     public function scopeEffectiveResponsible(Builder $query, int $employeeId): Builder

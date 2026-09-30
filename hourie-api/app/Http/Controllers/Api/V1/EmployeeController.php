@@ -27,7 +27,7 @@ class EmployeeController extends Controller
             ->where('is_active', true)
             ->with('user:id,username,email,role')
             ->orderBy('name')
-            ->get(['id', 'user_id', 'name', 'phone_number', 'passport_number', 'employment_date', 'is_active']);
+            ->get(['id', 'user_id', 'name', 'phone_number', 'email', 'passport_number', 'employment_date', 'birth_date', 'is_active']);
 
         $responsibilityCounts = Equipment::query()
             ->leftJoin('equipment_project_assignments', function ($join): void {
@@ -75,8 +75,10 @@ class EmployeeController extends Controller
                 'user_id' => $user?->id,
                 'name' => $data['name'],
                 'phone_number' => $data['phone_number'] ?? null,
+                'email' => $data['email'] ?? null,
                 'passport_number' => $data['passport_number'] ?? null,
                 'employment_date' => $data['employment_date'] ?? null,
+                'birth_date' => $data['birth_date'] ?? null,
                 'is_active' => true,
             ]);
         });
@@ -91,6 +93,9 @@ class EmployeeController extends Controller
         $employee->load([
             'user:id,username,email,role',
             'responsibleProjects:id,name,responsible_employee_id,is_active',
+            'insurancePolicies' => fn ($query) => $query
+                ->where('insurance_type', 'group_health')
+                ->orderByDesc('ends_on'),
         ]);
         $equipment = Equipment::query()
             ->effectiveResponsible($employee->id)
@@ -118,8 +123,10 @@ class EmployeeController extends Controller
             $employee->update([
                 'name' => $data['name'],
                 'phone_number' => $data['phone_number'] ?? null,
+                'email' => $data['email'] ?? null,
                 'passport_number' => $data['passport_number'] ?? null,
                 'employment_date' => $data['employment_date'] ?? null,
+                'birth_date' => $data['birth_date'] ?? null,
             ]);
 
             $accountData = [

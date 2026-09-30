@@ -32,6 +32,7 @@ class StoreEmployeeRequest extends FormRequest
             'phone_number' => ['nullable', 'string', 'max:30'],
             'passport_number' => ['nullable', 'string', 'max:100', 'unique:employees,passport_number'],
             'employment_date' => ['nullable', 'date_format:Y-m-d', 'before_or_equal:today'],
+            'birth_date' => ['nullable', 'date_format:Y-m-d', 'before_or_equal:today'],
             'create_account' => ['required', 'boolean'],
             'email' => ['nullable', 'string', 'email', 'max:255', 'unique:users,email'],
             'role' => [Rule::requiredIf($this->boolean('create_account')), 'nullable', Rule::enum(UserRole::class)],

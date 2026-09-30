@@ -15,6 +15,7 @@ import { LoadingSpinner } from "../../../shared/components/LoadingSpinner";
 import type { CatalogOption } from "../../equipment/types";
 import { catalogBadgeStyle, catalogLabel } from "../../equipment/catalogs";
 import { SearchableSelect } from "../../../shared/components/SearchableSelect";
+import { EmptyState } from "../../../shared/components/EmptyState";
 
 type PeoplePageProps = {
   canAdd: boolean;
@@ -61,6 +62,7 @@ export function PeoplePage({
   const [phoneNumber, setPhoneNumber] = useState("");
   const [passportNumber, setPassportNumber] = useState("");
   const [employmentDate, setEmploymentDate] = useState("");
+  const [birthDate, setBirthDate] = useState("");
   const [createAccount, setCreateAccount] = useState(false);
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<
@@ -126,8 +128,9 @@ export function PeoplePage({
         phone_number: phoneNumber.trim() || null,
         passport_number: passportNumber.trim() || null,
         employment_date: employmentDate || null,
+        birth_date: birthDate || null,
         create_account: createAccount,
-        email: createAccount ? email.trim() || null : null,
+        email: email.trim() || null,
         role: createAccount ? role : null,
         password: createAccount ? password : null,
         password_confirmation: createAccount ? passwordConfirmation : null,
@@ -137,6 +140,7 @@ export function PeoplePage({
       setPhoneNumber("");
       setPassportNumber("");
       setEmploymentDate("");
+      setBirthDate("");
       setCreateAccount(false);
       setEmail("");
       setRole("viewer");
@@ -234,6 +238,7 @@ export function PeoplePage({
                   <span>{fr.directory.phoneNumber}</span>
                   <input type="tel" autoComplete="tel" value={phoneNumber} onChange={(event) => setPhoneNumber(event.target.value)} placeholder="+225 07 00 00 00 00" />
                 </label>
+                <label><span>E-mail</span><input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="nom@hourie.ci" /></label>
                 <label>
                   <span>{fr.directory.passportNumber}</span>
                   <input value={passportNumber} onChange={(event) => setPassportNumber(event.target.value)} />
@@ -241,6 +246,10 @@ export function PeoplePage({
                 <label>
                   <span>{fr.directory.employmentDate}</span>
                   <input type="date" max={new Date().toISOString().slice(0, 10)} value={employmentDate} onChange={(event) => setEmploymentDate(event.target.value)} />
+                </label>
+                <label>
+                  <span>Date de naissance</span>
+                  <input type="date" max={new Date().toISOString().slice(0, 10)} value={birthDate} onChange={(event) => setBirthDate(event.target.value)} />
                 </label>
               </div>
             </section>
@@ -256,10 +265,6 @@ export function PeoplePage({
                   <span>{fr.directory.username}</span>
                   <input className="generated-username" readOnly tabIndex={-1} value={generatedUsername(name)} placeholder={fr.directory.usernameGeneratedPlaceholder} />
                   <small>{fr.directory.usernameGeneratedHint}</small>
-                </label>
-                <label>
-                  <span>{fr.directory.optionalEmail}</span>
-                  <input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="nom@hourie.ci" />
                 </label>
                 <label>
                   <span>{fr.directory.accountRole}</span>
@@ -325,7 +330,7 @@ export function PeoplePage({
             </span>
           </button>)}
         </div>}
-        {!isRefreshing && visiblePeople.length === 0 && <p className="people-card-empty">{searchTerm ? fr.directory.noPeopleMatching : fr.directory.noPeople}</p>}
+        {!isRefreshing && visiblePeople.length === 0 && <EmptyState icon="people" title={searchTerm ? fr.directory.noPeopleMatching : fr.directory.noPeople} description={searchTerm ? "Modifiez votre recherche pour afficher d’autres personnes." : "Les personnes ajoutées apparaîtront ici."} />}
         {isRefreshing && (
           <div className="table-state people-table-state">
             <LoadingSpinner label={fr.common.loading} />
@@ -396,6 +401,11 @@ function PersonDetail({
   const employmentDate = person.employment_date
     ? new Intl.DateTimeFormat("fr-FR").format(new Date(`${person.employment_date}T00:00:00`))
     : fr.common.notAssigned;
+  const birthDate = person.birth_date
+    ? new Intl.DateTimeFormat("fr-FR").format(new Date(`${person.birth_date}T00:00:00`))
+    : fr.common.notAssigned;
+  const activeHealthPolicy = person.health_insurance_policies.find((policy) => policy.ends_on !== null && policy.ends_on >= new Date().toISOString().slice(0, 10));
+  const healthPolicy = activeHealthPolicy ?? person.health_insurance_policies[0];
 
   return (
     <div className="person-detail">
@@ -423,18 +433,26 @@ function PersonDetail({
             <dd>{employmentDate}</dd>
           </div>
           <div>
+            <dt>Date de naissance</dt>
+            <dd>{birthDate}</dd>
+          </div>
+          <div>
             <dt>{fr.directory.passportNumber}</dt>
             <dd>{person.passport_number ?? fr.common.notAssigned}</dd>
           </div>
-          <div className="person-profile-email">
+          <div>
             <dt>{fr.directory.email}</dt>
-            <dd>{person.user?.email ?? fr.common.notAssigned}</dd>
+            <dd>{person.email ?? fr.common.notAssigned}</dd>
           </div>
         </dl>
         <div className="person-profile-actions">
           {canEdit && <button className="person-detail-action primary" type="button" onClick={onEdit}><ActionIcon name="edit" />{fr.common.edit}</button>}
           <button className="person-detail-action" type="button" disabled={person.equipment_in_custody.length === 0} onClick={() => setShowAssignedAssets((visible) => !visible)}>{showAssignedAssets ? fr.directory.hideAssignedAssets : fr.directory.viewAssignedAssets}</button>
         </div>
+      </section>
+      <section className="person-health-insurance">
+        <h3><ActionIcon name="invoice" />Assurance santé</h3>
+        {healthPolicy ? <dl><div><dt>Statut</dt><dd><span className={`insurance-status ${activeHealthPolicy ? "active" : "expired"}`}>{activeHealthPolicy ? "Assurance active" : "Assurance expirée"}</span></dd></div><div><dt>N° de police</dt><dd>{healthPolicy.policy_number}</dd></div><div><dt>Assureur</dt><dd>{healthPolicy.source ?? fr.common.notAssigned}</dd></div><div><dt>Expiration</dt><dd>{healthPolicy.ends_on ? new Intl.DateTimeFormat("fr-FR").format(new Date(`${healthPolicy.ends_on}T00:00:00`)) : fr.common.notAssigned}</dd></div></dl> : <EmptyState compact icon="invoice" title="Aucune assurance santé liée" description="La police apparaîtra ici lorsque cette personne sera ajoutée à une assurance santé groupe." />}
       </section>
       {showAssignedAssets && person.equipment_in_custody.length > 0 && <section className="person-assigned-assets-section">
         <h3>{fr.directory.assignedEquipment}</h3>
@@ -512,8 +530,9 @@ function EditPersonForm({
   const [phoneNumber, setPhoneNumber] = useState(person.phone_number ?? "");
   const [passportNumber, setPassportNumber] = useState(person.passport_number ?? "");
   const [employmentDate, setEmploymentDate] = useState(person.employment_date ?? "");
+  const [birthDate, setBirthDate] = useState(person.birth_date ?? "");
   const [username, setUsername] = useState(person.user?.username ?? "");
-  const [email, setEmail] = useState(person.user?.email ?? "");
+  const [email, setEmail] = useState(person.email ?? "");
   const [role, setRole] = useState<
     "manager" | "cms_manager" | "generator_manager" | "viewer"
   >(person.user?.role ?? "viewer");
@@ -537,6 +556,7 @@ function EditPersonForm({
           phone_number: phoneNumber.trim() || null,
           passport_number: passportNumber.trim() || null,
           employment_date: employmentDate || null,
+          birth_date: birthDate || null,
           username: username.trim() || null,
           email: email.trim() || null,
           role,
@@ -570,8 +590,10 @@ function EditPersonForm({
         <div className="people-form-fields">
           <label><span>{fr.directory.fullName}</span><input required autoComplete="name" value={name} onChange={(event) => setName(event.target.value)} /></label>
           <label><span>{fr.directory.phoneNumber}</span><input type="tel" autoComplete="tel" value={phoneNumber} onChange={(event) => setPhoneNumber(event.target.value)} /></label>
+          <label><span>E-mail</span><input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} /></label>
           <label><span>{fr.directory.passportNumber}</span><input value={passportNumber} onChange={(event) => setPassportNumber(event.target.value)} /></label>
           <label><span>{fr.directory.employmentDate}</span><input type="date" max={new Date().toISOString().slice(0, 10)} value={employmentDate} onChange={(event) => setEmploymentDate(event.target.value)} /></label>
+          <label><span>Date de naissance</span><input type="date" max={new Date().toISOString().slice(0, 10)} value={birthDate} onChange={(event) => setBirthDate(event.target.value)} /></label>
         </div>
       </section>
       <section className="people-form-section">
@@ -579,7 +601,6 @@ function EditPersonForm({
         <p className="account-form-hint">{fr.directory.editCredentialsHint}</p>
         <div className="people-form-fields">
           <label><span>{fr.directory.username}</span><input required={person.user !== null} minLength={3} autoComplete="username" value={username} onChange={(event) => setUsername(event.target.value.toLowerCase())} /></label>
-          <label><span>{fr.directory.optionalEmail}</span><input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} /></label>
           <label><span>{fr.directory.accountRole}</span><SearchableSelect ariaLabel={fr.directory.accountRole} value={role} onChange={(value) => setRole(value as typeof role)} placeholder={fr.directory.accountRole} includeEmpty={false} options={roleEntries.map(([value, label]) => ({ value, label }))} /></label>
           <label><span>{fr.directory.newPassword}</span><input minLength={12} required={!person.user && username !== ""} type="password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} /></label>
           <label className="field-wide"><span>{fr.directory.confirmNewPassword}</span><input minLength={12} required={password !== ""} type="password" autoComplete="new-password" value={passwordConfirmation} onChange={(event) => setPasswordConfirmation(event.target.value)} /></label>

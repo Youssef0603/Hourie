@@ -60,6 +60,10 @@ class EquipmentController extends Controller
             'maintenances.createdBy',
             'images.uploader',
             'invoices.uploader',
+            'insurancePolicies' => fn ($query) => $query
+                ->where('insurance_type', 'equipment')
+                ->with('documents')
+                ->orderByDesc('ends_on'),
             'changes' => fn ($query) => $query->with('actor')->latest('occurred_at')->latest('id'),
         ]);
 

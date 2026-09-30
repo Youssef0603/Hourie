@@ -15,8 +15,10 @@ class EmployeeResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'phone_number' => $this->phone_number,
+            'email' => $this->email,
             'passport_number' => $this->passport_number,
             'employment_date' => $this->employment_date?->format('Y-m-d'),
+            'birth_date' => $this->birth_date?->format('Y-m-d'),
             'is_active' => $this->is_active,
             'equipment_in_custody_count' => $this->when(
                 array_key_exists('equipment_in_custody_count', $this->resource->getAttributes()),
@@ -35,6 +37,13 @@ class EmployeeResource extends JsonResource
                 ->where('is_active', true)
                 ->map(fn ($project) => ['id' => $project->id, 'name' => $project->name])
                 ->values()),
+            'health_insurance_policies' => $this->whenLoaded('insurancePolicies', fn () => $this->insurancePolicies->map(fn ($policy) => [
+                'id' => $policy->id,
+                'policy_number' => $policy->policy_number,
+                'source' => $policy->source,
+                'starts_on' => $policy->starts_on?->format('Y-m-d'),
+                'ends_on' => $policy->ends_on?->format('Y-m-d'),
+            ])),
         ];
     }
 }

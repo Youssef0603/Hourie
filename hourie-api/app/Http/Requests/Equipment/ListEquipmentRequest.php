@@ -35,6 +35,7 @@ class ListEquipmentRequest extends FormRequest
             'brand' => ['nullable', 'string', 'max:100'],
             'model' => ['nullable', 'string', 'max:100'],
             'serial_number' => ['nullable', 'string', 'max:255'],
+            'chassis_number' => ['nullable', 'string', 'max:255'],
             'manufacture_year_from' => ['nullable', 'integer', 'min:1900', 'max:2100'],
             'manufacture_year_to' => ['nullable', 'integer', 'min:1900', 'max:2100', 'gte:manufacture_year_from'],
             'apparent_power_kva_min' => ['nullable', 'numeric', 'min:0'],

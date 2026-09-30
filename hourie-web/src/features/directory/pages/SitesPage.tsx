@@ -12,6 +12,7 @@ import { DirectoryHeading } from '../components/DirectoryHeading'
 import { SearchableSelect } from '../../../shared/components/SearchableSelect'
 import { LoadingSpinner } from '../../../shared/components/LoadingSpinner'
 import { SiteEditForm } from '../components/SiteEditForm'
+import { EmptyState } from '../../../shared/components/EmptyState'
 
 type SitesPageProps = {
   canAdd: boolean
@@ -153,7 +154,7 @@ export function SitesPage({ canAdd, onOpenSite, catalogs, employees = [] }: Site
             <section className="site-details-locations">
               <h4>{fr.directory.locations} ({selectedSite.locations.filter((location) => location.parent_id !== null).length})</h4>
               <div>{selectedSite.locations.filter((location) => location.parent_id !== null).map((location) => <span key={location.id}><ActionIcon name="location" />{location.name}</span>)}</div>
-              {selectedSite.locations.every((location) => location.parent_id === null) && <p>{fr.directory.noLocations}</p>}
+              {selectedSite.locations.every((location) => location.parent_id === null) && <EmptyState compact icon="location" title={fr.directory.noLocations} />}
             </section>
             {selectedSite.notes && <section className="site-details-notes"><h4>{fr.directory.siteNotes}</h4><p>{selectedSite.notes}</p></section>}
             <div className="site-details-actions">
@@ -194,6 +195,7 @@ export function SitesPage({ canAdd, onOpenSite, catalogs, employees = [] }: Site
             </footer>
           </button>
         })}
+        {sites.length === 0 && <EmptyState icon="location" title="Aucun site enregistré" description="Les sites et projets ajoutés apparaîtront ici." />}
       </div>
     </main>
   )

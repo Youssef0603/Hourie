@@ -1,5 +1,6 @@
 import { fr, type Language } from '../../../i18n/fr'
 import { LoadingSpinner } from '../../../shared/components/LoadingSpinner'
+import { EmptyState } from '../../../shared/components/EmptyState'
 import { assetCategoryLabel, isAssetCategoryCode } from '../assetCategories'
 import { catalogBadgeStyle, catalogLabel } from '../catalogs'
 import { locationName, measurement } from '../equipmentDisplay'
@@ -50,7 +51,7 @@ export function EquipmentInventoryTable({
           </tr>)}</tbody>
         </table>
         {isLoading && <div className="table-state"><LoadingSpinner label={fr.common.loading} /></div>}
-        {!isLoading && result?.data.length === 0 && <div className="table-state">{fr.assets.noResults}</div>}
+        {!isLoading && result?.data.length === 0 && <EmptyState title={fr.assets.noResults} description="Modifiez votre recherche ou vos filtres pour afficher d’autres actifs." />}
       </div>
       {result && result.meta.last_page > 1 && <nav className="pagination" aria-label={fr.equipment.pagination}><span>{fr.equipment.results(result.meta.from, result.meta.to, result.meta.total)}</span><div><button type="button" disabled={result.meta.current_page === 1 || isLoading} onClick={() => onChangePage(result.meta.current_page - 1)}>{fr.common.previous}</button><span>{fr.equipment.page(result.meta.current_page, result.meta.last_page)}</span><button type="button" disabled={result.meta.current_page === result.meta.last_page || isLoading} onClick={() => onChangePage(result.meta.current_page + 1)}>{fr.common.next}</button></div></nav>}
     </>
@@ -103,9 +104,7 @@ export function EquipmentInventoryTable({
               </tbody>
             </table>
             {isLoading && <div className="table-state"><LoadingSpinner label={fr.common.loading} /></div>}
-            {!isLoading && result?.data.length === 0 && (
-              <div className="table-state">{fr.equipment.empty}</div>
-            )}
+            {!isLoading && result?.data.length === 0 && <EmptyState title={fr.equipment.empty} description="Modifiez votre recherche ou vos filtres pour afficher d’autres générateurs." />}
           </div>
 
           {result && result.meta.last_page > 1 && (

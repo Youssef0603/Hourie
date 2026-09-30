@@ -2,7 +2,7 @@ import type { EquipmentFilters } from './types'
 
 export const initialFilters: EquipmentFilters = {
   q: '', category: '', condition: '', operational_situation: '', project_id: '', location_id: '',
-  custodian_employee_id: '', brand: '', model: '', serial_number: '', manufacture_year_from: '',
+  custodian_employee_id: '', brand: '', model: '', serial_number: '', chassis_number: '', manufacture_year_from: '',
   manufacture_year_to: '', apparent_power_kva_min: '',
   apparent_power_kva_max: '', active_power_kw_min: '', active_power_kw_max: '', frequency_hz_min: '',
   frequency_hz_max: '', engine_hours_min: '', engine_hours_max: '', tank_capacity_litres_min: '',
@@ -16,7 +16,7 @@ export const initialFilters: EquipmentFilters = {
 }
 
 export const advancedFilterKeys: Array<keyof EquipmentFilters> = [
-  'custodian_employee_id', 'manufacture_year_from', 'manufacture_year_to',
+  'custodian_employee_id', 'chassis_number', 'manufacture_year_from', 'manufacture_year_to',
   'apparent_power_kva_min', 'apparent_power_kva_max', 'active_power_kw_min',
   'active_power_kw_max', 'frequency_hz_min', 'frequency_hz_max',
   'engine_hours_min', 'engine_hours_max', 'tank_capacity_litres_min',

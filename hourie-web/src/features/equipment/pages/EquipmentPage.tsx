@@ -29,6 +29,7 @@ import {
 import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { Modal } from "../../../shared/components/Modal";
 import { LoadingSpinner } from "../../../shared/components/LoadingSpinner";
+import { EmptyState } from "../../../shared/components/EmptyState";
 import {
   deleteEquipment,
   getEquipment,
@@ -926,7 +927,7 @@ export function EquipmentPage({
                 ))}
               </div>
             ) : (
-              <p className="audit-empty">{fr.audit.empty}</p>
+              <EmptyState compact icon="history" title={fr.audit.empty} description="Les modifications de cet actif apparaîtront ici." />
             )
           ) : siteContext?.changes?.length ? (
             <div className="audit-list audit-modal-list">
@@ -946,7 +947,7 @@ export function EquipmentPage({
               ))}
             </div>
           ) : (
-            <p className="audit-empty">{fr.audit.empty}</p>
+            <EmptyState compact icon="history" title={fr.audit.empty} description="Les modifications de ce site apparaîtront ici." />
           )}
         </Modal>
       )}

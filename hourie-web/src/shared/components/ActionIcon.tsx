@@ -1,5 +1,5 @@
 type ActionIconProps = {
-  name: 'add' | 'close' | 'collapse' | 'expand' | 'logout' | 'filter' | 'refresh' | 'location' | 'transfer' | 'upload' | 'edit' | 'history' | 'delete' | 'photo' | 'invoice' | 'maintenance' | 'identification' | 'specifications' | 'note'
+  name: 'add' | 'close' | 'collapse' | 'expand' | 'logout' | 'filter' | 'refresh' | 'location' | 'transfer' | 'upload' | 'edit' | 'history' | 'delete' | 'photo' | 'invoice' | 'maintenance' | 'identification' | 'specifications' | 'note' | 'inbox' | 'people'
 }
 
 export function ActionIcon({ name }: ActionIconProps) {
@@ -41,6 +41,10 @@ export function ActionIcon({ name }: ActionIconProps) {
         <><path d="M11.2 2.8 5.5 10h4l-.7 7.2 5.7-8h-4Z" /></>
       ) : name === 'note' ? (
         <><path d="M5 3h10v14H5Z" /><path d="M7.5 7h5M7.5 10h5M7.5 13h3" /></>
+      ) : name === 'inbox' ? (
+        <><path d="M3.5 6.5 5 4h10l1.5 2.5V16h-13Z" /><path d="M3.5 11h3l1.3 2h4.4l1.3-2h3" /></>
+      ) : name === 'people' ? (
+        <><circle cx="7" cy="7" r="2.4" /><path d="M2.8 16c.3-3 1.7-4.5 4.2-4.5s3.9 1.5 4.2 4.5" /><circle cx="14" cy="7.5" r="1.8" /><path d="M12.6 12c2.7-.5 4.3.8 4.6 3.5" /></>
       ) : (
         <path d="M3.5 5h13M5.5 10h9M8 15h4" />
       )}

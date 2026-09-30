@@ -20,6 +20,7 @@ export const assetCategories: Array<{ code: AssetCategoryCode; labelFr: string; 
     { key: 'platform_length_m', labelFr: 'Longueur de plateforme (m)', labelAr: 'طول المنصة (م)', type: 'number', unit: 'm' },
   ], columns: ['load_capacity_kg', 'lifting_height_m'] },
   { code: 'equipment', labelFr: 'Matériel', labelAr: 'المعدات', fields: [
+    { key: 'chassis_number', labelFr: 'Numéro de châssis', labelAr: 'رقم الهيكل', type: 'text' },
     { key: 'equipment_type', labelFr: 'Type de matériel', labelAr: 'نوع المعدات', type: 'text' },
     { key: 'sub_category', labelFr: 'Sous-catégorie', labelAr: 'الفئة الفرعية', type: 'text' },
     { key: 'counter_at_purchase', labelFr: 'Compteur à l’achat', labelAr: 'العداد عند الشراء', type: 'text' },
@@ -72,6 +73,7 @@ export const assetCategories: Array<{ code: AssetCategoryCode; labelFr: string; 
     { key: 'official_document_location', labelFr: 'Emplacement du document', labelAr: 'مكان الوثيقة', type: 'text' },
   ], columns: [] },
   { code: 'truck_dumper', labelFr: 'Camions et bennes', labelAr: 'الشاحنات والقلابات', fields: [
+    { key: 'chassis_number', labelFr: 'Numéro de châssis', labelAr: 'رقم الهيكل', type: 'text' },
     { key: 'vehicle_type', labelFr: 'Type de véhicule', labelAr: 'نوع المركبة', type: 'text' },
     { key: 'payload_tonnes', labelFr: 'Charge utile (t)', labelAr: 'الحمولة (طن)', type: 'number', unit: 't' },
     { key: 'fuel_type', labelFr: 'Carburant', labelAr: 'الوقود', type: 'text' },

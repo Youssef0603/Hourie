@@ -13,6 +13,7 @@ import type {
 } from '../types'
 import { LoadingSpinner } from '../../../shared/components/LoadingSpinner'
 import { SearchableSelect } from '../../../shared/components/SearchableSelect'
+import { EmptyState } from '../../../shared/components/EmptyState'
 import { catalogBadgeStyle, catalogLabel, catalogOptions } from '../catalogs'
 
 type MaintenanceSectionProps = {
@@ -278,7 +279,7 @@ export function MaintenanceSection({
       )}
 
       {!showForm && (equipment.maintenances.length === 0 ? (
-        <p className="maintenance-empty">{fr.maintenance.empty}</p>
+        <EmptyState compact icon="maintenance" title={fr.maintenance.empty} description="Les interventions enregistrées apparaîtront ici." />
       ) : (
         <div className="maintenance-list">
           {equipment.maintenances.map((maintenance) => {

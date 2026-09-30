@@ -27,6 +27,7 @@ class StoreInsurancePolicyRequest extends FormRequest
             'notes' => ['nullable', 'string', 'max:5000'],
             'employee_ids' => ['sometimes', 'array'], 'employee_ids.*' => ['integer', 'distinct', 'exists:employees,id'],
             'equipment_ids' => ['sometimes', 'array'], 'equipment_ids.*' => ['integer', 'distinct', 'exists:equipment,id'],
+            'chassis_numbers' => ['sometimes', 'array'], 'chassis_numbers.*' => ['string', 'max:255'],
         ];
     }
 }

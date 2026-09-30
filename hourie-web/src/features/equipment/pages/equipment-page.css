@@ -2311,6 +2311,23 @@ html[dir='rtl'] .directory-form select {
   gap: 1rem;
 }
 
+.notification-settings { display:grid; gap:.7rem; max-width:42rem; margin:0 0 1.4rem; padding:1rem; border:1px solid var(--color-border); border-radius:.5rem; background:#fff; }
+.notification-settings h2,.notification-settings p { margin:0; }
+.notification-settings h2 { font-size:.95rem; }
+.notification-settings p { color:var(--color-text-muted); font-size:.73rem; }
+.notification-settings label { display:grid; gap:.3rem; font-size:.72rem; font-weight:700; }
+.notification-settings textarea { min-height:5rem; }
+.notification-settings button { width:fit-content; }
+.reminder-recipient-section { margin:0 0 1.4rem; border:1px solid var(--color-border); border-radius:.5rem; background:#fff; overflow:hidden; }
+.reminder-recipient-section header { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:1rem; border-bottom:1px solid var(--color-border); }
+.reminder-recipient-section h2,.reminder-recipient-section p { margin:0; }
+.reminder-recipient-section h2 { font-size:.95rem; }.reminder-recipient-section header p,.reminder-recipient-list p { margin-top:.25rem; color:var(--color-text-muted); font-size:.73rem; }
+.reminder-recipient-list article { display:grid; grid-template-columns:auto 1fr auto auto; align-items:center; gap:.75rem; min-height:3.25rem; padding:.55rem .75rem; border-bottom:1px solid var(--color-border); font-size:.78rem; }
+.reminder-recipient-list article:last-child { border-bottom:0; }
+.reminder-email-dot { background:var(--color-primary); }
+.reminder-recipient-list article button { display:grid; width:1.8rem; height:1.8rem; place-items:center; border:0; border-radius:.3rem; color:var(--color-primary); background:#fff1f4; }
+.reminder-recipient-list article button svg { width:.9rem; height:.9rem; fill:none; stroke:currentColor; }.reminder-recipient-list>p { padding:0 1rem .75rem; }
+
 .person-profile-summary {
   display: grid;
   gap: 1.25rem;
@@ -2382,10 +2399,6 @@ html[dir='rtl'] .directory-form select {
   gap: 0.85rem 1.5rem;
 }
 
-.person-profile-email {
-  grid-column: 1 / -1;
-}
-
 .person-profile-actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2433,6 +2446,47 @@ html[dir='rtl'] .directory-form select {
 
 .person-assigned-assets-section {
   min-width: 0;
+}
+
+.person-health-insurance dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem 1rem;
+  margin: 0;
+}
+
+.person-health-insurance h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.42rem;
+}
+
+.person-health-insurance h3 svg {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: var(--color-primary);
+  stroke-width: 1.8;
+}
+
+.person-health-insurance dt {
+  margin-bottom: 0.18rem;
+  color: var(--color-text-muted);
+  font-size: 0.66rem;
+}
+
+.person-health-insurance dd {
+  margin: 0;
+  color: var(--color-text-strong);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.person-health-insurance p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.73rem;
 }
 
 .person-detail section + section {
@@ -3426,6 +3480,8 @@ html[dir='rtl'] .filter-bar select {
   display: inline-flex;
   min-height: 2rem;
   width: 2rem;
+  min-width: 2rem;
+  flex: 0 0 2rem;
   align-items: center;
   justify-content: center;
   border-color: var(--color-border);
@@ -5852,9 +5908,34 @@ html[dir='rtl'] .maintenance-form-grid select {
 .insurance-status.expired { color: #ca4254; background: #ffeaee; }
 
 .insurance-table-empty {
-  padding: 3.5rem 1rem !important;
+  padding: 0 !important;
   color: var(--color-text-muted) !important;
   text-align: center;
+}
+
+.directory-grid > .empty-state {
+  grid-column: 1 / -1;
+  border: 1px solid var(--color-border);
+  border-radius: 0.7rem;
+  background: white;
+}
+
+.person-health-insurance .empty-state-copy p,
+.insurance-side-content .empty-state-copy p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.69rem;
+  line-height: 1.5;
+}
+
+.catalog-list > .empty-state {
+  min-height: 10rem;
+}
+
+.insurance-covered-equipment > .empty-state {
+  border: 1px dashed #cbd3df;
+  border-radius: 0.45rem;
+  background: #fcfcfd;
 }
 
 .insurance-detail-panel {
@@ -6227,13 +6308,7 @@ html[dir='rtl'] .maintenance-form-grid select {
 }
 
 .insurance-side-content {
-  padding: 0 0.85rem 1rem;
-}
-
-.insurance-detail-actions {
-  display: flex;
-  flex-wrap: wrap;
-  padding: 0.75rem 0 0.2rem;
+  padding: 0 1rem 1rem;
 }
 
 .insurance-history p {
@@ -6353,6 +6428,180 @@ html[dir='rtl'] .maintenance-form-grid select {
   height: 1px;
   opacity: 0;
   pointer-events: none;
+}
+
+.equipment-insurance-coverage {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.equipment-insurance-coverage-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.equipment-insurance-coverage-heading small {
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+}
+
+.equipment-insurance-coverage dl {
+  margin: 0;
+}
+
+.insurance-policy-document {
+  display: inline-flex;
+  width: fit-content;
+  min-height: 2rem;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.38rem;
+  padding: 0.4rem 0.6rem;
+  color: var(--color-primary);
+  background: #fff;
+  font-size: 0.73rem;
+  font-weight: 700;
+}
+
+.insurance-policy-document:hover {
+  border-color: var(--color-primary);
+}
+
+.insurance-policy-document svg {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.insurance-covered-equipment {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.insurance-covered-equipment > p {
+  margin: -0.25rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+}
+
+.insurance-covered-equipment > label {
+  display: grid;
+  gap: 0.32rem;
+  color: var(--color-text);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.insurance-covered-equipment .searchable-select-input {
+  min-height: 2.55rem;
+  font-weight: 400;
+}
+
+.insurance-covered-equipment ul {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.insurance-covered-equipment li {
+  display: flex;
+  min-height: 2.8rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.4rem;
+  padding: 0.45rem 0.55rem;
+  background: #fff;
+}
+
+.insurance-covered-equipment li span {
+  display: grid;
+  gap: 0.12rem;
+  min-width: 0;
+}
+
+.insurance-covered-equipment li strong {
+  overflow: hidden;
+  font-size: 0.74rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.insurance-covered-equipment li small {
+  color: var(--color-text-muted);
+  font-size: 0.65rem;
+}
+
+.insurance-covered-equipment li button {
+  display: grid;
+  width: 1.75rem;
+  height: 1.75rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 0;
+  border-radius: 0.3rem;
+  color: var(--color-primary);
+  background: #fff1f4;
+}
+
+.insurance-covered-equipment li button:hover {
+  background: #ffe2e8;
+}
+
+.insurance-covered-equipment li button svg {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+
+.insurance-covered-equipment li .insurance-covered-remove {
+  font-size: 1.35rem;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.insurance-covered-equipment-empty {
+  border: 1px dashed #cbd3df;
+  border-radius: 0.4rem;
+  padding: 0.6rem;
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+}
+
+.insurance-covered-equipment-count {
+  color: var(--color-text-muted);
+  font-size: 0.69rem;
+  font-weight: 700;
+}
+
+.insurance-covered-equipment-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.45rem;
+}
+
+.insurance-covered-equipment-pagination button {
+  min-height: 1.9rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.32rem;
+  padding: 0.28rem 0.48rem;
+  color: var(--color-text);
+  background: #fff;
+  font-size: 0.67rem;
+  font-weight: 700;
+}
+
+.insurance-covered-equipment-pagination button:disabled {
+  opacity: 0.45;
+}
+
+.insurance-covered-equipment-pagination span {
+  color: var(--color-text-muted);
+  font-size: 0.67rem;
 }
 
 @media (max-width: 1220px) {

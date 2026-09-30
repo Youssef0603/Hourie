@@ -16,6 +16,7 @@ import { AssetFilterDrawer } from './AssetFilterDrawer'
 import { EquipmentFilterDrawer } from './EquipmentFilterDrawer'
 import { EquipmentInventoryTable } from './EquipmentInventoryTable'
 import { EquipmentCreationPanel } from './EquipmentCreationPanel'
+import { EmptyState } from '../../../shared/components/EmptyState'
 
 type AssetInventoryViewProps = {
   category: Exclude<AssetView, 'generator'>
@@ -125,7 +126,7 @@ export function AssetInventoryView({ category, language, options, filters, searc
           </tr>)}</tbody>
         </table>
         {isLoading && <div className="table-state"><LoadingSpinner label={fr.common.loading} /></div>}
-        {!isLoading && result?.data.length === 0 && <div className="table-state">{fr.assets.noResults}</div>}
+        {!isLoading && result?.data.length === 0 && <EmptyState title={fr.assets.noResults} description="Modifiez votre recherche ou vos filtres pour afficher d’autres actifs." />}
       </div>
       {result && result.meta.last_page > 1 && <nav className="pagination" aria-label={fr.equipment.pagination}><span>{fr.equipment.results(result.meta.from, result.meta.to, result.meta.total)}</span><div><button type="button" disabled={result.meta.current_page === 1 || isLoading} onClick={() => onPageChange(result.meta.current_page - 1)}>{fr.common.previous}</button><span>{fr.equipment.page(result.meta.current_page, result.meta.last_page)}</span><button type="button" disabled={result.meta.current_page === result.meta.last_page || isLoading} onClick={() => onPageChange(result.meta.current_page + 1)}>{fr.common.next}</button></div></nav>}
       </>}

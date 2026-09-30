@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { activeLanguage, fr } from '../../../i18n/fr'
 import { ActionIcon } from '../../../shared/components/ActionIcon'
 import { LoadingSpinner } from '../../../shared/components/LoadingSpinner'
+import { EmptyState } from '../../../shared/components/EmptyState'
 import type { MaintenanceWarningResponse } from '../types'
 
 type MaintenanceWarningsPanelProps = {
@@ -83,7 +84,7 @@ export function MaintenanceWarningsPanel({
             ))}
           </div>
         ) : (
-          <p className="maintenance-warning-empty">{fr.maintenanceWarnings.empty}</p>
+          <EmptyState compact icon="maintenance" title={fr.maintenanceWarnings.empty} description="Les prochaines échéances apparaîtront automatiquement ici." />
         )}
 
         {result && result.meta.last_page > 1 && (

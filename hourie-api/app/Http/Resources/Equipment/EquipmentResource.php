@@ -50,6 +50,21 @@ class EquipmentResource extends JsonResource
                 ],
                 'created_at' => $invoice->created_at->toISOString(),
             ])),
+            'insurance_policies' => $this->whenLoaded('insurancePolicies', fn () => $this->insurancePolicies->map(fn ($policy) => [
+                'id' => $policy->id,
+                'policy_number' => $policy->policy_number,
+                'source' => $policy->source,
+                'starts_on' => $policy->starts_on?->format('Y-m-d'),
+                'ends_on' => $policy->ends_on?->format('Y-m-d'),
+                'total_amount' => $policy->total_amount,
+                'documents' => $policy->documents->map(fn ($document) => [
+                    'id' => $document->id,
+                    'url' => "/api/v1/insurance-policies/{$policy->id}/documents/{$document->id}/file",
+                    'original_name' => $document->original_name,
+                    'mime_type' => $document->mime_type,
+                    'size_bytes' => $document->size_bytes,
+                ]),
+            ])),
             'changes' => $this->whenLoaded('changes', fn () => $this->changes->map(fn ($change) => [
                 'id' => $change->id,
                 'type' => $change->change_type->value,

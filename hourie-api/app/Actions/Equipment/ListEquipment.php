@@ -74,6 +74,7 @@ class ListEquipment
             ->when($filters['brand'] ?? null, fn (Builder $query, string $value) => $query->where('brand', 'like', '%'.trim($value).'%'))
             ->when($filters['model'] ?? null, fn (Builder $query, string $value) => $query->where('model', 'like', '%'.trim($value).'%'))
             ->when($filters['serial_number'] ?? null, fn (Builder $query, string $value) => $query->where('serial_number', 'like', '%'.trim($value).'%'))
+            ->when($filters['chassis_number'] ?? null, fn (Builder $query, string $value) => $this->whereAssetText($query, 'chassis_number', $value))
             ->when(isset($filters['manufacture_year_from']), fn (Builder $query) => $query->where('manufacture_year', '>=', $filters['manufacture_year_from']))
             ->when(isset($filters['manufacture_year_to']), fn (Builder $query) => $query->where('manufacture_year', '<=', $filters['manufacture_year_to']))
             ->when($filters['equipment_type'] ?? null, fn (Builder $query, string $value) => $this->whereAssetText($query, 'equipment_type', $value))

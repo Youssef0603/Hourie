@@ -162,6 +162,91 @@ html[dir='rtl'] .user-menu {
   border-top-color: var(--color-primary);
 }
 
+.empty-state {
+  display: flex;
+  min-height: 12rem;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 0.8rem;
+  width: 100%;
+  padding: 2rem 1.25rem;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.empty-state-icon {
+  display: grid;
+  width: 3.25rem;
+  height: 3.25rem;
+  place-items: center;
+  border: 1px solid rgb(211 18 69 / 14%);
+  border-radius: 1rem;
+  color: var(--color-primary);
+  background: linear-gradient(145deg, #fff 5%, rgb(211 18 69 / 8%));
+  box-shadow: 0 8px 24px rgb(73 24 39 / 7%);
+}
+
+.empty-state-icon svg {
+  width: 1.4rem;
+  height: 1.4rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.55;
+}
+
+.empty-state-copy {
+  display: grid;
+  justify-items: center;
+  gap: 0.25rem;
+  max-width: 28rem;
+}
+
+.empty-state-copy strong {
+  color: var(--color-text-strong);
+  font-size: 0.92rem;
+  font-weight: 750;
+}
+
+.empty-state-copy p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.empty-state-action {
+  margin-top: 0.15rem;
+}
+
+.empty-state-compact {
+  min-height: 7rem;
+  gap: 0.55rem;
+  padding: 1.15rem;
+}
+
+.empty-state-compact .empty-state-icon {
+  width: 2.55rem;
+  height: 2.55rem;
+  border-radius: 0.8rem;
+  box-shadow: 0 5px 18px rgb(73 24 39 / 6%);
+}
+
+.empty-state-compact .empty-state-icon svg {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.empty-state-compact .empty-state-copy strong {
+  font-size: 0.78rem;
+}
+
+.empty-state-compact .empty-state-copy p {
+  font-size: 0.69rem;
+}
+
 .authenticated-card {
   width: min(100%, 34rem);
   border: 1px solid var(--color-border);

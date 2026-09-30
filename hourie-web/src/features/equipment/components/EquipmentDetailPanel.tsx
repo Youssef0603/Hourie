@@ -15,6 +15,8 @@ import { displayedValue, locationName, measurement } from '../equipmentDisplay'
 import type { Equipment, EquipmentFilterOptions } from '../types'
 import { GeneratorTransferForm } from './GeneratorTransferForm'
 import { formatMoney } from '../../../shared/formatMoney'
+import { getAuthenticatedFileObjectUrl } from '../../../shared/api/http'
+import { EmptyState } from '../../../shared/components/EmptyState'
 
 type EquipmentDetailPanelProps = {
   user: AuthenticatedUser
@@ -39,6 +41,7 @@ export function EquipmentDetailPanel({
   if (!selected && !isLoadingDetail) return null
   const categoryCode = selected?.category.code ?? 'generator'
   const isOtherAsset = isAssetCategoryCode(categoryCode)
+  const isInsurableAsset = ['car', 'truck_dumper', 'equipment'].includes(categoryCode)
   const assetDefinition = isOtherAsset ? assetCategory(categoryCode) : null
   const openHistory = () => {
     if (!selected) return
@@ -109,6 +112,9 @@ export function EquipmentDetailPanel({
                       <div><dt>{fr.equipment.situation}</dt><dd>{selected.operational_situation ? <span className="status-badge" style={catalogBadgeStyle(options?.catalogs, 'operational_situation', selected.operational_situation)}>{catalogLabel(options?.catalogs, 'operational_situation', selected.operational_situation)}</span> : fr.common.notProvided}</dd></div>
                     </dl>
                   </DetailSection>
+                  {isInsurableAsset && <DetailSection title="Assurance" icon="invoice" defaultOpen>
+                    <EquipmentInsuranceCoverage policies={selected.insurance_policies} />
+                  </DetailSection>}
                   {isOtherAsset && assetDefinition && <DetailSection title={fr.assets.specifications} icon="specifications" defaultOpen><dl>{assetDefinition.fields.map((field) => {
                     const value = selected.asset_details?.[field.key]
                     const isCost = field.key === 'purchase_price' || field.key === 'shipping_cost'
@@ -155,7 +161,7 @@ export function EquipmentDetailPanel({
                   <DetailSection id={`equipment-history-${selected.id}`} title={fr.audit.button} icon="history">
                     {selected.changes.length > 0
                       ? <div className="audit-list detail-audit-list">{selected.changes.map((change) => <article key={change.id}><span className="audit-dot" aria-hidden="true" /><div><strong>{equipmentAuditLabel(change.type, selected.category.code, language)}</strong><p>{fr.audit.by(change.actor?.name ?? fr.audit.system)} · <time dateTime={change.occurred_at}>{auditDate(change.occurred_at)}</time></p></div></article>)}</div>
-                      : <p className="audit-empty">{fr.audit.empty}</p>}
+                      : <EmptyState compact icon="history" title={fr.audit.empty} description="Les modifications de cet actif apparaîtront ici." />}
                   </DetailSection>
                 </div>
                 {showTransfer && options && <Modal title={fr.equipment.transferTitle} onClose={() => setShowTransfer(false)}><GeneratorTransferForm equipment={selected} options={options} onCancel={() => setShowTransfer(false)} onTransferred={(equipment) => { setShowTransfer(false); onChanged(equipment) }} /></Modal>}
@@ -164,6 +170,42 @@ export function EquipmentDetailPanel({
           </aside>
         </div>
   )
+}
+
+function EquipmentInsuranceCoverage({ policies }: { policies: Equipment['insurance_policies'] }) {
+  const activePolicy = policies.find((policy) => policyIsActive(policy))
+  const policy = activePolicy ?? policies[0]
+
+  if (!policy) return <EmptyState compact icon="invoice" title="Aucune assurance liée" description="La police apparaîtra ici dès que ce véhicule sera ajouté à une assurance équipement." />
+
+  const document = policy.documents[0]
+  const openDocument = async () => {
+    if (!document) return
+    const url = await getAuthenticatedFileObjectUrl(`${document.url}?preview=1`)
+    window.open(url, '_blank', 'noopener,noreferrer')
+  }
+
+  return <div className="equipment-insurance-coverage">
+    <div className="equipment-insurance-coverage-heading">
+      <span className={`insurance-status ${activePolicy ? 'active' : 'expired'}`}>{activePolicy ? 'Assurance active' : 'Assurance expirée'}</span>
+      {policies.length > 1 && <small>{policies.length} polices liées</small>}
+    </div>
+    <dl>
+      <div><dt>N° de police</dt><dd>{policy.policy_number}</dd></div>
+      <div><dt>Assureur</dt><dd>{policy.source || fr.common.notProvided}</dd></div>
+      <div><dt>Expiration</dt><dd>{formatInsuranceDate(policy.ends_on)}</dd></div>
+      <div><dt>Prime TTC</dt><dd>{policy.total_amount === null ? fr.common.notProvided : formatMoney(policy.total_amount)}</dd></div>
+    </dl>
+    {document && <button type="button" className="insurance-policy-document" onClick={() => void openDocument()}><ActionIcon name="invoice" />Voir le document d’assurance</button>}
+  </div>
+}
+
+function policyIsActive(policy: Equipment['insurance_policies'][number]) {
+  return policy.ends_on !== null && policy.ends_on >= new Date().toISOString().slice(0, 10)
+}
+
+function formatInsuranceDate(value: string | null) {
+  return value ? new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium' }).format(new Date(`${value}T00:00:00`)) : fr.common.notProvided
 }
 
 function priceCurrencyLabel(currency: unknown): string {

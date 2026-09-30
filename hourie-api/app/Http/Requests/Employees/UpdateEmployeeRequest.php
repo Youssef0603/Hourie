@@ -47,6 +47,7 @@ class UpdateEmployeeRequest extends FormRequest
                 Rule::unique('employees', 'passport_number')->ignore($employee?->id),
             ],
             'employment_date' => ['nullable', 'date_format:Y-m-d', 'before_or_equal:today'],
+            'birth_date' => ['nullable', 'date_format:Y-m-d', 'before_or_equal:today'],
             'username' => [
                 $hasAccount ? 'required' : 'nullable',
                 'string',
