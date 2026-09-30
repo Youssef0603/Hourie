@@ -5,6 +5,7 @@ import { DocumentUploadDropzone } from "../../../shared/components/DocumentUploa
 import { SearchableSelect } from "../../../shared/components/SearchableSelect";
 import { EmptyState } from "../../../shared/components/EmptyState";
 import { LoadingSpinner } from "../../../shared/components/LoadingSpinner";
+import { RecordHistoryModal, type RecordHistoryEntry } from "../../../shared/components/RecordHistoryModal";
 
 type Kind = "trc_rc" | "individual_accident" | "group_health" | "equipment";
 type PolicyDocument = { id: number; original_name: string; mime_type: string; size_bytes: number; url: string };
@@ -15,6 +16,7 @@ type Policy = {
   insured_situation: string | null; source: string | null; notes: string | null;
   project?: { id: number; name: string } | null;
   documents?: PolicyDocument[];
+  changes?: RecordHistoryEntry[];
   created_at?: string | null;
   employees?: Array<{ id: number; name: string }>;
   equipment?: Array<{ id: number; asset_code: string; brand: string | null; model: string | null }>;
@@ -235,6 +237,23 @@ function InsuranceDetailPanel({ policy, onClose, onEdit, onDocumentsChanged, onD
   const state = policyStatus(policy);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [history, setHistory] = useState<RecordHistoryEntry[]>(policy.changes ?? []);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState("");
+
+  async function openHistory() {
+    setShowHistory(true);
+    setHistoryLoading(true);
+    setHistoryError("");
+    try {
+      const response = await apiRequest<{ data: Policy }>(`/api/v1/insurance-policies/${policy.id}`);
+      setHistory(response.data.changes ?? []);
+    } catch {
+      setHistoryError("Impossible de charger l’historique de cette police.");
+    } finally {
+      setHistoryLoading(false);
+    }
+  }
 
   async function remove() {
     if (!window.confirm(`Supprimer la police ${policy.policy_number} ?`)) return;
@@ -242,21 +261,20 @@ function InsuranceDetailPanel({ policy, onClose, onEdit, onDocumentsChanged, onD
     try { await apiRequest(`/api/v1/insurance-policies/${policy.id}`, { method: "DELETE" }); onDeleted(); } finally { setIsDeleting(false); }
   }
 
-  return <div className="detail-backdrop" onMouseDown={onClose}>
+  return <><div className="detail-backdrop" onMouseDown={onClose}>
     <aside className="detail-panel insurance-side-panel" role="dialog" aria-modal="true" aria-label="Détail de la police" onMouseDown={(event) => event.stopPropagation()}>
       <header className="detail-header"><div><p className="section-label">{typeLabel(policy.insurance_type)}</p><h2>{policy.policy_number}</h2><p>{policy.source || "Assureur à compléter"}</p></div><button type="button" aria-label="Fermer" onClick={onClose}><ActionIcon name="close" /></button></header>
       <div className="detail-content insurance-side-content">
-        <div className="detail-primary-actions"><button className="equipment-edit-button detail-toolbar-button" type="button" onClick={onEdit}><ActionIcon name="edit" />Modifier</button><button className="danger-button detail-delete-button" type="button" disabled={isDeleting} onClick={() => void remove()} aria-label={isDeleting ? "Suppression en cours" : "Supprimer"}><ActionIcon name="delete" /></button><button className="equipment-history-button detail-toolbar-button" type="button" onClick={() => setShowHistory((value) => !value)}><ActionIcon name="history" />Voir l’historique</button></div>
+        <div className="detail-primary-actions"><button className="equipment-edit-button detail-toolbar-button" type="button" onClick={onEdit}><ActionIcon name="edit" />Modifier</button><button className="equipment-history-button detail-toolbar-button" type="button" onClick={() => void openHistory()}><ActionIcon name="history" />Voir l’historique</button><button className="danger-button detail-delete-button" type="button" disabled={isDeleting} onClick={() => void remove()} aria-label={isDeleting ? "Suppression en cours" : "Supprimer"}><ActionIcon name="delete" /></button></div>
         <section><h3><ActionIcon name="identification" />Informations de la police</h3><dl><div><dt>Assureur</dt><dd>{policy.source || "À compléter"}</dd></div>{policy.insurance_type === "trc_rc" && <div><dt>Site / projet</dt><dd>{policy.project?.name || "À compléter"}</dd></div>}<div><dt>Éléments couverts</dt><dd>{coveredLabel(policy)}</dd></div></dl></section>
         <section><h3><ActionIcon name="history" />Période et statut</h3><dl><div><dt>Date de début</dt><dd>{formatDate(policy.starts_on)}</dd></div><div><dt>Date d’expiration</dt><dd>{formatDate(policy.ends_on)}</dd></div><div><dt>Statut</dt><dd><em className={`insurance-status ${state}`}>{statusLabel(state)}</em></dd></div></dl></section>
         <section><h3><ActionIcon name="specifications" />Couverture</h3><dl><div><dt>Situation assurée</dt><dd>{policy.insured_situation || "À compléter"}</dd></div></dl></section>
         <section><h3><ActionIcon name="invoice" />Informations financières</h3><dl><div><dt>Prime nette</dt><dd>{formatMoney(policy.net_premium)}</dd></div><div><dt>ACC</dt><dd>{formatMoney(policy.accessories_amount ?? "0")}</dd></div><div><dt>Taxe</dt><dd>{formatMoney(policy.tax_amount)}</dd></div><div><dt>Prime TTC</dt><dd>{formatMoney(policy.total_amount)}</dd></div></dl></section>
         <InsuranceDocuments policy={policy} onChanged={onDocumentsChanged} />
         <section><h3><ActionIcon name="note" />Observations</h3><p className="observations">{policy.notes || "Aucune observation."}</p></section>
-        {showHistory && <section className="insurance-history"><h3><ActionIcon name="history" />Historique</h3>{policy.created_at ? <p>{`Police enregistrée le ${new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(policy.created_at))}.`}</p> : <EmptyState compact icon="history" title="Aucun historique disponible" />}</section>}
       </div>
     </aside>
-  </div>;
+  </div>{showHistory && <RecordHistoryModal title="Historique de la police" entries={history} loading={historyLoading} error={historyError} actionLabels={{ created: "Police créée", updated: "Police modifiée", document_added: "Document ajouté", document_deleted: "Document supprimé" }} emptyDescription="Les modifications de cette police apparaîtront ici." onClose={() => setShowHistory(false)} />}</>;
 }
 
 function InsuranceDocuments({ policy, onChanged }: { policy: Policy; onChanged: (documents: PolicyDocument[]) => void }) {

@@ -1071,8 +1071,8 @@ html[dir='rtl'] .advanced-filter-grid select {
 
 .site-location-fields {
   display: grid;
-  gap: 0.75rem;
-  padding: 0.85rem;
+  gap: 0.5rem;
+  padding: 0.65rem;
   border: 1px solid var(--color-border);
   border-radius: 0.7rem;
   background: #fafafb;
@@ -1089,7 +1089,7 @@ html[dir='rtl'] .advanced-filter-grid select {
 
 .site-location-fields-heading > span {
   color: var(--color-text-strong);
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 700;
 }
 
@@ -1097,21 +1097,22 @@ html[dir='rtl'] .advanced-filter-grid select {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
+  height: 1.85rem;
+  gap: 0.3rem;
   border: 1px solid var(--color-primary);
   border-radius: 0.4rem;
-  padding: 0.35rem 0.55rem;
+  padding: 0.25rem 0.5rem;
   color: var(--color-primary);
   background: white;
   cursor: pointer;
-  font-size: 0.68rem;
+  font-size: 0.64rem;
   font-weight: 700;
 }
 
 .site-location-fields-heading button svg,
 .site-location-input button svg {
-  width: 0.9rem;
-  height: 0.9rem;
+  width: 0.78rem;
+  height: 0.78rem;
   fill: none;
   stroke: currentcolor;
   stroke-linecap: round;
@@ -1121,27 +1122,30 @@ html[dir='rtl'] .advanced-filter-grid select {
 .site-location-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
-  gap: 0.55rem;
+  gap: 0.4rem;
 }
 
 .site-location-input {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) var(--control-height);
+  grid-template-columns: minmax(0, 1fr) 1.85rem;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.35rem;
 }
 
 .site-location-input input {
+  height: 1.85rem;
   width: 100%;
   min-width: 0;
+  padding: 0.3rem 0.55rem;
+  font-size: 0.72rem;
 }
 
 .site-location-input button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: var(--control-height);
-  height: var(--control-height);
+  width: 1.85rem;
+  height: 1.85rem;
   flex: 0 0 auto;
   border: 1px solid #f2c8d4;
   border-radius: 0.4rem;
@@ -3450,14 +3454,15 @@ html[dir='rtl'] .filter-bar select {
 
 .detail-primary-actions button.detail-toolbar-button {
   display: inline-flex;
+  height: 2rem;
   width: fit-content;
-  min-height: 2rem;
+  min-height: 2rem !important;
   align-items: center;
   justify-content: center;
   gap: 0.35rem;
   border: 1px solid var(--color-border);
   border-radius: 0.45rem;
-  padding: 0.3rem 0.55rem;
+  padding: 0.28rem 0.55rem !important;
   color: var(--color-text-muted);
   background: #fff;
   box-shadow: none;
@@ -3478,17 +3483,20 @@ html[dir='rtl'] .filter-bar select {
 .detail-primary-actions .detail-delete-button {
   order: 3;
   display: inline-flex;
-  min-height: 2rem;
-  width: 2rem;
-  min-width: 2rem;
+  height: 2rem;
+  min-height: 2rem !important;
+  width: 2rem !important;
+  min-width: 2rem !important;
   flex: 0 0 2rem;
   align-items: center;
   justify-content: center;
+  gap: 0;
   border-color: var(--color-border);
   padding: 0;
   color: var(--color-primary);
   background: #fff;
   font-size: 0;
+  line-height: 0;
 }
 
 .detail-primary-actions .equipment-history-button {
@@ -3500,8 +3508,26 @@ html[dir='rtl'] .filter-bar select {
 }
 
 .detail-primary-actions .detail-delete-button svg {
-  width: 1.05rem;
-  height: 1.05rem;
+  display: block;
+  width: 0.9rem;
+  height: 0.9rem;
+  flex: 0 0 0.9rem;
+  margin: 0;
+}
+
+.site-details-actions .site-detail-action,
+.person-profile-actions .person-detail-action {
+  height: 2rem;
+  min-height: 2rem !important;
+  padding-block: 0.28rem !important;
+}
+
+.person-detail .person-delete-action {
+  width: 2rem !important;
+  min-width: 2rem !important;
+  height: 2rem;
+  min-height: 2rem !important;
+  padding: 0 !important;
 }
 
 .detail-primary-actions.editing {
@@ -5884,6 +5910,14 @@ html[dir='rtl'] .maintenance-form-grid select {
   white-space: nowrap;
 }
 
+.bonds-table {
+  min-width: 68rem;
+}
+
+.bonds-table .bond-date-cell {
+  white-space: nowrap;
+}
+
 .insurance-table td:last-child button {
   border: 0 !important;
   padding: 0.1rem 0.25rem !important;
@@ -6057,9 +6091,10 @@ html[dir='rtl'] .maintenance-form-grid select {
 
 .insurance-add-header .save-button {
   display: inline-flex;
+  height: 2rem;
   width: auto;
   min-width: max-content;
-  min-height: 2rem;
+  min-height: 2rem !important;
   aspect-ratio: auto;
   align-items: center;
   justify-content: center;
@@ -6067,6 +6102,16 @@ html[dir='rtl'] .maintenance-form-grid select {
   padding: 0.35rem 0.65rem;
   font-size: 0.68rem;
   white-space: nowrap;
+}
+
+.insurance-add-header > div:last-child > button:last-child {
+  width: 2rem;
+  min-width: 2rem;
+  height: 2rem;
+  min-height: 2rem;
+  aspect-ratio: 1;
+  border-radius: var(--button-radius);
+  padding: 0;
 }
 
 .insurance-add-form {
@@ -6271,6 +6316,34 @@ html[dir='rtl'] .maintenance-form-grid select {
   font-weight: 700;
 }
 
+.insurance-filter-content .searchable-select-input {
+  width: 100%;
+  height: var(--control-height);
+  border: 1px solid var(--color-border);
+  border-radius: var(--control-radius);
+  outline: 0;
+  padding: 0.45rem 2.5rem 0.45rem 0.55rem;
+  color: var(--color-text-strong);
+  background: white;
+  font: inherit;
+  font-size: 0.73rem;
+}
+
+.insurance-filter-content .searchable-select-input::placeholder {
+  color: var(--color-text-muted);
+  opacity: 1;
+}
+
+.insurance-filter-content .searchable-select-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-soft);
+}
+
+html[dir='rtl'] .insurance-filter-content .searchable-select-input {
+  padding-right: 0.55rem;
+  padding-left: 2.5rem;
+}
+
 .insurance-filter-content select {
   width: 100%;
   height: var(--control-height);
@@ -6428,6 +6501,48 @@ html[dir='rtl'] .maintenance-form-grid select {
   height: 1px;
   opacity: 0;
   pointer-events: none;
+}
+
+.bond-selected-documents {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.55rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bond-selected-documents li {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--control-radius);
+  padding: 0.45rem 0.6rem;
+  background: #fbfcfd;
+}
+
+.bond-selected-documents span {
+  overflow: hidden;
+  color: var(--color-text-strong);
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bond-selected-documents button {
+  border: 0;
+  padding: 0.1rem 0.25rem;
+  color: var(--color-primary);
+  background: transparent;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.insurance-documents-section > .document-upload-dropzone {
+  margin-top: 0.55rem;
 }
 
 .equipment-insurance-coverage {

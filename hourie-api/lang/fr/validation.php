@@ -9,6 +9,8 @@ return [
     'email' => 'Le champ :attribute doit être une adresse e-mail valide.',
     'enum' => 'La valeur sélectionnée pour :attribute est invalide.',
     'exists' => 'La valeur sélectionnée pour :attribute est invalide.',
+    'extensions' => 'Le fichier :attribute doit avoir une extension valide : :values.',
+    'file' => 'Le champ :attribute doit être un fichier valide.',
     'integer' => 'Le champ :attribute doit être un nombre entier.',
     'numeric' => 'Le champ :attribute doit être un nombre.',
     'location_cycle' => 'Une localisation ne peut pas être placée sous elle-même ou sous l’un de ses descendants.',
@@ -18,6 +20,7 @@ return [
     'transfer_destination_same' => 'Le site de destination doit être différent du site actuel.',
     'only_generators_transferable' => 'Seuls les générateurs peuvent être transférés avec cette action.',
     'max' => [
+        'file' => 'Le fichier :attribute ne doit pas dépasser :max kilo-octets.',
         'numeric' => 'Le champ :attribute ne doit pas dépasser :max.',
         'string' => 'Le champ :attribute ne doit pas dépasser :max caractères.',
     ],
@@ -31,6 +34,7 @@ return [
     ],
     'string' => 'Le champ :attribute doit être du texte.',
     'unique' => 'La valeur du champ :attribute est déjà utilisée.',
+    'uploaded' => 'Le téléversement du fichier :attribute a échoué. Vérifiez qu’il ne dépasse pas 10 Mo.',
 
     'attributes' => [
         'email' => 'adresse e-mail',

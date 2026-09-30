@@ -28,6 +28,11 @@ class InsurancePolicy extends Model
         return $this->hasMany(InsurancePolicyDocument::class);
     }
 
+    public function changes(): HasMany
+    {
+        return $this->hasMany(InsurancePolicyChange::class)->latest('occurred_at')->latest('id');
+    }
+
     public function employees(): BelongsToMany
     {
         return $this->belongsToMany(Employee::class, 'insurance_policy_employees');

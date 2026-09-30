@@ -12,9 +12,17 @@ type DocumentUploadDropzoneProps = {
 export function DocumentUploadDropzone({ title, description = "PDF uniquement · 10 Mo maximum par fichier", compact = false, disabled = false, onFiles }: DocumentUploadDropzoneProps) {
   const input = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [validationError, setValidationError] = useState("");
 
   function selectFiles(files: File[]) {
-    if (!disabled && files.length > 0) onFiles(files);
+    const invalidType = files.find((file) => file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf"));
+    const oversized = files.find((file) => file.size > 10 * 1024 * 1024);
+    if (invalidType) setValidationError(`« ${invalidType.name} » n’est pas un fichier PDF.`);
+    else if (oversized) setValidationError(`« ${oversized.name} » dépasse la limite de 10 Mo.`);
+    else {
+      setValidationError("");
+      if (!disabled && files.length > 0) onFiles(files);
+    }
     if (input.current) input.current.value = "";
   }
 
@@ -34,5 +42,6 @@ export function DocumentUploadDropzone({ title, description = "PDF uniquement ·
     <div className={`document-upload-dropzone${compact ? " compact" : ""}${isDragging ? " is-dragging" : ""}${disabled ? " is-disabled" : ""}`} role="button" tabIndex={disabled ? -1 : 0} aria-disabled={disabled} onClick={() => openPicker()} onKeyDown={openPicker} onDragEnter={(event) => { event.preventDefault(); setIsDragging(true); }} onDragOver={(event) => event.preventDefault()} onDragLeave={(event) => { if (event.currentTarget === event.target) setIsDragging(false); }} onDrop={drop}>
       <ActionIcon name="upload" /><strong>{title}</strong><span>{description}</span>
     </div>
+    {validationError && <p className="form-alert" role="alert">{validationError}</p>}
   </>;
 }

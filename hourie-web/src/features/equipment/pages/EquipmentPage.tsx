@@ -18,6 +18,7 @@ import { advancedFilterKeys, initialFilters } from "../filters";
 import { PeoplePage } from "../../directory/pages/PeoplePage";
 import { SitesPage } from "../../directory/pages/SitesPage";
 import { InsurancePage } from "../../insurance/pages/InsurancePage";
+import { BondsPage } from "../../bonds/pages/BondsPage";
 import { SiteEditForm } from "../../directory/components/SiteEditForm";
 import { deleteSite, getSite } from "../../directory/api";
 import type { Site } from "../../directory/types";
@@ -857,6 +858,8 @@ export function EquipmentPage({
           />
         ) : activeSection === "insurance" ? (
           <InsurancePage />
+        ) : activeSection === "bonds" ? (
+          <BondsPage />
         ) : activeSection === "sites" ? (
           <SitesPage
             canAdd={user.permissions.manage_sites}

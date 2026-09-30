@@ -9,6 +9,28 @@ use Illuminate\Support\Facades\Storage;
 
 uses(LazilyRefreshDatabase::class);
 
+it('records policy creation and updates in the history', function () {
+    $manager = User::factory()->create(['role' => UserRole::Manager]);
+
+    $created = $this->actingAs($manager, 'web')->postJson('/api/v1/insurance-policies', [
+        'insurance_type' => 'equipment',
+        'policy_number' => 'POL-HISTORY-001',
+    ])->assertCreated()
+        ->assertJsonPath('data.changes.0.action', 'created')
+        ->assertJsonPath('data.changes.0.actor.id', $manager->id);
+
+    $policyId = $created->json('data.id');
+    $this->actingAs($manager, 'web')->patchJson("/api/v1/insurance-policies/{$policyId}", [
+        'insurance_type' => 'equipment',
+        'policy_number' => 'POL-HISTORY-002',
+    ])->assertOk()->assertJsonPath('data.changes.0.action', 'updated');
+
+    $this->actingAs($manager, 'web')->getJson("/api/v1/insurance-policies/{$policyId}")
+        ->assertOk()
+        ->assertJsonPath('data.changes.0.action', 'updated')
+        ->assertJsonPath('data.changes.1.action', 'created');
+});
+
 it('deletes an insurance policy document and its private file', function () {
     Storage::fake('equipment-documents');
     $manager = User::factory()->create(['role' => UserRole::Manager]);
@@ -34,6 +56,11 @@ it('deletes an insurance policy document and its private file', function () {
 
     Storage::disk('equipment-documents')->assertMissing($path);
     $this->assertDatabaseMissing('insurance_policy_documents', ['id' => $document->id]);
+    $this->assertDatabaseHas('insurance_policy_changes', [
+        'insurance_policy_id' => $policy->id,
+        'actor_user_id' => $manager->id,
+        'action' => 'document_deleted',
+    ]);
 });
 
 it('does not delete an insurance document through another policy', function () {

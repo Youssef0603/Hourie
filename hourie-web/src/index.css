@@ -8,6 +8,8 @@
   --color-border: #dcdde1;
   --control-height: 2.25rem;
   --control-radius: 0.45rem;
+  --button-height: 2.35rem;
+  --button-radius: 0.5rem;
   font-family: 'Avenir Next', Avenir, 'Segoe UI', system-ui, sans-serif;
   color: var(--color-text-muted);
   background: var(--color-surface);
@@ -158,8 +160,8 @@ html[dir='rtl'] .user-menu {
 }
 
 .primary-button .loading-spinner {
-  border-color: var(--color-primary-soft);
-  border-top-color: var(--color-primary);
+  border-color: rgb(255 255 255 / 38%);
+  border-top-color: white;
 }
 
 .empty-state {
@@ -297,80 +299,191 @@ html[dir='rtl'] .user-menu {
   text-decoration: underline;
 }
 
-/* Text-only actions throughout the app. Structural controls keep their own
-   treatment: navigation on the red sidebar, selectable rows, and upload areas. */
-:is(.workspace-shell, .modal-backdrop, .login-page) button:not(
-  .language-switch,
-  .account-menu-button,
-  .site-card,
-  .catalog-list > button,
-  .maintenance-card-toggle,
-  .equipment-image-preview,
-  .invoice-preview-button,
-  .generator-photo-field > button,
-  .asset-category-card,
-  .detail-toolbar-button,
-  .detail-delete-button,
-  .detail-upload-button,
-  .maintenance-add,
-  .maintenance-technician-mode button,
-  .transfer-cancel-button,
-  .person-directory-card,
-  .workspace-sidebar button,
-  .searchable-select-button,
-  .site-detail-action,
-  .person-detail-action,
-  .person-delete-action
+/* Shared action hierarchy. Page-specific CSS controls placement only; visual
+   treatment stays consistent throughout forms, drawers, tables and modals. */
+html :is(.workspace-shell, .modal-backdrop, .login-page) :is(
+  button.primary-button:not(.close-action),
+  button.save-button,
+  button.transfer-submit-button,
+  button.site-detail-action.primary,
+  button.person-detail-action.primary
 ) {
-  border-color: transparent !important;
-  color: var(--color-primary) !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  transform: none !important;
-}
-
-:is(.workspace-shell, .modal-backdrop, .login-page) button:not(
-  .language-switch,
-  .account-menu-button,
-  .site-card,
-  .catalog-list > button,
-  .maintenance-card-toggle,
-  .equipment-image-preview,
-  .invoice-preview-button,
-  .generator-photo-field > button,
-  .asset-category-card,
-  .detail-toolbar-button,
-  .detail-delete-button,
-  .detail-upload-button,
-  .maintenance-add,
-  .maintenance-technician-mode button,
-  .transfer-cancel-button,
-  .person-directory-card,
-  .workspace-sidebar button,
-  .searchable-select-button,
-  .site-detail-action,
-  .person-detail-action,
-  .person-delete-action
-):is(:hover, :focus-visible):not(:disabled) {
-  color: var(--color-primary-dark) !important;
-  text-decoration: underline;
-}
-
-/* Saving is the one filled action; supporting controls stay text-only. */
-html :is(.workspace-shell, .modal-backdrop) button.save-button {
-  border-color: var(--color-primary) !important;
+  display: inline-flex;
+  min-height: var(--button-height);
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border: 1px solid var(--color-primary) !important;
+  border-radius: var(--button-radius) !important;
+  padding: 0.48rem 0.8rem !important;
   color: white !important;
   background: var(--color-primary) !important;
   box-shadow: none !important;
+  cursor: pointer;
+  font-size: 0.74rem;
+  font-weight: 700;
   text-decoration: none;
+  transition: border-color 150ms ease, background 150ms ease, color 150ms ease;
 }
 
-html :is(.workspace-shell, .modal-backdrop) button.save-button:hover:not(:disabled),
-html :is(.workspace-shell, .modal-backdrop) button.save-button:focus-visible:not(:disabled) {
+html :is(.workspace-shell, .modal-backdrop, .login-page) :is(
+  button.primary-button:not(.close-action),
+  button.save-button,
+  button.transfer-submit-button,
+  button.site-detail-action.primary,
+  button.person-detail-action.primary
+):is(:hover, :focus-visible):not(:disabled) {
   border-color: var(--color-primary-dark) !important;
   color: white !important;
   background: var(--color-primary-dark) !important;
   text-decoration: none;
+}
+
+html :is(.workspace-shell, .modal-backdrop, .login-page) :is(
+  button.secondary-button,
+  button.primary-button.close-action,
+  button.table-refresh-button,
+  button.advanced-filter-toggle,
+  button.detail-toolbar-button,
+  .detail-upload-button,
+  button.invoice-upload-button,
+  button.invoice-download-button,
+  button.maintenance-add,
+  button.import-excel-action:not(.primary-button),
+  button.site-detail-action:not(.primary),
+  button.person-detail-action:not(.primary),
+  button.transfer-cancel-button
+) {
+  display: inline-flex;
+  min-height: var(--button-height);
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border: 1px solid #d8dbe1 !important;
+  border-radius: var(--button-radius) !important;
+  padding: 0.45rem 0.7rem !important;
+  color: var(--color-text-strong) !important;
+  background: white !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  font-size: 0.72rem;
+  font-weight: 650;
+  text-decoration: none;
+  transition: border-color 150ms ease, background 150ms ease, color 150ms ease;
+}
+
+html :is(.workspace-shell, .modal-backdrop, .login-page) :is(
+  button.secondary-button,
+  button.primary-button.close-action,
+  button.table-refresh-button,
+  button.advanced-filter-toggle,
+  button.detail-toolbar-button,
+  .detail-upload-button,
+  button.invoice-upload-button,
+  button.invoice-download-button,
+  button.maintenance-add,
+  button.import-excel-action:not(.primary-button),
+  button.site-detail-action:not(.primary),
+  button.person-detail-action:not(.primary),
+  button.transfer-cancel-button
+):is(:hover, :focus-visible):not(:disabled) {
+  border-color: #bfc3cb !important;
+  color: var(--color-primary) !important;
+  background: #fafafb !important;
+  text-decoration: none;
+}
+
+html :is(.workspace-shell, .modal-backdrop) button.advanced-filter-toggle.active {
+  border-color: var(--color-primary) !important;
+  color: var(--color-primary) !important;
+  background: var(--color-primary-soft) !important;
+}
+
+html :is(.workspace-shell, .modal-backdrop) :is(
+  button.danger-button,
+  button.detail-delete-button,
+  button.invoice-delete-button,
+  button.person-delete-action,
+  button.equipment-image-delete
+) {
+  border: 1px solid #e1c8ce !important;
+  border-radius: var(--button-radius) !important;
+  color: #b4233f !important;
+  background: white !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+html :is(.workspace-shell, .modal-backdrop) :is(
+  button.danger-button,
+  button.detail-delete-button,
+  button.invoice-delete-button,
+  button.person-delete-action,
+  button.equipment-image-delete
+):is(:hover, :focus-visible):not(:disabled) {
+  border-color: #d8aab4 !important;
+  color: #9e1732 !important;
+  background: #fff6f8 !important;
+}
+
+html :is(.workspace-shell, .modal-backdrop) :is(
+  button.table-add-button,
+  button.filter-refresh-button,
+  button.detail-delete-button,
+  button.invoice-delete-button,
+  button.person-delete-action
+) {
+  width: var(--button-height);
+  min-width: var(--button-height);
+  padding: 0 !important;
+}
+
+html :is(.workspace-shell, .modal-backdrop) .detail-primary-actions :is(
+  button.detail-toolbar-button,
+  button.detail-delete-button
+) {
+  height: 2rem;
+  min-height: 2rem !important;
+}
+
+html :is(.workspace-shell, .modal-backdrop) .detail-primary-actions button.detail-delete-button,
+html :is(.workspace-shell, .modal-backdrop) .person-detail button.person-delete-action {
+  width: 2rem !important;
+  min-width: 2rem !important;
+  height: 2rem;
+  min-height: 2rem !important;
+  padding: 0 !important;
+}
+
+html :is(.workspace-shell, .modal-backdrop) .detail-content :is(
+  .detail-upload-button,
+  button.maintenance-add,
+  button.invoice-upload-button,
+  button.invoice-download-button,
+  button.insurance-policy-document
+) {
+  height: 2rem;
+  min-height: 2rem !important;
+  padding-block: 0.28rem !important;
+}
+
+html :is(.workspace-shell, .modal-backdrop) .detail-content button.invoice-delete-button {
+  width: 2rem !important;
+  min-width: 2rem !important;
+  height: 2rem;
+  min-height: 2rem !important;
+  padding: 0 !important;
+}
+
+html :is(.workspace-shell, .modal-backdrop, .login-page) button:focus-visible {
+  outline: 3px solid var(--color-primary-soft) !important;
+  outline-offset: 2px;
+}
+
+html :is(.workspace-shell, .modal-backdrop, .login-page) button:disabled {
+  cursor: not-allowed !important;
+  opacity: 0.55;
 }
 
 .save-button .loading-spinner {
@@ -381,20 +494,4 @@ html :is(.workspace-shell, .modal-backdrop) button.save-button:focus-visible:not
 html :is(.workspace-shell, .modal-backdrop) label:has(> input:required, > select:required) > span::after {
   content: ' *';
   color: var(--color-primary);
-}
-
-html :is(.workspace-shell, .modal-backdrop) button.import-excel-action,
-html :is(.workspace-shell, .modal-backdrop) button.table-refresh-button,
-html :is(.workspace-shell, .modal-backdrop) button.advanced-filter-toggle,
-html :is(.workspace-shell, .modal-backdrop) button.equipment-history-button,
-html :is(.workspace-shell, .modal-backdrop) .pagination button {
-  color: var(--color-text-strong) !important;
-}
-
-html :is(.workspace-shell, .modal-backdrop) button.import-excel-action:is(:hover, :focus-visible):not(:disabled),
-html :is(.workspace-shell, .modal-backdrop) button.table-refresh-button:is(:hover, :focus-visible):not(:disabled),
-html :is(.workspace-shell, .modal-backdrop) button.advanced-filter-toggle:is(:hover, :focus-visible):not(:disabled),
-html :is(.workspace-shell, .modal-backdrop) button.equipment-history-button:is(:hover, :focus-visible):not(:disabled),
-html :is(.workspace-shell, .modal-backdrop) .pagination button:is(:hover, :focus-visible):not(:disabled) {
-  color: var(--color-primary) !important;
 }

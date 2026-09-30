@@ -43,7 +43,7 @@ export function ImportGeneratorForm({ onImported, onClose }: ImportGeneratorForm
       <h3>{fr.equipment.importSuccess(result.summary.imported_rows)}</h3>
       {result.summary.warning_rows > 0 && <p>{fr.equipment.importWarnings(result.summary.warning_rows)}</p>}
       <small>{result.original_filename}</small>
-      <button className="primary-button compact-action" type="button" onClick={onClose}>{fr.common.close}</button>
+      <button className="secondary-button compact-action" type="button" onClick={onClose}>{fr.common.close}</button>
     </div>
   }
 

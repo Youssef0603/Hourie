@@ -21,6 +21,12 @@ class InsurancePolicyResource extends JsonResource
             'employees' => $this->whenLoaded('employees', fn () => $this->employees->map(fn ($employee) => ['id' => $employee->id, 'name' => $employee->name])),
             'equipment' => $this->whenLoaded('equipment', fn () => $this->equipment->map(fn ($equipment) => ['id' => $equipment->id, 'asset_code' => $equipment->asset_code, 'brand' => $equipment->brand, 'model' => $equipment->model])),
             'documents' => $this->whenLoaded('documents', fn () => $this->documents->map(fn ($document) => ['id' => $document->id, 'original_name' => $document->original_name, 'mime_type' => $document->mime_type, 'size_bytes' => $document->size_bytes, 'url' => "/api/v1/insurance-policies/{$this->id}/documents/{$document->id}/file"])),
+            'changes' => $this->whenLoaded('changes', fn () => $this->changes->map(fn ($change) => [
+                'id' => $change->id,
+                'action' => $change->action,
+                'actor' => $change->actor === null ? null : ['id' => $change->actor->id, 'name' => $change->actor->name],
+                'occurred_at' => $change->occurred_at?->toISOString(),
+            ])),
             'created_at' => $this->created_at?->toISOString(),
         ];
     }

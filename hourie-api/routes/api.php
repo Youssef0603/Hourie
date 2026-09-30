@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Api\V1\Auth\PasswordController;
+use App\Http\Controllers\Api\V1\BondController;
 use App\Http\Controllers\Api\V1\CatalogOptionController;
 use App\Http\Controllers\Api\V1\EmployeeController;
 use App\Http\Controllers\Api\V1\Equipment\AssetImportController;
@@ -61,6 +62,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', EnsureUserIsActive::class, Ensu
     Route::delete('equipment/{equipment}/maintenances/{maintenance}', [EquipmentMaintenanceController::class, 'destroy']);
     Route::apiResource('sites', SiteController::class)->only(['index', 'store', 'show', 'update', 'destroy']);
     Route::apiResource('employees', EmployeeController::class)->only(['index', 'store', 'show', 'update', 'destroy']);
+    Route::post('bonds/{bond}/documents', [BondController::class, 'storeDocuments']);
+    Route::get('bonds/{bond}/documents/{document}/file', [BondController::class, 'showDocument']);
+    Route::delete('bonds/{bond}/documents/{document}', [BondController::class, 'destroyDocument']);
+    Route::apiResource('bonds', BondController::class);
     Route::get('insurance-equipment-options', [InsurancePolicyController::class, 'equipmentOptions']);
     Route::post('insurance-policies/{insurancePolicy}/documents', [InsurancePolicyController::class, 'storeDocuments']);
     Route::post('insurance-policies/{insurancePolicy}/send-expiry-reminder', [InsurancePolicyController::class, 'sendExpiryReminder']);

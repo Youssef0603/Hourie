@@ -1,9 +1,10 @@
 type NavigationIconProps = {
-  name: 'generators' | 'sites' | 'people' | 'settings' | 'insurance'
+  name: 'generators' | 'sites' | 'people' | 'settings' | 'insurance' | 'bonds'
 }
 
 export function NavigationIcon({ name }: NavigationIconProps) {
   if (name === 'insurance') return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 20 6v5c0 5-3.4 8.5-8 10-4.6-1.5-8-5-8-10V6l8-3Z" /><path d="M8.5 12 11 14.5l4.5-5" /></svg>
+  if (name === 'bonds') return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h10l4 4v14H5Z" /><path d="M15 3v5h4M8 12h8M8 16h5" /><path d="m9 7 1.5 1.5L13 6" /></svg>
   if (name === 'generators') {
     return (
       <svg viewBox="0 0 24 24" aria-hidden="true">

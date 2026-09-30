@@ -42,7 +42,7 @@ export function ImportAssetInventoryForm({ onImported, onClose }: ImportAssetInv
       <h3>{fr.assets.importSuccess(result.summary.imported_rows)}</h3>
       {(result.summary.skipped_rows ?? 0) > 0 && <p>{fr.assets.importSkipped(result.summary.skipped_rows ?? 0)}</p>}
       <small>{result.original_filename}</small>
-      <button className="primary-button compact-action" type="button" onClick={onClose}>{fr.common.close}</button>
+      <button className="secondary-button compact-action" type="button" onClick={onClose}>{fr.common.close}</button>
     </div>
   }
 

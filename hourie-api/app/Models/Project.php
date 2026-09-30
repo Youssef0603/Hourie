@@ -35,6 +35,11 @@ class Project extends Model
         return $this->hasMany(ProjectChange::class)->latest('occurred_at')->latest('id');
     }
 
+    public function bonds(): HasMany
+    {
+        return $this->hasMany(Bond::class);
+    }
+
     protected function casts(): array
     {
         return [

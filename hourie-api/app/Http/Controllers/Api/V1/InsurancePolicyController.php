@@ -63,12 +63,12 @@ class InsurancePolicyController extends Controller
 
     public function show(InsurancePolicy $insurancePolicy): InsurancePolicyResource
     {
-        return new InsurancePolicyResource($insurancePolicy->load(['project:id,name', 'employees:id,name', 'equipment:id,asset_code,brand,model', 'documents']));
+        return new InsurancePolicyResource($insurancePolicy->load(['project:id,name', 'employees:id,name', 'equipment:id,asset_code,brand,model', 'documents', 'changes.actor:id,name']));
     }
 
     public function update(UpdateInsurancePolicyRequest $request, InsurancePolicy $insurancePolicy): InsurancePolicyResource
     {
-        $policy = $this->save($insurancePolicy, $request->validated());
+        $policy = $this->save($insurancePolicy, $request->validated(), $request->user()->id);
 
         return new InsurancePolicyResource($policy);
     }
@@ -98,7 +98,7 @@ class InsurancePolicyController extends Controller
         $documents = collect($request->file('documents', []))->map(function ($file) use ($insurancePolicy, $request, $disk): InsurancePolicyDocument {
             $path = $file->store("insurance/{$insurancePolicy->id}/documents", $disk);
 
-            return $insurancePolicy->documents()->create([
+            $document = $insurancePolicy->documents()->create([
                 'uploaded_by_user_id' => $request->user()->id,
                 'disk' => $disk,
                 'path' => $path,
@@ -106,6 +106,15 @@ class InsurancePolicyController extends Controller
                 'mime_type' => $file->getMimeType() ?? 'application/pdf',
                 'size_bytes' => $file->getSize(),
             ]);
+
+            $insurancePolicy->changes()->create([
+                'actor_user_id' => $request->user()->id,
+                'action' => 'document_added',
+                'new_values' => ['document_id' => $document->id, 'name' => $document->original_name],
+                'occurred_at' => now(),
+            ]);
+
+            return $document;
         });
 
         return response()->json(['data' => $documents->map(fn (InsurancePolicyDocument $document) => $this->documentData($insurancePolicy, $document))], 201);
@@ -127,6 +136,13 @@ class InsurancePolicyController extends Controller
         abort_unless($request->user()?->role->canManageSites(), 403);
         abort_unless($document->insurance_policy_id === $insurancePolicy->id, 404);
 
+        $insurancePolicy->changes()->create([
+            'actor_user_id' => $request->user()->id,
+            'action' => 'document_deleted',
+            'previous_values' => ['document_id' => $document->id, 'name' => $document->original_name],
+            'new_values' => [],
+            'occurred_at' => now(),
+        ]);
         Storage::disk($document->disk)->delete($document->path);
         $document->delete();
 
@@ -134,9 +150,11 @@ class InsurancePolicyController extends Controller
     }
 
     /** @param array<string, mixed> $data */
-    private function save(InsurancePolicy $policy, array $data, ?int $createdBy = null): InsurancePolicy
+    private function save(InsurancePolicy $policy, array $data, int $actorUserId): InsurancePolicy
     {
-        return DB::transaction(function () use ($policy, $data, $createdBy): InsurancePolicy {
+        return DB::transaction(function () use ($policy, $data, $actorUserId): InsurancePolicy {
+            $isCreating = ! $policy->exists;
+            $previousValues = $isCreating ? null : $this->auditValues($policy);
             $employeeIds = $data['employee_ids'] ?? null;
             $equipmentIds = $data['equipment_ids'] ?? null;
             $chassisNumbers = $data['chassis_numbers'] ?? null;
@@ -158,8 +176,8 @@ class InsurancePolicyController extends Controller
                 }
             }
             $data['total_amount'] = array_sum($financialValues);
-            if ($createdBy !== null) {
-                $data['created_by_user_id'] = $createdBy;
+            if ($isCreating) {
+                $data['created_by_user_id'] = $actorUserId;
             }
             $policy->fill($data)->save();
             if ($employeeIds !== null) {
@@ -175,7 +193,15 @@ class InsurancePolicyController extends Controller
                 $policy->equipment()->sync($equipmentIds);
             }
 
-            return $policy->fresh()->load(['project:id,name', 'employees:id,name', 'equipment:id,asset_code,brand,model', 'documents']);
+            $policy->changes()->create([
+                'actor_user_id' => $actorUserId,
+                'action' => $isCreating ? 'created' : 'updated',
+                'previous_values' => $previousValues,
+                'new_values' => $this->auditValues($policy),
+                'occurred_at' => now(),
+            ]);
+
+            return $policy->fresh()->load(['project:id,name', 'employees:id,name', 'equipment:id,asset_code,brand,model', 'documents', 'changes.actor:id,name']);
         });
     }
 
@@ -207,5 +233,19 @@ class InsurancePolicyController extends Controller
     private function normalizeChassisNumber(string $value): string
     {
         return strtoupper((string) preg_replace('/[^A-Z0-9]/i', '', $value));
+    }
+
+    /** @return array<string, mixed> */
+    private function auditValues(InsurancePolicy $policy): array
+    {
+        return [
+            ...$policy->only([
+                'insurance_type', 'policy_number', 'starts_on', 'ends_on', 'net_premium',
+                'accessories_amount', 'tax_amount', 'total_amount', 'insured_situation',
+                'project_id', 'source', 'notes',
+            ]),
+            'employee_ids' => $policy->employees()->orderBy('employees.id')->pluck('employees.id')->all(),
+            'equipment_ids' => $policy->equipment()->orderBy('equipment.id')->pluck('equipment.id')->all(),
+        ];
     }
 }
