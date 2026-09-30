@@ -142,6 +142,10 @@ class InsurancePolicyController extends Controller
             $chassisNumbers = $data['chassis_numbers'] ?? null;
             unset($data['employee_ids'], $data['equipment_ids'], $data['chassis_numbers']);
 
+            if (($data['insurance_type'] ?? $policy->insurance_type) !== 'trc_rc') {
+                $data['project_id'] = null;
+            }
+
             // A policy total is never typed manually: it is the sum shown on the insurer document.
             $financialFields = ['net_premium', 'accessories_amount', 'tax_amount'];
             $financialValues = [];
