@@ -63,6 +63,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', EnsureUserIsActive::class, Ensu
     Route::apiResource('sites', SiteController::class)->only(['index', 'store', 'show', 'update', 'destroy']);
     Route::apiResource('employees', EmployeeController::class)->only(['index', 'store', 'show', 'update', 'destroy']);
     Route::post('bonds/{bond}/documents', [BondController::class, 'storeDocuments']);
+    Route::post('bonds/{bond}/send-expiry-reminder', [BondController::class, 'sendExpiryReminder']);
     Route::get('bonds/{bond}/documents/{document}/file', [BondController::class, 'showDocument']);
     Route::delete('bonds/{bond}/documents/{document}', [BondController::class, 'destroyDocument']);
     Route::apiResource('bonds', BondController::class);

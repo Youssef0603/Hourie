@@ -10,3 +10,4 @@ Artisan::command('inspire', function () {
 
 Schedule::command('equipment:send-inspection-reminders')->dailyAt('08:00');
 Schedule::command('insurance:send-expiry-reminders')->dailyAt('08:05');
+Schedule::command('bonds:send-expiry-reminders')->dailyAt('08:10');

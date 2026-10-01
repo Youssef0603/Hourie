@@ -17,11 +17,12 @@ import { EmptyState } from '../../../shared/components/EmptyState'
 type SitesPageProps = {
   canAdd: boolean
   onOpenSite?: (site: Site) => void
+  onOpenInsurance?: (site: Site) => void
   catalogs?: CatalogOption[]
   employees?: NamedReference[]
 }
 
-export function SitesPage({ canAdd, onOpenSite, catalogs, employees = [] }: SitesPageProps) {
+export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, catalogs, employees = [] }: SitesPageProps) {
   const [sites, setSites] = useState<Site[]>([])
   const [showForm, setShowForm] = useState(false)
   const [name, setName] = useState('')
@@ -125,8 +126,8 @@ export function SitesPage({ canAdd, onOpenSite, catalogs, employees = [] }: Site
               <label><span>{fr.directory.startDate}</span><input type="date" value={startDate} onChange={(event) => setStartDate(event.target.value)} /></label>
               <label><span>{fr.directory.expectedEndDate}</span><input type="date" min={startDate || undefined} value={expectedEndDate} onChange={(event) => setExpectedEndDate(event.target.value)} /></label>
             </div></section>
-            <section className="asset-form-section"><div className="asset-form-section-heading"><div><strong>{fr.directory.initialLocations}</strong></div></div><div className="maintenance-form-grid site-form-grid">
-              <div className="site-location-fields field-wide"><div className="site-location-fields-heading"><span>{fr.directory.initialLocations}</span><button type="button" onClick={() => setLocations((current) => [...current, ''])}><ActionIcon name="add" />{fr.directory.addLocation}</button></div><div className="site-location-list">{locations.map((location, index) => <div className="site-location-input" key={index}><input required aria-label={`${fr.directory.locationName} ${index + 1}`} placeholder={fr.directory.locationName} value={location} onChange={(event) => updateLocation(index, event.target.value)} /><button type="button" onClick={() => removeLocation(index)} aria-label={fr.common.delete}><ActionIcon name="close" /></button></div>)}</div></div>
+            <section className="asset-form-section"><div className="asset-form-section-heading site-locations-section-heading"><div><strong>{fr.directory.initialLocations}</strong></div><button className="site-add-location-button" type="button" onClick={() => setLocations((current) => [...current, ''])}><ActionIcon name="add" />{fr.directory.addLocation}</button></div><div className="maintenance-form-grid site-form-grid">
+              <div className="site-location-list field-wide">{locations.map((location, index) => <div className="site-location-input" key={index}><input required aria-label={`${fr.directory.locationName} ${index + 1}`} placeholder={fr.directory.locationName} value={location} onChange={(event) => updateLocation(index, event.target.value)} /><button type="button" onClick={() => removeLocation(index)} aria-label={fr.common.delete}><ActionIcon name="close" /></button></div>)}</div>
               <label className="field-wide"><span>{fr.directory.siteNotes}</span><textarea rows={3} value={notes} onChange={(event) => setNotes(event.target.value)} /></label>
             </div></section></div>
             <div className="maintenance-form-actions"><button className="primary-button save-button" type="submit">{fr.common.save}</button></div>
@@ -159,7 +160,8 @@ export function SitesPage({ canAdd, onOpenSite, catalogs, employees = [] }: Site
             {selectedSite.notes && <section className="site-details-notes"><h4>{fr.directory.siteNotes}</h4><p>{selectedSite.notes}</p></section>}
             <div className="site-details-actions">
               {canAdd && <button className="site-detail-action primary" type="button" onClick={() => setIsEditingSite(true)}><ActionIcon name="edit" />{fr.directory.editThisSite}</button>}
-              <button className="site-detail-action" type="button" onClick={() => onOpenSite?.(selectedSite)}>{fr.directory.viewAssets}</button>
+              <button className="site-detail-action" type="button" onClick={() => onOpenSite?.(selectedSite)}><NavigationIcon name="generators" />{fr.directory.viewAssets}</button>
+              <button className="site-detail-action" type="button" onClick={() => onOpenInsurance?.(selectedSite)}><ActionIcon name="invoice" />{fr.directory.viewInsurance}</button>
             </div>
           </div>
         </Modal>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Bonds;
 
+use App\Models\Bond;
 use App\Models\Location;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -19,10 +20,9 @@ class StoreBondRequest extends FormRequest
         return [
             'project_id' => ['required', 'integer', 'exists:projects,id'],
             'location_id' => ['required', 'integer', Rule::exists('locations', 'id')->where(fn ($query) => $query->where('is_active', true)->whereNotNull('parent_id'))],
+            'bond_type' => ['required', 'string', Rule::in(Bond::TYPES)],
             'issuer' => ['nullable', 'string', 'max:255'],
-            'advance_payment_amount' => ['nullable', 'numeric', 'min:0'],
-            'performance_amount' => ['nullable', 'numeric', 'min:0'],
-            'retention_amount' => ['nullable', 'numeric', 'min:0'],
+            'amount' => ['required', 'numeric', 'min:0'],
             'currency' => ['required', 'string', Rule::in(['XOF', 'EUR', 'USD'])],
             'issued_on' => ['nullable', 'date'],
             'expires_on' => ['nullable', 'date', 'after_or_equal:issued_on'],

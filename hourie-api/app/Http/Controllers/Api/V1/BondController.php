@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Actions\Bonds\SendBondExpiryReminders;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Bonds\StoreBondDocumentsRequest;
 use App\Http\Requests\Bonds\StoreBondRequest;
@@ -27,7 +28,7 @@ class BondController extends Controller
     public function store(StoreBondRequest $request): JsonResponse
     {
         $bond = DB::transaction(function () use ($request): Bond {
-            $bond = Bond::query()->create([...$this->withTotal($request->validated()), 'created_by_user_id' => $request->user()->id]);
+            $bond = Bond::query()->create([...$request->validated(), 'created_by_user_id' => $request->user()->id]);
             $bond->changes()->create([
                 'actor_user_id' => $request->user()->id,
                 'action' => 'created',
@@ -50,7 +51,7 @@ class BondController extends Controller
     {
         DB::transaction(function () use ($request, $bond): void {
             $previousValues = $this->auditValues($bond);
-            $bond->update($this->withTotal($request->validated()));
+            $bond->update($request->validated());
             $bond->changes()->create([
                 'actor_user_id' => $request->user()->id,
                 'action' => 'updated',
@@ -63,14 +64,29 @@ class BondController extends Controller
         return new BondResource($bond->fresh()->load(['project:id,name', 'location:id,project_id,name', 'documents', 'changes.actor:id,name']));
     }
 
+    public function sendExpiryReminder(Request $request, Bond $bond, SendBondExpiryReminders $reminders): JsonResponse
+    {
+        abort_unless($request->user()?->role->canManageSites(), 403);
+
+        return response()->json([
+            'data' => [
+                'sent' => $reminders->sendForBond($bond, withinThirtyDays: true),
+            ],
+        ]);
+    }
+
     public function destroy(Request $request, Bond $bond): Response
     {
         abort_unless($request->user()?->role->canManageSites(), 403);
         $bond->load('documents');
-        foreach ($bond->documents as $document) {
-            Storage::disk($document->disk)->delete($document->path);
-        }
+        $documents = $bond->documents;
         $bond->delete();
+        foreach ($documents as $document) {
+            if (! $document->bonds()->exists()) {
+                Storage::disk($document->disk)->delete($document->path);
+                $document->delete();
+            }
+        }
 
         return response()->noContent();
     }
@@ -81,7 +97,7 @@ class BondController extends Controller
         $documents = collect($request->file('documents', []))->map(function ($file) use ($bond, $request, $disk): BondDocument {
             $path = $file->store("bonds/{$bond->id}/documents", $disk);
 
-            $document = $bond->documents()->create([
+            $document = BondDocument::query()->create([
                 'uploaded_by_user_id' => $request->user()->id,
                 'disk' => $disk,
                 'path' => $path,
@@ -89,6 +105,7 @@ class BondController extends Controller
                 'mime_type' => $file->getMimeType() ?? 'application/pdf',
                 'size_bytes' => $file->getSize(),
             ]);
+            $bond->documents()->attach($document);
 
             $bond->changes()->create([
                 'actor_user_id' => $request->user()->id,
@@ -105,7 +122,7 @@ class BondController extends Controller
 
     public function showDocument(Bond $bond, BondDocument $document): StreamedResponse
     {
-        abort_unless($document->bond_id === $bond->id, 404);
+        abort_unless($bond->documents()->whereKey($document->id)->exists(), 404);
 
         return Storage::disk($document->disk)->response($document->path, $document->original_name, [
             'Content-Type' => $document->mime_type,
@@ -117,7 +134,7 @@ class BondController extends Controller
     public function destroyDocument(Request $request, Bond $bond, BondDocument $document): Response
     {
         abort_unless($request->user()?->role->canManageSites(), 403);
-        abort_unless($document->bond_id === $bond->id, 404);
+        abort_unless($bond->documents()->whereKey($document->id)->exists(), 404);
         $bond->changes()->create([
             'actor_user_id' => $request->user()->id,
             'action' => 'document_deleted',
@@ -125,8 +142,11 @@ class BondController extends Controller
             'new_values' => [],
             'occurred_at' => now(),
         ]);
-        Storage::disk($document->disk)->delete($document->path);
-        $document->delete();
+        $bond->documents()->detach($document);
+        if (! $document->bonds()->exists()) {
+            Storage::disk($document->disk)->delete($document->path);
+            $document->delete();
+        }
 
         return response()->noContent();
     }
@@ -142,23 +162,12 @@ class BondController extends Controller
         ];
     }
 
-    /** @param array<string, mixed> $data @return array<string, mixed> */
-    private function withTotal(array $data): array
-    {
-        $data['advance_payment_amount'] = (float) ($data['advance_payment_amount'] ?? 0);
-        $data['performance_amount'] = (float) ($data['performance_amount'] ?? 0);
-        $data['retention_amount'] = (float) ($data['retention_amount'] ?? 0);
-        $data['amount'] = $data['advance_payment_amount'] + $data['performance_amount'] + $data['retention_amount'];
-
-        return $data;
-    }
-
     /** @return array<string, mixed> */
     private function auditValues(Bond $bond): array
     {
         return $bond->only([
-            'project_id', 'location_id', 'issuer', 'advance_payment_amount', 'performance_amount',
-            'retention_amount', 'amount', 'currency', 'issued_on', 'expires_on', 'notes',
+            'project_id', 'location_id', 'bond_type', 'issuer', 'amount', 'currency',
+            'issued_on', 'expires_on', 'notes',
         ]);
     }
 }

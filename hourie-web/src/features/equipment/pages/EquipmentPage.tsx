@@ -423,6 +423,11 @@ export function EquipmentPage({
     });
   }
 
+  function openSiteInsurance(site: Site) {
+    setSiteContext(site);
+    navigate(`/sites/${site.id}/insurance`);
+  }
+
   function closeSiteInventory() {
     setShowHistory(null);
     setShowEditSite(false);
@@ -770,6 +775,8 @@ export function EquipmentPage({
               />
             )}
           </main>
+        ) : isSiteView && route.section === "sites" && route.siteView === "insurance" ? (
+          <InsurancePage key={`site-${siteContext.id}`} initialSiteId={siteContext.id} />
         ) : isSiteView ? (
           <AssetInventoryView
             category="all"
@@ -857,7 +864,7 @@ export function EquipmentPage({
             }}
           />
         ) : activeSection === "insurance" ? (
-          <InsurancePage />
+          <InsurancePage key={route.section === "insurance" ? route.insuranceProjectId ?? "all" : "all"} initialSiteId={route.section === "insurance" ? route.insuranceProjectId : null} />
         ) : activeSection === "bonds" ? (
           <BondsPage />
         ) : activeSection === "sites" ? (
@@ -866,6 +873,7 @@ export function EquipmentPage({
             catalogs={options?.catalogs}
             employees={options?.employees}
             onOpenSite={openSiteInventory}
+            onOpenInsurance={openSiteInsurance}
           />
         ) : activeSection === "catalogs" ? (
           <SettingsPage onChanged={refreshFilterOptions} />

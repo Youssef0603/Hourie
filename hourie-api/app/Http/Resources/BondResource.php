@@ -11,10 +11,8 @@ class BondResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'bond_type' => $this->bond_type,
             'issuer' => $this->issuer,
-            'advance_payment_amount' => $this->advance_payment_amount,
-            'performance_amount' => $this->performance_amount,
-            'retention_amount' => $this->retention_amount,
             'amount' => $this->amount,
             'currency' => $this->currency,
             'issued_on' => $this->issued_on?->format('Y-m-d'),

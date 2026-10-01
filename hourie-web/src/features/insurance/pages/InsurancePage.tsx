@@ -5,7 +5,7 @@ import { DocumentUploadDropzone } from "../../../shared/components/DocumentUploa
 import { SearchableSelect } from "../../../shared/components/SearchableSelect";
 import { EmptyState } from "../../../shared/components/EmptyState";
 import { LoadingSpinner } from "../../../shared/components/LoadingSpinner";
-import { RecordHistoryModal, type RecordHistoryEntry } from "../../../shared/components/RecordHistoryModal";
+import { RecordHistory, type RecordHistoryEntry } from "../../../shared/components/RecordHistory";
 
 type Kind = "trc_rc" | "individual_accident" | "group_health" | "equipment";
 type PolicyDocument = { id: number; original_name: string; mime_type: string; size_bytes: number; url: string };
@@ -46,14 +46,16 @@ const statusLabel = (status: ReturnType<typeof policyStatus>) => status === "act
 function coveredLabel(policy: Policy) {
   if (policy.insurance_type === "equipment") return policy.equipment?.length ? `${policy.equipment.length} actif${policy.equipment.length > 1 ? "s" : ""}` : "Équipements à compléter";
   if (policy.insurance_type === "individual_accident" || policy.insurance_type === "group_health") return policy.employees?.length ? `${policy.employees.length} employé${policy.employees.length > 1 ? "s" : ""}` : "Employés à compléter";
+  if (policy.insurance_type === "trc_rc") return policy.project?.name || policy.insured_situation || "Site / projet à compléter";
   return policy.insured_situation || "Site / projet à compléter";
 }
 
-export function InsurancePage() {
+export function InsurancePage({ initialSiteId = null }: { initialSiteId?: number | null }) {
   const [policies, setPolicies] = useState<Policy[]>([]);
-  const [activeType, setActiveType] = useState<Kind | "all">("all");
+  const [activeType, setActiveType] = useState<Kind | "all">(initialSiteId ? "trc_rc" : "all");
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<"all" | "active" | "soon" | "expired">("all");
+  const [projectId, setProjectId] = useState(initialSiteId ? String(initialSiteId) : "");
   const [showFilters, setShowFilters] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [editingPolicy, setEditingPolicy] = useState<Policy | null>(null);
@@ -77,27 +79,29 @@ export function InsurancePage() {
     apiRequest<{ data: Array<{ id: number; name: string; birth_date: string | null }> }>("/api/v1/employees").then((value) => setEmployeeOptions(value.data)).catch(() => setEmployeeOptions([]));
   }, []);
 
-  const filteredPolicies = useMemo(() => policies.filter((policy) => {
+  const filterMatchedPolicies = useMemo(() => policies.filter((policy) => {
     const term = search.trim().toLowerCase();
-    const searchable = [policy.policy_number, policy.source, policy.insured_situation, ...(policy.employees?.map((employee) => employee.name) ?? []), ...(policy.equipment?.map((equipment) => `${equipment.brand ?? ""} ${equipment.model ?? ""} ${equipment.asset_code}`) ?? [])].join(" ").toLowerCase();
-    return (activeType === "all" || policy.insurance_type === activeType) && (status === "all" || policyStatus(policy) === status) && (!term || searchable.includes(term));
-  }), [activeType, policies, search, status]);
+    const searchable = [policy.policy_number, policy.source, policy.project?.name, policy.insured_situation, ...(policy.employees?.map((employee) => employee.name) ?? []), ...(policy.equipment?.map((equipment) => `${equipment.brand ?? ""} ${equipment.model ?? ""} ${equipment.asset_code}`) ?? [])].join(" ").toLowerCase();
+    return (!projectId || policy.project?.id === Number(projectId)) && (status === "all" || policyStatus(policy) === status) && (!term || searchable.includes(term));
+  }), [policies, projectId, search, status]);
+  const filteredPolicies = useMemo(() => filterMatchedPolicies.filter((policy) => activeType === "all" || policy.insurance_type === activeType), [activeType, filterMatchedPolicies]);
   const selected = policies.find((policy) => policy.id === selectedId) ?? null;
+  const filteredSiteName = sites.find((site) => String(site.id) === projectId)?.name;
 
   return <main className="equipment-page asset-page insurance-workspace">
-    <section className="insurance-heading"><div><p className="section-label">Gestion</p><h1>Assurances</h1><p>Suivez les polices, les échéances et les éléments couverts.</p></div></section>
+    <section className="insurance-heading"><div><p className="section-label">Gestion</p><h1>Assurances</h1><p>{filteredSiteName ? `Polices TRC / RC liées au site ${filteredSiteName}.` : "Suivez les polices, les échéances et les éléments couverts."}</p></div></section>
     <section className="asset-category-section insurance-category-section">
       <h2>Catégories d’assurances</h2>
       <nav className="asset-categories" aria-label="Catégories d’assurance">
-        <button className={`asset-category-card${activeType === "all" ? " active" : ""}`} type="button" onClick={() => setActiveType("all")}><span>Toutes les polices</span><strong>{policies.length}</strong></button>
-        {types.map((type) => <button key={type.code} className={`asset-category-card${activeType === type.code ? " active" : ""}`} type="button" onClick={() => setActiveType(type.code)}><span>{type.label}</span><strong>{policies.filter((policy) => policy.insurance_type === type.code).length}</strong></button>)}
+        <button className={`asset-category-card${activeType === "all" ? " active" : ""}`} type="button" onClick={() => setActiveType("all")}><span>Toutes les polices</span><strong>{filterMatchedPolicies.length}</strong></button>
+        {types.map((type) => <button key={type.code} className={`asset-category-card${activeType === type.code ? " active" : ""}`} type="button" onClick={() => { setActiveType(type.code); if (type.code !== "trc_rc") setProjectId(""); }}><span>{type.label}</span><strong>{filterMatchedPolicies.filter((policy) => policy.insurance_type === type.code).length}</strong></button>)}
       </nav>
     </section>
     <section className="insurance-list-area inventory-panel">
           <div className="filter-bar">
             <div className="search-field"><label htmlFor="insurance-search">Rechercher</label><input id="insurance-search" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="N° de police, assureur, projet ou équipement" /></div>
             <div className="filter-toolbar-actions">
-              <button className={`advanced-filter-toggle${showFilters ? " active" : ""}`} type="button" onClick={() => setShowFilters((value) => !value)}><ActionIcon name="filter" /><span>Filtres</span>{status !== "all" && <strong>1</strong>}</button>
+              <button className={`advanced-filter-toggle${showFilters ? " active" : ""}`} type="button" onClick={() => setShowFilters((value) => !value)}><ActionIcon name="filter" /><span>Filtres</span>{(status !== "all" || projectId) && <strong>{Number(status !== "all") + Number(Boolean(projectId))}</strong>}</button>
               <button className="table-refresh-button table-add-button" type="button" aria-label="Ajouter une police" title="Ajouter une police" onClick={() => setShowAdd(true)}><ActionIcon name="add" /></button>
               <button className="table-refresh-button filter-refresh-button" type="button" aria-label="Actualiser" title="Actualiser" onClick={refreshPolicies}><ActionIcon name="refresh" /></button>
             </div>
@@ -107,10 +111,10 @@ export function InsurancePage() {
           </tbody></table></div>
           {!loading && <nav className="pagination insurance-pagination"><span>{filteredPolicies.length} police{filteredPolicies.length !== 1 ? "s" : ""} affichée{filteredPolicies.length !== 1 ? "s" : "e"}</span><div><button type="button" disabled>Précédent</button><span>1</span><button type="button" disabled>Suivant</button></div></nav>}
     </section>
-    {showFilters && <InsuranceFilterPanel status={status} onStatusChange={setStatus} onClose={() => setShowFilters(false)} onClear={() => setStatus("all")} />}
+    {showFilters && <InsuranceFilterPanel status={status} projectId={projectId} sites={sites} onStatusChange={setStatus} onProjectChange={(value) => { setProjectId(value); if (value) setActiveType("trc_rc"); }} onClose={() => setShowFilters(false)} onClear={() => { setStatus("all"); setProjectId(""); }} />}
     {showAdd && <InsuranceAddPanel defaultType={activeType === "all" ? "trc_rc" : activeType} sites={sites} equipmentOptions={equipmentOptions} employeeOptions={employeeOptions} onClose={() => setShowAdd(false)} onSaved={(policy) => { setPolicies((current) => [policy, ...current]); setSelectedId(policy.id); setShowAdd(false); }} />}
     {editingPolicy && <InsuranceAddPanel policy={editingPolicy} defaultType={editingPolicy.insurance_type} sites={sites} equipmentOptions={equipmentOptions} employeeOptions={employeeOptions} onClose={() => setEditingPolicy(null)} onSaved={(policy) => { setPolicies((current) => current.map((item) => item.id === policy.id ? policy : item)); setSelectedId(policy.id); setEditingPolicy(null); }} />}
-    {selected && <InsuranceDetailPanel policy={selected} onClose={() => setSelectedId(null)} onEdit={() => { setSelectedId(null); setEditingPolicy(selected); }} onDocumentsChanged={(documents) => setPolicies((current) => current.map((item) => item.id === selected.id ? { ...item, documents } : item))} onDeleted={() => { setPolicies((current) => current.filter((item) => item.id !== selected.id)); setSelectedId(null); }} />}
+    {selected && <InsuranceDetailPanel key={selected.id} policy={selected} onClose={() => setSelectedId(null)} onEdit={() => { setSelectedId(null); setEditingPolicy(selected); }} onDocumentsChanged={(documents) => setPolicies((current) => current.map((item) => item.id === selected.id ? { ...item, documents } : item))} onDeleted={() => { setPolicies((current) => current.filter((item) => item.id !== selected.id)); setSelectedId(null); }} />}
   </main>;
 }
 
@@ -218,15 +222,13 @@ function equipmentOptionLabel(option: InsuranceEquipmentOption) {
   return `${option.name} — Châssis ${option.chassis_number || "à renseigner"}`;
 }
 
-function InsuranceFilterPanel({ status, onStatusChange, onClose, onClear }: { status: "all" | "active" | "soon" | "expired"; onStatusChange: (value: "all" | "active" | "soon" | "expired") => void; onClose: () => void; onClear: () => void }) {
+function InsuranceFilterPanel({ status, projectId, sites, onStatusChange, onProjectChange, onClose, onClear }: { status: "all" | "active" | "soon" | "expired"; projectId: string; sites: Array<{ id: number; name: string }>; onStatusChange: (value: "all" | "active" | "soon" | "expired") => void; onProjectChange: (value: string) => void; onClose: () => void; onClear: () => void }) {
   return <div className="detail-backdrop" onMouseDown={onClose}>
     <aside className="detail-panel insurance-filter-drawer" role="dialog" aria-modal="true" aria-label="Filtres" onMouseDown={(event) => event.stopPropagation()}>
       <header className="detail-header"><div><p className="section-label">Assurances</p><h2>Filtres</h2><p>Affinez la liste des polices.</p></div><button type="button" aria-label="Fermer" onClick={onClose}><ActionIcon name="close" /></button></header>
       <div className="insurance-filter-content">
-        <label>Assureur<select><option>Tous les assureurs</option></select></label>
-        <label>Statut<select value={status} onChange={(event) => onStatusChange(event.target.value as typeof status)}><option value="all">Tous les statuts</option><option value="active">Active</option><option value="soon">Expire bientôt</option><option value="expired">Expirée</option></select></label>
-        <label>Date d’expiration<select><option>Toutes les dates</option><option>Dans les 30 prochains jours</option><option>Ce mois-ci</option></select></label>
-        <label>Site / projet<select><option>Tous les sites et projets</option></select></label>
+        <label>Statut<SearchableSelect ariaLabel="Statut de la police" value={status} onChange={(value) => onStatusChange(value as typeof status)} placeholder="Tous les statuts" includeEmpty={false} options={[{ value: "all", label: "Tous les statuts" }, { value: "active", label: "Active" }, { value: "soon", label: "Expire bientôt" }, { value: "expired", label: "Expirée" }]} /></label>
+        <label>Site / projet<SearchableSelect ariaLabel="Site ou projet assuré" value={projectId} onChange={onProjectChange} placeholder="Tous les sites et projets" options={sites.map((site) => ({ value: String(site.id), label: site.name }))} /></label>
       </div>
       <footer className="insurance-filter-actions"><button type="button" onClick={onClear}>Effacer les filtres</button><button className="save-button" type="button" onClick={onClose}>Afficher les résultats</button></footer>
     </aside>
@@ -236,13 +238,11 @@ function InsuranceFilterPanel({ status, onStatusChange, onClose, onClear }: { st
 function InsuranceDetailPanel({ policy, onClose, onEdit, onDocumentsChanged, onDeleted }: { policy: Policy; onClose: () => void; onEdit: () => void; onDocumentsChanged: (documents: PolicyDocument[]) => void; onDeleted: () => void }) {
   const state = policyStatus(policy);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
   const [history, setHistory] = useState<RecordHistoryEntry[]>(policy.changes ?? []);
-  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(true);
   const [historyError, setHistoryError] = useState("");
 
-  async function openHistory() {
-    setShowHistory(true);
+  async function refreshHistory() {
     setHistoryLoading(true);
     setHistoryError("");
     try {
@@ -255,13 +255,32 @@ function InsuranceDetailPanel({ policy, onClose, onEdit, onDocumentsChanged, onD
     }
   }
 
+  useEffect(() => {
+    let active = true;
+    apiRequest<{ data: Policy }>(`/api/v1/insurance-policies/${policy.id}`)
+      .then((response) => { if (active) setHistory(response.data.changes ?? []); })
+      .catch(() => { if (active) setHistoryError("Impossible de charger l’historique de cette police."); })
+      .finally(() => { if (active) setHistoryLoading(false); });
+
+    return () => { active = false; };
+  }, [policy.id]);
+
+  function openHistory() {
+    const section = document.getElementById(`insurance-history-${policy.id}`) as HTMLDetailsElement | null;
+    if (section) {
+      section.open = true;
+      section.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+    if (!historyLoading) void refreshHistory();
+  }
+
   async function remove() {
     if (!window.confirm(`Supprimer la police ${policy.policy_number} ?`)) return;
     setIsDeleting(true);
     try { await apiRequest(`/api/v1/insurance-policies/${policy.id}`, { method: "DELETE" }); onDeleted(); } finally { setIsDeleting(false); }
   }
 
-  return <><div className="detail-backdrop" onMouseDown={onClose}>
+  return <div className="detail-backdrop" onMouseDown={onClose}>
     <aside className="detail-panel insurance-side-panel" role="dialog" aria-modal="true" aria-label="Détail de la police" onMouseDown={(event) => event.stopPropagation()}>
       <header className="detail-header"><div><p className="section-label">{typeLabel(policy.insurance_type)}</p><h2>{policy.policy_number}</h2><p>{policy.source || "Assureur à compléter"}</p></div><button type="button" aria-label="Fermer" onClick={onClose}><ActionIcon name="close" /></button></header>
       <div className="detail-content insurance-side-content">
@@ -272,9 +291,10 @@ function InsuranceDetailPanel({ policy, onClose, onEdit, onDocumentsChanged, onD
         <section><h3><ActionIcon name="invoice" />Informations financières</h3><dl><div><dt>Prime nette</dt><dd>{formatMoney(policy.net_premium)}</dd></div><div><dt>ACC</dt><dd>{formatMoney(policy.accessories_amount ?? "0")}</dd></div><div><dt>Taxe</dt><dd>{formatMoney(policy.tax_amount)}</dd></div><div><dt>Prime TTC</dt><dd>{formatMoney(policy.total_amount)}</dd></div></dl></section>
         <InsuranceDocuments policy={policy} onChanged={onDocumentsChanged} />
         <section><h3><ActionIcon name="note" />Observations</h3><p className="observations">{policy.notes || "Aucune observation."}</p></section>
+        <details id={`insurance-history-${policy.id}`} className="detail-section"><summary><h3><ActionIcon name="history" />Historique</h3><ActionIcon name="expand" /></summary><div className="detail-section-body"><RecordHistory entries={history} loading={historyLoading} error={historyError} actionLabels={{ created: "Police créée", updated: "Police modifiée", document_added: "Document ajouté", document_deleted: "Document supprimé" }} emptyDescription="Les modifications de cette police apparaîtront ici." /></div></details>
       </div>
     </aside>
-  </div>{showHistory && <RecordHistoryModal title="Historique de la police" entries={history} loading={historyLoading} error={historyError} actionLabels={{ created: "Police créée", updated: "Police modifiée", document_added: "Document ajouté", document_deleted: "Document supprimé" }} emptyDescription="Les modifications de cette police apparaîtront ici." onClose={() => setShowHistory(false)} />}</>;
+  </div>;
 }
 
 function InsuranceDocuments({ policy, onChanged }: { policy: Policy; onChanged: (documents: PolicyDocument[]) => void }) {
