@@ -154,7 +154,7 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, catalogs, emplo
             </dl>
             <section className="site-details-locations">
               <h4>{fr.directory.locations} ({selectedSite.locations.filter((location) => location.parent_id !== null).length})</h4>
-              <div>{selectedSite.locations.filter((location) => location.parent_id !== null).map((location) => <span key={location.id}><ActionIcon name="location" />{location.name}</span>)}</div>
+              <div className="site-details-location-list">{selectedSite.locations.filter((location) => location.parent_id !== null).map((location) => <span key={location.id}><ActionIcon name="location" />{location.name}</span>)}</div>
               {selectedSite.locations.every((location) => location.parent_id === null) && <EmptyState compact icon="location" title={fr.directory.noLocations} />}
             </section>
             {selectedSite.notes && <section className="site-details-notes"><h4>{fr.directory.siteNotes}</h4><p>{selectedSite.notes}</p></section>}
@@ -177,26 +177,23 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, catalogs, emplo
         </Modal>
       )}
       <div className="directory-grid">
-        {sites.map((site) => {
-          const physicalLocations = site.locations.filter((location) => location.parent_id !== null)
-
-          return <button className="directory-card site-card" type="button" key={site.id} onClick={() => openSiteDetails(site)}>
+        {sites.map((site) => (
+          <button className="directory-card site-card" type="button" key={site.id} onClick={() => openSiteDetails(site)}>
             <header className="site-card-header">
-              <div className="site-card-title"><span className="site-card-icon"><NavigationIcon name="sites" /></span><h2>{site.name}</h2></div>
               <span className={`project-status project-status-${site.status}`} style={catalogBadgeStyle(catalogs, 'project_status', site.status)}>{catalogLabel(catalogs, 'project_status', site.status)}</span>
-            </header>
-            <p className={`site-card-address${site.address ? '' : ' empty'}`} aria-hidden={!site.address}>{site.address || '\u00a0'}</p>
-            <p className="site-card-responsible">{fr.directory.siteResponsible}: <strong>{site.responsible?.name ?? fr.common.notAssigned}</strong></p>
-            <div className="site-card-metrics">
-              <div><span className="site-metric-icon"><NavigationIcon name="generators" /></span><span><strong>{site.active_equipment_count}</strong><small>{fr.directory.assignedAssets}</small></span></div>
-              <div><span className="site-metric-icon"><ActionIcon name="location" /></span><span><strong>{physicalLocations.length}</strong><small>{fr.directory.locations}</small></span></div>
-            </div>
-            <footer className="site-card-footer">
-              <div className="location-tags">{physicalLocations.map((location) => <span key={location.id}><ActionIcon name="location" />{location.name}</span>)}</div>
               <span className="site-card-arrow" aria-hidden="true"><ActionIcon name="expand" /></span>
-            </footer>
+            </header>
+            <div className="site-card-identity">
+              <h2>{site.name}</h2>
+              <p className={`site-card-address${site.address ? '' : ' empty'}`}><ActionIcon name="location" />{site.address || fr.common.toComplete}</p>
+            </div>
+            <dl className="site-card-facts">
+              <div><dt>{fr.directory.siteResponsible}</dt><dd>{site.responsible?.name ?? fr.common.notAssigned}</dd></div>
+              <div><dt>{fr.directory.assignedAssets}</dt><dd>{site.active_equipment_count}</dd></div>
+              <div><dt>{fr.directory.expectedEndDate}</dt><dd>{formatSiteDate(site.expected_end_date)}</dd></div>
+            </dl>
           </button>
-        })}
+        ))}
         {sites.length === 0 && <EmptyState icon="location" title="Aucun site enregistré" description="Les sites et projets ajoutés apparaîtront ici." />}
       </div>
     </main>

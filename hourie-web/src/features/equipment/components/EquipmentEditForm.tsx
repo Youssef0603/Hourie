@@ -17,6 +17,8 @@ type EquipmentEditFormProps = {
   catalogs: EquipmentFilterOptions['catalogs']
   onChanged: (equipment: Equipment) => void
   onEditingChange?: (isEditing: boolean) => void
+  formId?: string
+  forceOpen?: boolean
 }
 
 type FormState = {
@@ -79,7 +81,7 @@ function number(value: string) {
   return value === '' ? null : Number(value)
 }
 
-export function EquipmentEditForm({ equipment, employees, projects, locations, catalogs, onChanged, onEditingChange }: EquipmentEditFormProps) {
+export function EquipmentEditForm({ equipment, employees, projects, locations, catalogs, onChanged, onEditingChange, formId, forceOpen = false }: EquipmentEditFormProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -151,13 +153,13 @@ export function EquipmentEditForm({ equipment, employees, projects, locations, c
     }
   }
 
-  if (!isOpen) {
+  if (!forceOpen && !isOpen) {
     return <button className="equipment-edit-button detail-toolbar-button" type="button" onClick={() => setEditing(true)}><ActionIcon name="edit" />{fr.common.edit}</button>
   }
 
   return (
-    <form className="maintenance-form equipment-edit-form" onSubmit={submit}>
-      <div className="maintenance-form-heading"><strong>{fr.equipment.editTitle}</strong><button type="button" onClick={() => setEditing(false)} aria-label={fr.common.close}><ActionIcon name="close" /></button></div>
+    <form id={formId} className="maintenance-form equipment-edit-form" onSubmit={submit}>
+      {!forceOpen && <div className="maintenance-form-heading"><strong>{fr.equipment.editTitle}</strong><button type="button" onClick={() => setEditing(false)} aria-label={fr.common.close}><ActionIcon name="close" /></button></div>}
       {error && <div className="form-alert" role="alert">{error}</div>}
       <p className="protected-code">{fr.equipment.assetCode}: <strong>{equipment.asset_code}</strong> · {fr.equipment.codeProtected}</p>
       <div className="maintenance-form-grid">
@@ -183,7 +185,7 @@ export function EquipmentEditForm({ equipment, employees, projects, locations, c
         <label><span>{fr.equipment.purchasePrice}</span><input min="0" step="1" type="number" value={form.purchase_price_fcfa} onChange={(event) => update('purchase_price_fcfa', event.target.value)} /></label>
         <label className="field-wide"><span>{fr.equipment.observations}</span><textarea rows={4} value={form.observations} onChange={(event) => update('observations', event.target.value)} /></label>
       </div>
-      <div className="maintenance-form-actions"><button className="primary-button save-button" type="submit" disabled={isSaving}>{isSaving ? <LoadingSpinner compact label={fr.common.saving} /> : fr.common.save}</button></div>
+      {!forceOpen && <div className="maintenance-form-actions"><button className="primary-button save-button" type="submit" disabled={isSaving}>{isSaving ? <LoadingSpinner compact label={fr.common.saving} /> : fr.common.save}</button></div>}
     </form>
   )
 }

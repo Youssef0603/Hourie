@@ -51,7 +51,7 @@
   flex: 0 0 auto;
   place-items: center;
   border: 1px solid var(--color-border) !important;
-  border-radius: 0.4rem !important;
+  border-radius: 0.3rem !important;
   padding: 0 !important;
   color: var(--color-text-muted) !important;
   background: white !important;
@@ -107,7 +107,7 @@
 .sidebar-assets-heading {
   display: flex;
   align-items: center;
-  border-radius: 0.45rem;
+  border-radius: 0.32rem;
 }
 
 .sidebar-assets-heading.active-group {
@@ -178,7 +178,7 @@
   align-items: center;
   gap: 0.32rem;
   border: 1px solid var(--color-border);
-  border-radius: 0.45rem;
+  border-radius: 0.32rem;
   padding: 0.35rem 0.55rem;
   color: var(--color-text-muted);
   background: #fff;
@@ -250,7 +250,7 @@
   width: 100%;
   min-height: 2.35rem;
   border: 1px solid var(--color-border);
-  border-radius: 0.45rem;
+  border-radius: 0.32rem;
   padding: 0.35rem 0.65rem;
   font: inherit;
 }
@@ -265,7 +265,7 @@
   align-items: center;
   gap: 0.8rem;
   border: 0;
-  border-radius: 0.4rem;
+  border-radius: 0.3rem;
   padding: 0.62rem 0.65rem;
   color: var(--color-text-muted);
   background: transparent;
@@ -407,7 +407,7 @@ html[dir='rtl'] .sidebar-toggle svg {
 .pagination button,
 .clear-filters {
   border: 1px solid var(--color-border);
-  border-radius: 0.45rem;
+  border-radius: 0.32rem;
   padding: 0.6rem 0.8rem;
   color: var(--color-text-strong);
   background: white;
@@ -500,7 +500,7 @@ html[dir='rtl'] .sidebar-toggle svg {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  border-radius: 0.4rem;
+  border-radius: 0.3rem;
   padding: 0.45rem 0.7rem;
   font-size: 0.78rem;
   box-shadow: none;
@@ -576,7 +576,7 @@ html[dir='rtl'] .sidebar-toggle svg {
 .inventory-panel {
   overflow: hidden;
   border: 1px solid #e9ebef;
-  border-radius: 0.8rem;
+  border-radius: 0.32rem;
   background: white;
   box-shadow: 0 8px 30px rgb(18 20 24 / 3%);
 }
@@ -603,7 +603,7 @@ html[dir='rtl'] .sidebar-toggle svg {
 .filter-bar .search-field input {
   height: var(--table-toolbar-height);
   border-color: #d9dde4;
-  border-radius: 999px;
+  border-radius: var(--control-radius);
   padding-inline: 2.65rem 2.4rem;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='none'%3E%3Ccircle cx='8.8' cy='8.8' r='5.6' stroke='%236a707b' stroke-width='1.7'/%3E%3Cpath d='m13 13 4 4' stroke='%236a707b' stroke-width='1.7' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
@@ -674,7 +674,7 @@ html[dir='rtl'] .search-clear-button {
   justify-content: center;
   gap: 0.4rem;
   border: 1px solid var(--color-border);
-  border-radius: 0.4rem;
+  border-radius: 0.3rem;
   padding: 0.38rem 0.6rem;
   color: var(--color-text-strong);
   background: white;
@@ -725,7 +725,7 @@ html[dir='rtl'] .search-clear-button {
   align-items: center;
   gap: 0.4rem;
   border: 1px solid var(--color-border);
-  border-radius: 0.45rem;
+  border-radius: 0.32rem;
   padding: 0.4rem 0.6rem;
   color: var(--color-text-strong);
   background: white;
@@ -807,7 +807,7 @@ html[dir='rtl'] .search-clear-button {
   flex: 0 0 auto;
   place-items: center;
   border: 1px solid var(--color-border);
-  border-radius: 0.45rem;
+  border-radius: 0.32rem;
   color: var(--color-text-strong);
   background: #f7f7f8;
   cursor: pointer;
@@ -971,7 +971,7 @@ html[dir='rtl'] .advanced-filter-grid select {
 .directory-form {
   margin-bottom: 1.25rem;
   border: 1px solid var(--color-border);
-  border-radius: 0.65rem;
+  border-radius: 0.3rem;
   padding: 1.25rem;
   background: white;
   box-shadow: 0 3px 12px rgb(18 20 24 / 4%);
@@ -995,7 +995,7 @@ html[dir='rtl'] .advanced-filter-grid select {
   flex-direction: column;
   overflow: hidden;
   border: 1px solid var(--color-border);
-  border-radius: 0.7rem;
+  border-radius: 0.3rem;
   background: white;
   box-shadow: 0 24px 70px rgb(18 20 24 / 28%);
 }
@@ -1035,7 +1035,7 @@ html[dir='rtl'] .advanced-filter-grid select {
   flex: 0 0 auto;
   place-items: center;
   border: 0;
-  border-radius: 0.4rem;
+  border-radius: 0.3rem;
   color: var(--color-text-strong);
   background: #f2eff0;
   cursor: pointer;
@@ -1186,7 +1186,7 @@ html[dir='rtl'] .advanced-filter-grid select {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  border-radius: 0.55rem;
+  border-radius: 0.35rem;
   padding: 0.8rem;
   background: #f6f6f7;
 }
@@ -1422,7 +1422,7 @@ html[dir='rtl'] .advanced-filter-grid select {
   justify-content: center;
   gap: 0.55rem;
   border: 1px dashed var(--color-primary);
-  border-radius: 0.55rem;
+  border-radius: 0.35rem;
   padding: 1rem;
   color: var(--color-primary);
   background: var(--color-primary-soft);
@@ -1543,7 +1543,7 @@ html[dir='rtl'] .directory-form select {
 
 .directory-form .primary-button {
   min-height: 2.4rem;
-  border-radius: 0.4rem;
+  border-radius: 0.3rem;
   padding: 0.45rem 0.75rem;
   box-shadow: none;
   font-size: 0.78rem;
@@ -1624,26 +1624,36 @@ html[dir='rtl'] .directory-form select {
   font-size: 0.95rem;
 }
 
-.site-details-locations > div {
+.site-details-location-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.35rem;
   margin-top: 0.4rem;
 }
 
-.site-details-locations span {
+.site-details-location-list:empty {
+  display: none;
+}
+
+.site-details-locations > .empty-state {
+  min-height: 6rem;
+  margin-top: 0.35rem;
+  padding: 0.75rem;
+}
+
+.site-details-location-list > span {
   display: flex;
   min-width: 0;
   align-items: center;
   gap: 0.35rem;
-  border-radius: 0.4rem;
+  border-radius: 0.3rem;
   padding: 0.4rem 0.55rem;
   color: #33456b;
   background: #f4f5f8;
   font-size: 0.68rem;
 }
 
-.site-details-locations span svg {
+.site-details-location-list > span svg {
   color: var(--color-primary);
 }
 
@@ -1656,7 +1666,7 @@ html[dir='rtl'] .directory-form select {
 .site-details-notes p {
   margin: 0.4rem 0 0;
   border: 1px solid var(--color-border);
-  border-radius: 0.45rem;
+  border-radius: 0.32rem;
   padding: 0.55rem;
   color: #33456b;
   background: #faf9f8;
@@ -1677,7 +1687,7 @@ html[dir='rtl'] .directory-form select {
   justify-content: center;
   gap: 0.4rem;
   border: 1px solid var(--color-border);
-  border-radius: 0.45rem;
+  border-radius: 0.32rem;
   color: var(--color-text-strong);
   background: white;
   cursor: pointer;
@@ -1711,7 +1721,7 @@ html[dir='rtl'] .directory-form select {
 
 .directory-card {
   border: 1px solid var(--color-border);
-  border-radius: 0.65rem;
+  border-radius: 0.3rem;
   padding: 1.35rem;
   background: white;
   box-shadow: 0 2px 8px rgb(18 20 24 / 3%);
@@ -1746,20 +1756,6 @@ html[dir='rtl'] .directory-form select {
   background: #ececef;
 }
 
-.site-card-address,
-.site-card-responsible {
-  color: var(--color-text-muted);
-  font-size: 0.72rem;
-}
-
-.site-card-responsible strong {
-  color: var(--color-text-strong);
-}
-
-.site-card-responsible {
-  margin: 0.25rem 0 0;
-}
-
 .responsibility-source {
   display: block;
   margin-top: 0.15rem;
@@ -1771,7 +1767,8 @@ html[dir='rtl'] .directory-form select {
 .site-card {
   position: relative;
   width: 100%;
-  min-height: 11.5rem;
+  min-height: 10.5rem;
+  padding: 1.15rem 1.2rem;
   color: inherit;
   cursor: pointer;
   font: inherit;
@@ -1788,47 +1785,41 @@ html[dir='rtl'] .directory-form select {
 }
 
 .site-card-header,
-.site-card-title,
-.site-card-footer,
-.site-card-metrics,
-.site-card-metrics div {
+.site-card-address {
   display: flex;
   align-items: center;
 }
 
-.site-card-header,
-.site-card-footer {
+.site-card-header {
   justify-content: space-between;
   gap: 0.65rem;
 }
 
-.site-card-title {
-  min-width: 0;
-  gap: 0.55rem;
+.directory-card.site-card .site-card-identity h2 {
+  margin: 0.55rem 0 0;
+  overflow: hidden;
+  color: #202b45;
+  font-size: 1rem;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.site-card-icon,
-.site-metric-icon {
-  display: grid;
+.site-card-address {
+  gap: 0.35rem;
+  min-height: 1rem;
+  margin: 0.25rem 0 0 !important;
+  overflow: hidden;
+  color: #807c78;
+  font-size: 0.74rem !important;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.site-card-address svg {
+  width: 0.85rem;
+  height: 0.85rem;
   flex: 0 0 auto;
-  place-items: center;
-  color: var(--color-primary);
-  background: var(--color-primary-soft);
-}
-
-.site-card-icon {
-  width: 2.35rem;
-  height: 2.35rem;
-  border-radius: 0.45rem;
-}
-
-.site-card-icon svg {
-  width: 1.3rem;
-  height: 1.3rem;
-}
-
-.site-card-icon svg,
-.site-metric-icon svg {
   fill: none;
   stroke: currentcolor;
   stroke-linecap: round;
@@ -1836,100 +1827,54 @@ html[dir='rtl'] .directory-form select {
   stroke-width: 1.7;
 }
 
-.site-card-header h2 {
-  margin: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.site-card-address {
-  min-height: 1.05rem;
-  margin: 0.65rem 0 0 !important;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .site-card-address.empty {
-  visibility: hidden;
+  color: #aaa6a1;
 }
 
-.site-card-metrics {
-  gap: 0;
-  margin-top: 1rem;
+.site-card-facts {
+  display: grid;
+  grid-template-columns: 1fr 0.85fr 1fr;
+  gap: 0.75rem;
+  margin: 1rem 0 0;
   border-top: 1px solid var(--color-border);
-  border-bottom: 1px solid var(--color-border);
+  padding-top: 0.85rem;
 }
 
-.site-card-metrics div {
-  width: 50%;
-  min-height: 3.3rem;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 0.5rem;
-  padding-inline: 0.35rem 0.75rem;
-}
-
-.site-card-metrics div + div {
-  border-inline-start: 1px solid var(--color-border);
-  padding-inline-start: 0.85rem;
-}
-
-.site-card-metrics strong {
-  display: block;
-  color: var(--color-text-strong);
-  font-size: 1rem;
-  line-height: 1;
-}
-
-.site-card-metrics small {
-  display: block;
-  max-width: 100%;
-  color: var(--color-text-muted);
-  font-size: 0.65rem;
-  line-height: 1.2;
-  white-space: normal;
-}
-
-.site-metric-icon {
-  width: 1.9rem;
-  height: 1.9rem;
-  border-radius: 0.4rem;
-}
-
-.site-metric-icon svg {
-  width: 1.05rem;
-  height: 1.05rem;
-}
-
-.site-card-footer {
-  min-height: 2rem;
-  margin-top: 0.7rem;
-}
-
-.site-card-footer .location-tags {
+.site-card-facts div {
   min-width: 0;
-  margin: 0;
+}
+
+.site-card-facts dt {
   overflow: hidden;
-  flex-wrap: nowrap;
+  color: #a09da0;
+  font-size: 0.6rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.site-card-facts dd {
+  margin: 0.28rem 0 0;
+  overflow: hidden;
+  color: #202b45;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .site-card-arrow {
-  display: grid;
-  width: 1.75rem;
-  height: 1.75rem;
-  flex: 0 0 auto;
-  place-items: center;
-  border: 1px solid var(--color-primary);
-  border-radius: 0.4rem;
-  color: var(--color-primary);
+  display: inline-flex;
+  align-items: center;
+  color: #c7c2bc;
 }
 
 .site-card-arrow svg {
-  width: 0.95rem;
-  height: 0.95rem;
+  width: 0.8rem;
+  height: 0.8rem;
   fill: none;
   stroke: currentcolor;
   stroke-linecap: round;
@@ -1986,7 +1931,7 @@ html[dir='rtl'] .directory-form select {
   aspect-ratio: 1;
   flex: 0 0 auto;
   place-items: center;
-  border-radius: 0.5rem;
+  border-radius: 0.35rem;
   color: var(--color-primary);
   background: var(--color-primary-soft);
   font-weight: 800;
@@ -2062,7 +2007,7 @@ html[dir='rtl'] .directory-form select {
   width: 100%;
   min-height: 8.5rem;
   border: 1px solid #e4e5e8;
-  border-radius: 0.7rem;
+  border-radius: 0.3rem;
   padding: 1rem;
   color: var(--color-text-strong);
   background: white;
@@ -2150,7 +2095,7 @@ html[dir='rtl'] .directory-form select {
 .people-card-empty {
   margin: 0;
   border: 1px solid #e4e5e8;
-  border-radius: 0.7rem;
+  border-radius: 0.3rem;
   padding: 2rem 1rem;
   color: var(--color-text-muted);
   background: white;
@@ -2180,7 +2125,7 @@ html[dir='rtl'] .directory-form select {
 .site-inventory-wrap {
   overflow-x: auto;
   border: 1px solid #e9ebef;
-  border-radius: 0.8rem;
+  border-radius: 0.32rem;
   padding: 0.7rem 1.2rem 0.85rem;
   background: white;
   box-shadow: 0 8px 30px rgb(18 20 24 / 3%);
@@ -2315,7 +2260,7 @@ html[dir='rtl'] .directory-form select {
   right: 1.5rem;
   bottom: 1.5rem;
   border: 1px solid var(--color-border);
-  border-radius: 0.4rem;
+  border-radius: 0.3rem;
   padding: 0.65rem 0.85rem;
   color: var(--color-text-strong);
   background: white;
@@ -2408,7 +2353,7 @@ html[dir='rtl'] .directory-form select {
   place-items: center;
   margin-inline-start: auto;
   border: 0;
-  border-radius: 0.4rem;
+  border-radius: 0.3rem;
   color: var(--color-primary);
   background: transparent;
   cursor: pointer;
@@ -2439,7 +2384,7 @@ html[dir='rtl'] .directory-form select {
   justify-content: center;
   gap: 0.4rem;
   border: 1px solid var(--color-border);
-  border-radius: 0.45rem;
+  border-radius: 0.32rem;
   color: var(--color-text-strong);
   background: white;
   cursor: pointer;
@@ -2667,7 +2612,7 @@ html[dir='rtl'] .directory-form select {
 .site-generator-card {
   overflow: hidden;
   border: 1px solid var(--color-border);
-  border-radius: 0.65rem;
+  border-radius: 0.3rem;
   background: white;
   box-shadow: 0 3px 12px rgb(18 20 24 / 4%);
 }
@@ -2726,7 +2671,7 @@ html[dir='rtl'] .directory-form select {
 
 .site-generator-specs div {
   min-width: 0;
-  border-radius: 0.4rem;
+  border-radius: 0.3rem;
   padding: 0.45rem 0.5rem;
   background: #f7f7f8;
 }
@@ -3045,12 +2990,18 @@ html[dir='rtl'] .filter-bar select {
 }
 
 .creation-panel-content .generator-create-form,
-.creation-panel-content .asset-form {
+.creation-panel-content .asset-form,
+.creation-panel-content .equipment-edit-form {
   margin: 0;
   border: 0;
   border-radius: 0;
   padding: 0;
+  background: white;
   box-shadow: none;
+}
+
+.asset-edit-drawer .equipment-edit-form .protected-code {
+  margin-top: 0;
 }
 
 .inventory-form-note {
@@ -3059,7 +3010,7 @@ html[dir='rtl'] .filter-bar select {
   gap: 0.55rem;
   margin: 0;
   border: 1px solid var(--color-border);
-  border-radius: 0.45rem;
+  border-radius: 0.32rem;
   padding: 0.65rem;
   color: var(--color-text-muted);
   background: #f7f7f8;
@@ -3123,7 +3074,7 @@ html[dir='rtl'] .filter-bar select {
   aspect-ratio: 1;
   place-items: center;
   border: 0;
-  border-radius: 0.4rem;
+  border-radius: 0.3rem;
   color: var(--color-text-strong);
   background: #f2eff0;
   cursor: pointer;
@@ -3293,7 +3244,7 @@ html[dir='rtl'] .filter-bar select {
   align-items: center;
   gap: 0.35rem;
   border: 1px solid var(--color-border);
-  border-radius: 0.45rem;
+  border-radius: 0.32rem;
   padding: 0.3rem 0.65rem;
   color: var(--color-text-strong);
   background: white;
@@ -3427,7 +3378,7 @@ html[dir='rtl'] .filter-bar select {
   align-items: center;
   gap: 0.4rem;
   border: 1px solid var(--color-border);
-  border-radius: 0.45rem;
+  border-radius: 0.32rem;
   padding: 0.5rem 0.75rem;
   color: var(--color-text-strong);
   background: white;
@@ -3442,7 +3393,7 @@ html[dir='rtl'] .filter-bar select {
   align-items: center;
   gap: 0.4rem;
   border: 1px solid var(--color-primary);
-  border-radius: 0.45rem;
+  border-radius: 0.32rem;
   padding: 0.5rem 0.75rem;
   color: var(--color-primary);
   background: white;
@@ -3467,7 +3418,7 @@ html[dir='rtl'] .filter-bar select {
 .detail-primary-actions .equipment-history-button {
   min-height: 2rem;
   border-color: #e2ded8;
-  border-radius: 0.5rem;
+  border-radius: 0.35rem;
   padding: 0.3rem 0.55rem;
   color: #17233f;
   background: white;
@@ -3484,7 +3435,7 @@ html[dir='rtl'] .filter-bar select {
   justify-content: center;
   gap: 0.35rem;
   border: 1px solid var(--color-border);
-  border-radius: 0.45rem;
+  border-radius: 0.32rem;
   padding: 0.28rem 0.55rem !important;
   color: var(--color-text-muted);
   background: #fff;
@@ -3566,7 +3517,7 @@ html[dir='rtl'] .filter-bar select {
 .maintenance-inline-form {
   margin: 0;
   border: 1px solid #e1e1df;
-  border-radius: 0.55rem;
+  border-radius: 0.35rem;
   padding: 0.85rem;
   background: #f8f8f7;
   box-shadow: none;
@@ -3648,7 +3599,7 @@ html[dir='rtl'] .filter-bar select {
   flex-direction: column;
   gap: 0.35rem;
   border: 2px dashed #cdd3dc;
-  border-radius: 0.7rem;
+  border-radius: 0.3rem;
   padding: 0.9rem 1rem;
   background: transparent;
   cursor: pointer;
@@ -3703,7 +3654,7 @@ html[dir='rtl'] .filter-bar select {
 .equipment-image-dropzone button {
   margin-top: 0.2rem;
   border: 1px solid var(--color-border-strong, #bcc3cc);
-  border-radius: 0.45rem;
+  border-radius: 0.32rem;
   padding: 0.42rem 0.65rem;
   color: var(--color-text-strong);
   background: white;
@@ -3787,7 +3738,7 @@ html[dir='rtl'] .filter-bar select {
   position: relative;
   overflow: hidden;
   border: 1px solid var(--color-border);
-  border-radius: 0.55rem;
+  border-radius: 0.35rem;
   aspect-ratio: 4 / 3;
   background: var(--color-surface);
 }
@@ -3846,7 +3797,7 @@ html[dir='rtl'] .filter-bar select {
 .equipment-images-empty {
   margin: 0;
   border: 1px dashed var(--color-border);
-  border-radius: 0.5rem;
+  border-radius: 0.35rem;
   padding: 1.2rem;
   color: var(--color-text-muted);
   text-align: center;
@@ -3894,7 +3845,7 @@ html[dir='rtl'] .filter-bar select {
 .catalog-page .directory-heading .compact-action {
   min-height: 2.25rem;
   flex: 0 0 auto;
-  border-radius: 0.42rem;
+  border-radius: 0.3rem;
   padding: 0.45rem 0.7rem;
   font-size: 0.72rem;
 }
@@ -3927,7 +3878,7 @@ html[dir='rtl'] .filter-bar select {
   gap: 0;
   overflow: hidden;
   border: 1px solid var(--color-border);
-  border-radius: 0.55rem;
+  border-radius: 0.35rem;
   background: white;
 }
 
@@ -4047,7 +3998,7 @@ html[dir='rtl'] .catalog-copy small {
 .maintenance-form-actions button,
 .maintenance-form-heading button {
   border: 1px solid var(--color-border);
-  border-radius: 0.4rem;
+  border-radius: 0.3rem;
   padding: 0.55rem 0.75rem;
   color: var(--color-text-strong);
   background: white;
@@ -4082,7 +4033,7 @@ html[dir='rtl'] .catalog-copy small {
   gap: 0.4rem;
   width: fit-content;
   border: 1px solid var(--color-primary);
-  border-radius: 0.45rem;
+  border-radius: 0.32rem;
   padding: 0.5rem 0.75rem;
   color: var(--color-primary);
   background: var(--color-primary-soft);
@@ -4201,7 +4152,7 @@ html[dir='rtl'] .catalog-copy small {
 .invoice-list article {
   gap: 0.65rem;
   border: 1px solid var(--color-border);
-  border-radius: 0.55rem;
+  border-radius: 0.35rem;
   padding: 0.65rem 0.75rem;
   background: #fbfcfd;
 }
@@ -4212,7 +4163,7 @@ html[dir='rtl'] .catalog-copy small {
   height: 2.15rem;
   flex: 0 0 auto;
   place-items: center;
-  border-radius: 0.4rem;
+  border-radius: 0.3rem;
   color: #a41831;
   background: #fbe8ec;
   font-size: 0.6rem;
@@ -4296,7 +4247,7 @@ html[dir='rtl'] .catalog-copy small {
   height: 2rem;
   justify-content: center;
   border: 1px solid var(--color-border);
-  border-radius: 0.4rem;
+  border-radius: 0.3rem;
   padding: 0;
   color: #a41831;
   background: white;
@@ -4313,7 +4264,7 @@ html[dir='rtl'] .catalog-copy small {
 .maintenance-form {
   margin-top: 0.75rem;
   border: 1px solid var(--color-border);
-  border-radius: 0.55rem;
+  border-radius: 0.35rem;
   padding: 0.9rem;
   background: #faf9f9;
 }
@@ -4519,7 +4470,7 @@ html[dir='rtl'] .maintenance-form-grid select {
   display: flex;
   align-items: center;
   gap: 0.45rem;
-  border-radius: 0.45rem;
+  border-radius: 0.32rem;
   padding: 0.55rem 0.65rem;
   color: #315470;
   background: #f1f7fb;
@@ -4571,7 +4522,7 @@ html[dir='rtl'] .maintenance-form-grid select {
 
 .asset-form-extra {
   border: 1px solid var(--color-border);
-  border-radius: 0.5rem;
+  border-radius: 0.35rem;
   background: #fafafa;
 }
 
@@ -4755,7 +4706,7 @@ html[dir='rtl'] .maintenance-form-grid select {
 .maintenance-empty {
   margin: 1.25rem 0 0;
   border: 1px dashed var(--color-border);
-  border-radius: 0.5rem;
+  border-radius: 0.35rem;
   padding: 1.25rem;
   text-align: center;
 }
@@ -4769,7 +4720,7 @@ html[dir='rtl'] .maintenance-form-grid select {
 .maintenance-card {
   border: 1px solid var(--color-border);
   border-inline-start: 3px solid var(--color-primary);
-  border-radius: 0.5rem;
+  border-radius: 0.35rem;
   overflow: hidden;
   background: white;
 }
@@ -4859,7 +4810,7 @@ html[dir='rtl'] .maintenance-form-grid select {
   margin-bottom: 0.75rem;
   border: 1px solid var(--color-border);
   border-inline-start: 4px solid var(--color-primary);
-  border-radius: 0.7rem;
+  border-radius: 0.3rem;
   background: white;
 }
 
@@ -5327,7 +5278,7 @@ html[dir='rtl'] .maintenance-form-grid select {
   .modal-panel.modal-wide {
     width: 100%;
     max-height: calc(100svh - 1rem);
-    border-radius: 0.55rem;
+    border-radius: 0.35rem;
   }
 
   .modal-header,
@@ -5475,7 +5426,7 @@ html[dir='rtl'] .maintenance-form-grid select {
   z-index: 50;
   width: min(13rem, calc(100vw - 1rem));
   border: 1px solid var(--color-border);
-  border-radius: 0.55rem;
+  border-radius: 0.35rem;
   outline: none;
   padding: 0.3rem;
   color: var(--color-text-strong);
@@ -5638,7 +5589,7 @@ html[dir='rtl'] .maintenance-form-grid select {
   align-items: start;
   gap: 0.75rem;
   border: 1px solid var(--color-border) !important;
-  border-radius: 0.55rem !important;
+  border-radius: 0.35rem !important;
   padding: 0.85rem !important;
   color: var(--color-text-strong) !important;
   text-align: left;
@@ -5692,7 +5643,7 @@ html[dir='rtl'] .maintenance-form-grid select {
 .insurance-panel {
   overflow: hidden;
   border: 1px solid var(--color-border);
-  border-radius: 0.65rem;
+  border-radius: 0.3rem;
   background: white;
 }
 
@@ -5725,7 +5676,7 @@ html[dir='rtl'] .maintenance-form-grid select {
 .insurance-panel .save-button {
   flex: 0 0 auto;
   min-height: 2.4rem;
-  border-radius: 0.45rem;
+  border-radius: 0.32rem;
   padding: 0.55rem 0.85rem;
   font-size: 0.75rem;
   font-weight: 700;
@@ -5811,7 +5762,7 @@ html[dir='rtl'] .maintenance-form-grid select {
   align-items: center;
   gap: 0.55rem;
   border: 1px solid var(--color-border) !important;
-  border-radius: 0.42rem !important;
+  border-radius: 0.3rem !important;
   padding: 0.45rem 0.65rem !important;
   color: #575b62 !important;
   white-space: nowrap;
@@ -5851,7 +5802,7 @@ html[dir='rtl'] .maintenance-form-grid select {
 .insurance-table-card,
 .insurance-detail-panel {
   border: 1px solid var(--color-border);
-  border-radius: 0.55rem;
+  border-radius: 0.35rem;
   background: white;
 }
 
@@ -5977,7 +5928,7 @@ html[dir='rtl'] .maintenance-form-grid select {
 .directory-grid > .empty-state {
   grid-column: 1 / -1;
   border: 1px solid var(--color-border);
-  border-radius: 0.7rem;
+  border-radius: 0.3rem;
   background: white;
 }
 
@@ -5995,7 +5946,7 @@ html[dir='rtl'] .maintenance-form-grid select {
 
 .insurance-covered-equipment > .empty-state {
   border: 1px dashed #cbd3df;
-  border-radius: 0.45rem;
+  border-radius: 0.32rem;
   background: #fcfcfd;
 }
 
@@ -6125,7 +6076,7 @@ html[dir='rtl'] .maintenance-form-grid select {
   aspect-ratio: auto;
   align-items: center;
   justify-content: center;
-  border-radius: 0.4rem;
+  border-radius: 0.3rem;
   padding: 0.35rem 0.65rem;
   font-size: 0.68rem;
   white-space: nowrap;
@@ -6260,7 +6211,7 @@ html[dir='rtl'] .maintenance-form-grid select {
   place-content: center;
   gap: 0.38rem;
   border: 1px dashed #cbd3df;
-  border-radius: 0.55rem;
+  border-radius: 0.35rem;
   padding: 1rem;
   color: var(--color-text-muted);
   text-align: center;
@@ -6402,7 +6353,7 @@ html[dir='rtl'] .insurance-filter-content .searchable-select-input {
 
 .insurance-filter-actions .save-button {
   min-height: 2.25rem;
-  border-radius: 0.42rem;
+  border-radius: 0.3rem;
   padding: 0.45rem 0.7rem;
   font-size: 0.72rem;
 }
@@ -6655,7 +6606,7 @@ html[dir='rtl'] .insurance-filter-content .searchable-select-input {
   justify-content: space-between;
   gap: 0.75rem;
   border: 1px solid var(--color-border);
-  border-radius: 0.4rem;
+  border-radius: 0.3rem;
   padding: 0.45rem 0.55rem;
   background: #fff;
 }
@@ -6707,7 +6658,7 @@ html[dir='rtl'] .insurance-filter-content .searchable-select-input {
 
 .insurance-covered-equipment-empty {
   border: 1px dashed #cbd3df;
-  border-radius: 0.4rem;
+  border-radius: 0.3rem;
   padding: 0.6rem;
   color: var(--color-text-muted);
   font-size: 0.7rem;

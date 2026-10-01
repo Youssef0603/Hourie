@@ -17,6 +17,7 @@ type AssetFormProps = {
   onSaved: (equipment: Equipment) => void
   onCancel?: () => void
   formId?: string
+  hideEditChrome?: boolean
 }
 
 const numberOrNull = (value: string) => value.trim() === '' ? null : Number(value)
@@ -33,7 +34,7 @@ export function InventoryFormSection({ title, icon, children, defaultOpen = true
   return <details className="detail-section inventory-form-section" open={defaultOpen}><summary><h3><ActionIcon name={icon} />{title}</h3><ActionIcon name="expand" /></summary><div className="detail-section-body">{children}</div></details>
 }
 
-export function AssetForm({ categoryCode, language, options, equipment, onSaved, onCancel, formId }: AssetFormProps) {
+export function AssetForm({ categoryCode, language, options, equipment, onSaved, onCancel, formId, hideEditChrome = false }: AssetFormProps) {
   const category = assetCategory(categoryCode)
   const isCar = categoryCode === 'car'
   const isBungalow = categoryCode === 'portacabin'
@@ -108,7 +109,7 @@ export function AssetForm({ categoryCode, language, options, equipment, onSaved,
   }
 
   return <form id={formId} className="generator-create-form asset-form" onSubmit={submit}>
-    {onCancel && <div className="maintenance-form-heading"><strong>{fr.assets.edit}</strong><button type="button" onClick={onCancel} aria-label={fr.common.close}><ActionIcon name="close" /></button></div>}
+    {onCancel && !hideEditChrome && <div className="maintenance-form-heading"><strong>{fr.assets.edit}</strong><button type="button" onClick={onCancel} aria-label={fr.common.close}><ActionIcon name="close" /></button></div>}
     {error && <div className="form-alert" role="alert">{error}</div>}
     <div className="inventory-form-note"><ActionIcon name="identification" /><span>{fr.assets.assetCodeAuto}</span></div>
     <div className="asset-form-layout">
@@ -135,6 +136,6 @@ export function AssetForm({ categoryCode, language, options, equipment, onSaved,
       </div></InventoryFormSection>}
       <InventoryFormSection title={fr.equipment.observations} icon="note"><div className="maintenance-form-grid"><label className="field-wide"><span>{fr.equipment.observations}</span><textarea rows={3} value={form.observations} onChange={(event) => update('observations', event.target.value)} /></label></div></InventoryFormSection>
     </div>
-    {onCancel && <div className="maintenance-form-actions"><button className="primary-button" type="submit" disabled={isSaving}>{fr.common.save}</button></div>}
+    {onCancel && !hideEditChrome && <div className="maintenance-form-actions"><button className="primary-button" type="submit" disabled={isSaving}>{fr.common.save}</button></div>}
   </form>
 }
