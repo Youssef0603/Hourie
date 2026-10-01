@@ -157,6 +157,10 @@ export type EquipmentChange = {
   source: 'import' | 'manual' | 'transfer' | 'maintenance'
   actor: NamedReference | null
   occurred_at: string
+  transfer: {
+    from: { project: string | null; location: string | null }
+    to: { project: string | null; location: string | null }
+  } | null
 }
 
 export type EquipmentFilters = {

@@ -101,6 +101,9 @@ export function EquipmentDetailPanel({
                       <div><dt>{categoryCode === 'car' ? fr.equipment.assignedTo : fr.equipment.custodian}</dt><dd>{selected.responsible ? <>{selected.responsible.name}{selected.responsible_source === 'site' && <small className="responsibility-source">{fr.equipment.inheritedFromSite}</small>}</> : fr.common.notProvided}</dd></div>
                     </dl>
                   </DetailSection>
+                  {categoryCode === 'generator' && <DetailSection title="Historique des transferts" icon="transfer" defaultOpen>
+                    <GeneratorTransferHistory changes={selected.changes.filter((change) => change.source === 'transfer')} />
+                  </DetailSection>}
                   <DetailSection title={fr.equipment.identification} icon="identification" defaultOpen>
                     <dl>
                       <div><dt>{categoryCode === 'car' ? fr.equipment.registrationNumber : fr.equipment.serialNumber}</dt><dd>{displayedValue(selected.serial_number)}</dd></div>
@@ -159,8 +162,8 @@ export function EquipmentDetailPanel({
                     }}
                   /></DetailSection>}
                   <DetailSection id={`equipment-history-${selected.id}`} title={fr.audit.button} icon="history">
-                    {selected.changes.length > 0
-                      ? <div className="audit-list detail-audit-list">{selected.changes.map((change) => <article key={change.id}><span className="audit-dot" aria-hidden="true" /><div><strong>{equipmentAuditLabel(change.type, selected.category.code, language)}</strong><p>{fr.audit.by(change.actor?.name ?? fr.audit.system)} · <time dateTime={change.occurred_at}>{auditDate(change.occurred_at)}</time></p></div></article>)}</div>
+                    {selected.changes.filter((change) => change.source !== 'transfer').length > 0
+                      ? <div className="audit-list detail-audit-list">{selected.changes.filter((change) => change.source !== 'transfer').map((change) => <article key={change.id}><span className="audit-dot" aria-hidden="true" /><div><strong>{equipmentAuditLabel(change.type, selected.category.code, language)}</strong><p>{fr.audit.by(change.actor?.name ?? fr.audit.system)} · <time dateTime={change.occurred_at}>{auditDate(change.occurred_at)}</time></p></div></article>)}</div>
                       : <EmptyState compact icon="history" title={fr.audit.empty} description="Les modifications de cet actif apparaîtront ici." />}
                   </DetailSection>
                 </div>
@@ -236,6 +239,43 @@ function auditDate(value: string) {
   return new Intl.DateTimeFormat('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
 }
 
+function GeneratorTransferHistory({ changes }: { changes: Equipment['changes'] }) {
+  const [page, setPage] = useState(0)
+  const pageSize = 3
+  const pageCount = Math.max(1, Math.ceil(changes.length / pageSize))
+  const currentPage = Math.min(page, pageCount - 1)
+  const visibleChanges = changes.slice(currentPage * pageSize, (currentPage + 1) * pageSize)
+
+  if (changes.length === 0) {
+    return <EmptyState compact icon="transfer" title="Aucun transfert enregistré" description="Les prochains déplacements de ce groupe apparaîtront ici." />
+  }
+
+  return <div className="generator-transfer-history">
+    {visibleChanges.map((change) => (
+      <article key={change.id}>
+        <header>
+          <time dateTime={change.occurred_at}>{auditDate(change.occurred_at)}</time>
+          <span>{change.actor?.name ?? fr.audit.system}</span>
+        </header>
+        <div className="generator-transfer-route">
+          <div><small>Depuis</small><strong>{transferPlace(change.transfer?.from)}</strong></div>
+          <ActionIcon name="transfer" />
+          <div><small>Vers</small><strong>{transferPlace(change.transfer?.to)}</strong></div>
+        </div>
+      </article>
+    ))}
+    {pageCount > 1 && <nav className="transfer-history-pagination" aria-label="Pagination des transferts">
+      <button type="button" disabled={currentPage === 0} onClick={() => setPage(currentPage - 1)}>Précédent</button>
+      <span>{currentPage + 1} / {pageCount}</span>
+      <button type="button" disabled={currentPage === pageCount - 1} onClick={() => setPage(currentPage + 1)}>Suivant</button>
+    </nav>}
+  </div>
+}
+
+function transferPlace(place: { project: string | null; location: string | null } | undefined): string {
+  return place ? [place.project, place.location].filter(Boolean).join(' · ') || fr.common.notProvided : fr.common.notProvided
+}
+
 function equipmentAuditLabel(type: Equipment['changes'][number]['type'], categoryCode: string, language: Language): string {
   if (categoryCode === 'generator') return fr.audit.equipmentActions[type]
 
@@ -249,7 +289,7 @@ function equipmentAuditLabel(type: Equipment['changes'][number]['type'], categor
   return fr.audit.equipmentActions[type]
 }
 
-function DetailSection({ id, title, children, defaultOpen = false, icon }: { id?: string; title: string; children: ReactNode; defaultOpen?: boolean; icon?: 'location' | 'identification' | 'specifications' | 'note' | 'photo' | 'invoice' | 'maintenance' | 'history' }) {
+function DetailSection({ id, title, children, defaultOpen = false, icon }: { id?: string; title: string; children: ReactNode; defaultOpen?: boolean; icon?: 'location' | 'identification' | 'specifications' | 'note' | 'photo' | 'invoice' | 'maintenance' | 'history' | 'transfer' }) {
   return <details id={id} className="detail-section" open={defaultOpen}>
     <summary><h3>{icon && <ActionIcon name={icon} />}{title}</h3><ActionIcon name="expand" /></summary>
     <div className="detail-section-body">{children}</div>

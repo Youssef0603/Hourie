@@ -3577,6 +3577,96 @@ html[dir='rtl'] .filter-bar select {
   background: var(--color-primary-soft);
 }
 
+.generator-transfer-history {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.generator-transfer-history article {
+  border: 1px solid var(--color-border);
+  border-radius: 0.35rem;
+  padding: 0.65rem 0.7rem;
+  background: #fff;
+}
+
+.generator-transfer-history header,
+.generator-transfer-route {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.generator-transfer-history header {
+  color: var(--color-text-muted);
+  font-size: 0.68rem;
+}
+
+.generator-transfer-route {
+  margin-top: 0.55rem;
+}
+
+.generator-transfer-route > div {
+  min-width: 0;
+  flex: 1;
+}
+
+.generator-transfer-route > div:last-child {
+  text-align: end;
+}
+
+.generator-transfer-route small {
+  display: block;
+  margin-bottom: 0.14rem;
+  color: var(--color-text-muted);
+  font-size: 0.62rem;
+}
+
+.generator-transfer-route strong {
+  display: block;
+  overflow: hidden;
+  color: var(--color-text-strong);
+  font-size: 0.74rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.generator-transfer-route > svg {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+  color: var(--color-primary);
+  fill: none;
+  stroke: currentColor;
+}
+
+.transfer-history-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  padding-top: 0.15rem;
+  color: var(--color-text-muted);
+  font-size: 0.68rem;
+}
+
+.transfer-history-pagination button {
+  border: 0;
+  padding: 0.18rem 0;
+  color: var(--color-primary);
+  background: transparent;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.transfer-history-pagination button:disabled {
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
 .audit-modal-list article {
   border-bottom: 1px solid var(--color-border);
   padding-bottom: 0.75rem;

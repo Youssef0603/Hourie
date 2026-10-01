@@ -2,8 +2,12 @@
 
 namespace App\Http\Resources\Equipment;
 
+use App\Enums\EquipmentChangeSource;
+use App\Models\Location;
+use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Collection;
 
 class EquipmentResource extends JsonResource
 {
@@ -65,13 +69,53 @@ class EquipmentResource extends JsonResource
                     'size_bytes' => $document->size_bytes,
                 ]),
             ])),
-            'changes' => $this->whenLoaded('changes', fn () => $this->changes->map(fn ($change) => [
+            'changes' => $this->whenLoaded('changes', fn () => $this->changesPayload()),
+        ];
+    }
+
+    /** @return Collection<int, array<string, mixed>> */
+    private function changesPayload(): Collection
+    {
+        $changes = $this->changes;
+        $transferIds = $changes
+            ->filter(fn ($change): bool => $change->source === EquipmentChangeSource::Transfer)
+            ->flatMap(fn ($change) => [
+                $change->previous_values['project_id'] ?? null,
+                $change->previous_values['location_id'] ?? null,
+                $change->new_values['project_id'] ?? null,
+                $change->new_values['location_id'] ?? null,
+            ])
+            ->filter()
+            ->unique()
+            ->values();
+        $projectNames = Project::query()->whereKey($transferIds)->pluck('name', 'id');
+        $locationNames = Location::query()->whereKey($transferIds)->pluck('name', 'id');
+
+        return $changes->map(function ($change) use ($projectNames, $locationNames): array {
+            $transfer = null;
+            if ($change->source === EquipmentChangeSource::Transfer) {
+                $previous = $change->previous_values ?? [];
+                $next = $change->new_values ?? [];
+                $transfer = [
+                    'from' => [
+                        'project' => $previous['project_name'] ?? $projectNames->get($previous['project_id'] ?? null),
+                        'location' => $previous['location_name'] ?? $locationNames->get($previous['location_id'] ?? null),
+                    ],
+                    'to' => [
+                        'project' => $next['project_name'] ?? $projectNames->get($next['project_id'] ?? null),
+                        'location' => $next['location_name'] ?? $locationNames->get($next['location_id'] ?? null),
+                    ],
+                ];
+            }
+
+            return [
                 'id' => $change->id,
                 'type' => $change->change_type->value,
                 'source' => $change->source->value,
                 'actor' => $change->actor === null ? null : ['id' => $change->actor->id, 'name' => $change->actor->name],
                 'occurred_at' => $change->occurred_at->toISOString(),
-            ])),
-        ];
+                'transfer' => $transfer,
+            ];
+        });
     }
 }

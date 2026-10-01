@@ -10,6 +10,8 @@ use App\Http\Resources\Equipment\EquipmentResource;
 use App\Models\Equipment;
 use App\Models\EquipmentChange;
 use App\Models\EquipmentProjectAssignment;
+use App\Models\Location;
+use App\Models\Project;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -32,7 +34,8 @@ class EquipmentTransferController extends Controller
 
         DB::transaction(function () use ($data, $equipment, $request): void {
             $previousLocationId = $equipment->current_location_id;
-            $currentAssignment = $equipment->currentProjectAssignment()->lockForUpdate()->first();
+            $previousLocation = $previousLocationId === null ? null : Location::query()->find($previousLocationId);
+            $currentAssignment = $equipment->currentProjectAssignment()->with('project')->lockForUpdate()->first();
             $currentProjectId = $currentAssignment?->project_id;
             $submittedProjectId = $data['from_project_id'] ?? null;
 
@@ -41,6 +44,11 @@ class EquipmentTransferController extends Controller
                     'from_project_id' => [__('validation.transfer_source_changed')],
                 ]);
             }
+
+            $destinationProject = Project::query()->findOrFail($data['to_project_id']);
+            $destinationLocation = $data['to_location_id'] === null
+                ? null
+                : Location::query()->findOrFail($data['to_location_id']);
 
             $currentAssignment?->update(['ended_at' => now()]);
 
@@ -61,10 +69,14 @@ class EquipmentTransferController extends Controller
                 'previous_values' => [
                     'project_id' => $data['from_project_id'],
                     'location_id' => $previousLocationId,
+                    'project_name' => $currentAssignment?->project?->name,
+                    'location_name' => $previousLocation?->name,
                 ],
                 'new_values' => [
                     'project_id' => $data['to_project_id'],
                     'location_id' => $data['to_location_id'],
+                    'project_name' => $destinationProject->name,
+                    'location_name' => $destinationLocation?->name,
                 ],
                 'occurred_at' => now(),
             ]);

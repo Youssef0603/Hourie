@@ -28,7 +28,10 @@ it('transfers a generator to another active site and records its history', funct
         'to_location_id' => $destinationLocation->id,
     ])->assertOk()
         ->assertJsonPath('data.current_project_assignment.project.id', $destination->id)
-        ->assertJsonPath('data.current_location.id', $destinationLocation->id);
+        ->assertJsonPath('data.current_location.id', $destinationLocation->id)
+        ->assertJsonPath('data.changes.0.transfer.from.project', $source->name)
+        ->assertJsonPath('data.changes.0.transfer.to.project', $destination->name)
+        ->assertJsonPath('data.changes.0.transfer.to.location', $destinationLocation->name);
 
     expect($assignment->fresh()->ended_at)->not->toBeNull();
     $this->assertDatabaseHas('equipment_project_assignments', [
