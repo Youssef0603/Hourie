@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { ApiError, apiRequest, getAuthenticatedFileObjectUrl } from "../../../shared/api/http";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { DocumentUploadDropzone } from "../../../shared/components/DocumentUploadDropzone";
@@ -18,7 +18,7 @@ type Policy = {
   documents?: PolicyDocument[];
   changes?: RecordHistoryEntry[];
   created_at?: string | null;
-  employees?: Array<{ id: number; name: string }>;
+  employees?: Array<{ id: number; name: string; birth_date: string | null }>;
   equipment?: Array<{ id: number; asset_code: string; brand: string | null; model: string | null }>;
 };
 
@@ -287,7 +287,9 @@ function InsuranceDetailPanel({ policy, onClose, onEdit, onDocumentsChanged, onD
         <div className="detail-primary-actions"><button className="equipment-edit-button detail-toolbar-button" type="button" onClick={onEdit}><ActionIcon name="edit" />Modifier</button><button className="equipment-history-button detail-toolbar-button" type="button" onClick={() => void openHistory()}><ActionIcon name="history" />Voir l’historique</button><button className="danger-button detail-delete-button" type="button" disabled={isDeleting} onClick={() => void remove()} aria-label={isDeleting ? "Suppression en cours" : "Supprimer"}><ActionIcon name="delete" /></button></div>
         <section><h3><ActionIcon name="identification" />Informations de la police</h3><dl><div><dt>Assureur</dt><dd>{policy.source || "À compléter"}</dd></div>{policy.insurance_type === "trc_rc" && <div><dt>Site / projet</dt><dd>{policy.project?.name || "À compléter"}</dd></div>}<div><dt>Éléments couverts</dt><dd>{coveredLabel(policy)}</dd></div></dl></section>
         <section><h3><ActionIcon name="history" />Période et statut</h3><dl><div><dt>Date de début</dt><dd>{formatDate(policy.starts_on)}</dd></div><div><dt>Date d’expiration</dt><dd>{formatDate(policy.ends_on)}</dd></div><div><dt>Statut</dt><dd><em className={`insurance-status ${state}`}>{statusLabel(state)}</em></dd></div></dl></section>
-        <section><h3><ActionIcon name="specifications" />Couverture</h3><dl><div><dt>Situation assurée</dt><dd>{policy.insured_situation || "À compléter"}</dd></div></dl></section>
+        {policy.insurance_type === "equipment" && <InsuranceCoveredEquipment equipment={policy.equipment ?? []} />}
+        {policy.insurance_type === "group_health" && <InsuranceCoveredPeople employees={policy.employees ?? []} />}
+        {policy.insurance_type !== "equipment" && policy.insurance_type !== "group_health" && <section><h3><ActionIcon name="specifications" />Couverture</h3><dl><div><dt>Situation assurée</dt><dd>{policy.insured_situation || "À compléter"}</dd></div></dl></section>}
         <section><h3><ActionIcon name="invoice" />Informations financières</h3><dl><div><dt>Prime nette</dt><dd>{formatMoney(policy.net_premium)}</dd></div><div><dt>ACC</dt><dd>{formatMoney(policy.accessories_amount ?? "0")}</dd></div><div><dt>Taxe</dt><dd>{formatMoney(policy.tax_amount)}</dd></div><div><dt>Prime TTC</dt><dd>{formatMoney(policy.total_amount)}</dd></div></dl></section>
         <InsuranceDocuments policy={policy} onChanged={onDocumentsChanged} />
         <section><h3><ActionIcon name="note" />Observations</h3><p className="observations">{policy.notes || "Aucune observation."}</p></section>
@@ -295,6 +297,24 @@ function InsuranceDetailPanel({ policy, onClose, onEdit, onDocumentsChanged, onD
       </div>
     </aside>
   </div>;
+}
+
+function InsuranceCoveredEquipment({ equipment }: { equipment: NonNullable<Policy["equipment"]> }) {
+  return <InsuranceCoveredItems title="Équipements couverts" icon="specifications" countLabel="actif" emptyTitle="Aucun équipement couvert" emptyDescription="Les actifs liés à cette assurance apparaîtront ici." items={equipment} renderItem={(item) => <><strong>{[item.brand, item.model].filter(Boolean).join(" ") || item.asset_code}</strong><small>{item.asset_code}</small></>} />;
+}
+
+function InsuranceCoveredPeople({ employees }: { employees: NonNullable<Policy["employees"]> }) {
+  return <InsuranceCoveredItems title="Personnes couvertes" icon="people" countLabel="personne" emptyTitle="Aucune personne couverte" emptyDescription="Les employés liés à cette assurance santé apparaîtront ici." items={employees} renderItem={(employee) => <><strong>{employee.name}</strong><small>Date de naissance : {employee.birth_date ? formatDate(employee.birth_date) : "à renseigner"}</small></>} />;
+}
+
+function InsuranceCoveredItems<T extends { id: number }>({ title, icon, countLabel, emptyTitle, emptyDescription, items, renderItem }: { title: string; icon: "specifications" | "people"; countLabel: string; emptyTitle: string; emptyDescription: string; items: T[]; renderItem: (item: T) => ReactNode }) {
+  const pageSize = 3;
+  const [page, setPage] = useState(0);
+  const pageCount = Math.max(1, Math.ceil(items.length / pageSize));
+  const currentPage = Math.min(page, pageCount - 1);
+  const visibleItems = items.slice(currentPage * pageSize, (currentPage + 1) * pageSize);
+
+  return <section className="insurance-detail-covered"><h3><ActionIcon name={icon} />{title}</h3>{items.length ? <><p className="insurance-detail-covered-count">{items.length} {countLabel}{items.length > 1 ? "s" : ""} couvert{items.length > 1 ? "s" : ""}</p><ul>{visibleItems.map((item) => <li key={item.id}>{renderItem(item)}</li>)}</ul>{pageCount > 1 && <nav className="insurance-detail-covered-pagination" aria-label={title}><button type="button" disabled={currentPage === 0} onClick={() => setPage((value) => value - 1)}>Précédent</button><span>{currentPage + 1} / {pageCount}</span><button type="button" disabled={currentPage === pageCount - 1} onClick={() => setPage((value) => value + 1)}>Suivant</button></nav>}</> : <EmptyState compact icon={icon} title={emptyTitle} description={emptyDescription} />}</section>;
 }
 
 function InsuranceDocuments({ policy, onChanged }: { policy: Policy; onChanged: (documents: PolicyDocument[]) => void }) {

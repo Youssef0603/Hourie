@@ -1,6 +1,8 @@
 <?php
 
 use App\Enums\UserRole;
+use App\Models\Employee;
+use App\Models\Equipment;
 use App\Models\InsurancePolicy;
 use App\Models\InsurancePolicyDocument;
 use App\Models\User;
@@ -8,6 +10,26 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 
 uses(LazilyRefreshDatabase::class);
+
+it('returns covered people and equipment in the policy detail', function () {
+    $manager = User::factory()->create(['role' => UserRole::Manager]);
+    $employee = Employee::factory()->create(['name' => 'Ahmad Yassin', 'birth_date' => '2001-07-13']);
+    $equipment = Equipment::factory()->create(['asset_code' => 'A.H-CAM-127', 'brand' => 'SinoTruck', 'model' => 'HOWO 400']);
+    $healthPolicy = InsurancePolicy::query()->create(['insurance_type' => 'group_health', 'policy_number' => 'HEALTH-001']);
+    $equipmentPolicy = InsurancePolicy::query()->create(['insurance_type' => 'equipment', 'policy_number' => 'EQUIP-001']);
+    $healthPolicy->employees()->attach($employee);
+    $equipmentPolicy->equipment()->attach($equipment);
+
+    $this->actingAs($manager, 'web')->getJson("/api/v1/insurance-policies/{$healthPolicy->id}")
+        ->assertOk()
+        ->assertJsonPath('data.employees.0.name', 'Ahmad Yassin')
+        ->assertJsonPath('data.employees.0.birth_date', '2001-07-13');
+
+    $this->actingAs($manager, 'web')->getJson("/api/v1/insurance-policies/{$equipmentPolicy->id}")
+        ->assertOk()
+        ->assertJsonPath('data.equipment.0.asset_code', 'A.H-CAM-127')
+        ->assertJsonPath('data.equipment.0.model', 'HOWO 400');
+});
 
 it('records policy creation and updates in the history', function () {
     $manager = User::factory()->create(['role' => UserRole::Manager]);

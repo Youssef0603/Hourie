@@ -23,7 +23,7 @@ class InsurancePolicyController extends Controller
 {
     public function index(Request $request): AnonymousResourceCollection
     {
-        $query = InsurancePolicy::query()->with(['project:id,name', 'employees:id,name', 'equipment:id,asset_code,brand,model', 'documents'])->latest('ends_on')->latest('id');
+        $query = InsurancePolicy::query()->with(['project:id,name', 'employees:id,name,birth_date', 'equipment:id,asset_code,brand,model', 'documents'])->latest('ends_on')->latest('id');
         if ($request->filled('insurance_type')) {
             $query->where('insurance_type', $request->string('insurance_type')->toString());
         }
@@ -63,7 +63,7 @@ class InsurancePolicyController extends Controller
 
     public function show(InsurancePolicy $insurancePolicy): InsurancePolicyResource
     {
-        return new InsurancePolicyResource($insurancePolicy->load(['project:id,name', 'employees:id,name', 'equipment:id,asset_code,brand,model', 'documents', 'changes.actor:id,name']));
+        return new InsurancePolicyResource($insurancePolicy->load(['project:id,name', 'employees:id,name,birth_date', 'equipment:id,asset_code,brand,model', 'documents', 'changes.actor:id,name']));
     }
 
     public function update(UpdateInsurancePolicyRequest $request, InsurancePolicy $insurancePolicy): InsurancePolicyResource
@@ -201,7 +201,7 @@ class InsurancePolicyController extends Controller
                 'occurred_at' => now(),
             ]);
 
-            return $policy->fresh()->load(['project:id,name', 'employees:id,name', 'equipment:id,asset_code,brand,model', 'documents', 'changes.actor:id,name']);
+            return $policy->fresh()->load(['project:id,name', 'employees:id,name,birth_date', 'equipment:id,asset_code,brand,model', 'documents', 'changes.actor:id,name']);
         });
     }
 

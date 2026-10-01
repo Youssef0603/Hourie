@@ -351,6 +351,17 @@ html[dir='rtl'] .sidebar-toggle svg {
   gap: 0.85rem;
 }
 
+.user-menu {
+  margin-inline-start: auto;
+}
+
+.workspace-brand {
+  position: absolute;
+  inset-inline-start: 0;
+  width: 15rem;
+  justify-content: center;
+}
+
 .user-menu > div {
   align-items: flex-start;
   flex-direction: column;
@@ -360,15 +371,17 @@ html[dir='rtl'] .sidebar-toggle svg {
 .workspace-logo-frame {
   display: flex;
   align-items: center;
-  border-radius: 0.35rem;
-  padding: 0.2rem 0.3rem;
+  width: 9.5rem;
+  justify-content: center;
+  border-radius: 0.3rem;
+  padding: 0.25rem 0.35rem;
   background: var(--color-primary);
 }
 
 .workspace-logo {
   display: block;
-  width: 7.25rem;
-  height: 1.9rem;
+  width: 100%;
+  height: 2.5rem;
 }
 
 .user-menu strong {
@@ -1798,7 +1811,7 @@ html[dir='rtl'] .directory-form select {
 .directory-card.site-card .site-card-identity h2 {
   margin: 0.55rem 0 0;
   overflow: hidden;
-  color: #202b45;
+  color: var(--color-text-strong);
   font-size: 1rem;
   font-weight: 500;
   text-overflow: ellipsis;
@@ -1858,7 +1871,7 @@ html[dir='rtl'] .directory-form select {
 .site-card-facts dd {
   margin: 0.28rem 0 0;
   overflow: hidden;
-  color: #202b45;
+  color: var(--color-text-strong);
   font-size: 0.75rem;
   font-weight: 500;
   line-height: 1.25;
@@ -5149,6 +5162,16 @@ html[dir='rtl'] .maintenance-form-grid select {
     margin-inline-start: 2.8rem;
   }
 
+  .workspace-brand {
+    position: static;
+    width: auto;
+    flex-basis: auto;
+  }
+
+  .user-menu {
+    margin-inline-start: 0;
+  }
+
   .workspace-header {
     gap: 0.9rem;
     border-bottom: 0;
@@ -5159,6 +5182,7 @@ html[dir='rtl'] .maintenance-form-grid select {
   }
 
   .workspace-logo-frame {
+    width: auto;
     padding: 0;
     background: transparent;
   }
@@ -6693,6 +6717,75 @@ html[dir='rtl'] .insurance-filter-content .searchable-select-input {
 }
 
 .insurance-covered-equipment-pagination span {
+  color: var(--color-text-muted);
+  font-size: 0.67rem;
+}
+
+.insurance-detail-covered {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.insurance-detail-covered-count {
+  margin: -0.2rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.68rem;
+}
+
+.insurance-detail-covered ul {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.insurance-detail-covered li {
+  display: grid;
+  gap: 0.12rem;
+  min-height: 2.65rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--control-radius);
+  padding: 0.42rem 0.55rem;
+}
+
+.insurance-detail-covered li strong {
+  overflow: hidden;
+  color: var(--color-text-strong);
+  font-size: 0.73rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.insurance-detail-covered li small {
+  color: var(--color-text-muted);
+  font-size: 0.65rem;
+}
+
+.insurance-detail-covered-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.45rem;
+}
+
+.insurance-detail-covered-pagination button {
+  min-height: 1.9rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--button-radius);
+  padding: 0.28rem 0.48rem;
+  color: var(--color-text-strong);
+  background: white;
+  font-size: 0.67rem;
+  font-weight: 600;
+}
+
+.insurance-detail-covered-pagination button:disabled {
+  opacity: 0.45;
+}
+
+.insurance-detail-covered-pagination span {
   color: var(--color-text-muted);
   font-size: 0.67rem;
 }
