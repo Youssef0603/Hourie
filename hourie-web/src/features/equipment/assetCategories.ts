@@ -39,8 +39,8 @@ export const assetCategories: Array<{ code: AssetCategoryCode; labelFr: string; 
     { key: 'official_document_type', labelFr: 'Type de document officiel', labelAr: 'نوع الوثيقة الرسمية', type: 'text' },
     { key: 'official_document_location', labelFr: 'Emplacement du document', labelAr: 'مكان الوثيقة', type: 'text' },
   ], columns: ['system_type', 'quantity', 'unit'] },
-  { code: 'portacabin', labelFr: 'Bungalows', labelAr: 'المكاتب المتنقلة', fields: [
-    { key: 'bungalow_type', labelFr: 'Type de bungalow', labelAr: 'نوع الوحدة', type: 'text' },
+  { code: 'portacabin', labelFr: 'Conteneurs', labelAr: 'المكاتب المتنقلة', fields: [
+    { key: 'bungalow_type', labelFr: 'Type de conteneur', labelAr: 'نوع الوحدة', type: 'text' },
     { key: 'length_m', labelFr: 'Longueur (m)', labelAr: 'الطول (م)', type: 'number', unit: 'm' },
     { key: 'width_m', labelFr: 'Largeur (m)', labelAr: 'العرض (م)', type: 'number', unit: 'm' },
     { key: 'height_m', labelFr: 'Hauteur (m)', labelAr: 'الارتفاع (م)', type: 'number', unit: 'm' },
