@@ -16,6 +16,7 @@ import type { CatalogOption } from "../../equipment/types";
 import { catalogBadgeStyle, catalogLabel } from "../../equipment/catalogs";
 import { SearchableSelect } from "../../../shared/components/SearchableSelect";
 import { EmptyState } from "../../../shared/components/EmptyState";
+import { DataTable } from "../../../shared/components/DataTable";
 
 type PeoplePageProps = {
   canAdd: boolean;
@@ -56,6 +57,11 @@ export function PeoplePage({
 }: PeoplePageProps) {
   const [people, setPeople] = useState<Employee[]>([]);
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [showFilters, setShowFilters] = useState(false);
+  const [accessFilter, setAccessFilter] = useState<"" | "with_access" | "without_access">("");
+  const [roleFilter, setRoleFilter] = useState<"" | "manager" | "cms_manager" | "generator_manager" | "viewer">("");
+  const [activityFilter, setActivityFilter] = useState<"" | "active" | "inactive">("");
   const [isRefreshing, setIsRefreshing] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState("");
@@ -81,11 +87,12 @@ export function PeoplePage({
     ([value]) => canManageManagerAccounts || value !== "manager",
   );
   const searchTerm = normalizeSearch(search.trim());
-  const visiblePeople = searchTerm
+  const searchedPeople = searchTerm
     ? people.filter((person) =>
         normalizeSearch(
           [
             person.name,
+            person.email,
             person.user?.username,
             person.user?.email,
             person.phone_number,
@@ -96,10 +103,27 @@ export function PeoplePage({
         ).includes(searchTerm),
       )
     : people;
+  const visiblePeople = searchedPeople.filter((person) =>
+    (accessFilter === "" || (accessFilter === "with_access" ? person.user !== null : person.user === null)) &&
+    (roleFilter === "" || person.user?.role === roleFilter) &&
+    (activityFilter === "" || (activityFilter === "active" ? person.is_active : !person.is_active)),
+  );
+  const activeFilterCount = [accessFilter, roleFilter, activityFilter].filter(Boolean).length;
+  const peoplePerPage = 10;
+  const totalPages = Math.max(1, Math.ceil(visiblePeople.length / peoplePerPage));
+  const page = Math.min(currentPage, totalPages);
+  const paginatedPeople = visiblePeople.slice(
+    (page - 1) * peoplePerPage,
+    page * peoplePerPage,
+  );
 
   useEffect(() => {
     refreshPeople();
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, accessFilter, roleFilter, activityFilter]);
 
   async function refreshPeople() {
     setError(null);
@@ -365,8 +389,8 @@ export function PeoplePage({
           </form>
         </Modal>
       )}
-      <section className="people-directory-panel">
-        <div className="filter-bar people-filter-bar">
+      <section className="inventory-panel">
+        <div className="filter-bar">
           <label className="search-field">
             <span>{fr.equipment.search}</span>
             <input
@@ -377,6 +401,11 @@ export function PeoplePage({
             />
           </label>
           <div className="filter-toolbar-actions">
+            <button className={`advanced-filter-toggle${showFilters ? " active" : ""}`} type="button" onClick={() => setShowFilters((value) => !value)} aria-expanded={showFilters}>
+              <ActionIcon name="filter" />
+              <span>{fr.equipment.filters}</span>
+              {activeFilterCount > 0 && <strong>{activeFilterCount}</strong>}
+            </button>
             {canAdd && (
               <button
                 className="table-refresh-button table-add-button"
@@ -398,48 +427,65 @@ export function PeoplePage({
             >
               <ActionIcon name="refresh" />
             </button>
+            {activeFilterCount > 0 && <button className="clear-filters" type="button" onClick={() => { setAccessFilter(""); setRoleFilter(""); setActivityFilter(""); }}>{fr.equipment.clearFilters}</button>}
           </div>
         </div>
-        {!isRefreshing && (
-          <div className="people-card-grid">
-            {visiblePeople.map((person) => (
-              <button
-                className="person-directory-card"
-                type="button"
-                key={person.id}
-                onClick={() => openPerson(person.id)}
-              >
-                <div className="person-directory-card-main">
-                  <span className="person-directory-avatar">
-                    {personInitials(person.name)}
-                  </span>
-                  <span className="person-directory-identity">
-                    <strong>{person.name}</strong>
-                    <span>
-                      {person.user
-                        ? fr.roles[person.user.role]
-                        : fr.directory.noSystemAccess}
-                    </span>
-                    {person.user?.username && (
-                      <small>@{person.user.username}</small>
-                    )}
-                  </span>
+        {showFilters && <PeopleFilterDrawer accessFilter={accessFilter} roleFilter={roleFilter} activityFilter={activityFilter} onAccessChange={setAccessFilter} onRoleChange={setRoleFilter} onActivityChange={setActivityFilter} onClose={() => setShowFilters(false)} />}
+        {!isRefreshing && visiblePeople.length > 0 && (
+          <>
+            <DataTable className="asset-inventory-table people-list-table" ariaLabel={fr.directory.people}>
+                <thead>
+                  <tr>
+                    <th>{fr.directory.fullName}</th>
+                    <th>{fr.directory.email}</th>
+                    <th>{fr.directory.phoneNumber}</th>
+                    <th>{fr.directory.employmentDate}</th>
+                    <th>Accès</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedPeople.map((person) => (
+                    <tr
+                      key={person.id}
+                      tabIndex={0}
+                      onClick={() => openPerson(person.id)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          openPerson(person.id);
+                        }
+                      }}
+                    >
+                      <td>
+                        <span className="directory-table-person">
+                          <span>
+                            <strong className="primary-cell">{person.name}</strong>
+                          </span>
+                        </span>
+                      </td>
+                      <td>{person.email ?? fr.common.notAssigned}</td>
+                      <td>{person.phone_number ?? fr.common.notAssigned}</td>
+                      <td>{person.employment_date ? new Intl.DateTimeFormat("fr-FR").format(new Date(`${person.employment_date}T00:00:00`)) : fr.common.notAssigned}</td>
+                      <td>
+                        <span className={`person-system-access${person.user ? " has-access" : ""}`}>
+                          {person.user ? fr.roles[person.user.role] : fr.directory.noSystemAccess}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+            </DataTable>
+            {totalPages > 1 && (
+              <nav className="pagination" aria-label={fr.equipment.pagination}>
+                <span>{visiblePeople.length} personne{visiblePeople.length > 1 ? "s" : ""}</span>
+                <div>
+                  <button type="button" disabled={page === 1} onClick={() => setCurrentPage(page - 1)}>{fr.common.previous}</button>
+                  <span>{fr.equipment.page(page, totalPages)}</span>
+                  <button type="button" disabled={page === totalPages} onClick={() => setCurrentPage(page + 1)}>{fr.common.next}</button>
                 </div>
-                <span className="person-directory-card-footer">
-                  <span className="person-directory-phone">
-                    {person.phone_number ?? fr.common.notAssigned}
-                  </span>
-                  <span
-                    className={`person-system-access${person.user ? " has-access" : ""}`}
-                  >
-                    {person.user
-                      ? fr.directory.hasSystemAccess
-                      : fr.directory.noSystemAccess}
-                  </span>
-                </span>
-              </button>
-            ))}
-          </div>
+              </nav>
+            )}
+          </>
         )}
         {!isRefreshing && visiblePeople.length === 0 && (
           <EmptyState
@@ -503,6 +549,37 @@ export function PeoplePage({
       )}
     </main>
   );
+}
+
+function PeopleFilterDrawer({
+  accessFilter,
+  roleFilter,
+  activityFilter,
+  onAccessChange,
+  onRoleChange,
+  onActivityChange,
+  onClose,
+}: {
+  accessFilter: "" | "with_access" | "without_access";
+  roleFilter: "" | "manager" | "cms_manager" | "generator_manager" | "viewer";
+  activityFilter: "" | "active" | "inactive";
+  onAccessChange: (value: "" | "with_access" | "without_access") => void;
+  onRoleChange: (value: "" | "manager" | "cms_manager" | "generator_manager" | "viewer") => void;
+  onActivityChange: (value: "" | "active" | "inactive") => void;
+  onClose: () => void;
+}) {
+  return <div className="filter-drawer-backdrop" onMouseDown={onClose}>
+    <aside className="filter-drawer" role="dialog" aria-modal="true" aria-label={fr.equipment.filters} onMouseDown={(event) => event.stopPropagation()}>
+      <header><div><p className="section-label">PERSONNEL</p><h2>{fr.equipment.filters}</h2></div><button type="button" onClick={onClose} aria-label={fr.common.close}><ActionIcon name="close" /></button></header>
+      <div className="filter-drawer-content">
+        <fieldset className="drawer-basic-filters"><legend>{fr.equipment.filters}</legend><div className="advanced-filter-grid">
+          <label><span>Accès au système</span><SearchableSelect ariaLabel="Accès au système" value={accessFilter} onChange={(value) => onAccessChange(value as typeof accessFilter)} placeholder={fr.common.all} options={[{ value: "with_access", label: "Avec accès" }, { value: "without_access", label: "Sans accès" }]} /></label>
+          <label><span>{fr.directory.accountRole}</span><SearchableSelect ariaLabel={fr.directory.accountRole} value={roleFilter} onChange={(value) => onRoleChange(value as typeof roleFilter)} placeholder={fr.common.all} options={Object.entries(fr.roles).map(([value, label]) => ({ value, label }))} /></label>
+          <label><span>Statut</span><SearchableSelect ariaLabel="Statut" value={activityFilter} onChange={(value) => onActivityChange(value as typeof activityFilter)} placeholder={fr.common.all} options={[{ value: "active", label: "Actif" }, { value: "inactive", label: "Inactif" }]} /></label>
+        </div></fieldset>
+      </div>
+    </aside>
+  </div>
 }
 
 function PersonDetail({

@@ -2791,7 +2791,7 @@ html[dir='rtl'] .filter-bar select {
 
 .equipment-table th {
   border-bottom: 1px solid #dfe2e7;
-  padding: 0.48rem 0.75rem;
+  padding: 0.62rem 0.85rem;
   color: var(--color-text-strong);
   background: white;
   font-size: 0.69rem;
@@ -2802,11 +2802,15 @@ html[dir='rtl'] .filter-bar select {
 
 .equipment-table td {
   border-bottom: 1px solid #e9ebef;
-  padding: calc(0.32rem + 2px) 0.75rem;
+  padding: 0.62rem 0.85rem;
   color: var(--color-text-strong);
   font-size: 0.72rem;
   line-height: 1.25;
   white-space: nowrap;
+}
+
+.people-list-table td {
+  padding-block: 0.72rem;
 }
 
 .equipment-table tbody tr:last-child td {

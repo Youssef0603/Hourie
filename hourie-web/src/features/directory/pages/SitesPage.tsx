@@ -13,6 +13,7 @@ import { SearchableSelect } from '../../../shared/components/SearchableSelect'
 import { LoadingSpinner } from '../../../shared/components/LoadingSpinner'
 import { SiteEditForm } from '../components/SiteEditForm'
 import { EmptyState } from '../../../shared/components/EmptyState'
+import { DataTable } from '../../../shared/components/DataTable'
 
 type SitesPageProps = {
   canAdd: boolean
@@ -24,6 +25,9 @@ type SitesPageProps = {
 
 export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, catalogs, employees = [] }: SitesPageProps) {
   const [sites, setSites] = useState<Site[]>([])
+  const [search, setSearch] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [isRefreshing, setIsRefreshing] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [name, setName] = useState('')
   const [address, setAddress] = useState('')
@@ -40,10 +44,24 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, catalogs, emplo
   const [isEditingSite, setIsEditingSite] = useState(false)
 
   useEffect(() => {
-    getSites()
-      .then(setSites)
-      .catch(() => setError(fr.directory.loadError))
+    refreshSites()
   }, [])
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [search])
+
+  async function refreshSites() {
+    setError(null)
+    setIsRefreshing(true)
+    try {
+      setSites(await getSites())
+    } catch {
+      setError(fr.directory.loadError)
+    } finally {
+      setIsRefreshing(false)
+    }
+  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -106,6 +124,14 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, catalogs, emplo
 
   const projectStatusOptions = catalogOptions(catalogs, 'project_status')
   const selectedProjectStatus = status || projectStatusOptions[0]?.code || ''
+  const searchTerm = search.trim().toLocaleLowerCase('fr-FR')
+  const visibleSites = searchTerm
+    ? sites.filter((site) => [site.name, site.address, site.responsible?.name].filter(Boolean).join(' ').toLocaleLowerCase('fr-FR').includes(searchTerm))
+    : sites
+  const sitesPerPage = 10
+  const totalPages = Math.max(1, Math.ceil(visibleSites.length / sitesPerPage))
+  const page = Math.min(currentPage, totalPages)
+  const paginatedSites = visibleSites.slice((page - 1) * sitesPerPage, page * sitesPerPage)
 
   return (
     <main className="directory-page">
@@ -176,26 +202,34 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, catalogs, emplo
           }} />
         </Modal>
       )}
-      <div className="directory-grid">
-        {sites.map((site) => (
-          <button className="directory-card site-card" type="button" key={site.id} onClick={() => openSiteDetails(site)}>
-            <header className="site-card-header">
-              <span className={`project-status project-status-${site.status}`} style={catalogBadgeStyle(catalogs, 'project_status', site.status)}>{catalogLabel(catalogs, 'project_status', site.status)}</span>
-              <span className="site-card-arrow" aria-hidden="true"><ActionIcon name="expand" /></span>
-            </header>
-            <div className="site-card-identity">
-              <h2>{site.name}</h2>
-              <p className={`site-card-address${site.address ? '' : ' empty'}`}><ActionIcon name="location" />{site.address || fr.common.toComplete}</p>
-            </div>
-            <dl className="site-card-facts">
-              <div><dt>{fr.directory.siteResponsible}</dt><dd>{site.responsible?.name ?? fr.common.notAssigned}</dd></div>
-              <div><dt>{fr.directory.assignedAssets}</dt><dd>{site.active_equipment_count}</dd></div>
-              <div><dt>{fr.directory.expectedEndDate}</dt><dd>{formatSiteDate(site.expected_end_date)}</dd></div>
-            </dl>
-          </button>
-        ))}
-        {sites.length === 0 && <EmptyState icon="location" title="Aucun site enregistré" description="Les sites et projets ajoutés apparaîtront ici." />}
-      </div>
+      <section className="inventory-panel">
+        <div className="filter-bar">
+          <label className="search-field">
+            <span>{fr.equipment.search}</span>
+            <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Rechercher un site, une adresse ou un responsable" />
+          </label>
+          <div className="filter-toolbar-actions">
+            <button className="table-refresh-button filter-refresh-button" type="button" onClick={refreshSites} disabled={isRefreshing} aria-label={fr.common.refresh} title={fr.common.refresh}><ActionIcon name="refresh" /></button>
+          </div>
+        </div>
+        {!isRefreshing && visibleSites.length > 0 && <>
+          <DataTable className="asset-inventory-table" ariaLabel={fr.directory.sites}>
+              <thead><tr><th>Site / projet</th><th>{fr.directory.siteResponsible}</th><th>{fr.directory.siteAddress}</th><th>{fr.directory.assignedAssets}</th><th>{fr.directory.startDate}</th><th>{fr.directory.expectedEndDate}</th><th>Statut</th></tr></thead>
+              <tbody>{paginatedSites.map((site) => <tr key={site.id} tabIndex={0} onClick={() => openSiteDetails(site)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openSiteDetails(site) } }}>
+                <td><strong>{site.name}</strong></td>
+                <td>{site.responsible?.name ?? fr.common.notAssigned}</td>
+                <td>{site.address ?? fr.common.notProvided}</td>
+                <td>{site.active_equipment_count}</td>
+                <td>{formatSiteDate(site.start_date)}</td>
+                <td>{formatSiteDate(site.expected_end_date)}</td>
+                <td><span className={`project-status project-status-${site.status}`} style={catalogBadgeStyle(catalogs, 'project_status', site.status)}>{catalogLabel(catalogs, 'project_status', site.status)}</span></td>
+              </tr>)}</tbody>
+          </DataTable>
+          {totalPages > 1 && <nav className="pagination" aria-label={fr.equipment.pagination}><span>{visibleSites.length} site{visibleSites.length > 1 ? 's' : ''}</span><div><button type="button" disabled={page === 1} onClick={() => setCurrentPage(page - 1)}>{fr.common.previous}</button><span>{fr.equipment.page(page, totalPages)}</span><button type="button" disabled={page === totalPages} onClick={() => setCurrentPage(page + 1)}>{fr.common.next}</button></div></nav>}
+        </>}
+        {!isRefreshing && visibleSites.length === 0 && <EmptyState icon="location" title={searchTerm ? 'Aucun site trouvé' : 'Aucun site enregistré'} description={searchTerm ? 'Modifiez votre recherche pour afficher d’autres sites.' : 'Les sites et projets ajoutés apparaîtront ici.'} />}
+        {isRefreshing && <div className="table-state"><LoadingSpinner label={fr.common.loading} /></div>}
+      </section>
     </main>
   )
 }
