@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'tank_capacity_litres',
     'current_engine_hours',
     'purchase_price_fcfa',
+    'sold_to',
 ])]
 class GeneratorDetail extends Model
 {

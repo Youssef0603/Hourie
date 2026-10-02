@@ -32,6 +32,7 @@ class EquipmentResource extends JsonResource
                 'tank_capacity_litres' => $this->generatorDetails->tank_capacity_litres,
                 'current_engine_hours' => $this->generatorDetails->current_engine_hours,
                 'purchase_price_fcfa' => $this->generatorDetails->purchase_price_fcfa,
+                'sold_to' => $this->generatorDetails->sold_to,
             ]),
             'maintenances' => EquipmentMaintenanceResource::collection($this->whenLoaded('maintenances')),
             'images' => $this->whenLoaded('images', fn () => $this->images->map(fn ($image) => [

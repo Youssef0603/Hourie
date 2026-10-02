@@ -219,7 +219,7 @@ export function PeoplePage({
           onClose={() => setShowForm(false)}
         >
           <form
-            className={`directory-form people-form modal-directory-form${createAccount ? '' : ' personnel-only-form'}`}
+            className={`directory-form people-form modal-directory-form${createAccount ? "" : " personnel-only-form"}`}
             onSubmit={submit}
           >
             {error && (
@@ -232,54 +232,130 @@ export function PeoplePage({
               <div className="people-form-fields">
                 <label>
                   <span>{fr.directory.fullName}</span>
-                  <input required autoComplete="name" value={name} onChange={(event) => setName(event.target.value)} />
+                  <input
+                    required
+                    autoComplete="name"
+                    value={name}
+                    onChange={(event) => setName(event.target.value)}
+                  />
                 </label>
                 <label>
                   <span>{fr.directory.phoneNumber}</span>
-                  <input type="tel" autoComplete="tel" value={phoneNumber} onChange={(event) => setPhoneNumber(event.target.value)} placeholder="+225 07 00 00 00 00" />
+                  <input
+                    type="tel"
+                    autoComplete="tel"
+                    value={phoneNumber}
+                    onChange={(event) => setPhoneNumber(event.target.value)}
+                    placeholder="+225 07 00 00 00 00"
+                  />
                 </label>
-                <label><span>E-mail</span><input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="nom@hourie.ci" /></label>
+                <label>
+                  <span>E-mail</span>
+                  <input
+                    type="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    placeholder="nom@hourie.ci"
+                  />
+                </label>
                 <label>
                   <span>{fr.directory.passportNumber}</span>
-                  <input value={passportNumber} onChange={(event) => setPassportNumber(event.target.value)} />
+                  <input
+                    value={passportNumber}
+                    onChange={(event) => setPassportNumber(event.target.value)}
+                  />
                 </label>
                 <label>
                   <span>{fr.directory.employmentDate}</span>
-                  <input type="date" max={new Date().toISOString().slice(0, 10)} value={employmentDate} onChange={(event) => setEmploymentDate(event.target.value)} />
+                  <input
+                    type="date"
+                    max={new Date().toISOString().slice(0, 10)}
+                    value={employmentDate}
+                    onChange={(event) => setEmploymentDate(event.target.value)}
+                  />
                 </label>
                 <label>
                   <span>Date de naissance</span>
-                  <input type="date" max={new Date().toISOString().slice(0, 10)} value={birthDate} onChange={(event) => setBirthDate(event.target.value)} />
+                  <input
+                    type="date"
+                    max={new Date().toISOString().slice(0, 10)}
+                    value={birthDate}
+                    onChange={(event) => setBirthDate(event.target.value)}
+                  />
                 </label>
               </div>
             </section>
-            <section className={`people-form-section account-access-section${createAccount ? ' has-account' : ''}`}>
+            <section
+              className={`people-form-section account-access-section${createAccount ? " has-account" : ""}`}
+            >
               {createAccount && <h3>{fr.directory.accountAccess}</h3>}
               <label className="account-access-toggle">
-                <input type="checkbox" checked={createAccount} onChange={(event) => setCreateAccount(event.target.checked)} />
+                <input
+                  type="checkbox"
+                  checked={createAccount}
+                  onChange={(event) => setCreateAccount(event.target.checked)}
+                />
                 <span>{fr.directory.createAccount}</span>
               </label>
-              {createAccount && <><p className="account-form-hint">{fr.directory.credentialsHint}</p>
-              <div className="people-form-fields">
-                <label>
-                  <span>{fr.directory.username}</span>
-                  <input className="generated-username" readOnly tabIndex={-1} value={generatedUsername(name)} placeholder={fr.directory.usernameGeneratedPlaceholder} />
-                  <small>{fr.directory.usernameGeneratedHint}</small>
-                </label>
-                <label>
-                  <span>{fr.directory.accountRole}</span>
-                  <SearchableSelect ariaLabel={fr.directory.accountRole} value={role} onChange={(value) => setRole(value as typeof role)} placeholder={fr.directory.accountRole} includeEmpty={false} options={roleEntries.map(([value, label]) => ({ value, label }))} />
-                </label>
-                <label>
-                  <span>{fr.directory.temporaryPassword}</span>
-                  <input required minLength={12} type="password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} />
-                </label>
-                <label className="field-wide">
-                  <span>{fr.directory.confirmPassword}</span>
-                  <input required minLength={12} type="password" autoComplete="new-password" value={passwordConfirmation} onChange={(event) => setPasswordConfirmation(event.target.value)} />
-                </label>
-              </div>
-              </>}
+              {createAccount && (
+                <>
+                  <p className="account-form-hint">
+                    {fr.directory.credentialsHint}
+                  </p>
+                  <div className="people-form-fields">
+                    <label>
+                      <span>{fr.directory.username}</span>
+                      <input
+                        className="generated-username"
+                        readOnly
+                        tabIndex={-1}
+                        value={generatedUsername(name)}
+                        placeholder={fr.directory.usernameGeneratedPlaceholder}
+                      />
+                      <small>{fr.directory.usernameGeneratedHint}</small>
+                    </label>
+                    <label>
+                      <span>{fr.directory.accountRole}</span>
+                      <SearchableSelect
+                        ariaLabel={fr.directory.accountRole}
+                        value={role}
+                        onChange={(value) => setRole(value as typeof role)}
+                        placeholder={fr.directory.accountRole}
+                        includeEmpty={false}
+                        options={roleEntries.map(([value, label]) => ({
+                          value,
+                          label,
+                        }))}
+                      />
+                    </label>
+                    <label>
+                      <span>{fr.directory.temporaryPassword}</span>
+                      <input
+                        required
+                        minLength={12}
+                        type="password"
+                        autoComplete="new-password"
+                        value={password}
+                        onChange={(event) => setPassword(event.target.value)}
+                      />
+                    </label>
+                    <label className="field-wide">
+                      <span>{fr.directory.confirmPassword}</span>
+                      <input
+                        required
+                        minLength={12}
+                        type="password"
+                        autoComplete="new-password"
+                        value={passwordConfirmation}
+                        onChange={(event) =>
+                          setPasswordConfirmation(event.target.value)
+                        }
+                      />
+                    </label>
+                  </div>
+                </>
+              )}
             </section>
             <div className="maintenance-form-actions">
               <button className="primary-button save-button" type="submit">
@@ -301,7 +377,17 @@ export function PeoplePage({
             />
           </label>
           <div className="filter-toolbar-actions">
-            {canAdd && <button className="table-refresh-button table-add-button" type="button" onClick={() => setShowForm(true)} aria-label={fr.directory.addPerson} title={fr.directory.addPerson}><ActionIcon name="add" /></button>}
+            {canAdd && (
+              <button
+                className="table-refresh-button table-add-button"
+                type="button"
+                onClick={() => setShowForm(true)}
+                aria-label={fr.directory.addPerson}
+                title={fr.directory.addPerson}
+              >
+                <ActionIcon name="add" />
+              </button>
+            )}
             <button
               className="table-refresh-button filter-refresh-button"
               type="button"
@@ -314,23 +400,60 @@ export function PeoplePage({
             </button>
           </div>
         </div>
-        {!isRefreshing && <div className="people-card-grid">
-          {visiblePeople.map((person) => <button className="person-directory-card" type="button" key={person.id} onClick={() => openPerson(person.id)}>
-            <div className="person-directory-card-main">
-              <span className="person-directory-avatar">{personInitials(person.name)}</span>
-              <span className="person-directory-identity">
-                <strong>{person.name}</strong>
-                <span>{person.user ? fr.roles[person.user.role] : fr.directory.noSystemAccess}</span>
-                {person.user?.username && <small>@{person.user.username}</small>}
-              </span>
-            </div>
-            <span className="person-directory-card-footer">
-              <span className="person-directory-phone">{person.phone_number ?? fr.common.notAssigned}</span>
-              <span className={`person-system-access${person.user ? ' has-access' : ''}`}>{person.user ? fr.directory.hasSystemAccess : fr.directory.noSystemAccess}</span>
-            </span>
-          </button>)}
-        </div>}
-        {!isRefreshing && visiblePeople.length === 0 && <EmptyState icon="people" title={searchTerm ? fr.directory.noPeopleMatching : fr.directory.noPeople} description={searchTerm ? "Modifiez votre recherche pour afficher d’autres personnes." : "Les personnes ajoutées apparaîtront ici."} />}
+        {!isRefreshing && (
+          <div className="people-card-grid">
+            {visiblePeople.map((person) => (
+              <button
+                className="person-directory-card"
+                type="button"
+                key={person.id}
+                onClick={() => openPerson(person.id)}
+              >
+                <div className="person-directory-card-main">
+                  <span className="person-directory-avatar">
+                    {personInitials(person.name)}
+                  </span>
+                  <span className="person-directory-identity">
+                    <strong>{person.name}</strong>
+                    <span>
+                      {person.user
+                        ? fr.roles[person.user.role]
+                        : fr.directory.noSystemAccess}
+                    </span>
+                    {person.user?.username && (
+                      <small>@{person.user.username}</small>
+                    )}
+                  </span>
+                </div>
+                <span className="person-directory-card-footer">
+                  <span className="person-directory-phone">
+                    {person.phone_number ?? fr.common.notAssigned}
+                  </span>
+                  <span
+                    className={`person-system-access${person.user ? " has-access" : ""}`}
+                  >
+                    {person.user
+                      ? fr.directory.hasSystemAccess
+                      : fr.directory.noSystemAccess}
+                  </span>
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+        {!isRefreshing && visiblePeople.length === 0 && (
+          <EmptyState
+            icon="people"
+            title={
+              searchTerm ? fr.directory.noPeopleMatching : fr.directory.noPeople
+            }
+            description={
+              searchTerm
+                ? "Modifiez votre recherche pour afficher d’autres personnes."
+                : "Les personnes ajoutées apparaîtront ici."
+            }
+          />
+        )}
         {isRefreshing && (
           <div className="table-state people-table-state">
             <LoadingSpinner label={fr.common.loading} />
@@ -340,9 +463,7 @@ export function PeoplePage({
       {(isLoadingPerson || selectedPerson) && (
         <Modal
           title={
-            isEditingPerson
-              ? fr.directory.editPerson
-              : fr.directory.personSheet
+            isEditingPerson ? fr.directory.editPerson : fr.directory.personSheet
           }
           size={isEditingPerson ? "wide" : "person"}
           onClose={closePerson}
@@ -399,25 +520,50 @@ function PersonDetail({
 }) {
   const [showAssignedAssets, setShowAssignedAssets] = useState(false);
   const employmentDate = person.employment_date
-    ? new Intl.DateTimeFormat("fr-FR").format(new Date(`${person.employment_date}T00:00:00`))
+    ? new Intl.DateTimeFormat("fr-FR").format(
+        new Date(`${person.employment_date}T00:00:00`),
+      )
     : fr.common.notAssigned;
   const birthDate = person.birth_date
-    ? new Intl.DateTimeFormat("fr-FR").format(new Date(`${person.birth_date}T00:00:00`))
+    ? new Intl.DateTimeFormat("fr-FR").format(
+        new Date(`${person.birth_date}T00:00:00`),
+      )
     : fr.common.notAssigned;
-  const activeHealthPolicy = person.health_insurance_policies.find((policy) => policy.ends_on !== null && policy.ends_on >= new Date().toISOString().slice(0, 10));
-  const healthPolicy = activeHealthPolicy ?? person.health_insurance_policies[0];
+  const activeHealthPolicy = person.health_insurance_policies.find(
+    (policy) =>
+      policy.ends_on !== null &&
+      policy.ends_on >= new Date().toISOString().slice(0, 10),
+  );
+  const healthPolicy =
+    activeHealthPolicy ?? person.health_insurance_policies[0];
 
   return (
     <div className="person-detail">
       <section className="person-profile-summary">
         <div className="person-profile-identity">
-          <span className="person-profile-avatar">{personInitials(person.name)}</span>
+          <span className="person-profile-avatar">
+            {personInitials(person.name)}
+          </span>
           <div>
             <h3>{person.name}</h3>
-            <p>{person.user ? fr.roles[person.user.role] : fr.directory.noSystemAccess}</p>
+            <p>
+              {person.user
+                ? fr.roles[person.user.role]
+                : fr.directory.noSystemAccess}
+            </p>
             {person.user?.username && <small>@{person.user.username}</small>}
           </div>
-          {canEdit && <button className="person-delete-action" type="button" onClick={onDelete} aria-label={fr.directory.deletePerson} title={fr.directory.deletePerson}><ActionIcon name="delete" /></button>}
+          {canEdit && (
+            <button
+              className="person-delete-action"
+              type="button"
+              onClick={onDelete}
+              aria-label={fr.directory.deletePerson}
+              title={fr.directory.deletePerson}
+            >
+              <ActionIcon name="delete" />
+            </button>
+          )}
         </div>
         <dl className="person-profile-facts">
           <div>
@@ -426,7 +572,9 @@ function PersonDetail({
           </div>
           <div>
             <dt>{fr.directory.assignedAssets}</dt>
-            <dd>{fr.directory.assetCount(person.equipment_in_custody.length)}</dd>
+            <dd>
+              {fr.directory.assetCount(person.equipment_in_custody.length)}
+            </dd>
           </div>
           <div>
             <dt>{fr.directory.employmentDate}</dt>
@@ -446,17 +594,79 @@ function PersonDetail({
           </div>
         </dl>
         <div className="person-profile-actions">
-          {canEdit && <button className="person-detail-action primary" type="button" onClick={onEdit}><ActionIcon name="edit" />{fr.common.edit}</button>}
-          <button className="person-detail-action" type="button" disabled={person.equipment_in_custody.length === 0} onClick={() => setShowAssignedAssets((visible) => !visible)}>{showAssignedAssets ? fr.directory.hideAssignedAssets : fr.directory.viewAssignedAssets}</button>
+          {canEdit && (
+            <button
+              className="person-detail-action primary"
+              type="button"
+              onClick={onEdit}
+            >
+              <ActionIcon name="edit" />
+              {fr.common.edit}
+            </button>
+          )}
+          <button
+            className="person-detail-action"
+            type="button"
+            disabled={person.equipment_in_custody.length === 0}
+            onClick={() => setShowAssignedAssets((visible) => !visible)}
+          >
+            {showAssignedAssets
+              ? fr.directory.hideAssignedAssets
+              : fr.directory.viewAssignedAssets}
+          </button>
         </div>
       </section>
       <section className="person-health-insurance">
-        <h3><ActionIcon name="invoice" />Assurance santé</h3>
-        {healthPolicy ? <dl><div><dt>Statut</dt><dd><span className={`insurance-status ${activeHealthPolicy ? "active" : "expired"}`}>{activeHealthPolicy ? "Assurance active" : "Assurance expirée"}</span></dd></div><div><dt>N° de police</dt><dd>{healthPolicy.policy_number}</dd></div><div><dt>Assureur</dt><dd>{healthPolicy.source ?? fr.common.notAssigned}</dd></div><div><dt>Expiration</dt><dd>{healthPolicy.ends_on ? new Intl.DateTimeFormat("fr-FR").format(new Date(`${healthPolicy.ends_on}T00:00:00`)) : fr.common.notAssigned}</dd></div></dl> : <EmptyState compact icon="invoice" title="Aucune assurance santé liée" description="La police apparaîtra ici lorsque cette personne sera ajoutée à une assurance santé groupe." />}
+        <h3>
+          <ActionIcon name="invoice" />
+          Assurance santé
+        </h3>
+        {healthPolicy ? (
+          <dl>
+            <div>
+              <dt>Statut</dt>
+              <dd>
+                <span
+                  className={`insurance-status ${activeHealthPolicy ? "active" : "expired"}`}
+                >
+                  {activeHealthPolicy
+                    ? "Assurance active"
+                    : "Assurance expirée"}
+                </span>
+              </dd>
+            </div>
+            <div>
+              <dt>N° de police</dt>
+              <dd>{healthPolicy.policy_number}</dd>
+            </div>
+            <div>
+              <dt>Assureur</dt>
+              <dd>{healthPolicy.source ?? fr.common.notAssigned}</dd>
+            </div>
+            <div>
+              <dt>Expiration</dt>
+              <dd>
+                {healthPolicy.ends_on
+                  ? new Intl.DateTimeFormat("fr-FR").format(
+                      new Date(`${healthPolicy.ends_on}T00:00:00`),
+                    )
+                  : fr.common.notAssigned}
+              </dd>
+            </div>
+          </dl>
+        ) : (
+          <EmptyState
+            compact
+            icon="invoice"
+            title="Aucune assurance santé liée"
+            description="La police apparaîtra ici lorsque cette personne sera ajoutée à une assurance santé groupe."
+          />
+        )}
       </section>
-      {showAssignedAssets && person.equipment_in_custody.length > 0 && <section className="person-assigned-assets-section">
-        <h3>{fr.directory.assignedEquipment}</h3>
-        <div className="site-inventory-wrap">
+      {showAssignedAssets && person.equipment_in_custody.length > 0 && (
+        <section className="person-assigned-assets-section">
+          <h3>{fr.directory.assignedEquipment}</h3>
+          <div className="site-inventory-wrap">
             <table className="equipment-table person-inventory-table">
               <thead>
                 <tr>
@@ -511,8 +721,9 @@ function PersonDetail({
                 ))}
               </tbody>
             </table>
-        </div>
-      </section>}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
@@ -528,8 +739,12 @@ function EditPersonForm({
 }) {
   const [name, setName] = useState(person.name);
   const [phoneNumber, setPhoneNumber] = useState(person.phone_number ?? "");
-  const [passportNumber, setPassportNumber] = useState(person.passport_number ?? "");
-  const [employmentDate, setEmploymentDate] = useState(person.employment_date ?? "");
+  const [passportNumber, setPassportNumber] = useState(
+    person.passport_number ?? "",
+  );
+  const [employmentDate, setEmploymentDate] = useState(
+    person.employment_date ?? "",
+  );
   const [birthDate, setBirthDate] = useState(person.birth_date ?? "");
   const [username, setUsername] = useState(person.user?.username ?? "");
   const [email, setEmail] = useState(person.email ?? "");
@@ -588,22 +803,109 @@ function EditPersonForm({
       <section className="people-form-section">
         <h3>{fr.directory.personalInformation}</h3>
         <div className="people-form-fields">
-          <label><span>{fr.directory.fullName}</span><input required autoComplete="name" value={name} onChange={(event) => setName(event.target.value)} /></label>
-          <label><span>{fr.directory.phoneNumber}</span><input type="tel" autoComplete="tel" value={phoneNumber} onChange={(event) => setPhoneNumber(event.target.value)} /></label>
-          <label><span>E-mail</span><input type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} /></label>
-          <label><span>{fr.directory.passportNumber}</span><input value={passportNumber} onChange={(event) => setPassportNumber(event.target.value)} /></label>
-          <label><span>{fr.directory.employmentDate}</span><input type="date" max={new Date().toISOString().slice(0, 10)} value={employmentDate} onChange={(event) => setEmploymentDate(event.target.value)} /></label>
-          <label><span>Date de naissance</span><input type="date" max={new Date().toISOString().slice(0, 10)} value={birthDate} onChange={(event) => setBirthDate(event.target.value)} /></label>
+          <label>
+            <span>{fr.directory.fullName}</span>
+            <input
+              required
+              autoComplete="name"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+            />
+          </label>
+          <label>
+            <span>{fr.directory.phoneNumber}</span>
+            <input
+              type="tel"
+              autoComplete="tel"
+              value={phoneNumber}
+              onChange={(event) => setPhoneNumber(event.target.value)}
+            />
+          </label>
+          <label>
+            <span>E-mail</span>
+            <input
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+            />
+          </label>
+          <label>
+            <span>{fr.directory.passportNumber}</span>
+            <input
+              value={passportNumber}
+              onChange={(event) => setPassportNumber(event.target.value)}
+            />
+          </label>
+          <label>
+            <span>{fr.directory.employmentDate}</span>
+            <input
+              type="date"
+              max={new Date().toISOString().slice(0, 10)}
+              value={employmentDate}
+              onChange={(event) => setEmploymentDate(event.target.value)}
+            />
+          </label>
+          <label>
+            <span>Date de naissance</span>
+            <input
+              type="date"
+              max={new Date().toISOString().slice(0, 10)}
+              value={birthDate}
+              onChange={(event) => setBirthDate(event.target.value)}
+            />
+          </label>
         </div>
       </section>
       <section className="people-form-section">
         <h3>{fr.directory.accountAccess}</h3>
         <p className="account-form-hint">{fr.directory.editCredentialsHint}</p>
         <div className="people-form-fields">
-          <label><span>{fr.directory.username}</span><input required={person.user !== null} minLength={3} autoComplete="username" value={username} onChange={(event) => setUsername(event.target.value.toLowerCase())} /></label>
-          <label><span>{fr.directory.accountRole}</span><SearchableSelect ariaLabel={fr.directory.accountRole} value={role} onChange={(value) => setRole(value as typeof role)} placeholder={fr.directory.accountRole} includeEmpty={false} options={roleEntries.map(([value, label]) => ({ value, label }))} /></label>
-          <label><span>{fr.directory.newPassword}</span><input minLength={12} required={!person.user && username !== ""} type="password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} /></label>
-          <label className="field-wide"><span>{fr.directory.confirmNewPassword}</span><input minLength={12} required={password !== ""} type="password" autoComplete="new-password" value={passwordConfirmation} onChange={(event) => setPasswordConfirmation(event.target.value)} /></label>
+          <label>
+            <span>{fr.directory.username}</span>
+            <input
+              required={person.user !== null}
+              minLength={3}
+              autoComplete="username"
+              value={username}
+              onChange={(event) =>
+                setUsername(event.target.value.toLowerCase())
+              }
+            />
+          </label>
+          <label>
+            <span>{fr.directory.accountRole}</span>
+            <SearchableSelect
+              ariaLabel={fr.directory.accountRole}
+              value={role}
+              onChange={(value) => setRole(value as typeof role)}
+              placeholder={fr.directory.accountRole}
+              includeEmpty={false}
+              options={roleEntries.map(([value, label]) => ({ value, label }))}
+            />
+          </label>
+          <label>
+            <span>{fr.directory.newPassword}</span>
+            <input
+              minLength={12}
+              required={!person.user && username !== ""}
+              type="password"
+              autoComplete="new-password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+            />
+          </label>
+          <label className="field-wide">
+            <span>{fr.directory.confirmNewPassword}</span>
+            <input
+              minLength={12}
+              required={password !== ""}
+              type="password"
+              autoComplete="new-password"
+              value={passwordConfirmation}
+              onChange={(event) => setPasswordConfirmation(event.target.value)}
+            />
+          </label>
         </div>
       </section>
       <div className="maintenance-form-actions">

@@ -4,6 +4,7 @@ use App\Enums\EquipmentCondition;
 use App\Enums\OperationalSituation;
 use App\Enums\UserRole;
 use App\Models\Employee;
+use App\Models\CatalogOption;
 use App\Models\Equipment;
 use App\Models\EquipmentCategory;
 use App\Models\EquipmentProjectAssignment;
@@ -336,6 +337,15 @@ it('returns generator details without inventing missing values', function () {
 
 it('allows a generator manager to fill every inventory field without changing the asset code', function () {
     $manager = User::factory()->create(['role' => UserRole::GeneratorManager]);
+        CatalogOption::query()->create([
+            'group' => 'equipment_condition',
+            'code' => 'sold',
+            'label_fr' => 'Vendu',
+            'label_ar' => null,
+            'color' => '#A41831',
+            'sort_order' => 999,
+            'is_active' => true,
+        ]);
     EquipmentCategory::factory()->create(['code' => 'generator']);
     $custodian = Employee::factory()->create(['name' => 'Jean Responsable']);
     $equipment = Equipment::factory()->create([
@@ -349,7 +359,7 @@ it('allows a generator manager to fill every inventory field without changing th
         'serial_number' => '34LNGLH0009',
         'manufacture_year' => 2023,
         'purchase_date' => '2024-05-20',
-        'condition' => 'good',
+        'condition' => 'sold',
         'operational_situation' => 'in_use',
         'custodian_employee_id' => $custodian->id,
         'observations' => 'Essai en charge validé.',
@@ -364,6 +374,7 @@ it('allows a generator manager to fill every inventory field without changing th
             'tank_capacity_litres' => 470,
             'current_engine_hours' => 1250.5,
             'purchase_price_fcfa' => 18500000,
+            'sold_to' => 'Entreprise Koffi',
         ],
     ];
 
@@ -376,7 +387,8 @@ it('allows a generator manager to fill every inventory field without changing th
         ->assertJsonPath('data.purchase_date', '2024-05-20')
         ->assertJsonPath('data.custodian.name', 'Jean Responsable')
         ->assertJsonPath('data.generator_details.current_rating', '216')
-        ->assertJsonPath('data.generator_details.purchase_price_fcfa', '18500000.00');
+        ->assertJsonPath('data.generator_details.purchase_price_fcfa', '18500000.00')
+        ->assertJsonPath('data.generator_details.sold_to', 'Entreprise Koffi');
 
     $this->assertDatabaseHas('equipment', [
         'id' => $equipment->id,
@@ -387,6 +399,10 @@ it('allows a generator manager to fill every inventory field without changing th
     $this->assertDatabaseHas('equipment_changes', [
         'equipment_id' => $equipment->id,
         'change_type' => 'specifications_updated',
+    ]);
+    $this->assertDatabaseHas('generator_details', [
+        'equipment_id' => $equipment->id,
+        'sold_to' => 'Entreprise Koffi',
     ]);
 });
 

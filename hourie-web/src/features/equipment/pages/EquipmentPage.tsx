@@ -775,8 +775,13 @@ export function EquipmentPage({
               />
             )}
           </main>
-        ) : isSiteView && route.section === "sites" && route.siteView === "insurance" ? (
-          <InsurancePage key={`site-${siteContext.id}`} initialSiteId={siteContext.id} />
+        ) : isSiteView &&
+          route.section === "sites" &&
+          route.siteView === "insurance" ? (
+          <InsurancePage
+            key={`site-${siteContext.id}`}
+            initialSiteId={siteContext.id}
+          />
         ) : isSiteView ? (
           <AssetInventoryView
             category="all"
@@ -864,7 +869,16 @@ export function EquipmentPage({
             }}
           />
         ) : activeSection === "insurance" ? (
-          <InsurancePage key={route.section === "insurance" ? route.insuranceProjectId ?? "all" : "all"} initialSiteId={route.section === "insurance" ? route.insuranceProjectId : null} />
+          <InsurancePage
+            key={
+              route.section === "insurance"
+                ? (route.insuranceProjectId ?? "all")
+                : "all"
+            }
+            initialSiteId={
+              route.section === "insurance" ? route.insuranceProjectId : null
+            }
+          />
         ) : activeSection === "bonds" ? (
           <BondsPage />
         ) : activeSection === "sites" ? (
@@ -938,7 +952,12 @@ export function EquipmentPage({
                 ))}
               </div>
             ) : (
-              <EmptyState compact icon="history" title={fr.audit.empty} description="Les modifications de cet actif apparaîtront ici." />
+              <EmptyState
+                compact
+                icon="history"
+                title={fr.audit.empty}
+                description="Les modifications de cet actif apparaîtront ici."
+              />
             )
           ) : siteContext?.changes?.length ? (
             <div className="audit-list audit-modal-list">
@@ -958,7 +977,12 @@ export function EquipmentPage({
               ))}
             </div>
           ) : (
-            <EmptyState compact icon="history" title={fr.audit.empty} description="Les modifications de ce site apparaîtront ici." />
+            <EmptyState
+              compact
+              icon="history"
+              title={fr.audit.empty}
+              description="Les modifications de ce site apparaîtront ici."
+            />
           )}
         </Modal>
       )}

@@ -19,7 +19,7 @@ class ImportGeneratorInventoryCommand extends Command
     {
         $path = realpath((string) $this->argument('path'));
 
-        if ($path === false || ! is_file($path) || ! is_readable($path)) {
+        if ($path === false || !is_file($path) || !is_readable($path)) {
             $this->error(__('imports.errors.file_missing'));
 
             return self::FAILURE;
@@ -52,7 +52,7 @@ class ImportGeneratorInventoryCommand extends Command
             );
 
             foreach ($inspection['errors'] as $rowNumber => $error) {
-                $this->error(__('imports.summary.row', ['row' => $rowNumber]).': '.$error);
+                $this->error(__('imports.summary.row', ['row' => $rowNumber]) . ': ' . $error);
             }
 
             if ($inspection['errors'] !== []) {

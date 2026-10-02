@@ -16,6 +16,12 @@ type AddGeneratorFormProps = {
   formId?: string
 }
 
+function formConditionIsSold(options: EquipmentFilterOptions['catalogs'], condition: string) {
+  return condition === 'sold' || catalogOptions(options, 'equipment_condition').some((option) =>
+    option.code === condition && option.label_fr.trim().toLocaleLowerCase('fr-FR') === 'vendu',
+  )
+}
+
 export function AddGeneratorForm({ options, initialProjectId, onCreated, formId }: AddGeneratorFormProps) {
   const defaultCondition = catalogOptions(options.catalogs, 'equipment_condition')[0]?.code ?? ''
   const [form, setForm] = useState({
@@ -23,7 +29,7 @@ export function AddGeneratorForm({ options, initialProjectId, onCreated, formId 
     operational_situation: '', project_id: initialProjectId?.toString() ?? '', current_location_id: '', custodian_employee_id: '',
     apparent_power_kva: '', active_power_kw: '', phases: '', voltage_rating: '', frequency_hz: '',
     current_rating: '', fuel_type: '', tank_capacity_litres: '', current_engine_hours: '', observations: '',
-    purchase_price_fcfa: '',
+    purchase_price_fcfa: '', sold_to: '',
   })
   const [, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -72,7 +78,7 @@ export function AddGeneratorForm({ options, initialProjectId, onCreated, formId 
           phases: text(form.phases), voltage_rating: text(form.voltage_rating), frequency_hz: number(form.frequency_hz),
           current_rating: text(form.current_rating), fuel_type: text(form.fuel_type),
           tank_capacity_litres: number(form.tank_capacity_litres), current_engine_hours: number(form.current_engine_hours),
-          purchase_price_fcfa: number(form.purchase_price_fcfa),
+          purchase_price_fcfa: number(form.purchase_price_fcfa), sold_to: formConditionIsSold(options.catalogs, form.condition) ? text(form.sold_to) : null,
         },
       })
       savedEquipment = equipment
@@ -111,6 +117,7 @@ export function AddGeneratorForm({ options, initialProjectId, onCreated, formId 
         <label><span>{fr.equipment.manufactureYear}</span><input type="number" min="1900" max="2100" value={form.manufacture_year} onChange={(event) => update('manufacture_year', event.target.value)} /></label>
         <label><span>{fr.equipment.purchaseDate}</span><input type="date" value={form.purchase_date} onChange={(event) => update('purchase_date', event.target.value)} /></label>
         <label><span>{fr.equipment.condition}</span><SearchableSelect ariaLabel={fr.equipment.condition} value={form.condition} onChange={(value) => update('condition', value)} placeholder={fr.common.toComplete} includeEmpty={false} options={catalogOptions(options.catalogs, 'equipment_condition').map((option) => ({ value: option.code, label: catalogLabel(options.catalogs, 'equipment_condition', option.code) }))} /></label>
+        {formConditionIsSold(options.catalogs, form.condition) && <label><span>Acheteur <em>*</em></span><input required value={form.sold_to} onChange={(event) => update('sold_to', event.target.value)} placeholder="Nom de l’acheteur" /></label>}
         <label><span>{fr.equipment.situation}</span><SearchableSelect ariaLabel={fr.equipment.situation} value={form.operational_situation} onChange={(value) => update('operational_situation', value)} placeholder={fr.common.toComplete} options={catalogOptions(options.catalogs, 'operational_situation').map((option) => ({ value: option.code, label: catalogLabel(options.catalogs, 'operational_situation', option.code) }))} /></label>
       </div></InventoryFormSection>
       <InventoryFormSection title={fr.equipment.technicalDetails} icon="specifications"><div className="maintenance-form-grid asset-form-grid-3">

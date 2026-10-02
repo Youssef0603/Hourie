@@ -40,6 +40,7 @@ export function EquipmentDetailPanel({
   const [showTransfer, setShowTransfer] = useState(false)
   if (!selected && !isLoadingDetail) return null
   const categoryCode = selected?.category.code ?? 'generator'
+  const isSold = selected?.condition === 'sold' || catalogLabel(options?.catalogs, 'equipment_condition', selected?.condition ?? '').trim().toLocaleLowerCase('fr-FR') === 'vendu'
   const isOtherAsset = isAssetCategoryCode(categoryCode)
   const isInsurableAsset = ['car', 'truck_dumper', 'equipment'].includes(categoryCode)
   const assetDefinition = isOtherAsset ? assetCategory(categoryCode) : null
@@ -112,6 +113,7 @@ export function EquipmentDetailPanel({
                       <div><dt>{fr.equipment.manufactureYear}</dt><dd>{displayedValue(selected.manufacture_year)}</dd></div>
                       <div><dt>{fr.equipment.purchaseDate}</dt><dd>{displayedValue(selected.purchase_date)}</dd></div>
                       <div><dt>{fr.equipment.condition}</dt><dd>{selected.condition ? <span className={`status-badge status-${selected.condition}`} style={catalogBadgeStyle(options?.catalogs, 'equipment_condition', selected.condition)}>{catalogLabel(options?.catalogs, 'equipment_condition', selected.condition)}</span> : fr.common.notProvided}</dd></div>
+                      {categoryCode === 'generator' && isSold && <div><dt>Acheteur</dt><dd>{selected.generator_details?.sold_to ?? fr.common.notProvided}</dd></div>}
                       <div><dt>{fr.equipment.situation}</dt><dd>{selected.operational_situation ? <span className="status-badge" style={catalogBadgeStyle(options?.catalogs, 'operational_situation', selected.operational_situation)}>{catalogLabel(options?.catalogs, 'operational_situation', selected.operational_situation)}</span> : fr.common.notProvided}</dd></div>
                     </dl>
                   </DetailSection>

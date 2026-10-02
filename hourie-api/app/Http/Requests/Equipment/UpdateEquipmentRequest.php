@@ -4,6 +4,7 @@ namespace App\Http\Requests\Equipment;
 
 use App\Models\Equipment;
 use App\Models\EquipmentCategory;
+use App\Models\CatalogOption;
 use App\Models\Location;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -69,6 +70,7 @@ class UpdateEquipmentRequest extends FormRequest
             $rules['generator_details.tank_capacity_litres'] = ['present', 'nullable', 'numeric', 'min:0'];
             $rules['generator_details.current_engine_hours'] = ['present', 'nullable', 'numeric', 'min:0'];
             $rules['generator_details.purchase_price_fcfa'] = ['sometimes', 'nullable', 'numeric', 'min:0', 'max:9999999999999.99'];
+            $rules['generator_details.sold_to'] = ['sometimes', 'nullable', 'string', 'max:255'];
         }
 
         return $rules;
@@ -78,6 +80,8 @@ class UpdateEquipmentRequest extends FormRequest
     public function after(): array
     {
         return [function (Validator $validator): void {
+            $this->validateSoldGeneratorBuyer($validator);
+
             if ($validator->errors()->hasAny(['project_id', 'current_location_id'])) {
                 return;
             }
@@ -107,6 +111,31 @@ class UpdateEquipmentRequest extends FormRequest
                 $validator->errors()->add('current_location_id', __('validation.equipment_location_project_mismatch'));
             }
         }];
+    }
+
+    private function validateSoldGeneratorBuyer(Validator $validator): void
+    {
+        $equipment = $this->route('equipment');
+        $categoryCode = $equipment instanceof Equipment
+            ? $equipment->category()->value('code')
+            : $this->input('category_code', 'generator');
+
+        if ($categoryCode !== 'generator' || ! $this->isSoldCondition() || filled($this->input('generator_details.sold_to'))) {
+            return;
+        }
+
+        $validator->errors()->add('generator_details.sold_to', 'Le nom de l’acheteur est requis lorsque l’état est « Vendu ».');
+    }
+
+    private function isSoldCondition(): bool
+    {
+        $condition = $this->input('condition');
+
+        return $condition === 'sold' || CatalogOption::query()
+            ->where('group', 'equipment_condition')
+            ->where('code', $condition)
+            ->whereRaw('LOWER(label_fr) = ?', ['vendu'])
+            ->exists();
     }
 
     private function activeCatalogOption(string $group): Exists
