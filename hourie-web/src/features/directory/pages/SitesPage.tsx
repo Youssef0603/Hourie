@@ -135,7 +135,7 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, catalogs, emplo
 
   return (
     <main className="directory-page">
-      <DirectoryHeading title={fr.directory.sites} subtitle={fr.directory.sitesSubtitle} canAdd={canAdd} showForm={showForm} onToggle={() => setShowForm((value) => !value)} addLabel={fr.directory.addSite} />
+      <DirectoryHeading title={fr.directory.sites} subtitle={fr.directory.sitesSubtitle} canAdd={false} showForm={showForm} onToggle={() => setShowForm((value) => !value)} addLabel={fr.directory.addSite} />
       {error && <div className="form-alert" role="alert">{error}</div>}
       {showForm && (
         <Modal title={fr.directory.addSite} size="wide" onClose={() => setShowForm(false)}>
@@ -209,6 +209,7 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, catalogs, emplo
             <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Rechercher un site, une adresse ou un responsable" />
           </label>
           <div className="filter-toolbar-actions">
+            {canAdd && <button className="table-refresh-button table-add-button" type="button" onClick={() => setShowForm(true)} aria-label={fr.directory.addSite} title={fr.directory.addSite}><ActionIcon name="add" /></button>}
             <button className="table-refresh-button filter-refresh-button" type="button" onClick={refreshSites} disabled={isRefreshing} aria-label={fr.common.refresh} title={fr.common.refresh}><ActionIcon name="refresh" /></button>
           </div>
         </div>
