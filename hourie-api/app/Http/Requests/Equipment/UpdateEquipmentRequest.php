@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Equipment;
 
+use App\Models\CatalogOption;
 use App\Models\Equipment;
 use App\Models\EquipmentCategory;
-use App\Models\CatalogOption;
 use App\Models\Location;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;

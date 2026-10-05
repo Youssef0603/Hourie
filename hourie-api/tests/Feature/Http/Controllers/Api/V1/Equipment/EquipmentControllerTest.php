@@ -3,8 +3,8 @@
 use App\Enums\EquipmentCondition;
 use App\Enums\OperationalSituation;
 use App\Enums\UserRole;
-use App\Models\Employee;
 use App\Models\CatalogOption;
+use App\Models\Employee;
 use App\Models\Equipment;
 use App\Models\EquipmentCategory;
 use App\Models\EquipmentProjectAssignment;
@@ -337,15 +337,15 @@ it('returns generator details without inventing missing values', function () {
 
 it('allows a generator manager to fill every inventory field without changing the asset code', function () {
     $manager = User::factory()->create(['role' => UserRole::GeneratorManager]);
-        CatalogOption::query()->create([
-            'group' => 'equipment_condition',
-            'code' => 'sold',
-            'label_fr' => 'Vendu',
-            'label_ar' => null,
-            'color' => '#A41831',
-            'sort_order' => 999,
-            'is_active' => true,
-        ]);
+    CatalogOption::query()->create([
+        'group' => 'equipment_condition',
+        'code' => 'sold',
+        'label_fr' => 'Vendu',
+        'label_ar' => null,
+        'color' => '#A41831',
+        'sort_order' => 999,
+        'is_active' => true,
+    ]);
     EquipmentCategory::factory()->create(['code' => 'generator']);
     $custodian = Employee::factory()->create(['name' => 'Jean Responsable']);
     $equipment = Equipment::factory()->create([

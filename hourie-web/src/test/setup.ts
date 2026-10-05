@@ -16,6 +16,22 @@ Object.defineProperty(window, 'localStorage', {
   },
 })
 
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
+Object.defineProperty(window, 'ResizeObserver', {
+  configurable: true,
+  value: ResizeObserverMock,
+})
+
+Object.defineProperty(globalThis, 'ResizeObserver', {
+  configurable: true,
+  value: ResizeObserverMock,
+})
+
 afterEach(() => {
   cleanup()
   window.localStorage.clear()

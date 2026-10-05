@@ -3,9 +3,9 @@
 namespace App\Actions\Equipment;
 
 use App\Mail\CarInspectionReminder;
+use App\Models\ApplicationSetting;
 use App\Models\Equipment;
 use App\Models\EquipmentInspectionReminder;
-use App\Models\ApplicationSetting;
 use Carbon\CarbonImmutable;
 use Carbon\Exceptions\InvalidFormatException;
 use Illuminate\Support\Collection;

@@ -24,6 +24,7 @@ return new class extends Migration
             $table->unique(['insurance_policy_id', 'expiry_date', 'reminder_date'], 'insurance_reminder_once');
         });
     }
+
     public function down(): void
     {
         Schema::dropIfExists('insurance_policy_reminders');

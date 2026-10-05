@@ -47,10 +47,6 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, catalogs, emplo
     refreshSites()
   }, [])
 
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [search])
-
   async function refreshSites() {
     setError(null)
     setIsRefreshing(true)
@@ -206,7 +202,7 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, catalogs, emplo
         <div className="filter-bar">
           <label className="search-field">
             <span>{fr.equipment.search}</span>
-            <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Rechercher un site, une adresse ou un responsable" />
+            <input type="search" value={search} onChange={(event) => { setSearch(event.target.value); setCurrentPage(1) }} placeholder="Rechercher un site, une adresse ou un responsable" />
           </label>
           <div className="filter-toolbar-actions">
             {canAdd && <button className="table-refresh-button table-add-button" type="button" onClick={() => setShowForm(true)} aria-label={fr.directory.addSite} title={fr.directory.addSite}><ActionIcon name="add" /></button>}

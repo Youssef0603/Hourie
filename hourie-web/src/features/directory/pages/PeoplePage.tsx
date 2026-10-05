@@ -1,22 +1,23 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState } from "react";
 import { fr } from "../../../i18n/fr";
-import {
-  createEmployee,
-  deleteEmployee,
-  getEmployee,
-  getEmployees,
-  updateEmployee,
-} from "../api";
+import { deleteEmployee, getEmployee, getEmployees } from "../api";
 import type { Employee, EmployeeDetails } from "../types";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { Modal } from "../../../shared/components/Modal";
 import { ApiError } from "../../../shared/api/http";
 import { LoadingSpinner } from "../../../shared/components/LoadingSpinner";
 import type { CatalogOption } from "../../equipment/types";
-import { catalogBadgeStyle, catalogLabel } from "../../equipment/catalogs";
-import { SearchableSelect } from "../../../shared/components/SearchableSelect";
 import { EmptyState } from "../../../shared/components/EmptyState";
 import { DataTable } from "../../../shared/components/DataTable";
+import { AddPersonForm } from "../components/AddPersonForm";
+import { EditPersonForm } from "../components/EditPersonForm";
+import {
+  PeopleFilterDrawer,
+  type AccessFilter,
+  type ActivityFilter,
+  type RoleFilter,
+} from "../components/PeopleFilterDrawer";
+import { PersonDetail } from "../components/PersonDetail";
 
 type PeoplePageProps = {
   canAdd: boolean;
@@ -24,30 +25,11 @@ type PeoplePageProps = {
   catalogs?: CatalogOption[];
 };
 
-function generatedUsername(name: string) {
-  return name
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, ".")
-    .replace(/^\.+|\.+$/g, "");
-}
-
 function normalizeSearch(value: string) {
   return value
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLocaleLowerCase();
-}
-
-function personInitials(name: string) {
-  return name
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("");
 }
 
 export function PeoplePage({
@@ -59,23 +41,11 @@ export function PeoplePage({
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
-  const [accessFilter, setAccessFilter] = useState<"" | "with_access" | "without_access">("");
-  const [roleFilter, setRoleFilter] = useState<"" | "manager" | "cms_manager" | "generator_manager" | "viewer">("");
-  const [activityFilter, setActivityFilter] = useState<"" | "active" | "inactive">("");
+  const [accessFilter, setAccessFilter] = useState<AccessFilter>("");
+  const [roleFilter, setRoleFilter] = useState<RoleFilter>("");
+  const [activityFilter, setActivityFilter] = useState<ActivityFilter>("");
   const [isRefreshing, setIsRefreshing] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [name, setName] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [passportNumber, setPassportNumber] = useState("");
-  const [employmentDate, setEmploymentDate] = useState("");
-  const [birthDate, setBirthDate] = useState("");
-  const [createAccount, setCreateAccount] = useState(false);
-  const [email, setEmail] = useState("");
-  const [role, setRole] = useState<
-    "manager" | "cms_manager" | "generator_manager" | "viewer"
-  >("viewer");
-  const [password, setPassword] = useState("");
-  const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [selectedPerson, setSelectedPerson] = useState<EmployeeDetails | null>(
     null,
@@ -83,9 +53,6 @@ export function PeoplePage({
   const [isLoadingPerson, setIsLoadingPerson] = useState(false);
   const [isEditingPerson, setIsEditingPerson] = useState(false);
   const personRequest = useRef(0);
-  const roleEntries = Object.entries(fr.roles).filter(
-    ([value]) => canManageManagerAccounts || value !== "manager",
-  );
   const searchTerm = normalizeSearch(search.trim());
   const searchedPeople = searchTerm
     ? people.filter((person) =>
@@ -103,14 +70,24 @@ export function PeoplePage({
         ).includes(searchTerm),
       )
     : people;
-  const visiblePeople = searchedPeople.filter((person) =>
-    (accessFilter === "" || (accessFilter === "with_access" ? person.user !== null : person.user === null)) &&
-    (roleFilter === "" || person.user?.role === roleFilter) &&
-    (activityFilter === "" || (activityFilter === "active" ? person.is_active : !person.is_active)),
+  const visiblePeople = searchedPeople.filter(
+    (person) =>
+      (accessFilter === "" ||
+        (accessFilter === "with_access"
+          ? person.user !== null
+          : person.user === null)) &&
+      (roleFilter === "" || person.user?.role === roleFilter) &&
+      (activityFilter === "" ||
+        (activityFilter === "active" ? person.is_active : !person.is_active)),
   );
-  const activeFilterCount = [accessFilter, roleFilter, activityFilter].filter(Boolean).length;
+  const activeFilterCount = [accessFilter, roleFilter, activityFilter].filter(
+    Boolean,
+  ).length;
   const peoplePerPage = 10;
-  const totalPages = Math.max(1, Math.ceil(visiblePeople.length / peoplePerPage));
+  const totalPages = Math.max(
+    1,
+    Math.ceil(visiblePeople.length / peoplePerPage),
+  );
   const page = Math.min(currentPage, totalPages);
   const paginatedPeople = visiblePeople.slice(
     (page - 1) * peoplePerPage,
@@ -121,10 +98,6 @@ export function PeoplePage({
     refreshPeople();
   }, []);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [search, accessFilter, roleFilter, activityFilter]);
-
   async function refreshPeople() {
     setError(null);
     setIsRefreshing(true);
@@ -134,49 +107,6 @@ export function PeoplePage({
       setError(fr.directory.loadError);
     } finally {
       setIsRefreshing(false);
-    }
-  }
-
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError(null);
-
-    if (createAccount && !canManageManagerAccounts && role === "manager") {
-      setRole("viewer");
-      return;
-    }
-
-    try {
-      await createEmployee({
-        name: name.trim(),
-        phone_number: phoneNumber.trim() || null,
-        passport_number: passportNumber.trim() || null,
-        employment_date: employmentDate || null,
-        birth_date: birthDate || null,
-        create_account: createAccount,
-        email: email.trim() || null,
-        role: createAccount ? role : null,
-        password: createAccount ? password : null,
-        password_confirmation: createAccount ? passwordConfirmation : null,
-      });
-      await refreshPeople();
-      setName("");
-      setPhoneNumber("");
-      setPassportNumber("");
-      setEmploymentDate("");
-      setBirthDate("");
-      setCreateAccount(false);
-      setEmail("");
-      setRole("viewer");
-      setPassword("");
-      setPasswordConfirmation("");
-      setShowForm(false);
-    } catch (caught) {
-      setError(
-        caught instanceof ApiError
-          ? (Object.values(caught.errors)[0]?.[0] ?? fr.directory.saveError)
-          : fr.directory.saveError,
-      );
     }
   }
 
@@ -242,151 +172,13 @@ export function PeoplePage({
           title={fr.directory.addPerson}
           onClose={() => setShowForm(false)}
         >
-          <form
-            className={`directory-form people-form modal-directory-form${createAccount ? "" : " personnel-only-form"}`}
-            onSubmit={submit}
-          >
-            {error && (
-              <div className="form-alert account-form-alert" role="alert">
-                {error}
-              </div>
-            )}
-            <section className="people-form-section">
-              <h3>{fr.directory.personalInformation}</h3>
-              <div className="people-form-fields">
-                <label>
-                  <span>{fr.directory.fullName}</span>
-                  <input
-                    required
-                    autoComplete="name"
-                    value={name}
-                    onChange={(event) => setName(event.target.value)}
-                  />
-                </label>
-                <label>
-                  <span>{fr.directory.phoneNumber}</span>
-                  <input
-                    type="tel"
-                    autoComplete="tel"
-                    value={phoneNumber}
-                    onChange={(event) => setPhoneNumber(event.target.value)}
-                    placeholder="+225 07 00 00 00 00"
-                  />
-                </label>
-                <label>
-                  <span>E-mail</span>
-                  <input
-                    type="email"
-                    autoComplete="email"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    placeholder="nom@hourie.ci"
-                  />
-                </label>
-                <label>
-                  <span>{fr.directory.passportNumber}</span>
-                  <input
-                    value={passportNumber}
-                    onChange={(event) => setPassportNumber(event.target.value)}
-                  />
-                </label>
-                <label>
-                  <span>{fr.directory.employmentDate}</span>
-                  <input
-                    type="date"
-                    max={new Date().toISOString().slice(0, 10)}
-                    value={employmentDate}
-                    onChange={(event) => setEmploymentDate(event.target.value)}
-                  />
-                </label>
-                <label>
-                  <span>Date de naissance</span>
-                  <input
-                    type="date"
-                    max={new Date().toISOString().slice(0, 10)}
-                    value={birthDate}
-                    onChange={(event) => setBirthDate(event.target.value)}
-                  />
-                </label>
-              </div>
-            </section>
-            <section
-              className={`people-form-section account-access-section${createAccount ? " has-account" : ""}`}
-            >
-              {createAccount && <h3>{fr.directory.accountAccess}</h3>}
-              <label className="account-access-toggle">
-                <input
-                  type="checkbox"
-                  checked={createAccount}
-                  onChange={(event) => setCreateAccount(event.target.checked)}
-                />
-                <span>{fr.directory.createAccount}</span>
-              </label>
-              {createAccount && (
-                <>
-                  <p className="account-form-hint">
-                    {fr.directory.credentialsHint}
-                  </p>
-                  <div className="people-form-fields">
-                    <label>
-                      <span>{fr.directory.username}</span>
-                      <input
-                        className="generated-username"
-                        readOnly
-                        tabIndex={-1}
-                        value={generatedUsername(name)}
-                        placeholder={fr.directory.usernameGeneratedPlaceholder}
-                      />
-                      <small>{fr.directory.usernameGeneratedHint}</small>
-                    </label>
-                    <label>
-                      <span>{fr.directory.accountRole}</span>
-                      <SearchableSelect
-                        ariaLabel={fr.directory.accountRole}
-                        value={role}
-                        onChange={(value) => setRole(value as typeof role)}
-                        placeholder={fr.directory.accountRole}
-                        includeEmpty={false}
-                        options={roleEntries.map(([value, label]) => ({
-                          value,
-                          label,
-                        }))}
-                      />
-                    </label>
-                    <label>
-                      <span>{fr.directory.temporaryPassword}</span>
-                      <input
-                        required
-                        minLength={12}
-                        type="password"
-                        autoComplete="new-password"
-                        value={password}
-                        onChange={(event) => setPassword(event.target.value)}
-                      />
-                    </label>
-                    <label className="field-wide">
-                      <span>{fr.directory.confirmPassword}</span>
-                      <input
-                        required
-                        minLength={12}
-                        type="password"
-                        autoComplete="new-password"
-                        value={passwordConfirmation}
-                        onChange={(event) =>
-                          setPasswordConfirmation(event.target.value)
-                        }
-                      />
-                    </label>
-                  </div>
-                </>
-              )}
-            </section>
-            <div className="maintenance-form-actions">
-              <button className="primary-button save-button" type="submit">
-                {fr.common.save}
-              </button>
-            </div>
-          </form>
+          <AddPersonForm
+            canManageManagerAccounts={canManageManagerAccounts}
+            onSaved={async () => {
+              await refreshPeople();
+              setShowForm(false);
+            }}
+          />
         </Modal>
       )}
       <section className="inventory-panel">
@@ -396,12 +188,20 @@ export function PeoplePage({
             <input
               type="search"
               value={search}
-              onChange={(event) => setSearch(event.target.value)}
+              onChange={(event) => {
+                setSearch(event.target.value);
+                setCurrentPage(1);
+              }}
               placeholder={fr.directory.peopleSearchPlaceholder}
             />
           </label>
           <div className="filter-toolbar-actions">
-            <button className={`advanced-filter-toggle${showFilters ? " active" : ""}`} type="button" onClick={() => setShowFilters((value) => !value)} aria-expanded={showFilters}>
+            <button
+              className={`advanced-filter-toggle${showFilters ? " active" : ""}`}
+              type="button"
+              onClick={() => setShowFilters((value) => !value)}
+              aria-expanded={showFilters}
+            >
               <ActionIcon name="filter" />
               <span>{fr.equipment.filters}</span>
               {activeFilterCount > 0 && <strong>{activeFilterCount}</strong>}
@@ -427,61 +227,123 @@ export function PeoplePage({
             >
               <ActionIcon name="refresh" />
             </button>
-            {activeFilterCount > 0 && <button className="clear-filters" type="button" onClick={() => { setAccessFilter(""); setRoleFilter(""); setActivityFilter(""); }}>{fr.equipment.clearFilters}</button>}
+            {activeFilterCount > 0 && (
+              <button
+                className="clear-filters"
+                type="button"
+                onClick={() => {
+                  setAccessFilter("");
+                  setRoleFilter("");
+                  setActivityFilter("");
+                  setCurrentPage(1);
+                }}
+              >
+                {fr.equipment.clearFilters}
+              </button>
+            )}
           </div>
         </div>
-        {showFilters && <PeopleFilterDrawer accessFilter={accessFilter} roleFilter={roleFilter} activityFilter={activityFilter} onAccessChange={setAccessFilter} onRoleChange={setRoleFilter} onActivityChange={setActivityFilter} onClose={() => setShowFilters(false)} />}
+        {showFilters && (
+          <PeopleFilterDrawer
+            accessFilter={accessFilter}
+            roleFilter={roleFilter}
+            activityFilter={activityFilter}
+            onAccessChange={(value) => {
+              setAccessFilter(value);
+              setCurrentPage(1);
+            }}
+            onRoleChange={(value) => {
+              setRoleFilter(value);
+              setCurrentPage(1);
+            }}
+            onActivityChange={(value) => {
+              setActivityFilter(value);
+              setCurrentPage(1);
+            }}
+            onClose={() => setShowFilters(false)}
+          />
+        )}
         {!isRefreshing && visiblePeople.length > 0 && (
           <>
-            <DataTable className="asset-inventory-table people-list-table" ariaLabel={fr.directory.people}>
-                <thead>
-                  <tr>
-                    <th>{fr.directory.fullName}</th>
-                    <th>{fr.directory.email}</th>
-                    <th>{fr.directory.phoneNumber}</th>
-                    <th>{fr.directory.employmentDate}</th>
-                    <th>Accès</th>
+            <DataTable
+              className="asset-inventory-table people-list-table"
+              ariaLabel={fr.directory.people}
+            >
+              <thead>
+                <tr>
+                  <th>{fr.directory.fullName}</th>
+                  <th>{fr.directory.email}</th>
+                  <th>{fr.directory.phoneNumber}</th>
+                  <th>{fr.directory.employmentDate}</th>
+                  <th>Accès</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedPeople.map((person) => (
+                  <tr
+                    key={person.id}
+                    tabIndex={0}
+                    onClick={() => openPerson(person.id)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        openPerson(person.id);
+                      }
+                    }}
+                  >
+                    <td>
+                      <span className="directory-table-person">
+                        <span>
+                          <strong className="primary-cell">
+                            {person.name}
+                          </strong>
+                        </span>
+                      </span>
+                    </td>
+                    <td>{person.email ?? fr.common.notAssigned}</td>
+                    <td>{person.phone_number ?? fr.common.notAssigned}</td>
+                    <td>
+                      {person.employment_date
+                        ? new Intl.DateTimeFormat("fr-FR").format(
+                            new Date(`${person.employment_date}T00:00:00`),
+                          )
+                        : fr.common.notAssigned}
+                    </td>
+                    <td>
+                      <span
+                        className={`person-system-access${person.user ? " has-access" : ""}`}
+                      >
+                        {person.user
+                          ? fr.roles[person.user.role]
+                          : fr.directory.noSystemAccess}
+                      </span>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {paginatedPeople.map((person) => (
-                    <tr
-                      key={person.id}
-                      tabIndex={0}
-                      onClick={() => openPerson(person.id)}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter" || event.key === " ") {
-                          event.preventDefault();
-                          openPerson(person.id);
-                        }
-                      }}
-                    >
-                      <td>
-                        <span className="directory-table-person">
-                          <span>
-                            <strong className="primary-cell">{person.name}</strong>
-                          </span>
-                        </span>
-                      </td>
-                      <td>{person.email ?? fr.common.notAssigned}</td>
-                      <td>{person.phone_number ?? fr.common.notAssigned}</td>
-                      <td>{person.employment_date ? new Intl.DateTimeFormat("fr-FR").format(new Date(`${person.employment_date}T00:00:00`)) : fr.common.notAssigned}</td>
-                      <td>
-                        <span className={`person-system-access${person.user ? " has-access" : ""}`}>
-                          {person.user ? fr.roles[person.user.role] : fr.directory.noSystemAccess}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
+                ))}
+              </tbody>
             </DataTable>
             {totalPages > 1 && (
               <nav className="pagination" aria-label={fr.equipment.pagination}>
-                <span>{visiblePeople.length} personne{visiblePeople.length > 1 ? "s" : ""}</span>
+                <span>
+                  {visiblePeople.length} personne
+                  {visiblePeople.length > 1 ? "s" : ""}
+                </span>
                 <div>
-                  <button type="button" disabled={page === 1} onClick={() => setCurrentPage(page - 1)}>{fr.common.previous}</button>
+                  <button
+                    type="button"
+                    disabled={page === 1}
+                    onClick={() => setCurrentPage(page - 1)}
+                  >
+                    {fr.common.previous}
+                  </button>
                   <span>{fr.equipment.page(page, totalPages)}</span>
-                  <button type="button" disabled={page === totalPages} onClick={() => setCurrentPage(page + 1)}>{fr.common.next}</button>
+                  <button
+                    type="button"
+                    disabled={page === totalPages}
+                    onClick={() => setCurrentPage(page + 1)}
+                  >
+                    {fr.common.next}
+                  </button>
                 </div>
               </nav>
             )}
@@ -548,456 +410,5 @@ export function PeoplePage({
         </Modal>
       )}
     </main>
-  );
-}
-
-function PeopleFilterDrawer({
-  accessFilter,
-  roleFilter,
-  activityFilter,
-  onAccessChange,
-  onRoleChange,
-  onActivityChange,
-  onClose,
-}: {
-  accessFilter: "" | "with_access" | "without_access";
-  roleFilter: "" | "manager" | "cms_manager" | "generator_manager" | "viewer";
-  activityFilter: "" | "active" | "inactive";
-  onAccessChange: (value: "" | "with_access" | "without_access") => void;
-  onRoleChange: (value: "" | "manager" | "cms_manager" | "generator_manager" | "viewer") => void;
-  onActivityChange: (value: "" | "active" | "inactive") => void;
-  onClose: () => void;
-}) {
-  return <div className="filter-drawer-backdrop" onMouseDown={onClose}>
-    <aside className="filter-drawer" role="dialog" aria-modal="true" aria-label={fr.equipment.filters} onMouseDown={(event) => event.stopPropagation()}>
-      <header><div><p className="section-label">PERSONNEL</p><h2>{fr.equipment.filters}</h2></div><button type="button" onClick={onClose} aria-label={fr.common.close}><ActionIcon name="close" /></button></header>
-      <div className="filter-drawer-content">
-        <fieldset className="drawer-basic-filters"><legend>{fr.equipment.filters}</legend><div className="advanced-filter-grid">
-          <label><span>Accès au système</span><SearchableSelect ariaLabel="Accès au système" value={accessFilter} onChange={(value) => onAccessChange(value as typeof accessFilter)} placeholder={fr.common.all} options={[{ value: "with_access", label: "Avec accès" }, { value: "without_access", label: "Sans accès" }]} /></label>
-          <label><span>{fr.directory.accountRole}</span><SearchableSelect ariaLabel={fr.directory.accountRole} value={roleFilter} onChange={(value) => onRoleChange(value as typeof roleFilter)} placeholder={fr.common.all} options={Object.entries(fr.roles).map(([value, label]) => ({ value, label }))} /></label>
-          <label><span>Statut</span><SearchableSelect ariaLabel="Statut" value={activityFilter} onChange={(value) => onActivityChange(value as typeof activityFilter)} placeholder={fr.common.all} options={[{ value: "active", label: "Actif" }, { value: "inactive", label: "Inactif" }]} /></label>
-        </div></fieldset>
-      </div>
-    </aside>
-  </div>
-}
-
-function PersonDetail({
-  person,
-  catalogs,
-  canEdit,
-  onEdit,
-  onDelete,
-}: {
-  person: EmployeeDetails;
-  catalogs: CatalogOption[] | undefined;
-  canEdit: boolean;
-  onEdit: () => void;
-  onDelete: () => void;
-}) {
-  const [showAssignedAssets, setShowAssignedAssets] = useState(false);
-  const employmentDate = person.employment_date
-    ? new Intl.DateTimeFormat("fr-FR").format(
-        new Date(`${person.employment_date}T00:00:00`),
-      )
-    : fr.common.notAssigned;
-  const birthDate = person.birth_date
-    ? new Intl.DateTimeFormat("fr-FR").format(
-        new Date(`${person.birth_date}T00:00:00`),
-      )
-    : fr.common.notAssigned;
-  const activeHealthPolicy = person.health_insurance_policies.find(
-    (policy) =>
-      policy.ends_on !== null &&
-      policy.ends_on >= new Date().toISOString().slice(0, 10),
-  );
-  const healthPolicy =
-    activeHealthPolicy ?? person.health_insurance_policies[0];
-
-  return (
-    <div className="person-detail">
-      <section className="person-profile-summary">
-        <div className="person-profile-identity">
-          <span className="person-profile-avatar">
-            {personInitials(person.name)}
-          </span>
-          <div>
-            <h3>{person.name}</h3>
-            <p>
-              {person.user
-                ? fr.roles[person.user.role]
-                : fr.directory.noSystemAccess}
-            </p>
-            {person.user?.username && <small>@{person.user.username}</small>}
-          </div>
-          {canEdit && (
-            <button
-              className="person-delete-action"
-              type="button"
-              onClick={onDelete}
-              aria-label={fr.directory.deletePerson}
-              title={fr.directory.deletePerson}
-            >
-              <ActionIcon name="delete" />
-            </button>
-          )}
-        </div>
-        <dl className="person-profile-facts">
-          <div>
-            <dt>{fr.directory.phoneNumber}</dt>
-            <dd>{person.phone_number ?? fr.common.notAssigned}</dd>
-          </div>
-          <div>
-            <dt>{fr.directory.assignedAssets}</dt>
-            <dd>
-              {fr.directory.assetCount(person.equipment_in_custody.length)}
-            </dd>
-          </div>
-          <div>
-            <dt>{fr.directory.employmentDate}</dt>
-            <dd>{employmentDate}</dd>
-          </div>
-          <div>
-            <dt>Date de naissance</dt>
-            <dd>{birthDate}</dd>
-          </div>
-          <div>
-            <dt>{fr.directory.passportNumber}</dt>
-            <dd>{person.passport_number ?? fr.common.notAssigned}</dd>
-          </div>
-          <div>
-            <dt>{fr.directory.email}</dt>
-            <dd>{person.email ?? fr.common.notAssigned}</dd>
-          </div>
-        </dl>
-        <div className="person-profile-actions">
-          {canEdit && (
-            <button
-              className="person-detail-action primary"
-              type="button"
-              onClick={onEdit}
-            >
-              <ActionIcon name="edit" />
-              {fr.common.edit}
-            </button>
-          )}
-          <button
-            className="person-detail-action"
-            type="button"
-            disabled={person.equipment_in_custody.length === 0}
-            onClick={() => setShowAssignedAssets((visible) => !visible)}
-          >
-            {showAssignedAssets
-              ? fr.directory.hideAssignedAssets
-              : fr.directory.viewAssignedAssets}
-          </button>
-        </div>
-      </section>
-      <section className="person-health-insurance">
-        <h3>
-          <ActionIcon name="invoice" />
-          Assurance santé
-        </h3>
-        {healthPolicy ? (
-          <dl>
-            <div>
-              <dt>Statut</dt>
-              <dd>
-                <span
-                  className={`insurance-status ${activeHealthPolicy ? "active" : "expired"}`}
-                >
-                  {activeHealthPolicy
-                    ? "Assurance active"
-                    : "Assurance expirée"}
-                </span>
-              </dd>
-            </div>
-            <div>
-              <dt>N° de police</dt>
-              <dd>{healthPolicy.policy_number}</dd>
-            </div>
-            <div>
-              <dt>Assureur</dt>
-              <dd>{healthPolicy.source ?? fr.common.notAssigned}</dd>
-            </div>
-            <div>
-              <dt>Expiration</dt>
-              <dd>
-                {healthPolicy.ends_on
-                  ? new Intl.DateTimeFormat("fr-FR").format(
-                      new Date(`${healthPolicy.ends_on}T00:00:00`),
-                    )
-                  : fr.common.notAssigned}
-              </dd>
-            </div>
-          </dl>
-        ) : (
-          <EmptyState
-            compact
-            icon="invoice"
-            title="Aucune assurance santé liée"
-            description="La police apparaîtra ici lorsque cette personne sera ajoutée à une assurance santé groupe."
-          />
-        )}
-      </section>
-      {showAssignedAssets && person.equipment_in_custody.length > 0 && (
-        <section className="person-assigned-assets-section">
-          <h3>{fr.directory.assignedEquipment}</h3>
-          <div className="site-inventory-wrap">
-            <table className="equipment-table person-inventory-table">
-              <thead>
-                <tr>
-                  <th>{fr.equipment.number}</th>
-                  <th>{fr.equipment.identification}</th>
-                  <th>{fr.equipment.condition}</th>
-                  <th>{fr.equipment.project}</th>
-                  <th>{fr.equipment.locationShort}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {person.equipment_in_custody.map((equipment) => (
-                  <tr key={equipment.id}>
-                    <td>
-                      <strong>{equipment.display_id}</strong>
-                      <span className="secondary-cell">
-                        {equipment.asset_code}
-                      </span>
-                    </td>
-                    <td>
-                      {[equipment.brand, equipment.model]
-                        .filter(Boolean)
-                        .join(" ") || fr.common.notProvided}
-                    </td>
-                    <td>
-                      <span
-                        className={`status-badge status-${equipment.condition ?? "unknown"}`}
-                        style={catalogBadgeStyle(
-                          catalogs,
-                          "equipment_condition",
-                          equipment.condition,
-                        )}
-                      >
-                        {equipment.condition
-                          ? catalogLabel(
-                              catalogs,
-                              "equipment_condition",
-                              equipment.condition,
-                            )
-                          : fr.common.notProvided}
-                      </span>
-                    </td>
-                    <td>
-                      {equipment.current_project_assignment?.project.name ??
-                        fr.common.notProvided}
-                    </td>
-                    <td>
-                      {equipment.current_location?.name ??
-                        fr.common.notProvided}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      )}
-    </div>
-  );
-}
-
-function EditPersonForm({
-  person,
-  canManageManagerAccounts,
-  onSaved,
-}: {
-  person: EmployeeDetails;
-  canManageManagerAccounts: boolean;
-  onSaved: (person: EmployeeDetails) => void;
-}) {
-  const [name, setName] = useState(person.name);
-  const [phoneNumber, setPhoneNumber] = useState(person.phone_number ?? "");
-  const [passportNumber, setPassportNumber] = useState(
-    person.passport_number ?? "",
-  );
-  const [employmentDate, setEmploymentDate] = useState(
-    person.employment_date ?? "",
-  );
-  const [birthDate, setBirthDate] = useState(person.birth_date ?? "");
-  const [username, setUsername] = useState(person.user?.username ?? "");
-  const [email, setEmail] = useState(person.email ?? "");
-  const [role, setRole] = useState<
-    "manager" | "cms_manager" | "generator_manager" | "viewer"
-  >(person.user?.role ?? "viewer");
-  const [password, setPassword] = useState("");
-  const [passwordConfirmation, setPasswordConfirmation] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
-  const roleEntries = Object.entries(fr.roles).filter(
-    ([value]) => canManageManagerAccounts || value !== "manager",
-  );
-
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setIsSaving(true);
-    setFormError(null);
-
-    try {
-      onSaved(
-        await updateEmployee(person.id, {
-          name: name.trim(),
-          phone_number: phoneNumber.trim() || null,
-          passport_number: passportNumber.trim() || null,
-          employment_date: employmentDate || null,
-          birth_date: birthDate || null,
-          username: username.trim() || null,
-          email: email.trim() || null,
-          role,
-          password: password || null,
-          password_confirmation: password ? passwordConfirmation : null,
-        }),
-      );
-    } catch (caught) {
-      setFormError(
-        caught instanceof ApiError
-          ? (Object.values(caught.errors)[0]?.[0] ?? fr.directory.saveError)
-          : fr.directory.saveError,
-      );
-    } finally {
-      setIsSaving(false);
-    }
-  }
-
-  return (
-    <form
-      className="directory-form people-form modal-directory-form person-edit-form"
-      onSubmit={submit}
-    >
-      {formError && (
-        <div className="form-alert account-form-alert" role="alert">
-          {formError}
-        </div>
-      )}
-      <section className="people-form-section">
-        <h3>{fr.directory.personalInformation}</h3>
-        <div className="people-form-fields">
-          <label>
-            <span>{fr.directory.fullName}</span>
-            <input
-              required
-              autoComplete="name"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-            />
-          </label>
-          <label>
-            <span>{fr.directory.phoneNumber}</span>
-            <input
-              type="tel"
-              autoComplete="tel"
-              value={phoneNumber}
-              onChange={(event) => setPhoneNumber(event.target.value)}
-            />
-          </label>
-          <label>
-            <span>E-mail</span>
-            <input
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-            />
-          </label>
-          <label>
-            <span>{fr.directory.passportNumber}</span>
-            <input
-              value={passportNumber}
-              onChange={(event) => setPassportNumber(event.target.value)}
-            />
-          </label>
-          <label>
-            <span>{fr.directory.employmentDate}</span>
-            <input
-              type="date"
-              max={new Date().toISOString().slice(0, 10)}
-              value={employmentDate}
-              onChange={(event) => setEmploymentDate(event.target.value)}
-            />
-          </label>
-          <label>
-            <span>Date de naissance</span>
-            <input
-              type="date"
-              max={new Date().toISOString().slice(0, 10)}
-              value={birthDate}
-              onChange={(event) => setBirthDate(event.target.value)}
-            />
-          </label>
-        </div>
-      </section>
-      <section className="people-form-section">
-        <h3>{fr.directory.accountAccess}</h3>
-        <p className="account-form-hint">{fr.directory.editCredentialsHint}</p>
-        <div className="people-form-fields">
-          <label>
-            <span>{fr.directory.username}</span>
-            <input
-              required={person.user !== null}
-              minLength={3}
-              autoComplete="username"
-              value={username}
-              onChange={(event) =>
-                setUsername(event.target.value.toLowerCase())
-              }
-            />
-          </label>
-          <label>
-            <span>{fr.directory.accountRole}</span>
-            <SearchableSelect
-              ariaLabel={fr.directory.accountRole}
-              value={role}
-              onChange={(value) => setRole(value as typeof role)}
-              placeholder={fr.directory.accountRole}
-              includeEmpty={false}
-              options={roleEntries.map(([value, label]) => ({ value, label }))}
-            />
-          </label>
-          <label>
-            <span>{fr.directory.newPassword}</span>
-            <input
-              minLength={12}
-              required={!person.user && username !== ""}
-              type="password"
-              autoComplete="new-password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-            />
-          </label>
-          <label className="field-wide">
-            <span>{fr.directory.confirmNewPassword}</span>
-            <input
-              minLength={12}
-              required={password !== ""}
-              type="password"
-              autoComplete="new-password"
-              value={passwordConfirmation}
-              onChange={(event) => setPasswordConfirmation(event.target.value)}
-            />
-          </label>
-        </div>
-      </section>
-      <div className="maintenance-form-actions">
-        <button
-          className="primary-button save-button"
-          type="submit"
-          disabled={isSaving}
-        >
-          {isSaving ? (
-            <LoadingSpinner compact label={fr.common.saving} />
-          ) : (
-            fr.common.save
-          )}
-        </button>
-      </div>
-    </form>
   );
 }

@@ -33,7 +33,5 @@ return new class extends Migration
     /**
      * The removed values were empty placeholders and cannot be restored.
      */
-    public function down(): void
-    {
-    }
+    public function down(): void {}
 };

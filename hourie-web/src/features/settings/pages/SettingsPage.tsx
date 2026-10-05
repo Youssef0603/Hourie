@@ -1,17 +1,12 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState } from "react";
 import { activeLanguage, fr } from "../../../i18n/fr";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
-import { Modal } from "../../../shared/components/Modal";
 import { LoadingSpinner } from "../../../shared/components/LoadingSpinner";
-import { ApiError, apiRequest } from "../../../shared/api/http";
-import {
-  deleteCatalogOption,
-  getCatalogOptions,
-  saveCatalogOption,
-} from "../../equipment/api";
+import { getCatalogOptions } from "../../equipment/api";
 import type { CatalogOption } from "../../equipment/types";
-import { SearchableSelect } from "../../../shared/components/SearchableSelect";
 import { EmptyState } from "../../../shared/components/EmptyState";
+import { CatalogForm } from "../components/CatalogForm";
+import { ReminderRecipientSettings } from "../components/ReminderRecipientSettings";
 
 const groups: CatalogOption["group"][] = [
   "equipment_condition",
@@ -25,7 +20,7 @@ type SettingsSection = CatalogOption["group"] | "reminder_recipients";
 export function SettingsPage({ onChanged }: { onChanged: () => void }) {
   const [items, setItems] = useState<CatalogOption[]>([]);
   const [group, setGroup] = useState<SettingsSection>("equipment_condition");
-  const [recipientAddRequest, setRecipientAddRequest] = useState(0);
+  const [isAddingRecipient, setIsAddingRecipient] = useState(false);
   const [editing, setEditing] = useState<CatalogOption | null | undefined>();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -75,7 +70,7 @@ export function SettingsPage({ onChanged }: { onChanged: () => void }) {
           type="button"
           onClick={() =>
             group === "reminder_recipients"
-              ? setRecipientAddRequest((value) => value + 1)
+              ? setIsAddingRecipient(true)
               : setEditing(null)
           }
         >
@@ -110,7 +105,10 @@ export function SettingsPage({ onChanged }: { onChanged: () => void }) {
         </button>
       </div>
       {group === "reminder_recipients" ? (
-        <ReminderRecipientSettings addRequest={recipientAddRequest} />
+        <ReminderRecipientSettings
+          isAdding={isAddingRecipient}
+          onCloseAdd={() => setIsAddingRecipient(false)}
+        />
       ) : isLoading ? (
         <LoadingSpinner label={fr.common.loading} />
       ) : (
@@ -165,289 +163,5 @@ export function SettingsPage({ onChanged }: { onChanged: () => void }) {
         />
       )}
     </main>
-  );
-}
-
-function ReminderRecipientSettings({ addRequest }: { addRequest: number }) {
-  type ReminderRecipient = { employee_id: number; name: string; email: string };
-  const [recipients, setRecipients] = useState<ReminderRecipient[]>([]);
-  const [people, setPeople] = useState<
-    Array<{ id: number; name: string; email: string | null }>
-  >([]);
-  const [adding, setAdding] = useState(false);
-  const [employeeId, setEmployeeId] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-  useEffect(() => {
-    apiRequest<{ data: { recipients: ReminderRecipient[] } }>(
-      "/api/v1/notification-settings",
-    )
-      .then((value) => setRecipients(value.data.recipients))
-      .catch(() => setError("Impossible de charger les destinataires."));
-  }, []);
-  useEffect(() => {
-    apiRequest<{
-      data: Array<{ id: number; name: string; email: string | null }>;
-    }>("/api/v1/employees")
-      .then((value) => setPeople(value.data))
-      .catch(() => undefined);
-  }, []);
-  useEffect(() => {
-    if (addRequest > 0) setAdding(true);
-  }, [addRequest]);
-  async function persist(nextIds: number[]) {
-    setSaving(true);
-    setError(null);
-    try {
-      const response = await apiRequest<{
-        data: { recipients: ReminderRecipient[] };
-      }>("/api/v1/notification-settings", {
-        method: "PUT",
-        body: JSON.stringify({ employee_ids: nextIds }),
-      });
-      setRecipients(response.data.recipients);
-      setEmployeeId("");
-      setAdding(false);
-    } catch (caught) {
-      setError(
-        caught instanceof ApiError
-          ? (Object.values(caught.errors)[0]?.[0] ?? "Personne invalide.")
-          : "Impossible d’enregistrer les destinataires.",
-      );
-    } finally {
-      setSaving(false);
-    }
-  }
-  return (
-    <>
-      {error && <div className="form-alert">{error}</div>}
-      <div className="catalog-list reminder-recipient-list">
-        {recipients.length ? (
-          recipients.map((recipient) => (
-            <article key={recipient.employee_id}>
-              <span className="catalog-color reminder-email-dot" />
-              <span className="catalog-copy">
-                <strong>{recipient.name}</strong>
-                <small>{recipient.email}</small>
-              </span>
-              <span className="account-status active">Actif</span>
-              <button
-                type="button"
-                aria-label={`Supprimer ${recipient.name}`}
-                onClick={() =>
-                  void persist(
-                    recipients
-                      .filter(
-                        (value) => value.employee_id !== recipient.employee_id,
-                      )
-                      .map((value) => value.employee_id),
-                  )
-                }
-              >
-                <ActionIcon name="delete" />
-              </button>
-            </article>
-          ))
-        ) : (
-          <EmptyState
-            icon="people"
-            title="Aucun destinataire"
-            description="Ajoutez une personne pour recevoir les rappels d’assurance et de visite des véhicules."
-          />
-        )}
-      </div>
-      {adding && (
-        <Modal title="Ajouter un destinataire" onClose={() => setAdding(false)}>
-          <form
-            className="catalog-form"
-            onSubmit={(event) => {
-              event.preventDefault();
-              if (employeeId)
-                void persist([
-                  ...recipients.map((recipient) => recipient.employee_id),
-                  Number(employeeId),
-                ]);
-            }}
-          >
-            <label className="field-wide">
-              <span>Personne</span>
-              <SearchableSelect
-                ariaLabel="Personne destinataire"
-                value={employeeId}
-                onChange={setEmployeeId}
-                placeholder="Sélectionner une personne"
-                includeEmpty={false}
-                options={people
-                  .filter(
-                    (person) =>
-                      person.email &&
-                      !recipients.some(
-                        (recipient) => recipient.employee_id === person.id,
-                      ),
-                  )
-                  .map((person) => ({
-                    value: String(person.id),
-                    label: `${person.name} — ${person.email}`,
-                  }))}
-              />
-            </label>
-            <div className="maintenance-form-actions">
-              <button
-                className="primary-button save-button"
-                disabled={saving || !employeeId}
-                type="submit"
-              >
-                {saving ? fr.common.saving : fr.common.save}
-              </button>
-            </div>
-          </form>
-        </Modal>
-      )}
-    </>
-  );
-}
-
-function CatalogForm({
-  initial,
-  group,
-  onClose,
-  onSaved,
-}: {
-  initial: CatalogOption | null;
-  group: CatalogOption["group"];
-  onClose: () => void;
-  onSaved: () => void;
-}) {
-  const [code, setCode] = useState(initial?.code ?? "");
-  const [labelFr, setLabelFr] = useState(initial?.label_fr ?? "");
-  const [labelAr, setLabelAr] = useState(initial?.label_ar ?? "");
-  const [color, setColor] = useState(initial?.color ?? "#526070");
-  const [active, setActive] = useState(initial?.is_active ?? true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  async function submit(event: FormEvent) {
-    event.preventDefault();
-    setIsSaving(true);
-    setError(null);
-    try {
-      await saveCatalogOption(
-        {
-          group: initial?.group ?? group,
-          code,
-          label_fr: labelFr,
-          label_ar: labelAr || null,
-          color,
-          sort_order: initial?.sort_order ?? 0,
-          is_active: active,
-        },
-        initial?.id,
-      );
-      onSaved();
-    } catch (caught) {
-      setError(
-        caught instanceof ApiError
-          ? (Object.values(caught.errors)[0]?.[0] ?? fr.catalogs.saveError)
-          : fr.catalogs.saveError,
-      );
-    } finally {
-      setIsSaving(false);
-    }
-  }
-  async function remove() {
-    if (initial && window.confirm(fr.catalogs.deleteConfirmation)) {
-      setIsSaving(true);
-      setError(null);
-      try {
-        await deleteCatalogOption(initial.id);
-        onSaved();
-      } catch {
-        setError(fr.common.deleteError);
-        setIsSaving(false);
-      }
-    }
-  }
-  return (
-    <Modal
-      title={initial ? fr.catalogs.edit : fr.catalogs.add}
-      onClose={onClose}
-    >
-      <form className="catalog-form" onSubmit={submit}>
-        {error && (
-          <div className="form-alert field-wide" role="alert">
-            {error}
-          </div>
-        )}
-        <label>
-          <span>{fr.catalogs.code}</span>
-          <input
-            required
-            pattern="[A-Za-z0-9_-]+"
-            value={code}
-            disabled={Boolean(initial) || isSaving}
-            onChange={(event) => setCode(event.target.value)}
-          />
-        </label>
-        <label className="catalog-color-field">
-          <span>{fr.catalogs.color}</span>
-          <input
-            type="color"
-            value={color}
-            disabled={isSaving}
-            onChange={(event) => setColor(event.target.value)}
-          />
-        </label>
-        <label>
-          <span>{fr.catalogs.labelFr}</span>
-          <input
-            required
-            value={labelFr}
-            disabled={isSaving}
-            onChange={(event) => setLabelFr(event.target.value)}
-          />
-        </label>
-        <label>
-          <span>{fr.catalogs.labelAr}</span>
-          <input
-            dir="rtl"
-            value={labelAr}
-            disabled={isSaving}
-            onChange={(event) => setLabelAr(event.target.value)}
-          />
-        </label>
-        <label className="catalog-active">
-          <input
-            type="checkbox"
-            checked={active}
-            disabled={isSaving}
-            onChange={(event) => setActive(event.target.checked)}
-          />
-          {fr.catalogs.enabled}
-        </label>
-        <div className="maintenance-form-actions">
-          {initial && (
-            <button
-              className="danger-button"
-              type="button"
-              disabled={isSaving}
-              onClick={remove}
-            >
-              <ActionIcon name="delete" />
-              {fr.common.delete}
-            </button>
-          )}
-          <button
-            className="primary-button save-button"
-            type="submit"
-            disabled={isSaving}
-          >
-            {isSaving ? (
-              <LoadingSpinner compact label={fr.common.saving} />
-            ) : (
-              fr.common.save
-            )}
-          </button>
-        </div>
-      </form>
-    </Modal>
   );
 }

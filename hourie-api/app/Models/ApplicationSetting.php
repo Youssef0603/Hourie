@@ -8,7 +8,11 @@ use Illuminate\Support\Collection;
 class ApplicationSetting extends Model
 {
     protected $fillable = ['key', 'value'];
-    protected function casts(): array { return ['value' => 'array']; }
+
+    protected function casts(): array
+    {
+        return ['value' => 'array'];
+    }
 
     /** @return Collection<int, Employee> */
     public static function reminderRecipientEmployees(): Collection
@@ -54,6 +58,7 @@ class ApplicationSetting extends Model
 
         $stored = static::query()->where('key', 'reminder_recipients')->value('value');
         $fallback = config('mail.inspection_reminder_recipients', []);
+
         return collect(is_array($stored) ? $stored : $fallback)->filter(fn ($email) => is_string($email) && filter_var($email, FILTER_VALIDATE_EMAIL))->unique()->values()->all();
     }
 }

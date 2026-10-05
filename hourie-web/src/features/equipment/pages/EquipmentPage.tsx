@@ -1,11 +1,17 @@
-import { useEffect, useRef, useState } from "react";
+import {
+  lazy,
+  startTransition,
+  Suspense,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import type { AuthenticatedUser } from "../../auth/types";
 import { AddGeneratorForm } from "../components/AddGeneratorForm";
 import { EquipmentCreationPanel } from "../components/EquipmentCreationPanel";
 import { ImportGeneratorForm } from "../components/ImportGeneratorForm";
 import { EquipmentDetailPanel } from "../components/EquipmentDetailPanel";
 import { EquipmentInventoryTable } from "../components/EquipmentInventoryTable";
-import { SettingsPage } from "../../settings/pages/SettingsPage";
 import { EquipmentFilterDrawer } from "../components/EquipmentFilterDrawer";
 import { AssetInventoryView } from "../components/AssetInventoryView";
 import {
@@ -15,10 +21,6 @@ import {
   type AssetView,
 } from "../assetCategories";
 import { advancedFilterKeys, initialFilters } from "../filters";
-import { PeoplePage } from "../../directory/pages/PeoplePage";
-import { SitesPage } from "../../directory/pages/SitesPage";
-import { InsurancePage } from "../../insurance/pages/InsurancePage";
-import { BondsPage } from "../../bonds/pages/BondsPage";
 import { SiteEditForm } from "../../directory/components/SiteEditForm";
 import { deleteSite, getSite } from "../../directory/api";
 import type { Site } from "../../directory/types";
@@ -50,6 +52,32 @@ import type {
 } from "../types";
 import "./equipment-page.css";
 
+const SettingsPage = lazy(() =>
+  import("../../settings/pages/SettingsPage").then((module) => ({
+    default: module.SettingsPage,
+  })),
+);
+const PeoplePage = lazy(() =>
+  import("../../directory/pages/PeoplePage").then((module) => ({
+    default: module.PeoplePage,
+  })),
+);
+const SitesPage = lazy(() =>
+  import("../../directory/pages/SitesPage").then((module) => ({
+    default: module.SitesPage,
+  })),
+);
+const InsurancePage = lazy(() =>
+  import("../../insurance/pages/InsurancePage").then((module) => ({
+    default: module.InsurancePage,
+  })),
+);
+const BondsPage = lazy(() =>
+  import("../../bonds/pages/BondsPage").then((module) => ({
+    default: module.BondsPage,
+  })),
+);
+
 type EquipmentPageProps = {
   user: AuthenticatedUser;
   isLoggingOut: boolean;
@@ -58,6 +86,16 @@ type EquipmentPageProps = {
   language: Language;
   onToggleLanguage: () => void;
 };
+
+function FeaturePageLoading() {
+  return (
+    <main className="equipment-page">
+      <div className="table-state">
+        <LoadingSpinner label={fr.common.loading} />
+      </div>
+    </main>
+  );
+}
 
 function auditDate(value: string) {
   return new Intl.DateTimeFormat("fr-FR", {
@@ -162,29 +200,34 @@ export function EquipmentPage({
         : "generator";
     const wasAssetCategory = previousAssetCategory.current;
     previousAssetCategory.current = currentCategory;
-    // The browser history is an external source of navigation state.
-    setShowHistory(null);
-    setShowEditSite(false);
-    setShowFilterDrawer(false);
-    setShowAddGenerator(false);
-    setShowImportGenerator(false);
-    setIsEditingEquipment(false);
-    setSelected(null);
-    setIsLoadingDetail(currentRoute.equipmentId !== null);
+    // The browser history is an external source of navigation state. Reset
+    // transient panels as a transition so a route render is never blocked.
+    startTransition(() => {
+      setShowHistory(null);
+      setShowEditSite(false);
+      setShowFilterDrawer(false);
+      setShowAddGenerator(false);
+      setShowImportGenerator(false);
+      setIsEditingEquipment(false);
+      setSelected(null);
+      setIsLoadingDetail(currentRoute.equipmentId !== null);
+    });
 
     if (currentRoute.siteId) {
-      setSiteContext((current) =>
-        current?.id === currentRoute.siteId ? current : null,
-      );
-      if (wasSiteId !== currentRoute.siteId) {
-        setIsLoading(true);
-        setResult(null);
-        setFilters({
-          ...initialFilters,
-          category: "",
-          project_id: String(currentRoute.siteId),
-        });
-      }
+      startTransition(() => {
+        setSiteContext((current) =>
+          current?.id === currentRoute.siteId ? current : null,
+        );
+        if (wasSiteId !== currentRoute.siteId) {
+          setIsLoading(true);
+          setResult(null);
+          setFilters({
+            ...initialFilters,
+            category: "",
+            project_id: String(currentRoute.siteId),
+          });
+        }
+      });
       getSite(currentRoute.siteId)
         .then((site) => {
           if (!cancelled) setSiteContext(site);
@@ -196,16 +239,18 @@ export function EquipmentPage({
           }
         });
     } else {
-      setSiteContext(null);
-      if (wasSiteId !== null || wasAssetCategory !== currentCategory) {
-        setIsLoading(true);
-        setResult(null);
-        setSearch("");
-        setFilters({
-          ...initialFilters,
-          category: currentCategory === "all" ? "" : currentCategory,
-        });
-      }
+      startTransition(() => {
+        setSiteContext(null);
+        if (wasSiteId !== null || wasAssetCategory !== currentCategory) {
+          setIsLoading(true);
+          setResult(null);
+          setSearch("");
+          setFilters({
+            ...initialFilters,
+            category: currentCategory === "all" ? "" : currentCategory,
+          });
+        }
+      });
     }
 
     if (currentRoute.equipmentId) {
@@ -313,10 +358,7 @@ export function EquipmentPage({
     const needsCategoryCounts =
       currentRoute.section === "assets" || currentRoute.siteId !== null;
 
-    if (!needsCategoryCounts) {
-      setFilteredCategoryCounts(null);
-      return;
-    }
+    if (!needsCategoryCounts) return;
 
     let cancelled = false;
     const categories = [
@@ -778,10 +820,12 @@ export function EquipmentPage({
         ) : isSiteView &&
           route.section === "sites" &&
           route.siteView === "insurance" ? (
-          <InsurancePage
-            key={`site-${siteContext.id}`}
-            initialSiteId={siteContext.id}
-          />
+          <Suspense fallback={<FeaturePageLoading />}>
+            <InsurancePage
+              key={`site-${siteContext.id}`}
+              initialSiteId={siteContext.id}
+            />
+          </Suspense>
         ) : isSiteView ? (
           <AssetInventoryView
             category="all"
@@ -869,34 +913,44 @@ export function EquipmentPage({
             }}
           />
         ) : activeSection === "insurance" ? (
-          <InsurancePage
-            key={
-              route.section === "insurance"
-                ? (route.insuranceProjectId ?? "all")
-                : "all"
-            }
-            initialSiteId={
-              route.section === "insurance" ? route.insuranceProjectId : null
-            }
-          />
+          <Suspense fallback={<FeaturePageLoading />}>
+            <InsurancePage
+              key={
+                route.section === "insurance"
+                  ? (route.insuranceProjectId ?? "all")
+                  : "all"
+              }
+              initialSiteId={
+                route.section === "insurance" ? route.insuranceProjectId : null
+              }
+            />
+          </Suspense>
         ) : activeSection === "bonds" ? (
-          <BondsPage />
+          <Suspense fallback={<FeaturePageLoading />}>
+            <BondsPage />
+          </Suspense>
         ) : activeSection === "sites" ? (
-          <SitesPage
-            canAdd={user.permissions.manage_sites}
-            catalogs={options?.catalogs}
-            employees={options?.employees}
-            onOpenSite={openSiteInventory}
-            onOpenInsurance={openSiteInsurance}
-          />
+          <Suspense fallback={<FeaturePageLoading />}>
+            <SitesPage
+              canAdd={user.permissions.manage_sites}
+              catalogs={options?.catalogs}
+              employees={options?.employees}
+              onOpenSite={openSiteInventory}
+              onOpenInsurance={openSiteInsurance}
+            />
+          </Suspense>
         ) : activeSection === "catalogs" ? (
-          <SettingsPage onChanged={refreshFilterOptions} />
+          <Suspense fallback={<FeaturePageLoading />}>
+            <SettingsPage onChanged={refreshFilterOptions} />
+          </Suspense>
         ) : (
-          <PeoplePage
-            canAdd={user.permissions.manage_users}
-            canManageManagerAccounts={user.role === "manager"}
-            catalogs={options?.catalogs}
-          />
+          <Suspense fallback={<FeaturePageLoading />}>
+            <PeoplePage
+              canAdd={user.permissions.manage_users}
+              canManageManagerAccounts={user.role === "manager"}
+              catalogs={options?.catalogs}
+            />
+          </Suspense>
         )}
       </div>
 
