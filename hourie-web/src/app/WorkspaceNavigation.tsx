@@ -222,6 +222,15 @@ export function WorkspaceSidebar({
           <span className="nav-label">Cautions</span>
         </button>
         <button
+          title="Admissions temporaires"
+          className={activeSection === "temporary-admissions" ? "active" : ""}
+          type="button"
+          onClick={() => onNavigate("temporary-admissions")}
+        >
+          <NavigationIcon name="insurance" />
+          <span className="nav-label">Admissions temporaires</span>
+        </button>
+        <button
           title={fr.navigation.sites}
           className={activeSection === "sites" ? "active" : ""}
           type="button"

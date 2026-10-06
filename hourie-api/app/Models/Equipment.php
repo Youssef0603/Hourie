@@ -104,6 +104,11 @@ class Equipment extends Model
         return $this->belongsToMany(InsurancePolicy::class, 'insurance_policy_equipment');
     }
 
+    public function temporaryAdmissions(): BelongsToMany
+    {
+        return $this->belongsToMany(TemporaryAdmission::class, 'temporary_admission_equipment');
+    }
+
     public function scopeEffectiveResponsible(Builder $query, int $employeeId): Builder
     {
         return $query->where(function (Builder $query) use ($employeeId): void {

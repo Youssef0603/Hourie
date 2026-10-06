@@ -1,5 +1,5 @@
 type ActionIconProps = {
-  name: 'add' | 'close' | 'collapse' | 'expand' | 'logout' | 'filter' | 'refresh' | 'location' | 'transfer' | 'upload' | 'edit' | 'history' | 'delete' | 'photo' | 'invoice' | 'maintenance' | 'identification' | 'specifications' | 'note' | 'inbox' | 'people'
+  name: 'add' | 'close' | 'collapse' | 'expand' | 'logout' | 'filter' | 'search' | 'refresh' | 'location' | 'transfer' | 'upload' | 'edit' | 'history' | 'delete' | 'photo' | 'invoice' | 'maintenance' | 'identification' | 'specifications' | 'note' | 'inbox' | 'people'
 }
 
 export function ActionIcon({ name }: ActionIconProps) {
@@ -17,6 +17,8 @@ export function ActionIcon({ name }: ActionIconProps) {
         <><path d="M8 4H5.5A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8M11.5 6.5 15 10l-3.5 3.5M8 10h7" /></>
       ) : name === 'refresh' ? (
         <><path d="M15.5 8A6 6 0 1 0 16 11M15.5 4.5V8H12" /></>
+      ) : name === 'search' ? (
+        <><circle cx="8.5" cy="8.5" r="4.5" fill="none" /><path d="m12 12 4 4" /></>
       ) : name === 'location' ? (
         <><path d="M16 8.5c0 4.25-6 8-6 8s-6-3.75-6-8a6 6 0 1 1 12 0Z" /><circle cx="10" cy="8.5" r="1.8" /></>
       ) : name === 'transfer' ? (

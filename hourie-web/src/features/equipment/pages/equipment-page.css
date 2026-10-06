@@ -131,7 +131,7 @@
   transition: transform 220ms ease;
 }
 
-.sidebar-assets-chevron[aria-expanded='true'] svg {
+.sidebar-assets-chevron[aria-expanded="true"] svg {
   transform: rotate(90deg);
 }
 
@@ -139,7 +139,9 @@
   display: grid;
   grid-template-rows: 0fr;
   opacity: 0;
-  transition: grid-template-rows 230ms ease, opacity 180ms ease;
+  transition:
+    grid-template-rows 230ms ease,
+    opacity 180ms ease;
 }
 
 .sidebar-asset-disclosure.expanded {
@@ -186,7 +188,10 @@
   font-size: 0.68rem;
   font-weight: 650;
   box-shadow: none;
-  transition: border-color 160ms ease, color 160ms ease, background 160ms ease;
+  transition:
+    border-color 160ms ease,
+    color 160ms ease,
+    background 160ms ease;
 }
 
 .asset-category-card svg {
@@ -273,7 +278,9 @@
   text-align: start;
   font-size: 0.82rem;
   font-weight: 600;
-  transition: color 140ms ease, background 140ms ease;
+  transition:
+    color 140ms ease,
+    background 140ms ease;
 }
 
 .workspace-sidebar button:hover {
@@ -298,11 +305,11 @@
   box-shadow: inset 3px 0 0 var(--color-primary);
 }
 
-html[dir='rtl'] .workspace-sidebar button.active {
+html[dir="rtl"] .workspace-sidebar button.active {
   box-shadow: inset -3px 0 0 var(--color-primary);
 }
 
-html[dir='rtl'] .sidebar-toggle svg {
+html[dir="rtl"] .sidebar-toggle svg {
   transform: scaleX(-1);
 }
 
@@ -625,7 +632,7 @@ html[dir='rtl'] .sidebar-toggle svg {
   font-size: 0.75rem;
 }
 
-html[dir='rtl'] .filter-bar .search-field input {
+html[dir="rtl"] .filter-bar .search-field input {
   background-position: right 0.9rem center;
 }
 
@@ -659,7 +666,7 @@ html[dir='rtl'] .filter-bar .search-field input {
   height: 0.9rem;
 }
 
-html[dir='rtl'] .search-clear-button {
+html[dir="rtl"] .search-clear-button {
   right: auto;
   left: 0.55rem;
 }
@@ -958,7 +965,7 @@ html[dir='rtl'] .search-clear-button {
   background-size: 0.9rem;
 }
 
-html[dir='rtl'] .advanced-filter-grid select {
+html[dir="rtl"] .advanced-filter-grid select {
   background-position: left 0.8rem center;
 }
 
@@ -1550,7 +1557,7 @@ html[dir='rtl'] .advanced-filter-grid select {
   background-size: 0.9rem;
 }
 
-html[dir='rtl'] .directory-form select {
+html[dir="rtl"] .directory-form select {
   background-position: left 0.9rem center;
 }
 
@@ -1709,7 +1716,10 @@ html[dir='rtl'] .directory-form select {
   font-weight: 650;
   line-height: 1;
   white-space: nowrap;
-  transition: border-color 140ms ease, background-color 140ms ease, color 140ms ease;
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease,
+    color 140ms ease;
 }
 
 .site-details-actions .site-detail-action.primary {
@@ -1786,7 +1796,10 @@ html[dir='rtl'] .directory-form select {
   cursor: pointer;
   font: inherit;
   text-align: start;
-  transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+  transition:
+    border-color 140ms ease,
+    box-shadow 140ms ease,
+    transform 140ms ease;
 }
 
 .site-card:hover,
@@ -1955,7 +1968,11 @@ html[dir='rtl'] .directory-form select {
   font-size: 0.68rem;
 }
 
-.price-input { display: grid; grid-template-columns: minmax(0, 1fr) 5rem; gap: 0.4rem; }
+.price-input {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 5rem;
+  gap: 0.4rem;
+}
 
 .people-page-heading {
   display: flex;
@@ -2027,7 +2044,10 @@ html[dir='rtl'] .directory-form select {
   cursor: pointer;
   font: inherit;
   text-align: start;
-  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
 }
 
 .person-directory-card:hover,
@@ -2072,9 +2092,17 @@ html[dir='rtl'] .directory-form select {
   white-space: nowrap;
 }
 
-.person-directory-identity strong { font-size: 0.88rem; }
-.person-directory-identity span { color: var(--color-text-muted); font-size: 0.74rem; }
-.person-directory-identity small { color: #999da5; font-size: 0.7rem; }
+.person-directory-identity strong {
+  font-size: 0.88rem;
+}
+.person-directory-identity span {
+  color: var(--color-text-muted);
+  font-size: 0.74rem;
+}
+.person-directory-identity small {
+  color: #999da5;
+  font-size: 0.7rem;
+}
 
 .person-directory-card-footer {
   display: flex;
@@ -2296,22 +2324,102 @@ html[dir='rtl'] .directory-form select {
   gap: 1rem;
 }
 
-.notification-settings { display:grid; gap:.7rem; max-width:42rem; margin:0 0 1.4rem; padding:1rem; border:1px solid var(--color-border); border-radius:.5rem; background:#fff; }
-.notification-settings h2,.notification-settings p { margin:0; }
-.notification-settings h2 { font-size:.95rem; }
-.notification-settings p { color:var(--color-text-muted); font-size:.73rem; }
-.notification-settings label { display:grid; gap:.3rem; font-size:.72rem; font-weight:700; }
-.notification-settings textarea { min-height:5rem; }
-.notification-settings button { width:fit-content; }
-.reminder-recipient-section { margin:0 0 1.4rem; border:1px solid var(--color-border); border-radius:.5rem; background:#fff; overflow:hidden; }
-.reminder-recipient-section header { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:1rem; border-bottom:1px solid var(--color-border); }
-.reminder-recipient-section h2,.reminder-recipient-section p { margin:0; }
-.reminder-recipient-section h2 { font-size:.95rem; }.reminder-recipient-section header p,.reminder-recipient-list p { margin-top:.25rem; color:var(--color-text-muted); font-size:.73rem; }
-.reminder-recipient-list article { display:grid; grid-template-columns:auto 1fr auto auto; align-items:center; gap:.75rem; min-height:3.25rem; padding:.55rem .75rem; border-bottom:1px solid var(--color-border); font-size:.78rem; }
-.reminder-recipient-list article:last-child { border-bottom:0; }
-.reminder-email-dot { background:var(--color-primary); }
-.reminder-recipient-list article button { display:grid; width:1.8rem; height:1.8rem; place-items:center; border:0; border-radius:.3rem; color:var(--color-primary); background:#fff1f4; }
-.reminder-recipient-list article button svg { width:.9rem; height:.9rem; fill:none; stroke:currentColor; }.reminder-recipient-list>p { padding:0 1rem .75rem; }
+.notification-settings {
+  display: grid;
+  gap: 0.7rem;
+  max-width: 42rem;
+  margin: 0 0 1.4rem;
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  background: #fff;
+}
+.notification-settings h2,
+.notification-settings p {
+  margin: 0;
+}
+.notification-settings h2 {
+  font-size: 0.95rem;
+}
+.notification-settings p {
+  color: var(--color-text-muted);
+  font-size: 0.73rem;
+}
+.notification-settings label {
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.notification-settings textarea {
+  min-height: 5rem;
+}
+.notification-settings button {
+  width: fit-content;
+}
+.reminder-recipient-section {
+  margin: 0 0 1.4rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  background: #fff;
+  overflow: hidden;
+}
+.reminder-recipient-section header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+.reminder-recipient-section h2,
+.reminder-recipient-section p {
+  margin: 0;
+}
+.reminder-recipient-section h2 {
+  font-size: 0.95rem;
+}
+.reminder-recipient-section header p,
+.reminder-recipient-list p {
+  margin-top: 0.25rem;
+  color: var(--color-text-muted);
+  font-size: 0.73rem;
+}
+.reminder-recipient-list article {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3.25rem;
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.78rem;
+}
+.reminder-recipient-list article:last-child {
+  border-bottom: 0;
+}
+.reminder-email-dot {
+  background: var(--color-primary);
+}
+.reminder-recipient-list article button {
+  display: grid;
+  width: 1.8rem;
+  height: 1.8rem;
+  place-items: center;
+  border: 0;
+  border-radius: 0.3rem;
+  color: var(--color-primary);
+  background: #fff1f4;
+}
+.reminder-recipient-list article button svg {
+  width: 0.9rem;
+  height: 0.9rem;
+  fill: none;
+  stroke: currentColor;
+}
+.reminder-recipient-list > p {
+  padding: 0 1rem 0.75rem;
+}
 
 .person-profile-summary {
   display: grid;
@@ -2610,7 +2718,7 @@ html[dir='rtl'] .directory-form select {
 }
 
 .site-overview .site-location-list span::before {
-  content: '·';
+  content: "·";
   margin-inline-end: 0.4rem;
   color: var(--color-primary);
 }
@@ -2761,7 +2869,7 @@ html[dir='rtl'] .directory-form select {
   line-height: 1.2;
 }
 
-html[dir='rtl'] .filter-bar select {
+html[dir="rtl"] .filter-bar select {
   background-position: left 0.75rem center;
 }
 
@@ -2920,6 +3028,14 @@ html[dir='rtl'] .filter-bar select {
   backdrop-filter: blur(2px);
 }
 
+/* A second live backdrop-filter over a scrolling drawer flickers in Chromium.
+   The underlying drawer is already behind an overlay, so a solid tint gives the
+   same separation without forcing two backdrop layers to be recomposited. */
+.nested-detail-backdrop {
+  background: rgb(10 12 16 / 52%);
+  backdrop-filter: none;
+}
+
 .detail-panel {
   width: min(100%, 30rem);
   max-height: 100svh;
@@ -2930,7 +3046,7 @@ html[dir='rtl'] .filter-bar select {
   background: white;
   box-shadow: 0 24px 70px rgb(18 20 24 / 24%);
   overscroll-behavior: contain;
-  font-family: 'Avenir Next', Avenir, 'Segoe UI', sans-serif;
+  font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
 }
 
 .creation-panel {
@@ -3112,6 +3228,28 @@ html[dir='rtl'] .filter-bar select {
 .detail-content > section:last-child,
 .detail-section:last-of-type {
   border-bottom: 0;
+}
+
+/* Keep the characteristic block immediately after Identification on every
+   equipment detail, including linked read-only details. */
+.detail-content > .detail-section {
+  order: 20;
+}
+
+.detail-content > .detail-section.detail-assignment {
+  order: 1;
+}
+
+.detail-content > .detail-section.detail-transfer-history {
+  order: 2;
+}
+
+.detail-content > .detail-section.detail-identification {
+  order: 3;
+}
+
+.detail-content > .detail-section.detail-characteristics {
+  order: 4;
 }
 
 .detail-section > summary {
@@ -3386,7 +3524,7 @@ html[dir='rtl'] .filter-bar select {
   left: 0.26rem;
   width: 1px;
   background: var(--color-border);
-  content: '';
+  content: "";
 }
 
 .equipment-history-button {
@@ -3711,7 +3849,10 @@ html[dir='rtl'] .filter-bar select {
   background: transparent;
   cursor: pointer;
   text-align: center;
-  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
 }
 
 .equipment-image-dropzone:hover,
@@ -3734,7 +3875,8 @@ html[dir='rtl'] .filter-bar select {
   font-size: 0.78rem;
 }
 
-.equipment-image-dropzone > span:not(.equipment-dropzone-icon, .loading-indicator) {
+.equipment-image-dropzone
+  > span:not(.equipment-dropzone-icon, .loading-indicator) {
   color: var(--color-text-muted);
   font-size: 0.66rem;
 }
@@ -4013,26 +4155,86 @@ html[dir='rtl'] .filter-bar select {
 }
 
 .catalog-list strong,
-.catalog-list small { display: block; }
-.catalog-copy { min-width: 0; text-align: start; }
-html[dir='rtl'] .catalog-copy,
-html[dir='rtl'] .catalog-copy small {
+.catalog-list small {
+  display: block;
+}
+.catalog-copy {
+  min-width: 0;
+  text-align: start;
+}
+html[dir="rtl"] .catalog-copy,
+html[dir="rtl"] .catalog-copy small {
   direction: rtl;
   text-align: right;
 }
-.catalog-list strong { font-size: 0.78rem; }
-.catalog-list small { margin-top: 0.1rem; color: var(--color-text-muted); font-size: 0.65rem; }
-.catalog-list svg { width: 1rem; fill: none; stroke: currentColor; }
-.catalog-color { width: 0.75rem; height: 0.75rem; border-radius: 50%; }
-.catalog-form { display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem 0.8rem; }
-.catalog-form label { display: grid; gap: 0.3rem; color: var(--color-text-strong); font-size: 0.72rem; font-weight: 700; }
-.catalog-form input:not([type='checkbox']) { width: 100%; height: var(--control-height); min-height: var(--control-height); border: 1px solid var(--color-border); border-radius: var(--control-radius); padding: 0.5rem 0.7rem; font: inherit; }
-.catalog-form .catalog-color-field { align-content: start; justify-items: start; }
-.catalog-form input[type='color'] { width: var(--control-height); padding: 0.2rem; cursor: pointer; }
-.catalog-form .catalog-active { display: flex; grid-column: 1 / -1; align-items: center; gap: 0.45rem; min-height: 2rem; }
-.catalog-form .maintenance-form-actions { grid-column: 1 / -1; justify-content: flex-end; margin-top: 0.15rem; }
-.catalog-form .maintenance-form-actions .danger-button { margin-inline-end: auto; }
-.catalog-form .maintenance-form-actions .primary-button { min-height: 2.25rem; padding: 0.45rem 0.75rem; font-size: 0.72rem; }
+.catalog-list strong {
+  font-size: 0.78rem;
+}
+.catalog-list small {
+  margin-top: 0.1rem;
+  color: var(--color-text-muted);
+  font-size: 0.65rem;
+}
+.catalog-list svg {
+  width: 1rem;
+  fill: none;
+  stroke: currentColor;
+}
+.catalog-color {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+}
+.catalog-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7rem 0.8rem;
+}
+.catalog-form label {
+  display: grid;
+  gap: 0.3rem;
+  color: var(--color-text-strong);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.catalog-form input:not([type="checkbox"]) {
+  width: 100%;
+  height: var(--control-height);
+  min-height: var(--control-height);
+  border: 1px solid var(--color-border);
+  border-radius: var(--control-radius);
+  padding: 0.5rem 0.7rem;
+  font: inherit;
+}
+.catalog-form .catalog-color-field {
+  align-content: start;
+  justify-items: start;
+}
+.catalog-form input[type="color"] {
+  width: var(--control-height);
+  padding: 0.2rem;
+  cursor: pointer;
+}
+.catalog-form .catalog-active {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2rem;
+}
+.catalog-form .maintenance-form-actions {
+  grid-column: 1 / -1;
+  justify-content: flex-end;
+  margin-top: 0.15rem;
+}
+.catalog-form .maintenance-form-actions .danger-button {
+  margin-inline-end: auto;
+}
+.catalog-form .maintenance-form-actions .primary-button {
+  min-height: 2.25rem;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.72rem;
+}
 
 @media (max-width: 640px) {
   .catalog-page {
@@ -4553,7 +4755,7 @@ html[dir='rtl'] .catalog-copy small {
   background-size: 0.9rem;
 }
 
-html[dir='rtl'] .maintenance-form-grid select {
+html[dir="rtl"] .maintenance-form-grid select {
   background-position: left 0.9rem center;
 }
 
@@ -4698,7 +4900,6 @@ html[dir='rtl'] .maintenance-form-grid select {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.65rem;
 }
-
 
 .searchable-select {
   position: relative;
@@ -5029,7 +5230,10 @@ html[dir='rtl'] .maintenance-form-grid select {
 
 .maintenance-warning-card {
   display: grid;
-  grid-template-columns: minmax(13rem, 1.1fr) minmax(22rem, 2fr) minmax(11rem, auto);
+  grid-template-columns: minmax(13rem, 1.1fr) minmax(22rem, 2fr) minmax(
+      11rem,
+      auto
+    );
   align-items: center;
   gap: 1.25rem;
   border-bottom: 1px solid var(--color-border);
@@ -5324,7 +5528,7 @@ html[dir='rtl'] .maintenance-form-grid select {
   }
 
   .user-menu .language-switch-track,
-  .user-menu .language-switch[aria-checked='true'] .language-switch-track {
+  .user-menu .language-switch[aria-checked="true"] .language-switch-track {
     background: rgb(255 255 255 / 30%);
     box-shadow: inset 0 0 0 1px rgb(255 255 255 / 32%);
   }
@@ -5512,7 +5716,6 @@ html[dir='rtl'] .maintenance-form-grid select {
   .user-menu .language-switch {
     padding-inline: 0;
   }
-
 }
 
 .user-menu > .account-menu {
@@ -6033,9 +6236,130 @@ html[dir='rtl'] .maintenance-form-grid select {
   white-space: nowrap;
 }
 
-.insurance-status.active { color: #26845a; background: #e9f5ed; }
-.insurance-status.soon { color: #a5670b; background: #fff2d8; }
-.insurance-status.expired { color: #ca4254; background: #ffeaee; }
+.insurance-status.active {
+  color: #26845a;
+  background: #e9f5ed;
+}
+.insurance-status.soon {
+  color: #a5670b;
+  background: #fff2d8;
+}
+.insurance-status.expired {
+  color: #ca4254;
+  background: #ffeaee;
+}
+.insurance-status.returned {
+  color: #626870;
+  background: #eef0f2;
+}
+.insurance-status.cleared {
+  color: #26845a;
+  background: #e9f5ed;
+}
+
+.temporary-admission-panel .detail-primary-actions .detail-delete-button {
+  margin-inline-start: auto;
+}
+
+.temporary-admission-panel
+  .detail-primary-actions
+  .equipment-transfer-button.detail-toolbar-button {
+  height: 2rem !important;
+  min-height: 2rem !important;
+  padding: 0.28rem 0.55rem !important;
+  font-size: 0.7rem !important;
+}
+
+.temporary-admission-action-section form {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.temporary-admission-action-section form > label,
+.temporary-admission-form-grid label {
+  display: grid;
+  gap: 0.3rem;
+  color: var(--color-text-strong);
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.temporary-admission-action-section input {
+  width: 100%;
+  min-height: var(--control-height);
+  border: 1px solid var(--color-border);
+  border-radius: var(--control-radius);
+  padding: 0.45rem 0.55rem;
+  background: white;
+  font: inherit;
+  font-size: 0.72rem;
+}
+
+.temporary-admission-action-section form > button {
+  width: max-content;
+  height: 2rem;
+  min-height: 2rem;
+  justify-self: end;
+  border-radius: var(--button-radius);
+  padding: 0.3rem 0.6rem;
+  font-size: 0.68rem;
+}
+
+.temporary-admission-action-section form > button.primary-button {
+  height: 2rem !important;
+  min-height: 2rem !important;
+  padding: 0.3rem 0.6rem !important;
+  font-size: 0.68rem !important;
+}
+
+.temporary-admission-action-hint {
+  margin: -0.15rem 0 0.65rem;
+  color: var(--color-text-muted) !important;
+  font-size: 0.68rem !important;
+}
+
+.temporary-admission-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.4rem;
+}
+
+.temporary-admission-form-actions button {
+  width: max-content;
+  box-sizing: border-box;
+  height: 2rem !important;
+  min-height: 2rem !important;
+  max-height: 2rem;
+  align-items: center !important;
+  border-radius: var(--button-radius) !important;
+  padding: 0.3rem 0.6rem !important;
+  font-size: 0.68rem !important;
+  line-height: 1 !important;
+}
+
+.temporary-admission-form-actions
+  button.temporary-admission-form-action-button {
+  display: inline-flex !important;
+  box-sizing: border-box !important;
+  height: 2rem !important;
+  min-height: 2rem !important;
+  max-height: 2rem !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0.3rem 0.6rem !important;
+  line-height: 1 !important;
+  white-space: nowrap;
+}
+
+.temporary-admission-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.temporary-admission-form-grid .field-wide {
+  grid-column: 1 / -1;
+}
 
 .insurance-table-empty {
   padding: 0 !important;
@@ -6163,7 +6487,10 @@ html[dir='rtl'] .maintenance-form-grid select {
   font-size: 0.7rem;
 }
 
-.insurance-detail-empty strong { color: var(--color-text-strong); font-size: 0.78rem; }
+.insurance-detail-empty strong {
+  color: var(--color-text-strong);
+  font-size: 0.78rem;
+}
 
 .insurance-side-panel {
   width: min(100%, 30rem);
@@ -6435,7 +6762,7 @@ html[dir='rtl'] .maintenance-form-grid select {
   box-shadow: 0 0 0 3px var(--color-primary-soft);
 }
 
-html[dir='rtl'] .insurance-filter-content .searchable-select-input {
+html[dir="rtl"] .insurance-filter-content .searchable-select-input {
   padding-right: 0.55rem;
   padding-left: 2.5rem;
 }
@@ -6661,6 +6988,19 @@ html[dir='rtl'] .insurance-filter-content .searchable-select-input {
   margin: 0;
 }
 
+.equipment-temporary-admissions > article {
+  display: grid;
+  gap: 0.55rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.35rem;
+  padding: 0.65rem;
+  background: white;
+}
+
+.equipment-temporary-admissions > article + article {
+  margin-top: 0.1rem;
+}
+
 .insurance-policy-document {
   display: inline-flex;
   width: fit-content;
@@ -6843,6 +7183,255 @@ html[dir='rtl'] .insurance-filter-content .searchable-select-input {
   padding: 0.42rem 0.55rem;
 }
 
+.insurance-detail-covered li:has(button) {
+  padding: 0;
+}
+
+.insurance-detail-covered li button,
+.related-equipment-link {
+  display: grid;
+  width: 100%;
+  gap: 0.12rem;
+  border: 0;
+  border-radius: inherit;
+  padding: 0.42rem 0.55rem;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+
+.insurance-detail-covered li button:not(:disabled),
+.related-equipment-link:not(:disabled) {
+  cursor: pointer;
+}
+
+.insurance-detail-covered li button:not(:disabled):hover,
+.related-equipment-link:not(:disabled):hover {
+  background: var(--color-surface-muted);
+}
+
+.related-equipment-link:disabled {
+  cursor: default;
+}
+
+.temporary-admission-documents-group {
+  display: grid;
+  gap: 0.45rem;
+  margin-top: 0.9rem;
+}
+
+.temporary-admission-documents-group h4 {
+  margin: 0;
+  color: var(--color-text-strong);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.temporary-admission-document-empty {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+}
+
+.paginated-document-list {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.document-list-search {
+  display: flex;
+  min-height: 2rem;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--control-radius);
+  padding: 0 0.55rem;
+  background: white;
+}
+
+.insurance-covered-equipment > label.document-list-search {
+  display: flex;
+  min-height: 2.35rem;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--control-radius);
+  padding: 0 0.65rem;
+  color: var(--color-text-muted);
+  background: white;
+  font-size: 0.72rem;
+  font-weight: 400;
+}
+
+.insurance-covered-equipment > label.document-list-search input {
+  height: auto;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
+  color: var(--color-text-strong);
+  background: transparent;
+  font-size: 0.72rem;
+  font-weight: 400;
+}
+
+.insurance-covered-equipment > label.document-list-search svg {
+  width: 0.9rem;
+  height: 0.9rem;
+  color: var(--color-text-muted);
+  fill: none;
+  stroke: currentcolor;
+}
+
+.document-list-search svg {
+  width: 0.85rem;
+  height: 0.85rem;
+  flex: 0 0 auto;
+  color: var(--color-text-muted);
+}
+
+.document-list-search input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  padding: 0;
+  color: var(--color-text-strong);
+  background: transparent;
+  font: inherit;
+  font-size: 0.7rem;
+}
+
+.document-list-search:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-soft);
+}
+
+.insurance-detail-covered-search svg {
+  display: block;
+  width: 0.9rem;
+  height: 0.9rem;
+  flex: 0 0 auto;
+  color: var(--color-text-muted);
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.document-list-empty {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+}
+
+.document-list-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.4rem;
+  color: var(--color-text-muted);
+  font-size: 0.67rem;
+}
+
+.document-list-pagination button {
+  min-height: 1.8rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--button-radius);
+  padding: 0.2rem 0.45rem;
+  color: var(--color-text-strong);
+  background: white;
+  font: inherit;
+  font-size: 0.67rem;
+  cursor: pointer;
+}
+
+.document-list-pagination button:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.temporary-admission-document-action {
+  justify-self: start;
+  min-height: 2rem;
+  padding-inline: 0.7rem;
+  font-size: 0.72rem;
+}
+
+.temporary-admission-renewal-form {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.temporary-admission-renewal-form > label {
+  display: grid;
+  gap: 0.3rem;
+  color: var(--color-text-strong);
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.temporary-admission-renewal-form input {
+  width: 100%;
+  height: var(--control-height);
+  min-height: var(--control-height);
+  border: 1px solid var(--color-border);
+  border-radius: var(--control-radius);
+  padding: 0.45rem 0.55rem;
+  color: var(--color-text-strong);
+  background: white;
+  font: inherit;
+  font-size: 0.72rem;
+}
+
+.temporary-admission-renewal-form input:focus {
+  outline: 0;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-soft);
+}
+
+.temporary-admission-renewal-form .temporary-admission-document-action {
+  display: inline-flex;
+  width: max-content;
+  height: 2rem !important;
+  min-height: 2rem !important;
+  justify-self: end;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--button-radius);
+  padding: 0.3rem 0.6rem;
+  font-size: 0.68rem;
+  line-height: 1;
+}
+
+/* In AT details this is a navigation row, not the small remove control used
+   by the insurance form. Keep the selector more specific than that control. */
+.insurance-covered-equipment li:has(.related-equipment-link) {
+  padding: 0;
+}
+
+.insurance-covered-equipment li .related-equipment-link {
+  display: grid;
+  width: 100%;
+  height: auto;
+  min-height: 2.8rem;
+  flex: 1 1 auto;
+  place-items: initial;
+  gap: 0.12rem;
+  border: 0;
+  border-radius: inherit;
+  padding: 0.45rem 0.55rem;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+
+.insurance-covered-equipment li .related-equipment-link:not(:disabled):hover {
+  background: var(--color-surface-muted);
+}
+
 .insurance-detail-covered li strong {
   overflow: hidden;
   color: var(--color-text-strong);
@@ -6885,15 +7474,27 @@ html[dir='rtl'] .insurance-filter-content .searchable-select-input {
 }
 
 @media (max-width: 1220px) {
-  .insurance-layout { grid-template-columns: minmax(0, 1fr); }
-  .insurance-detail-panel { position: static; }
+  .insurance-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .insurance-detail-panel {
+    position: static;
+  }
 }
 
 @media (max-width: 830px) {
-  .insurance-workspace { padding-inline: 1rem; }
-  .insurance-controls { grid-template-columns: minmax(13rem, 1fr) 1fr 1fr; }
-  .insurance-search { grid-column: 1 / -1; }
-  .insurance-date-filter { display: none !important; }
+  .insurance-workspace {
+    padding-inline: 1rem;
+  }
+  .insurance-controls {
+    grid-template-columns: minmax(13rem, 1fr) 1fr 1fr;
+  }
+  .insurance-search {
+    grid-column: 1 / -1;
+  }
+  .insurance-date-filter {
+    display: none !important;
+  }
 }
 
 @media (max-width: 900px) {
@@ -6929,5 +7530,4 @@ html[dir='rtl'] .insurance-filter-content .searchable-select-input {
     padding: 0.45rem 0.65rem;
     font-size: 0.68rem;
   }
-
 }

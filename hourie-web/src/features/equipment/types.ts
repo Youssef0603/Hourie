@@ -1,278 +1,316 @@
 export type NamedReference = {
-  id: number
-  name: string
-}
+  id: number;
+  name: string;
+};
 
-export type EquipmentCondition = string
-export type OperationalSituation = string
+export type EquipmentCondition = string;
+export type OperationalSituation = string;
 
 export type CatalogOption = {
-  id: number
-  group: 'equipment_condition' | 'operational_situation' | 'maintenance_type' | 'fuel_type' | 'project_status'
-  code: string
-  label_fr: string
-  label_ar: string | null
-  color: string | null
-  sort_order: number
-  is_active?: boolean
-}
+  id: number;
+  group:
+    | "equipment_condition"
+    | "operational_situation"
+    | "maintenance_type"
+    | "fuel_type"
+    | "project_status";
+  code: string;
+  label_fr: string;
+  label_ar: string | null;
+  color: string | null;
+  sort_order: number;
+  is_active?: boolean;
+};
 
 export type EquipmentSummary = {
-  id: number
-  display_id: string
-  asset_code: string
-  category: NamedReference & { code: string }
-  brand: string | null
-  model: string | null
-  serial_number: string | null
-  manufacture_year: number | null
-  purchase_date: string | null
-  asset_details: Record<string, string | number | null> | null
-  condition: EquipmentCondition | null
-  operational_situation: OperationalSituation | null
-  current_location: (NamedReference & {
-    parent: NamedReference | null
-    project: NamedReference | null
-  }) | null
+  id: number;
+  display_id: string;
+  asset_code: string;
+  category: NamedReference & { code: string };
+  brand: string | null;
+  model: string | null;
+  serial_number: string | null;
+  manufacture_year: number | null;
+  purchase_date: string | null;
+  asset_details: Record<string, string | number | null> | null;
+  condition: EquipmentCondition | null;
+  operational_situation: OperationalSituation | null;
+  current_location:
+    | (NamedReference & {
+        parent: NamedReference | null;
+        project: NamedReference | null;
+      })
+    | null;
   current_project_assignment: {
-    id: number
-    project: NamedReference & { responsible: NamedReference | null }
-  } | null
-  custodian: NamedReference | null
-  responsible: NamedReference | null
-  responsible_source: 'site' | 'generator' | 'asset' | null
+    id: number;
+    project: NamedReference & { responsible: NamedReference | null };
+  } | null;
+  custodian: NamedReference | null;
+  responsible: NamedReference | null;
+  responsible_source: "site" | "generator" | "asset" | null;
   power: {
-    apparent_kva: string | null
-    active_kw: string | null
-  } | null
-  fuel_type: string | null
-}
+    apparent_kva: string | null;
+    active_kw: string | null;
+  } | null;
+  fuel_type: string | null;
+};
 
 export type GeneratorDetails = {
-  apparent_power_kva: string | null
-  active_power_kw: string | null
-  phases: number | null
-  voltage_rating: string | null
-  frequency_hz: string | null
-  current_rating: string | null
-  fuel_type: string | null
-  tank_capacity_litres: string | null
-  current_engine_hours: string | null
-  purchase_price_fcfa: string | null
-  sold_to: string | null
-}
+  apparent_power_kva: string | null;
+  active_power_kw: string | null;
+  phases: number | null;
+  voltage_rating: string | null;
+  frequency_hz: string | null;
+  current_rating: string | null;
+  fuel_type: string | null;
+  tank_capacity_litres: string | null;
+  current_engine_hours: string | null;
+  purchase_price_fcfa: string | null;
+  sold_to: string | null;
+};
 
 export type EquipmentMaintenance = {
-  id: number
-  maintenance_date: string
-  engine_hours: string | null
-  intervention_type: MaintenanceType
-  oil_changed: boolean | null
-  oil_quantity_litres: string | null
-  oil_filter_changed: boolean | null
-  fuel_filter_changed: boolean | null
-  air_filter_changed: boolean | null
-  battery_serviced: boolean | null
-  coolant_serviced: boolean | null
-  technician: NamedReference | null
-  technician_name: string | null
-  external_technician_phone: string | null
-  next_maintenance_date: string | null
-  cost: string | null
-  cost_currency: string | null
-  observations: string | null
-  created_by: NamedReference
-  created_at: string
-}
+  id: number;
+  maintenance_date: string;
+  engine_hours: string | null;
+  intervention_type: MaintenanceType;
+  oil_changed: boolean | null;
+  oil_quantity_litres: string | null;
+  oil_filter_changed: boolean | null;
+  fuel_filter_changed: boolean | null;
+  air_filter_changed: boolean | null;
+  battery_serviced: boolean | null;
+  coolant_serviced: boolean | null;
+  technician: NamedReference | null;
+  technician_name: string | null;
+  external_technician_phone: string | null;
+  next_maintenance_date: string | null;
+  cost: string | null;
+  cost_currency: string | null;
+  observations: string | null;
+  created_by: NamedReference;
+  created_at: string;
+};
 
-export type MaintenanceType = string
+export type MaintenanceType = string;
 
 export type MaintenancePayload = {
-  maintenance_date: string
-  engine_hours: number | null
-  intervention_type: MaintenanceType
-  oil_changed: boolean | null
-  oil_quantity_litres: number | null
-  oil_filter_changed: boolean | null
-  fuel_filter_changed: boolean | null
-  air_filter_changed: boolean | null
-  battery_serviced: boolean | null
-  coolant_serviced: boolean | null
-  technician_employee_id: number | null
-  technician_name: string | null
-  external_technician_phone: string | null
-  next_maintenance_date: string | null
-  cost: number | null
-  cost_currency: string | null
-  observations: string | null
-}
+  maintenance_date: string;
+  engine_hours: number | null;
+  intervention_type: MaintenanceType;
+  oil_changed: boolean | null;
+  oil_quantity_litres: number | null;
+  oil_filter_changed: boolean | null;
+  fuel_filter_changed: boolean | null;
+  air_filter_changed: boolean | null;
+  battery_serviced: boolean | null;
+  coolant_serviced: boolean | null;
+  technician_employee_id: number | null;
+  technician_name: string | null;
+  external_technician_phone: string | null;
+  next_maintenance_date: string | null;
+  cost: number | null;
+  cost_currency: string | null;
+  observations: string | null;
+};
 
 export type Equipment = EquipmentSummary & {
-  observations: string | null
-  generator_details: GeneratorDetails | null
-  maintenances: EquipmentMaintenance[]
-  changes: EquipmentChange[]
-  images: EquipmentImage[]
-  invoices: EquipmentInvoice[]
-  insurance_policies: EquipmentInsurancePolicy[]
-}
+  observations: string | null;
+  generator_details: GeneratorDetails | null;
+  maintenances: EquipmentMaintenance[];
+  changes: EquipmentChange[];
+  images: EquipmentImage[];
+  invoices: EquipmentInvoice[];
+  insurance_policies: EquipmentInsurancePolicy[];
+  temporary_admissions: EquipmentTemporaryAdmission[];
+};
 
 export type EquipmentInsurancePolicy = {
-  id: number
-  policy_number: string
-  source: string | null
-  starts_on: string | null
-  ends_on: string | null
-  total_amount: string | number | null
+  id: number;
+  policy_number: string;
+  source: string | null;
+  starts_on: string | null;
+  ends_on: string | null;
+  total_amount: string | number | null;
   documents: Array<{
-    id: number
-    url: string
-    original_name: string
-    mime_type: string
-    size_bytes: number
-  }>
-}
+    id: number;
+    url: string;
+    original_name: string;
+    mime_type: string;
+    size_bytes: number;
+  }>;
+};
+
+export type EquipmentTemporaryAdmission = {
+  id: number;
+  customs_reference: string;
+  entered_on: string | null;
+  expires_on: string | null;
+  status: "active" | "renewed" | "returned" | "cleared" | "expired";
+  cleared_on: string | null;
+  customs_duty_amount: string | null;
+};
 
 export type EquipmentImage = {
-  id: number
-  url: string
-  original_name: string
-  mime_type: string
-  size_bytes: number
-  created_at: string
-}
+  id: number;
+  url: string;
+  original_name: string;
+  mime_type: string;
+  size_bytes: number;
+  created_at: string;
+};
 
 export type EquipmentInvoice = {
-  id: number
-  url: string
-  original_name: string
-  mime_type: string
-  size_bytes: number
-  uploaded_by: NamedReference | null
-  created_at: string
-}
+  id: number;
+  url: string;
+  original_name: string;
+  mime_type: string;
+  size_bytes: number;
+  uploaded_by: NamedReference | null;
+  created_at: string;
+};
 
 export type EquipmentChange = {
-  id: number
-  type: 'initial_import' | 'identity_updated' | 'specifications_updated' | 'condition_changed' | 'operational_situation_changed' | 'location_changed' | 'custodian_changed' | 'project_assignment_changed' | 'maintenance_recorded' | 'maintenance_updated' | 'maintenance_deleted' | 'image_added' | 'image_deleted' | 'invoice_added' | 'invoice_deleted' | 'archived'
-  source: 'import' | 'manual' | 'transfer' | 'maintenance'
-  actor: NamedReference | null
-  occurred_at: string
+  id: number;
+  type:
+    | "initial_import"
+    | "identity_updated"
+    | "specifications_updated"
+    | "condition_changed"
+    | "operational_situation_changed"
+    | "location_changed"
+    | "custodian_changed"
+    | "project_assignment_changed"
+    | "maintenance_recorded"
+    | "maintenance_updated"
+    | "maintenance_deleted"
+    | "image_added"
+    | "image_deleted"
+    | "invoice_added"
+    | "invoice_deleted"
+    | "archived";
+  source: "import" | "manual" | "transfer" | "maintenance";
+  actor: NamedReference | null;
+  occurred_at: string;
   transfer: {
-    from: { project: string | null; location: string | null }
-    to: { project: string | null; location: string | null }
-  } | null
-}
+    from: { project: string | null; location: string | null };
+    to: { project: string | null; location: string | null };
+  } | null;
+};
 
 export type EquipmentFilters = {
-  q: string
-  category: string
-  condition: string
-  operational_situation: string
-  project_id: string
-  location_id: string
-  custodian_employee_id: string
-  brand: string
-  model: string
-  serial_number: string
-  chassis_number: string
-  manufacture_year_from: string
-  manufacture_year_to: string
-  apparent_power_kva_min: string
-  apparent_power_kva_max: string
-  active_power_kw_min: string
-  active_power_kw_max: string
-  frequency_hz_min: string
-  frequency_hz_max: string
-  engine_hours_min: string
-  engine_hours_max: string
-  tank_capacity_litres_min: string
-  tank_capacity_litres_max: string
-  phases: string
-  voltage_rating: string
-  current_rating: string
-  fuel_type: string
-  equipment_type: string
-  sub_category: string
-  asset_fuel_type: string
-  inspection_status: '' | 'expired' | 'upcoming'
-  odometer_km_min: string
-  odometer_km_max: string
-  unassigned: string
-  bungalow_type: string
-  bungalow_group: '' | 'office' | 'sanitary' | 'guard'
-  air_conditioning: string
-  with_toilet: string
-  with_shower: string
-  supplier: string
-  length_m_min: string
-  length_m_max: string
-  width_m_min: string
-  width_m_max: string
-  height_m_min: string
-  height_m_max: string
-  asset_field: string
-  asset_value: string
-  page: number
-  per_page: number
-  sort: 'manufacture_year_desc' | 'manufacture_year_asc'
-}
+  q: string;
+  category: string;
+  condition: string;
+  operational_situation: string;
+  project_id: string;
+  location_id: string;
+  custodian_employee_id: string;
+  brand: string;
+  model: string;
+  serial_number: string;
+  chassis_number: string;
+  manufacture_year_from: string;
+  manufacture_year_to: string;
+  apparent_power_kva_min: string;
+  apparent_power_kva_max: string;
+  active_power_kw_min: string;
+  active_power_kw_max: string;
+  frequency_hz_min: string;
+  frequency_hz_max: string;
+  engine_hours_min: string;
+  engine_hours_max: string;
+  tank_capacity_litres_min: string;
+  tank_capacity_litres_max: string;
+  phases: string;
+  voltage_rating: string;
+  current_rating: string;
+  fuel_type: string;
+  equipment_type: string;
+  sub_category: string;
+  asset_fuel_type: string;
+  inspection_status: "" | "expired" | "upcoming";
+  odometer_km_min: string;
+  odometer_km_max: string;
+  unassigned: string;
+  bungalow_type: string;
+  bungalow_group: "" | "office" | "sanitary" | "guard";
+  air_conditioning: string;
+  with_toilet: string;
+  with_shower: string;
+  supplier: string;
+  length_m_min: string;
+  length_m_max: string;
+  width_m_min: string;
+  width_m_max: string;
+  height_m_min: string;
+  height_m_max: string;
+  asset_field: string;
+  asset_value: string;
+  page: number;
+  per_page: number;
+  sort: "manufacture_year_desc" | "manufacture_year_asc";
+};
 
 export type EquipmentListResponse = {
-  data: EquipmentSummary[]
+  data: EquipmentSummary[];
   meta: {
-    current_page: number
-    from: number | null
-    last_page: number
-    per_page: number
-    to: number | null
-    total: number
-  }
-}
+    current_page: number;
+    from: number | null;
+    last_page: number;
+    per_page: number;
+    to: number | null;
+    total: number;
+  };
+};
 
 export type MaintenanceWarning = {
-  equipment: EquipmentSummary
-  last_maintenance_date: string
-  next_maintenance_date: string
-  days_until_due: number
-  status: 'overdue' | 'due_soon'
-}
+  equipment: EquipmentSummary;
+  last_maintenance_date: string;
+  next_maintenance_date: string;
+  days_until_due: number;
+  status: "overdue" | "due_soon";
+};
 
 export type MaintenanceWarningResponse = {
-  data: MaintenanceWarning[]
+  data: MaintenanceWarning[];
   summary: {
-    overdue: number
-    due_soon: number
-    total: number
-    horizon_days: number
-  }
-  meta: EquipmentListResponse['meta']
-}
+    overdue: number;
+    due_soon: number;
+    total: number;
+    horizon_days: number;
+  };
+  meta: EquipmentListResponse["meta"];
+};
 
 export type EquipmentImportResult = {
-  id: number
-  original_filename: string
-  status: 'completed'
-  imported_at: string
+  id: number;
+  original_filename: string;
+  status: "completed";
+  imported_at: string;
   summary: {
-    imported_rows: number
-    warning_rows: number
-    skipped_rows?: number
-    categories?: Record<string, number>
-  }
-}
+    imported_rows: number;
+    warning_rows: number;
+    skipped_rows?: number;
+    categories?: Record<string, number>;
+  };
+};
 
 export type EquipmentFilterOptions = {
-  categories: Array<NamedReference & { code: string; equipment_count: number }>
-  projects: Array<NamedReference & { code: string | null; responsible: NamedReference | null }>
-  locations: Array<NamedReference & {
-    project_id: number | null
-    parent_id: number | null
-    location_type: string | null
-    project: NamedReference | null
-  }>
-  employees: NamedReference[]
-  fuel_types: string[]
-  catalogs: CatalogOption[]
-  asset_filter_values: Record<string, Record<string, string[]>>
-}
+  categories: Array<NamedReference & { code: string; equipment_count: number }>;
+  projects: Array<
+    NamedReference & { code: string | null; responsible: NamedReference | null }
+  >;
+  locations: Array<
+    NamedReference & {
+      project_id: number | null;
+      parent_id: number | null;
+      location_type: string | null;
+      project: NamedReference | null;
+    }
+  >;
+  employees: NamedReference[];
+  fuel_types: string[];
+  catalogs: CatalogOption[];
+  asset_filter_values: Record<string, Record<string, string[]>>;
+};

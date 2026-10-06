@@ -20,11 +20,23 @@ import type {
 import { InsuranceDetailPanel } from "../components/InsuranceDetailPanel";
 import { InsuranceFilterPanel } from "../components/InsuranceFilterPanel";
 import { InsuranceAddPanel } from "../components/InsurancePolicyForm";
+import { RelatedEquipmentDetailPanel } from "../../equipment/components/RelatedEquipmentDetailPanel";
+import type { AuthenticatedUser } from "../../auth/types";
+import type { Language } from "../../../i18n/fr";
+import type { EquipmentFilterOptions } from "../../equipment/types";
 
 export function InsurancePage({
   initialSiteId = null,
+  initialPolicyId = null,
+  relatedEquipmentContext,
 }: {
   initialSiteId?: number | null;
+  initialPolicyId?: number | null;
+  relatedEquipmentContext?: {
+    user: AuthenticatedUser;
+    language: Language;
+    options: EquipmentFilterOptions | null;
+  };
 }) {
   const [policies, setPolicies] = useState<Policy[]>([]);
   const [activeType, setActiveType] = useState<Kind | "all">(
@@ -47,7 +59,8 @@ export function InsurancePage({
   const [employeeOptions, setEmployeeOptions] = useState<
     Array<{ id: number; name: string; birth_date: string | null }>
   >([]);
-  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [selectedId, setSelectedId] = useState<number | null>(initialPolicyId);
+  const [relatedEquipmentId, setRelatedEquipmentId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
   function loadPolicies() {
@@ -362,6 +375,17 @@ export function InsurancePage({
             );
             setSelectedId(null);
           }}
+          onOpenEquipment={(equipmentId) => {
+            setRelatedEquipmentId(equipmentId);
+          }}
+        />
+      )}
+      {relatedEquipmentId && relatedEquipmentContext && (
+        <RelatedEquipmentDetailPanel
+          key={relatedEquipmentId}
+          equipmentId={relatedEquipmentId}
+          {...relatedEquipmentContext}
+          onClose={() => setRelatedEquipmentId(null)}
         />
       )}
     </main>

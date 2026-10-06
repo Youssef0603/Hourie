@@ -70,6 +70,23 @@ class EquipmentResource extends JsonResource
                     'size_bytes' => $document->size_bytes,
                 ]),
             ])),
+            'temporary_admissions' => $this->whenLoaded('temporaryAdmissions', fn () => $this->temporaryAdmissions->map(function ($admission) {
+                $renewalCount = $admission->documents->where('document_type', 'renewal')->count();
+                $expiresOn = $admission->entered_on?->copy()->addYears($renewalCount + 1);
+                $status = in_array($admission->status, ['returned', 'cleared'], true)
+                    ? $admission->status
+                    : (($expiresOn?->isBefore(now()->startOfDay())) ? 'expired' : $admission->status);
+
+                return [
+                    'id' => $admission->id,
+                    'customs_reference' => $admission->customs_reference,
+                    'entered_on' => $admission->entered_on?->format('Y-m-d'),
+                    'expires_on' => $expiresOn?->format('Y-m-d'),
+                    'status' => $status,
+                    'cleared_on' => $admission->cleared_on?->format('Y-m-d'),
+                    'customs_duty_amount' => $admission->customs_duty_amount,
+                ];
+            })),
             'changes' => $this->whenLoaded('changes', fn () => $this->changesPayload()),
         ];
     }

@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\InsurancePolicyController;
 use App\Http\Controllers\Api\V1\NotificationSettingsController;
 use App\Http\Controllers\Api\V1\SiteController;
+use App\Http\Controllers\Api\V1\TemporaryAdmissionController;
 use App\Http\Middleware\EnsurePasswordWasChanged;
 use App\Http\Middleware\EnsureUserIsActive;
 use Illuminate\Support\Facades\Route;
@@ -67,6 +68,14 @@ Route::prefix('v1')->middleware(['auth:sanctum', EnsureUserIsActive::class, Ensu
     Route::get('bonds/{bond}/documents/{document}/file', [BondController::class, 'showDocument']);
     Route::delete('bonds/{bond}/documents/{document}', [BondController::class, 'destroyDocument']);
     Route::apiResource('bonds', BondController::class);
+    Route::get('temporary-admission-equipment-options', [TemporaryAdmissionController::class, 'equipmentOptions']);
+    Route::post('temporary-admissions/{temporaryAdmission}/return', [TemporaryAdmissionController::class, 'return']);
+    Route::post('temporary-admissions/{temporaryAdmission}/clear-customs', [TemporaryAdmissionController::class, 'clearCustoms']);
+    Route::post('temporary-admissions/{temporaryAdmission}/documents', [TemporaryAdmissionController::class, 'storeDocument']);
+    Route::get('temporary-admissions/{temporaryAdmission}/documents/{document}/file', [TemporaryAdmissionController::class, 'showDocument']);
+    Route::delete('temporary-admissions/{temporaryAdmission}/documents/{document}', [TemporaryAdmissionController::class, 'destroyDocument']);
+    Route::apiResource('temporary-admissions', TemporaryAdmissionController::class)
+        ->parameters(['temporary-admissions' => 'temporaryAdmission']);
     Route::get('insurance-equipment-options', [InsurancePolicyController::class, 'equipmentOptions']);
     Route::post('insurance-policies/{insurancePolicy}/documents', [InsurancePolicyController::class, 'storeDocuments']);
     Route::post('insurance-policies/{insurancePolicy}/send-expiry-reminder', [InsurancePolicyController::class, 'sendExpiryReminder']);

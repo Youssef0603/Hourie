@@ -77,6 +77,13 @@ const BondsPage = lazy(() =>
     default: module.BondsPage,
   })),
 );
+const TemporaryAdmissionsPage = lazy(() =>
+  import("../../temporary-admissions/pages/TemporaryAdmissionsPage").then(
+    (module) => ({
+      default: module.TemporaryAdmissionsPage,
+    }),
+  ),
+);
 
 type EquipmentPageProps = {
   user: AuthenticatedUser;
@@ -917,17 +924,29 @@ export function EquipmentPage({
             <InsurancePage
               key={
                 route.section === "insurance"
-                  ? (route.insuranceProjectId ?? "all")
+                  ? `${route.insuranceProjectId ?? "all"}-${route.insurancePolicyId ?? "none"}`
                   : "all"
               }
               initialSiteId={
                 route.section === "insurance" ? route.insuranceProjectId : null
               }
+              initialPolicyId={
+                route.section === "insurance" ? route.insurancePolicyId : null
+              }
+              relatedEquipmentContext={{ user, language, options }}
             />
           </Suspense>
         ) : activeSection === "bonds" ? (
           <Suspense fallback={<FeaturePageLoading />}>
             <BondsPage />
+          </Suspense>
+        ) : activeSection === "temporary-admissions" ? (
+          <Suspense fallback={<FeaturePageLoading />}>
+            <TemporaryAdmissionsPage
+              canManage={user.permissions.manage_equipment}
+              initialAdmissionId={route.temporaryAdmissionId}
+              relatedEquipmentContext={{ user, language, options }}
+            />
           </Suspense>
         ) : activeSection === "sites" ? (
           <Suspense fallback={<FeaturePageLoading />}>

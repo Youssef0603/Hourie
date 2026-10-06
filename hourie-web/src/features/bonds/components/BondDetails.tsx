@@ -7,6 +7,7 @@ import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { DocumentUploadDropzone } from "../../../shared/components/DocumentUploadDropzone";
 import { EmptyState } from "../../../shared/components/EmptyState";
 import { LoadingSpinner } from "../../../shared/components/LoadingSpinner";
+import { PaginatedDocumentList } from "../../../shared/components/PaginatedDocumentList";
 import {
   RecordHistory,
   type RecordHistoryEntry,
@@ -315,8 +316,10 @@ function BondDocuments({
         </div>
       )}
       {bond.documents.length ? (
-        <div className="invoice-list">
-          {bond.documents.map((document) => (
+        <PaginatedDocumentList
+          documents={bond.documents}
+          emptyMessage="Aucun document ajouté."
+          renderDocument={(document) => (
             <article key={document.id}>
               <button
                 className="invoice-preview-button"
@@ -345,8 +348,8 @@ function BondDocuments({
                 )}
               </button>
             </article>
-          ))}
-        </div>
+          )}
+        />
       ) : (
         <EmptyState
           compact

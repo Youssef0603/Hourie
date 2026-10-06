@@ -26,12 +26,18 @@ export function InsuranceDetailPanel({
   onEdit,
   onDocumentsChanged,
   onDeleted,
+  onOpenEquipment,
+  readOnly = false,
+  nested = false,
 }: {
   policy: Policy;
   onClose: () => void;
   onEdit: () => void;
   onDocumentsChanged: (documents: PolicyDocument[]) => void;
   onDeleted: () => void;
+  onOpenEquipment?: (equipmentId: number) => void;
+  readOnly?: boolean;
+  nested?: boolean;
 }) {
   const state = insurancePolicyStatus(policy);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -61,7 +67,10 @@ export function InsuranceDetailPanel({
   }
 
   return (
-    <div className="detail-backdrop" onMouseDown={onClose}>
+    <div
+      className={`detail-backdrop${nested ? " nested-detail-backdrop" : ""}`}
+      onMouseDown={onClose}
+    >
       <aside
         className="detail-panel insurance-side-panel"
         role="dialog"
@@ -82,33 +91,35 @@ export function InsuranceDetailPanel({
           </button>
         </header>
         <div className="detail-content insurance-side-content">
-          <div className="detail-primary-actions">
-            <button
-              className="equipment-edit-button detail-toolbar-button"
-              type="button"
-              onClick={onEdit}
-            >
-              <ActionIcon name="edit" />
-              Modifier
-            </button>
-            <button
-              className="equipment-history-button detail-toolbar-button"
-              type="button"
-              onClick={() => void openHistory()}
-            >
-              <ActionIcon name="history" />
-              Voir l’historique
-            </button>
-            <button
-              className="danger-button detail-delete-button"
-              type="button"
-              disabled={isDeleting}
-              onClick={() => void remove()}
-              aria-label={isDeleting ? "Suppression en cours" : "Supprimer"}
-            >
-              <ActionIcon name="delete" />
-            </button>
-          </div>
+          {!readOnly && (
+            <div className="detail-primary-actions">
+              <button
+                className="equipment-edit-button detail-toolbar-button"
+                type="button"
+                onClick={onEdit}
+              >
+                <ActionIcon name="edit" />
+                Modifier
+              </button>
+              <button
+                className="equipment-history-button detail-toolbar-button"
+                type="button"
+                onClick={() => void openHistory()}
+              >
+                <ActionIcon name="history" />
+                Voir l’historique
+              </button>
+              <button
+                className="danger-button detail-delete-button"
+                type="button"
+                disabled={isDeleting}
+                onClick={() => void remove()}
+                aria-label={isDeleting ? "Suppression en cours" : "Supprimer"}
+              >
+                <ActionIcon name="delete" />
+              </button>
+            </div>
+          )}
           <section>
             <h3>
               <ActionIcon name="identification" />
@@ -156,7 +167,10 @@ export function InsuranceDetailPanel({
             </dl>
           </section>
           {policy.insurance_type === "equipment" && (
-            <InsuranceCoveredEquipment equipment={policy.equipment ?? []} />
+            <InsuranceCoveredEquipment
+              equipment={policy.equipment ?? []}
+              onOpenEquipment={onOpenEquipment}
+            />
           )}
           {policy.insurance_type === "group_health" && (
             <InsuranceCoveredPeople employees={policy.employees ?? []} />
@@ -202,7 +216,11 @@ export function InsuranceDetailPanel({
               </div>
             </dl>
           </section>
-          <InsuranceDocuments policy={policy} onChanged={onDocumentsChanged} />
+          <InsuranceDocuments
+            policy={policy}
+            onChanged={onDocumentsChanged}
+            readOnly={readOnly}
+          />
           <section>
             <h3>
               <ActionIcon name="note" />

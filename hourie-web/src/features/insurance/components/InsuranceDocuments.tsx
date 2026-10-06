@@ -7,6 +7,7 @@ import {
 import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { EmptyState } from "../../../shared/components/EmptyState";
 import { LoadingSpinner } from "../../../shared/components/LoadingSpinner";
+import { PaginatedDocumentList } from "../../../shared/components/PaginatedDocumentList";
 import type {
   InsurancePolicy as Policy,
   InsurancePolicyDocument as PolicyDocument,
@@ -15,9 +16,11 @@ import type {
 export function InsuranceDocuments({
   policy,
   onChanged,
+  readOnly = false,
 }: {
   policy: Policy;
   onChanged: (documents: PolicyDocument[]) => void;
+  readOnly?: boolean;
 }) {
   const documents = policy.documents ?? [];
   const [uploading, setUploading] = useState(false);
@@ -104,8 +107,10 @@ export function InsuranceDocuments({
         </div>
       )}
       {documents.length ? (
-        <div className="invoice-list">
-          {documents.map((document) => (
+        <PaginatedDocumentList
+          documents={documents}
+          emptyMessage="Aucun document ajouté."
+          renderDocument={(document) => (
             <article key={document.id}>
               <button
                 className="invoice-preview-button"
@@ -120,7 +125,7 @@ export function InsuranceDocuments({
                   </small>
                 </span>
               </button>
-              <button
+              {!readOnly && <button
                 className="invoice-delete-button"
                 type="button"
                 disabled={deletingId === document.id}
@@ -132,10 +137,10 @@ export function InsuranceDocuments({
                 ) : (
                   <ActionIcon name="delete" />
                 )}
-              </button>
+              </button>}
             </article>
-          ))}
-        </div>
+          )}
+        />
       ) : (
         <EmptyState
           compact
@@ -144,7 +149,7 @@ export function InsuranceDocuments({
           description="Les contrats et attestations associés apparaîtront ici."
         />
       )}
-      <label className="detail-upload-button insurance-document-upload">
+      {!readOnly && <label className="detail-upload-button insurance-document-upload">
         <ActionIcon name="add" />
         <span>{uploading ? uploadLabel : "Ajouter des documents"}</span>
         <input
@@ -154,7 +159,7 @@ export function InsuranceDocuments({
           disabled={uploading}
           onChange={(event) => void upload(event)}
         />
-      </label>
+      </label>}
     </section>
   );
 }

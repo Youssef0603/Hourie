@@ -64,6 +64,9 @@ class EquipmentController extends Controller
                 ->where('insurance_type', 'equipment')
                 ->with('documents')
                 ->orderByDesc('ends_on'),
+            'temporaryAdmissions' => fn ($query) => $query
+                ->with('documents')
+                ->latest('entered_on'),
             'changes' => fn ($query) => $query->with('actor')->latest('occurred_at')->latest('id'),
         ]);
 
