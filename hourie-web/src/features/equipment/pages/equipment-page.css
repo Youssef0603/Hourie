@@ -5471,9 +5471,11 @@ html[dir="rtl"] .maintenance-form-grid select {
   }
 
   .workspace-header {
+    align-items: center;
+    flex-direction: row;
     gap: 0.9rem;
     border-bottom: 0;
-    padding: 1rem 1.1rem 1.15rem;
+    padding: 0.75rem 1rem;
     color: white;
     background: var(--color-primary);
     backdrop-filter: none;
@@ -5486,26 +5488,25 @@ html[dir="rtl"] .maintenance-form-grid select {
   }
 
   .workspace-logo {
-    width: 9.5rem;
-    height: 2.55rem;
+    width: 8.5rem;
+    height: 2.25rem;
   }
 
-  .workspace-header,
   .page-heading,
   .pagination {
     align-items: flex-start;
   }
 
-  .workspace-header,
   .page-heading,
   .pagination {
     flex-direction: column;
   }
 
   .user-menu {
-    width: 100%;
+    width: auto;
+    margin-inline-start: auto;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-end;
     gap: 0.65rem;
     text-align: start;
   }
@@ -5545,7 +5546,7 @@ html[dir="rtl"] .maintenance-form-grid select {
     border-inline-end: 0;
     border-top: 1px solid rgb(255 255 255 / 20%);
     border-bottom: 0;
-    padding: 0.5rem;
+    padding: 0.55rem;
   }
 
   .workspace-sidebar nav {
@@ -5842,37 +5843,55 @@ html[dir="rtl"] .maintenance-form-grid select {
   .workspace-sidebar nav {
     display: grid;
     min-height: 0;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.35rem;
   }
 
-  .workspace-sidebar .sidebar-settings-link {
-    margin-top: 0;
-    padding-top: 0.5rem;
-  }
-
   .workspace-sidebar .sidebar-navigation-group {
-    display: grid;
-    grid-column: 1 / -1;
+    display: block;
+    grid-column: auto;
     min-width: 0;
   }
 
+  .workspace-sidebar .sidebar-group-label,
+  .workspace-sidebar .sidebar-assets-chevron,
+  .workspace-sidebar .sidebar-asset-disclosure {
+    display: none;
+  }
+
+  .workspace-sidebar .sidebar-assets-heading,
+  .workspace-sidebar .sidebar-assets-heading.active-group {
+    height: 100%;
+    background: transparent;
+  }
+
+  .workspace-sidebar nav > button,
   .workspace-sidebar .sidebar-assets-toggle {
+    width: 100%;
+    min-height: 3.35rem;
     justify-content: flex-start;
+    gap: 0.65rem;
+    border: 1px solid transparent;
+    border-radius: 0.32rem;
+    padding: 0.65rem 0.8rem;
+    line-height: 1.25;
   }
 
-  .workspace-sidebar .sidebar-asset-children {
-    display: flex;
-    gap: 0.2rem;
-    overflow-x: auto;
-    scrollbar-width: thin;
+  .workspace-sidebar button.active,
+  .workspace-sidebar .sidebar-assets-heading.active-group .sidebar-assets-toggle {
+    border-color: #f4cbd5;
+    color: var(--color-primary);
+    background: #fff0f4;
+    box-shadow: none;
   }
 
-  .workspace-sidebar button.sidebar-child {
-    width: auto;
-    flex: 0 0 auto;
-    padding: 0.4rem 0.55rem;
-    white-space: nowrap;
+  .workspace-sidebar .sidebar-settings-link {
+    grid-column: 1 / -1;
+    margin-top: 0.15rem;
+    border: 0;
+    border-top: 1px solid var(--color-border);
+    border-radius: 0;
+    padding-top: 0.75rem;
   }
 
   .asset-categories {
@@ -7483,9 +7502,6 @@ html[dir="rtl"] .insurance-filter-content .searchable-select-input {
 }
 
 @media (max-width: 830px) {
-  .insurance-workspace {
-    padding-inline: 1rem;
-  }
   .insurance-controls {
     grid-template-columns: minmax(13rem, 1fr) 1fr 1fr;
   }

@@ -23,11 +23,7 @@ class InsurancePolicyController extends Controller
 {
     public function index(Request $request): AnonymousResourceCollection
     {
-        $query = InsurancePolicy::query()
-            ->with('project:id,name')
-            ->withCount(['employees', 'equipment'])
-            ->latest('ends_on')
-            ->latest('id');
+        $query = InsurancePolicy::query();
         if ($request->filled('project_id')) {
             $query->where('project_id', $request->integer('project_id'));
         }
@@ -52,13 +48,19 @@ class InsurancePolicyController extends Controller
         }
 
         $categoryCounts = (clone $query)
-            ->reorder()
-            ->selectRaw('insurance_type, COUNT(*) as aggregate')
+            ->select('insurance_type')
+            ->selectRaw('COUNT(*) as aggregate')
             ->groupBy('insurance_type')
             ->pluck('aggregate', 'insurance_type');
         if ($request->filled('insurance_type')) {
             $query->where('insurance_type', $request->string('insurance_type')->toString());
         }
+
+        $query
+            ->with('project:id,name')
+            ->withCount(['employees', 'equipment'])
+            ->latest('ends_on')
+            ->latest('id');
 
         $perPage = max(1, min(100, $request->integer('per_page', 10)));
 
