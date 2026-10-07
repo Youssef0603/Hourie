@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { fr } from '../../../i18n/fr'
 import { createSite, getSite, getSites } from '../api'
 import type { ProjectStatus, Site, SiteDetails } from '../types'
@@ -14,6 +14,7 @@ import { LoadingSpinner } from '../../../shared/components/LoadingSpinner'
 import { SiteEditForm } from '../components/SiteEditForm'
 import { EmptyState } from '../../../shared/components/EmptyState'
 import { DataTable } from '../../../shared/components/DataTable'
+import type { PaginationMeta } from '../../../shared/api/pagination'
 
 type SitesPageProps = {
   canAdd: boolean
@@ -27,6 +28,7 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, catalogs, emplo
   const [sites, setSites] = useState<Site[]>([])
   const [search, setSearch] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
+  const [pagination, setPagination] = useState<PaginationMeta | null>(null)
   const [isRefreshing, setIsRefreshing] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [name, setName] = useState('')
@@ -43,20 +45,28 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, catalogs, emplo
   const [detailsError, setDetailsError] = useState<string | null>(null)
   const [isEditingSite, setIsEditingSite] = useState(false)
 
-  useEffect(() => {
-    refreshSites()
-  }, [])
-
-  async function refreshSites() {
+  const loadSites = useCallback(async (page: number) => {
     setError(null)
     setIsRefreshing(true)
     try {
-      setSites(await getSites())
+      const response = await getSites(page, search)
+      setSites(response.data ?? [])
+      setPagination(response.meta ?? null)
+      if (response.meta) setCurrentPage(response.meta.current_page)
     } catch {
       setError(fr.directory.loadError)
     } finally {
       setIsRefreshing(false)
     }
+  }, [search])
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => void loadSites(1), 200)
+    return () => window.clearTimeout(timer)
+  }, [loadSites])
+
+  async function refreshSites(page = currentPage) {
+    await loadSites(page)
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -124,10 +134,8 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, catalogs, emplo
   const visibleSites = searchTerm
     ? sites.filter((site) => [site.name, site.address, site.responsible?.name].filter(Boolean).join(' ').toLocaleLowerCase('fr-FR').includes(searchTerm))
     : sites
-  const sitesPerPage = 10
-  const totalPages = Math.max(1, Math.ceil(visibleSites.length / sitesPerPage))
-  const page = Math.min(currentPage, totalPages)
-  const paginatedSites = visibleSites.slice((page - 1) * sitesPerPage, page * sitesPerPage)
+  const page = pagination?.current_page ?? currentPage
+  const totalPages = pagination?.last_page ?? 1
 
   return (
     <main className="directory-page">
@@ -206,13 +214,13 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, catalogs, emplo
           </label>
           <div className="filter-toolbar-actions">
             {canAdd && <button className="table-refresh-button table-add-button" type="button" onClick={() => setShowForm(true)} aria-label={fr.directory.addSite} title={fr.directory.addSite}><ActionIcon name="add" /></button>}
-            <button className="table-refresh-button filter-refresh-button" type="button" onClick={refreshSites} disabled={isRefreshing} aria-label={fr.common.refresh} title={fr.common.refresh}><ActionIcon name="refresh" /></button>
+            <button className="table-refresh-button filter-refresh-button" type="button" onClick={() => void refreshSites()} disabled={isRefreshing} aria-label={fr.common.refresh} title={fr.common.refresh}><ActionIcon name="refresh" /></button>
           </div>
         </div>
         {!isRefreshing && visibleSites.length > 0 && <>
           <DataTable className="asset-inventory-table" ariaLabel={fr.directory.sites}>
               <thead><tr><th>Site / projet</th><th>{fr.directory.siteResponsible}</th><th>{fr.directory.siteAddress}</th><th>{fr.directory.assignedAssets}</th><th>{fr.directory.startDate}</th><th>{fr.directory.expectedEndDate}</th><th>Statut</th></tr></thead>
-              <tbody>{paginatedSites.map((site) => <tr key={site.id} tabIndex={0} onClick={() => openSiteDetails(site)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openSiteDetails(site) } }}>
+              <tbody>{visibleSites.map((site) => <tr key={site.id} tabIndex={0} onClick={() => openSiteDetails(site)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openSiteDetails(site) } }}>
                 <td><strong>{site.name}</strong></td>
                 <td>{site.responsible?.name ?? fr.common.notAssigned}</td>
                 <td>{site.address ?? fr.common.notProvided}</td>
@@ -222,7 +230,7 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, catalogs, emplo
                 <td><span className={`project-status project-status-${site.status}`} style={catalogBadgeStyle(catalogs, 'project_status', site.status)}>{catalogLabel(catalogs, 'project_status', site.status)}</span></td>
               </tr>)}</tbody>
           </DataTable>
-          {totalPages > 1 && <nav className="pagination" aria-label={fr.equipment.pagination}><span>{visibleSites.length} site{visibleSites.length > 1 ? 's' : ''}</span><div><button type="button" disabled={page === 1} onClick={() => setCurrentPage(page - 1)}>{fr.common.previous}</button><span>{fr.equipment.page(page, totalPages)}</span><button type="button" disabled={page === totalPages} onClick={() => setCurrentPage(page + 1)}>{fr.common.next}</button></div></nav>}
+          {pagination && <nav className="pagination" aria-label={fr.equipment.pagination}><span>{fr.equipment.results(pagination.from, pagination.to, pagination.total)}</span><div><button type="button" disabled={page === 1 || isRefreshing} onClick={() => void refreshSites(page - 1)}>{fr.common.previous}</button><span>{fr.equipment.page(page, totalPages)}</span><button type="button" disabled={page === totalPages || isRefreshing} onClick={() => void refreshSites(page + 1)}>{fr.common.next}</button></div></nav>}
         </>}
         {!isRefreshing && visibleSites.length === 0 && <EmptyState icon="location" title={searchTerm ? 'Aucun site trouvé' : 'Aucun site enregistré'} description={searchTerm ? 'Modifiez votre recherche pour afficher d’autres sites.' : 'Les sites et projets ajoutés apparaîtront ici.'} />}
         {isRefreshing && <div className="table-state"><LoadingSpinner label={fr.common.loading} /></div>}

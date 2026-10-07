@@ -17,18 +17,34 @@ use Illuminate\Support\Facades\DB;
 
 class SiteController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
+        $perPage = max(1, min(100, $request->integer('per_page', 10)));
         $projects = Project::query()
             ->where('is_active', true)
+            ->when($request->filled('search'), function ($query) use ($request): void {
+                $term = '%'.$request->string('search')->toString().'%';
+                $query->where(fn ($builder) => $builder->where('name', 'like', $term)
+                    ->orWhere('address', 'like', $term)
+                    ->orWhereHas('responsible', fn ($responsible) => $responsible->where('name', 'like', $term)));
+            })
             ->with('responsible:id,name')
             ->with(['locations' => fn ($query) => $query->where('is_active', true)->orderBy('parent_id')->orderBy('name')])
-            ->with(['changes' => fn ($query) => $query->with('actor')->limit(10)])
             ->withCount(['equipmentAssignments as active_equipment_count' => fn ($query) => $query->whereNull('ended_at')])
             ->orderBy('name')
-            ->get();
+            ->paginate($perPage);
 
-        return response()->json(['data' => $projects]);
+        return response()->json([
+            'data' => $projects->items(),
+            'meta' => [
+                'current_page' => $projects->currentPage(),
+                'from' => $projects->firstItem(),
+                'last_page' => $projects->lastPage(),
+                'per_page' => $projects->perPage(),
+                'to' => $projects->lastItem(),
+                'total' => $projects->total(),
+            ],
+        ]);
     }
 
     public function store(StoreSiteRequest $request): JsonResponse

@@ -1,8 +1,11 @@
 import { apiRequest, initializeCsrfProtection } from '../../shared/api/http'
+import type { PaginatedResponse } from '../../shared/api/pagination'
 import type { CreateEmployeePayload, CreateSitePayload, Employee, EmployeeDetails, Site, SiteDetails, UpdateEmployeePayload, UpdateSitePayload } from './types'
 
-export async function getSites(): Promise<Site[]> {
-  return (await apiRequest<{ data: Site[] }>('/api/v1/sites')).data
+export async function getSites(page = 1, search = ''): Promise<PaginatedResponse<Site>> {
+  const params = new URLSearchParams({ page: String(page) })
+  if (search.trim()) params.set('search', search.trim())
+  return await apiRequest<PaginatedResponse<Site>>(`/api/v1/sites?${params}`)
 }
 
 export async function getSite(id: number): Promise<SiteDetails> {
@@ -30,8 +33,9 @@ export async function deleteSite(id: number): Promise<void> {
   await apiRequest<void>(`/api/v1/sites/${id}`, { method: 'DELETE' })
 }
 
-export async function getEmployees(): Promise<Employee[]> {
-  return (await apiRequest<{ data: Employee[] }>('/api/v1/employees')).data
+export async function getEmployees(page = 1, filters: Record<string, string> = {}): Promise<PaginatedResponse<Employee>> {
+  const params = new URLSearchParams({ page: String(page), ...filters })
+  return await apiRequest<PaginatedResponse<Employee>>(`/api/v1/employees?${params}`)
 }
 
 export async function getEmployee(id: number): Promise<EmployeeDetails> {

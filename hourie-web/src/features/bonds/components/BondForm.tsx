@@ -72,7 +72,7 @@ export function BondForm({
         ...(response.data.documents ?? []),
         ...uploaded,
       ];
-      await apiRequest<{ data: { sent: boolean } }>(
+      await apiRequest<{ data: { queued: boolean } }>(
         `/api/v1/bonds/${response.data.id}/send-expiry-reminder`,
         { method: "POST" },
       ).catch(() => undefined);

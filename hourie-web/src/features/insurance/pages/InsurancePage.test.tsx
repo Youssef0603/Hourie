@@ -28,9 +28,24 @@ const policies = [
 
 describe('InsurancePage', () => {
   beforeEach(() => {
-    apiRequest.mockImplementation((path: string) => Promise.resolve({
-      data: path === '/api/v1/insurance-policies' ? policies : path === '/api/v1/sites' ? [{ id: 1, name: 'Bassam' }] : [],
-    }))
+    apiRequest.mockImplementation((path: string) => {
+      if (path.startsWith('/api/v1/insurance-policies?')) {
+        const params = new URL(path, 'https://hourie.test').searchParams
+        const type = params.get('insurance_type')
+        const search = params.get('search')?.toLowerCase()
+        const filtered = policies.filter((policy) =>
+          (!type || policy.insurance_type === type) &&
+          (!search || JSON.stringify(policy).toLowerCase().includes(search)),
+        )
+        return Promise.resolve({
+          data: filtered,
+          category_counts: { trc_rc: 1, equipment: 1 },
+          meta: { current_page: 1, from: filtered.length ? 1 : null, last_page: 1, per_page: 10, to: filtered.length || null, total: filtered.length },
+        })
+      }
+      if (path.startsWith('/api/v1/sites?')) return Promise.resolve({ data: [{ id: 1, name: 'Bassam' }], meta: {} })
+      return Promise.resolve({ data: [] })
+    })
   })
 
   it('filters policies by category and searches covered equipment', async () => {

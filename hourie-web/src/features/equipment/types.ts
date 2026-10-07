@@ -254,6 +254,7 @@ export type EquipmentFilters = {
 
 export type EquipmentListResponse = {
   data: EquipmentSummary[];
+  category_counts?: Record<string, number>;
   meta: {
     current_page: number;
     from: number | null;

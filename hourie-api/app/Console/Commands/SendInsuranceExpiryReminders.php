@@ -15,7 +15,7 @@ class SendInsuranceExpiryReminders extends Command
     public function handle(SendInsuranceExpiryRemindersAction $action): int
     {
         $date = $this->option('date') ? CarbonImmutable::parse((string) $this->option('date')) : null;
-        $this->info('Sent '.$action->handle($date).' insurance reminder(s).');
+        $this->info('Queued '.$action->handle($date).' insurance reminder(s).');
 
         return self::SUCCESS;
     }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { apiRequest } from "../../../shared/api/http";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { EmptyState } from "../../../shared/components/EmptyState";
@@ -14,71 +14,71 @@ import type { Bond, BondSite as Site, BondStatus, BondType } from "../types";
 import { BondDetails } from "../components/BondDetails";
 import { BondFilters } from "../components/BondFilters";
 import { BondForm } from "../components/BondForm";
+import type { PaginatedResponse, PaginationMeta } from "../../../shared/api/pagination";
 
 export function BondsPage() {
   const [bonds, setBonds] = useState<Bond[]>([]);
+  const [pagination, setPagination] = useState<PaginationMeta | null>(null);
   const [sites, setSites] = useState<Site[]>([]);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<BondStatus | "all">("all");
   const [type, setType] = useState<BondType | "all">("all");
   const [siteId, setSiteId] = useState("");
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [editing, setEditing] = useState<Bond | null>(null);
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [selected, setSelected] = useState<Bond | null>(null);
 
-  function refresh() {
+  const refresh = useCallback(async () => {
     setLoading(true);
-    apiRequest<{ data: Bond[] }>("/api/v1/bonds")
-      .then((response) => setBonds(response.data))
-      .finally(() => setLoading(false));
-  }
+    const params = new URLSearchParams({ page: String(page) });
+    if (search.trim()) params.set("search", search.trim());
+    if (status !== "all") params.set("status", status);
+    if (type !== "all") params.set("bond_type", type);
+    if (siteId) params.set("project_id", siteId);
+    try {
+      const response = await apiRequest<PaginatedResponse<Bond>>(`/api/v1/bonds?${params}`);
+      setBonds(response.data ?? []);
+      setPagination(response.meta ?? null);
+    } finally { setLoading(false); }
+  }, [page, search, siteId, status, type]);
 
   useEffect(() => {
-    apiRequest<{ data: Bond[] }>("/api/v1/bonds")
-      .then((response) => setBonds(response.data))
-      .finally(() => setLoading(false));
-    apiRequest<{ data: Site[] }>("/api/v1/sites")
+    const timer = window.setTimeout(() => void refresh(), 200);
+    return () => window.clearTimeout(timer);
+  }, [refresh]);
+
+  useEffect(() => {
+    apiRequest<PaginatedResponse<Site>>("/api/v1/sites?per_page=100")
       .then((response) => setSites(response.data))
       .catch(() => setSites([]));
   }, []);
 
-  const filtered = useMemo(
-    () =>
-      bonds.filter((bond) => {
-        const term = search.trim().toLowerCase();
-        const text = [
-          bond.issuer,
-          bond.project?.name,
-          bond.location?.name,
-          bondTypeLabel(bond.bond_type),
-        ]
-          .join(" ")
-          .toLowerCase();
-        return (
-          (status === "all" || getBondStatus(bond) === status) &&
-          (type === "all" || bond.bond_type === type) &&
-          (!siteId || bond.project?.id === Number(siteId)) &&
-          (!term || text.includes(term))
-        );
-      }),
-    [bonds, search, siteId, status, type],
-  );
-  const pageSize = 10;
-  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const currentPage = Math.min(page, pageCount - 1);
-  const visible = filtered.slice(
-    currentPage * pageSize,
-    (currentPage + 1) * pageSize,
-  );
-  const selected = bonds.find((bond) => bond.id === selectedId) ?? null;
+  const visible = bonds;
+  const pageCount = pagination?.last_page ?? 1;
+  const currentPage = pagination?.current_page ?? page;
 
-  const updateBond = (bond: Bond) =>
+  useEffect(() => {
+    if (selectedId === null) {
+      const timer = window.setTimeout(() => setSelected(null), 0);
+      return () => window.clearTimeout(timer);
+    }
+    let active = true;
+    apiRequest<{ data: Bond }>(`/api/v1/bonds/${selectedId}`)
+      .then((response) => { if (active) setSelected(response.data); })
+      .catch(() => { if (active) setSelectedId(null); });
+    return () => { active = false; };
+  }, [selectedId]);
+
+  const updateBond = (bond: Bond) => {
+    setSelected((current) => current?.id === bond.id ? bond : current);
     setBonds((current) =>
       current.map((item) => (item.id === bond.id ? bond : item)),
     );
+  };
 
   return (
     <main className="equipment-page asset-page insurance-workspace bonds-workspace">
@@ -102,7 +102,7 @@ export function BondsPage() {
               value={search}
               onChange={(event) => {
                 setSearch(event.target.value);
-                setPage(0);
+                setPage(1);
               }}
               placeholder="Type, banque, localisation ou site"
             />
@@ -215,23 +215,22 @@ export function BondsPage() {
         {!loading && (
           <nav className="pagination insurance-pagination">
             <span>
-              {filtered.length} caution{filtered.length !== 1 ? "s" : ""}{" "}
-              affichée{filtered.length !== 1 ? "s" : ""}
+              {pagination ? `${pagination.from ?? 0}–${pagination.to ?? 0} sur ${pagination.total}` : `${visible.length} caution(s)`}
             </span>
             <div>
               <button
                 type="button"
-                disabled={currentPage === 0}
+                disabled={currentPage === 1 || loading}
                 onClick={() => setPage(currentPage - 1)}
               >
                 Précédent
               </button>
               <span>
-                {currentPage + 1} / {pageCount}
+                {currentPage} / {pageCount}
               </span>
               <button
                 type="button"
-                disabled={currentPage === pageCount - 1}
+                disabled={currentPage === pageCount || loading}
                 onClick={() => setPage(currentPage + 1)}
               >
                 Suivant
@@ -248,22 +247,22 @@ export function BondsPage() {
           siteId={siteId}
           onStatus={(value) => {
             setStatus(value);
-            setPage(0);
+            setPage(1);
           }}
           onType={(value) => {
             setType(value);
-            setPage(0);
+            setPage(1);
           }}
           onSite={(value) => {
             setSiteId(value);
-            setPage(0);
+            setPage(1);
           }}
           onClose={() => setShowFilters(false)}
           onClear={() => {
             setStatus("all");
             setType("all");
             setSiteId("");
-            setPage(0);
+            setPage(1);
           }}
         />
       )}

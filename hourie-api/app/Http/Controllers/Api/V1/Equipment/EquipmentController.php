@@ -37,7 +37,16 @@ class EquipmentController extends Controller
 
     public function index(ListEquipmentRequest $request, ListEquipment $listEquipment): AnonymousResourceCollection
     {
-        return EquipmentSummaryResource::collection($listEquipment->handle($request->validated()));
+        $filters = $request->validated();
+        $collection = EquipmentSummaryResource::collection($listEquipment->handle($filters));
+
+        if ($request->boolean('with_category_counts')) {
+            $collection->additional([
+                'category_counts' => $listEquipment->categoryCounts($filters),
+            ]);
+        }
+
+        return $collection;
     }
 
     public function show(Equipment $equipment): EquipmentResource

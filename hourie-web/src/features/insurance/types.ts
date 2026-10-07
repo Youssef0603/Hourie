@@ -33,6 +33,7 @@ export type InsurancePolicy = {
   source: string | null
   notes: string | null
   project?: { id: number; name: string } | null
+  covered_count?: number
   documents?: InsurancePolicyDocument[]
   changes?: RecordHistoryEntry[]
   created_at?: string | null

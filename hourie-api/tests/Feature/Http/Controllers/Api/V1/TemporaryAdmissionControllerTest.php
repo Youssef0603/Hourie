@@ -46,6 +46,23 @@ it('creates an admission linked to equipment with a one year validity', function
         ->assertJsonPath('data.temporary_admissions.0.expires_on', '2027-10-06');
 });
 
+it('paginates admission summaries without covered equipment or documents', function (): void {
+    $admission = TemporaryAdmission::query()->create([
+        'customs_reference' => 'S-SUMMARY',
+        'entered_on' => '2026-10-06',
+        'created_by_user_id' => $this->user->id,
+    ]);
+    $admission->equipment()->attach($this->equipment);
+
+    $this->actingAs($this->user)->getJson('/api/v1/temporary-admissions?per_page=1')
+        ->assertOk()
+        ->assertJsonPath('meta.per_page', 1)
+        ->assertJsonPath('meta.total', 1)
+        ->assertJsonPath('data.0.customs_reference', 'S-SUMMARY')
+        ->assertJsonMissingPath('data.0.equipment')
+        ->assertJsonMissingPath('data.0.documents');
+});
+
 it('closes an admission when equipment is returned', function (): void {
     $admission = TemporaryAdmission::query()->create(['customs_reference' => 'S2000', 'entered_on' => '2026-01-01', 'created_by_user_id' => $this->user->id]);
     $admission->equipment()->attach($this->equipment);

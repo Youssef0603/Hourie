@@ -2,21 +2,18 @@
 
 namespace App\Actions\Equipment;
 
-use App\Mail\CarInspectionReminder;
+use App\Jobs\SendCarInspectionReminderJob;
 use App\Models\ApplicationSetting;
 use App\Models\Equipment;
 use App\Models\EquipmentInspectionReminder;
 use Carbon\CarbonImmutable;
 use Carbon\Exceptions\InvalidFormatException;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
-use Throwable;
+use Illuminate\Support\Facades\DB;
 
 class SendCarInspectionReminder
 {
-    /** @param Collection<int, string>|null $recipients */
-    public function handle(Equipment $car, ?CarbonImmutable $today = null, ?Collection $recipients = null, bool $force = false): bool
+    public function handle(Equipment $car, ?CarbonImmutable $today = null, bool $force = false): bool
     {
         $today ??= CarbonImmutable::today();
         $car->loadMissing(['category', 'custodian']);
@@ -31,34 +28,28 @@ class SendCarInspectionReminder
             return false;
         }
 
-        $recipients ??= $this->recipients();
-        if ($recipients->isEmpty()) {
+        if ($this->recipients()->isEmpty()) {
             return false;
         }
 
-        try {
-            Mail::to($recipients->all())->send(new CarInspectionReminder($car));
-        } catch (Throwable $exception) {
-            Log::warning('Unable to send car inspection reminder.', [
-                'equipment_id' => $car->id,
-                'asset_code' => $car->asset_code,
-                'exception' => $exception->getMessage(),
-            ]);
-
-            return false;
-        }
-
-        if (! $force) {
-            EquipmentInspectionReminder::query()->create([
+        $reminder = DB::transaction(function () use ($car, $inspectionDate, $reminderType, $today): EquipmentInspectionReminder {
+            $reminder = EquipmentInspectionReminder::query()->firstOrCreate([
                 'equipment_id' => $car->id,
                 'inspection_date' => $inspectionDate->toDateString(),
                 'reminder_date' => $today->toDateString(),
+            ], [
                 'reminder_type' => $reminderType,
-                'sent_at' => now(),
+                'queued_at' => now(),
             ]);
-        }
 
-        return true;
+            if ($reminder->wasRecentlyCreated) {
+                SendCarInspectionReminderJob::dispatch($reminder->id)->afterCommit();
+            }
+
+            return $reminder;
+        });
+
+        return $reminder->wasRecentlyCreated;
     }
 
     /** @return Collection<int, string> */

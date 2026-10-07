@@ -18,7 +18,7 @@ class SendBondExpiryReminders extends Command
     public function handle(SendBondExpiryRemindersAction $action): int
     {
         $date = $this->option('date') ? CarbonImmutable::parse((string) $this->option('date')) : null;
-        $this->info('Sent '.$action->handle($date).' bond reminder(s).');
+        $this->info('Queued '.$action->handle($date).' bond reminder(s).');
 
         return self::SUCCESS;
     }

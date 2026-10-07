@@ -21,13 +21,31 @@ use Illuminate\Support\Str;
 
 class EmployeeController extends Controller
 {
-    public function index(): AnonymousResourceCollection
+    public function index(Request $request): AnonymousResourceCollection
     {
+        $perPage = max(1, min(100, $request->integer('per_page', 10)));
         $employees = Employee::query()
-            ->where('is_active', true)
+            ->when(
+                $request->string('activity')->toString() === 'inactive',
+                fn ($query) => $query->where('is_active', false),
+                fn ($query) => $query->where('is_active', true),
+            )
+            ->when($request->filled('search'), function ($query) use ($request): void {
+                $term = '%'.$request->string('search')->toString().'%';
+                $query->where(fn ($builder) => $builder->where('name', 'like', $term)
+                    ->orWhere('email', 'like', $term)
+                    ->orWhere('phone_number', 'like', $term)
+                    ->orWhere('passport_number', 'like', $term)
+                    ->orWhereHas('user', fn ($user) => $user->where('username', 'like', $term)->orWhere('email', 'like', $term)));
+            })
+            ->when($request->string('access')->toString() === 'with_access', fn ($query) => $query->whereNotNull('user_id'))
+            ->when($request->string('access')->toString() === 'without_access', fn ($query) => $query->whereNull('user_id'))
+            ->when($request->filled('role'), fn ($query) => $query->whereHas('user', fn ($user) => $user->where('role', $request->string('role')->toString())))
             ->with('user:id,username,email,role')
             ->orderBy('name')
-            ->get(['id', 'user_id', 'name', 'phone_number', 'email', 'passport_number', 'employment_date', 'birth_date', 'is_active']);
+            ->paginate($perPage, ['id', 'user_id', 'name', 'phone_number', 'email', 'passport_number', 'employment_date', 'birth_date', 'is_active']);
+
+        $employeeIds = $employees->getCollection()->modelKeys();
 
         $responsibilityCounts = Equipment::query()
             ->leftJoin('equipment_project_assignments', function ($join): void {
@@ -41,11 +59,15 @@ class EmployeeController extends Controller
                 $query->whereNotNull('equipment.custodian_employee_id')
                     ->orWhereNotNull('projects.responsible_employee_id');
             })
+            ->where(function ($query) use ($employeeIds): void {
+                $query->whereIn('equipment.custodian_employee_id', $employeeIds)
+                    ->orWhereIn('projects.responsible_employee_id', $employeeIds);
+            })
             ->selectRaw('COALESCE(equipment.custodian_employee_id, projects.responsible_employee_id) as responsible_employee_id, COUNT(DISTINCT equipment.id) as aggregate')
             ->groupByRaw('COALESCE(equipment.custodian_employee_id, projects.responsible_employee_id)')
             ->pluck('aggregate', 'responsible_employee_id');
 
-        $employees->each(fn (Employee $employee) => $employee->setAttribute(
+        $employees->getCollection()->each(fn (Employee $employee) => $employee->setAttribute(
             'equipment_in_custody_count',
             (int) ($responsibilityCounts[$employee->id] ?? 0),
         ));

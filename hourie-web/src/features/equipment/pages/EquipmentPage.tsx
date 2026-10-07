@@ -15,7 +15,6 @@ import { EquipmentInventoryTable } from "../components/EquipmentInventoryTable";
 import { EquipmentFilterDrawer } from "../components/EquipmentFilterDrawer";
 import { AssetInventoryView } from "../components/AssetInventoryView";
 import {
-  assetCategories,
   assetCategoryLabel,
   isAssetCategoryCode,
   type AssetView,
@@ -147,6 +146,8 @@ export function EquipmentPage({
     route.section === "assets" ? route.assetCategory : "generator",
   );
   const activeSection = route.section;
+  const needsCategoryCounts =
+    route.section === "assets" || route.siteId !== null;
   const [filters, setFilters] = useState(() => ({
     ...initialFilters,
     category: route.siteId
@@ -344,12 +345,22 @@ export function EquipmentPage({
   useEffect(() => {
     let cancelled = false;
 
-    getEquipment(filters)
+    getEquipment(filters, needsCategoryCounts)
       .then((equipmentResult) => {
-        if (!cancelled) setResult(equipmentResult);
+        if (!cancelled) {
+          setResult(equipmentResult);
+          setFilteredCategoryCounts(
+            needsCategoryCounts
+              ? (equipmentResult.category_counts ?? {})
+              : null,
+          );
+        }
       })
       .catch(() => {
-        if (!cancelled) setError(fr.equipment.loadError);
+        if (!cancelled) {
+          setError(fr.equipment.loadError);
+          setFilteredCategoryCounts(null);
+        }
       })
       .finally(() => {
         if (!cancelled) setIsLoading(false);
@@ -358,39 +369,7 @@ export function EquipmentPage({
     return () => {
       cancelled = true;
     };
-  }, [filters, refreshToken]);
-
-  useEffect(() => {
-    const currentRoute = parseWorkspaceRoute(pathname);
-    const needsCategoryCounts =
-      currentRoute.section === "assets" || currentRoute.siteId !== null;
-
-    if (!needsCategoryCounts) return;
-
-    let cancelled = false;
-    const categories = [
-      "generator",
-      ...assetCategories.map((category) => category.code),
-    ];
-    const countFilters = { ...filters, category: "", page: 1, per_page: 1 };
-
-    Promise.all(
-      categories.map(async (category) => {
-        const result = await getEquipment({ ...countFilters, category });
-        return [category, result.meta.total] as const;
-      }),
-    )
-      .then((counts) => {
-        if (!cancelled) setFilteredCategoryCounts(Object.fromEntries(counts));
-      })
-      .catch(() => {
-        if (!cancelled) setFilteredCategoryCounts(null);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [filters, pathname, refreshToken]);
+  }, [filters, needsCategoryCounts, refreshToken]);
 
   function refreshInventory() {
     setIsLoading(true);

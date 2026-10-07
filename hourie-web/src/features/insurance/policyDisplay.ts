@@ -38,7 +38,7 @@ export function insuranceStatusLabel(status: ReturnType<typeof insurancePolicySt
 }
 
 export function coveredInsuranceLabel(policy: InsurancePolicy) {
-  if (policy.insurance_type === 'equipment') return policy.equipment?.length ? `${policy.equipment.length} actif${policy.equipment.length > 1 ? 's' : ''}` : 'Équipements à compléter'
-  if (policy.insurance_type === 'individual_accident' || policy.insurance_type === 'group_health') return policy.employees?.length ? `${policy.employees.length} employé${policy.employees.length > 1 ? 's' : ''}` : 'Employés à compléter'
+  if (policy.insurance_type === 'equipment') { const count = policy.covered_count ?? policy.equipment?.length ?? 0; return count ? `${count} actif${count > 1 ? 's' : ''}` : 'Équipements à compléter' }
+  if (policy.insurance_type === 'individual_accident' || policy.insurance_type === 'group_health') { const count = policy.covered_count ?? policy.employees?.length ?? 0; return count ? `${count} employé${count > 1 ? 's' : ''}` : 'Employés à compléter' }
   return policy.project?.name || policy.insured_situation || 'Site / projet à compléter'
 }

@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { apiRequest } from "../../../shared/api/http";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { EmptyState } from "../../../shared/components/EmptyState";
 import { LoadingSpinner } from "../../../shared/components/LoadingSpinner";
-import { admissionError } from "../api";
+import { admissionError, fetchTemporaryAdmission } from "../api";
 import { TemporaryAdmissionDetails } from "../components/TemporaryAdmissionDetails";
 import { TemporaryAdmissionForm } from "../components/TemporaryAdmissionForm";
 import { RelatedEquipmentDetailPanel } from "../../equipment/components/RelatedEquipmentDetailPanel";
@@ -11,8 +11,8 @@ import type { AuthenticatedUser } from "../../auth/types";
 import type { Language } from "../../../i18n/fr";
 import type { EquipmentFilterOptions } from "../../equipment/types";
 import type { AdmissionEquipment, TemporaryAdmission } from "../types";
+import type { PaginatedResponse, PaginationMeta } from "../../../shared/api/pagination";
 
-const PAGE_SIZE = 10;
 const statusLabel = {
   active: "Active",
   renewed: "Renouvelée",
@@ -35,9 +35,10 @@ export function TemporaryAdmissionsPage({
   };
 }) {
   const [items, setItems] = useState<TemporaryAdmission[]>([]);
+  const [pagination, setPagination] = useState<PaginationMeta | null>(null);
   const [equipment, setEquipment] = useState<AdmissionEquipment[]>([]);
   const [search, setSearch] = useState("");
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [formItem, setFormItem] = useState<
@@ -46,21 +47,34 @@ export function TemporaryAdmissionsPage({
   const [selectedId, setSelectedId] = useState<number | null>(
     initialAdmissionId,
   );
-  const selected =
-    items.find((item) => item.id === selectedId) ?? null;
+  const [selected, setSelected] = useState<TemporaryAdmission | null>(null);
   const [relatedEquipmentId, setRelatedEquipmentId] = useState<number | null>(null);
+
+  const loadItems = useCallback(async () => {
+    setLoading(true);
+    const params = new URLSearchParams({ page: String(page) });
+    if (search.trim()) params.set("search", search.trim());
+    try {
+      const admissions = await apiRequest<PaginatedResponse<TemporaryAdmission>>(`/api/v1/temporary-admissions?${params}`);
+      setItems(admissions.data ?? []);
+      setPagination(admissions.meta ?? null);
+    } catch (caught) {
+      setError(admissionError(caught, "Impossible de charger les admissions."));
+    } finally { setLoading(false); }
+  }, [page, search]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => void loadItems(), 200);
+    return () => window.clearTimeout(timer);
+  }, [loadItems]);
 
   useEffect(() => {
     Promise.all([
-      apiRequest<{ data: TemporaryAdmission[] }>(
-        "/api/v1/temporary-admissions",
-      ),
       apiRequest<{ data: AdmissionEquipment[] }>(
         "/api/v1/temporary-admission-equipment-options",
       ),
     ])
-      .then(([admissions, equipmentItems]) => {
-        setItems(admissions.data);
+      .then(([equipmentItems]) => {
         setEquipment(equipmentItems.data);
       })
       .catch((caught) =>
@@ -68,23 +82,26 @@ export function TemporaryAdmissionsPage({
           admissionError(caught, "Impossible de charger les admissions."),
         ),
       )
-      .finally(() => setLoading(false));
   }, []);
 
-  const filtered = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    return items.filter((item) =>
-      item.customs_reference.toLowerCase().includes(term),
-    );
-  }, [items, search]);
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const currentPage = Math.min(page, pageCount - 1);
-  const visible = filtered.slice(
-    currentPage * PAGE_SIZE,
-    (currentPage + 1) * PAGE_SIZE,
-  );
+  const visible = items;
+  const pageCount = pagination?.last_page ?? 1;
+  const currentPage = pagination?.current_page ?? page;
+
+  useEffect(() => {
+    if (selectedId === null) {
+      const timer = window.setTimeout(() => setSelected(null), 0);
+      return () => window.clearTimeout(timer);
+    }
+    let active = true;
+    fetchTemporaryAdmission(selectedId)
+      .then((item) => { if (active) setSelected(item); })
+      .catch((caught) => { if (active) { setSelectedId(null); setError(admissionError(caught, "Impossible de charger l’admission.")); } });
+    return () => { active = false; };
+  }, [selectedId]);
 
   function save(item: TemporaryAdmission) {
+    setSelected(item);
     setItems((all) => {
       const exists = all.some((entry) => entry.id === item.id);
       return exists
@@ -120,7 +137,7 @@ export function TemporaryAdmissionsPage({
               value={search}
               onChange={(event) => {
                 setSearch(event.target.value);
-                setPage(0);
+                setPage(1);
               }}
               placeholder="Référence douane"
             />
@@ -160,7 +177,7 @@ export function TemporaryAdmissionsPage({
                     </td>
                     <td>{formatDate(item.entered_on)}</td>
                     <td>{formatDate(item.expires_on)}</td>
-                    <td>{item.documents.length}</td>
+                    <td>{item.documents_count ?? item.documents?.length ?? 0}</td>
                     <td>
                       <em
                         className={`insurance-status ${item.status === "renewed" ? "active" : item.status}`}
@@ -187,22 +204,22 @@ export function TemporaryAdmissionsPage({
         {!loading && (
           <nav className="pagination insurance-pagination">
             <span>
-              {filtered.length} admission{filtered.length !== 1 ? "s" : ""}
+              {pagination ? `${pagination.from ?? 0}–${pagination.to ?? 0} sur ${pagination.total}` : `${visible.length} admission(s)`}
             </span>
             <div>
               <button
                 type="button"
-                disabled={currentPage === 0}
+                disabled={currentPage === 1 || loading}
                 onClick={() => setPage(currentPage - 1)}
               >
                 Précédent
               </button>
               <span>
-                {currentPage + 1} / {pageCount}
+                {currentPage} / {pageCount}
               </span>
               <button
                 type="button"
-                disabled={currentPage === pageCount - 1}
+                disabled={currentPage === pageCount || loading}
                 onClick={() => setPage(currentPage + 1)}
               >
                 Suivant

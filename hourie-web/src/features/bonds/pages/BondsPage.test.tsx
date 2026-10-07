@@ -43,9 +43,20 @@ const bonds = [
 
 describe('BondsPage', () => {
   beforeEach(() => {
-    apiRequest.mockImplementation((path: string) =>
-      Promise.resolve({ data: path === '/api/v1/bonds' ? bonds : [] }),
-    )
+    apiRequest.mockImplementation((path: string) => {
+      if (path.startsWith('/api/v1/bonds?')) {
+        const search = new URL(path, 'https://hourie.test').searchParams.get('search')?.toLowerCase()
+        const filtered = search
+          ? bonds.filter((bond) => JSON.stringify(bond).toLowerCase().includes(search))
+          : bonds
+        return Promise.resolve({
+          data: filtered,
+          meta: { current_page: 1, from: filtered.length ? 1 : null, last_page: 1, per_page: 10, to: filtered.length || null, total: filtered.length },
+        })
+      }
+      if (path.startsWith('/api/v1/sites?')) return Promise.resolve({ data: [], meta: {} })
+      return Promise.resolve({ data: [] })
+    })
   })
 
   it('loads guarantees and filters the table without losing their site or physical location', async () => {

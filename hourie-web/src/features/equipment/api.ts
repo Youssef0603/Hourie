@@ -15,6 +15,7 @@ import type {
 
 export async function getEquipment(
   filters: EquipmentFilters,
+  withCategoryCounts = false,
 ): Promise<EquipmentListResponse> {
   const params = new URLSearchParams()
 
@@ -27,6 +28,10 @@ export async function getEquipment(
       params.set(key, String(value))
     }
   })
+
+  if (withCategoryCounts) {
+    params.set('with_category_counts', '1')
+  }
 
   return apiRequest<EquipmentListResponse>(`/api/v1/equipment?${params}`)
 }

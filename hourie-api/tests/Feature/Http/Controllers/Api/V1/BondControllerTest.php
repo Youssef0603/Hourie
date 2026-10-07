@@ -37,7 +37,10 @@ it('creates and lists a bond linked to a site', function () {
 
     $this->actingAs($manager, 'web')->getJson('/api/v1/bonds')
         ->assertOk()
-        ->assertJsonPath('data.0.bond_type', 'performance');
+        ->assertJsonPath('data.0.bond_type', 'performance')
+        ->assertJsonPath('meta.total', 1)
+        ->assertJsonMissingPath('data.0.documents')
+        ->assertJsonMissingPath('data.0.changes');
 
     $bond = Bond::query()->firstOrFail();
     $this->actingAs($manager, 'web')->patchJson("/api/v1/bonds/{$bond->id}", [

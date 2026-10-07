@@ -15,6 +15,49 @@ class ListEquipment
      */
     public function handle(array $filters): LengthAwarePaginator
     {
+        $sort = $filters['sort'] ?? 'manufacture_year_desc';
+
+        return $this->filteredQuery($filters)
+            ->with([
+                'category',
+                'currentLocation.parent',
+                'currentLocation.project',
+                'currentProjectAssignment.project.responsible:id,name',
+                'custodian',
+                'generatorDetails',
+            ])
+            ->when($sort === 'manufacture_year_asc', fn (Builder $query) => $query
+                ->orderByRaw('CASE WHEN manufacture_year IS NULL THEN 1 ELSE 0 END')
+                ->orderBy('manufacture_year')
+                ->orderBy('id'))
+            ->when($sort === 'manufacture_year_desc', fn (Builder $query) => $query
+                ->orderByRaw('CASE WHEN manufacture_year IS NULL THEN 1 ELSE 0 END')
+                ->orderByDesc('manufacture_year')
+                ->orderByDesc('id'))
+            ->paginate((int) ($filters['per_page'] ?? 20))
+            ->withQueryString();
+    }
+
+    /**
+     * Return all category totals after applying every filter except category.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return array<string, int>
+     */
+    public function categoryCounts(array $filters): array
+    {
+        return $this->filteredQuery($filters, includeCategory: false)
+            ->join('equipment_categories', 'equipment_categories.id', '=', 'equipment.equipment_category_id')
+            ->selectRaw('equipment_categories.code, COUNT(equipment.id) as aggregate')
+            ->groupBy('equipment_categories.code')
+            ->pluck('aggregate', 'equipment_categories.code')
+            ->map(fn (mixed $count): int => (int) $count)
+            ->all();
+    }
+
+    /** @param array<string, mixed> $filters */
+    private function filteredQuery(array $filters, bool $includeCategory = true): Builder
+    {
         $generatorFilterKeys = [
             'apparent_power_kva_min', 'apparent_power_kva_max',
             'active_power_kw_min', 'active_power_kw_max',
@@ -25,20 +68,11 @@ class ListEquipment
         ];
         $hasGeneratorFilters = collect($generatorFilterKeys)
             ->contains(fn (string $key): bool => isset($filters[$key]) && $filters[$key] !== '');
-        $sort = $filters['sort'] ?? 'manufacture_year_desc';
         $assetField = $filters['asset_field'] ?? null;
         $categoryFields = EquipmentCategory::ASSET_CATEGORIES[$filters['category'] ?? '']['fields'] ?? [];
 
         return Equipment::query()
-            ->where('is_active', true)
-            ->with([
-                'category',
-                'currentLocation.parent',
-                'currentLocation.project',
-                'currentProjectAssignment.project.responsible:id,name',
-                'custodian',
-                'generatorDetails',
-            ])
+            ->where('equipment.is_active', true)
             ->when($filters['q'] ?? null, function (Builder $query, string $search): void {
                 $query->where(function (Builder $query) use ($search): void {
                     $pattern = '%'.trim($search).'%';
@@ -54,7 +88,7 @@ class ListEquipment
                             ->whereRaw('LOWER(name) like ?', ['%'.mb_strtolower(trim($search)).'%']));
                 });
             })
-            ->when($filters['category'] ?? null, function (Builder $query, string $category): void {
+            ->when($includeCategory ? ($filters['category'] ?? null) : null, function (Builder $query, string $category): void {
                 $query->whereHas('category', fn (Builder $query) => $query->where('code', $category));
             })
             ->when($assetField !== null && isset($categoryFields[$assetField]) && ! empty($filters['asset_value']), function (Builder $query) use ($assetField, $filters): void {
@@ -143,17 +177,7 @@ class ListEquipment
                         }
                     }
                 });
-            })
-            ->when($sort === 'manufacture_year_asc', fn (Builder $query) => $query
-                ->orderByRaw('CASE WHEN manufacture_year IS NULL THEN 1 ELSE 0 END')
-                ->orderBy('manufacture_year')
-                ->orderBy('id'))
-            ->when($sort === 'manufacture_year_desc', fn (Builder $query) => $query
-                ->orderByRaw('CASE WHEN manufacture_year IS NULL THEN 1 ELSE 0 END')
-                ->orderByDesc('manufacture_year')
-                ->orderByDesc('id'))
-            ->paginate((int) ($filters['per_page'] ?? 20))
-            ->withQueryString();
+            });
     }
 
     private function whereAssetText(Builder $query, string $field, string $value): Builder

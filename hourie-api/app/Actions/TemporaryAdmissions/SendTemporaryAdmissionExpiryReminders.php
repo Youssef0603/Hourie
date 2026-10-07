@@ -2,12 +2,12 @@
 
 namespace App\Actions\TemporaryAdmissions;
 
-use App\Mail\TemporaryAdmissionExpiryReminder;
+use App\Jobs\SendTemporaryAdmissionExpiryReminderJob;
 use App\Models\ApplicationSetting;
 use App\Models\TemporaryAdmission;
 use App\Models\TemporaryAdmissionReminder;
 use Carbon\CarbonImmutable;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\DB;
 
 class SendTemporaryAdmissionExpiryReminders
 {
@@ -19,8 +19,8 @@ class SendTemporaryAdmissionExpiryReminders
         foreach (TemporaryAdmission::query()
             ->whereNotIn('status', ['returned', 'cleared'])
             ->whereNotNull('entered_on')
-            ->with(['documents', 'equipment'])
-            ->get() as $admission) {
+            ->with('documents:id,temporary_admission_id,document_type')
+            ->lazyById() as $admission) {
             if ($this->sendForAdmission($admission, $today)) {
                 $sent++;
             }
@@ -61,25 +61,28 @@ class SendTemporaryAdmissionExpiryReminders
             }
         }
 
-        $recipients = ApplicationSetting::reminderRecipients();
-        if ($recipients === [] || TemporaryAdmissionReminder::query()
-            ->where('temporary_admission_id', $admission->id)
-            ->whereDate('expiry_date', $expiresOn)
-            ->whereDate('reminder_date', $today)
-            ->exists()) {
+        if (ApplicationSetting::reminderRecipients() === []) {
             return false;
         }
 
-        Mail::to($recipients)->send(new TemporaryAdmissionExpiryReminder($admission));
-        TemporaryAdmissionReminder::query()->create([
-            'temporary_admission_id' => $admission->id,
-            'expiry_date' => $expiresOn->toDateString(),
-            'reminder_date' => $today->toDateString(),
-            'reminder_type' => $this->reminderType($days, $force, $lastReminderDate !== null),
-            'sent_at' => now(),
-        ]);
+        $reminder = DB::transaction(function () use ($admission, $days, $expiresOn, $force, $lastReminderDate, $today): TemporaryAdmissionReminder {
+            $reminder = TemporaryAdmissionReminder::query()->firstOrCreate([
+                'temporary_admission_id' => $admission->id,
+                'expiry_date' => $expiresOn->toDateString(),
+                'reminder_date' => $today->toDateString(),
+            ], [
+                'reminder_type' => $this->reminderType($days, $force, $lastReminderDate !== null),
+                'queued_at' => now(),
+            ]);
 
-        return true;
+            if ($reminder->wasRecentlyCreated) {
+                SendTemporaryAdmissionExpiryReminderJob::dispatch($reminder->id)->afterCommit();
+            }
+
+            return $reminder;
+        });
+
+        return $reminder->wasRecentlyCreated;
     }
 
     private function reminderType(int $days, bool $force, bool $hasPreviousReminder): string

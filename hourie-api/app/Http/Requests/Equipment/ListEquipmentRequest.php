@@ -75,6 +75,7 @@ class ListEquipmentRequest extends FormRequest
             'asset_value' => ['nullable', 'string', 'max:100', 'required_with:asset_field'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
             'page' => ['nullable', 'integer', 'min:1'],
+            'with_category_counts' => ['nullable', 'boolean'],
             'sort' => ['nullable', Rule::in([
                 'manufacture_year_desc',
                 'manufacture_year_asc',

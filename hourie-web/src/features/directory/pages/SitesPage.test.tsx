@@ -29,7 +29,24 @@ const sites = Array.from({ length: 11 }, (_, index) => ({
 }))
 
 describe('SitesPage', () => {
-  beforeEach(() => getSites.mockResolvedValue(sites))
+  beforeEach(() => getSites.mockImplementation((page: number, search: string) => {
+    const filtered = search
+      ? sites.filter((site) => `${site.name} ${site.address ?? ''}`.toLowerCase().includes(search.toLowerCase()))
+      : sites
+    const perPage = 10
+    const data = filtered.slice((page - 1) * perPage, page * perPage)
+    return Promise.resolve({
+      data,
+      meta: {
+        current_page: page,
+        from: data.length ? (page - 1) * perPage + 1 : null,
+        last_page: Math.max(1, Math.ceil(filtered.length / perPage)),
+        per_page: perPage,
+        to: data.length ? (page - 1) * perPage + data.length : null,
+        total: filtered.length,
+      },
+    })
+  }))
 
   it('lists sites in a table, searches them, and paginates the result', async () => {
     const user = userEvent.setup()

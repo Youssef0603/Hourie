@@ -55,8 +55,14 @@ const admission = {
 describe("TemporaryAdmissionsPage", () => {
   beforeEach(() => {
     apiRequest.mockImplementation((path: string) => {
-      if (path === "/api/v1/temporary-admissions") {
-        return Promise.resolve({ data: [admission] });
+      if (path.startsWith("/api/v1/temporary-admissions?")) {
+        return Promise.resolve({
+          data: [{ ...admission, equipment: [], documents: [], documents_count: admission.documents.length }],
+          meta: { current_page: 1, from: 1, last_page: 1, per_page: 10, to: 1, total: 1 },
+        });
+      }
+      if (path === "/api/v1/temporary-admissions/1") {
+        return Promise.resolve({ data: admission });
       }
       if (path === "/api/v1/temporary-admission-equipment-options") {
         return Promise.resolve({ data: admission.equipment });
@@ -79,7 +85,7 @@ describe("TemporaryAdmissionsPage", () => {
     expect(await screen.findByText("Perkins 250 KVA")).toBeVisible();
     expect(screen.getByText("N° de châssis : CH-008")).toBeVisible();
     expect(screen.getByText("AT-S1445.pdf")).toBeVisible();
-    await waitFor(() => expect(apiRequest).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(apiRequest).toHaveBeenCalledTimes(3));
   });
 
   it("shows equipment names and chassis numbers in the add dropdown", async () => {

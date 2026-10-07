@@ -29,7 +29,7 @@ class SendTemporaryAdmissionExpiryReminders extends Command
             $sent = $action->handle($today);
         }
 
-        $this->info("Sent {$sent} temporary admission reminder(s).");
+        $this->info("Queued {$sent} temporary admission reminder(s).");
 
         return self::SUCCESS;
     }

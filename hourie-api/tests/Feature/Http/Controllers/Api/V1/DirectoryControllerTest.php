@@ -18,12 +18,20 @@ it('lists sites and personnel for authenticated users', function () {
     Employee::factory()->for($viewer)->create(['name' => 'Jean Responsable']);
 
     $this->actingAs($viewer, 'web')->getJson('/api/v1/sites')
-        ->assertOk()->assertJsonPath('data.0.name', 'BASSAM');
+        ->assertOk()
+        ->assertJsonPath('data.0.name', 'BASSAM')
+        ->assertJsonPath('meta.total', 1)
+        ->assertJsonMissingPath('data.0.equipment')
+        ->assertJsonMissingPath('data.0.changes');
     $this->actingAs($viewer, 'web')->getJson('/api/v1/employees')
         ->assertOk()
         ->assertJsonPath('data.0.name', 'Jean Responsable')
         ->assertJsonPath('data.0.user.username', $viewer->username)
-        ->assertJsonPath('data.0.user.email', $viewer->email);
+        ->assertJsonPath('data.0.user.email', $viewer->email)
+        ->assertJsonPath('meta.total', 1)
+        ->assertJsonMissingPath('data.0.equipment_in_custody')
+        ->assertJsonMissingPath('data.0.assigned_sites')
+        ->assertJsonMissingPath('data.0.health_insurance_policies');
 });
 
 it('prevents viewers from adding sites', function () {

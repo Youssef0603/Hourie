@@ -110,7 +110,7 @@ export function InsuranceAddPanel({
           ...uploadedDocuments,
         ];
       }
-      await apiRequest<{ data: { sent: boolean } }>(
+      await apiRequest<{ data: { queued: boolean } }>(
         `/api/v1/insurance-policies/${response.data.id}/send-expiry-reminder`,
         { method: "POST" },
       );

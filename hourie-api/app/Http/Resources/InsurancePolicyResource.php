@@ -16,6 +16,10 @@ class InsurancePolicyResource extends JsonResource
             'tax_amount' => $this->tax_amount, 'policy_cost' => $this->policy_cost, 'total_amount' => $this->total_amount,
             'coverage_amount' => $this->coverage_amount, 'invoice_number' => $this->invoice_number,
             'territory' => $this->territory, 'insured_situation' => $this->insured_situation, 'source' => $this->source,
+            'covered_count' => $this->when(
+                array_key_exists('employees_count', $this->resource->getAttributes()) || array_key_exists('equipment_count', $this->resource->getAttributes()),
+                fn () => $this->insurance_type === 'equipment' ? (int) ($this->equipment_count ?? 0) : (int) ($this->employees_count ?? 0),
+            ),
             'project' => $this->whenLoaded('project', fn () => $this->project === null ? null : ['id' => $this->project->id, 'name' => $this->project->name]),
             'notes' => $this->notes,
             'employees' => $this->whenLoaded('employees', fn () => $this->employees->map(fn ($employee) => ['id' => $employee->id, 'name' => $employee->name, 'birth_date' => $employee->birth_date?->format('Y-m-d')])),

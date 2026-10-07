@@ -31,6 +31,25 @@ it('returns covered people and equipment in the policy detail', function () {
         ->assertJsonPath('data.equipment.0.model', 'HOWO 400');
 });
 
+it('paginates policy summaries and searches covered records without loading details', function () {
+    $manager = User::factory()->create(['role' => UserRole::Manager]);
+    $equipment = Equipment::factory()->create(['asset_code' => 'SEARCH-TRUCK', 'brand' => 'SinoTruck']);
+    $matching = InsurancePolicy::query()->create(['insurance_type' => 'equipment', 'policy_number' => 'EQUIP-SEARCH']);
+    $matching->equipment()->attach($equipment);
+    InsurancePolicy::query()->create(['insurance_type' => 'group_health', 'policy_number' => 'HEALTH-OTHER']);
+
+    $this->actingAs($manager, 'web')->getJson('/api/v1/insurance-policies?search=SinoTruck&per_page=1')
+        ->assertOk()
+        ->assertJsonPath('meta.per_page', 1)
+        ->assertJsonPath('meta.total', 1)
+        ->assertJsonPath('data.0.id', $matching->id)
+        ->assertJsonPath('data.0.covered_count', 1)
+        ->assertJsonMissingPath('data.0.equipment')
+        ->assertJsonMissingPath('data.0.employees')
+        ->assertJsonMissingPath('data.0.documents')
+        ->assertJsonMissingPath('data.0.changes');
+});
+
 it('records policy creation and updates in the history', function () {
     $manager = User::factory()->create(['role' => UserRole::Manager]);
 

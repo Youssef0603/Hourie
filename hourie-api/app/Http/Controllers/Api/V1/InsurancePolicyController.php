@@ -23,12 +23,47 @@ class InsurancePolicyController extends Controller
 {
     public function index(Request $request): AnonymousResourceCollection
     {
-        $query = InsurancePolicy::query()->with(['project:id,name', 'employees:id,name,birth_date', 'equipment:id,asset_code,brand,model', 'documents'])->latest('ends_on')->latest('id');
+        $query = InsurancePolicy::query()
+            ->with('project:id,name')
+            ->withCount(['employees', 'equipment'])
+            ->latest('ends_on')
+            ->latest('id');
+        if ($request->filled('project_id')) {
+            $query->where('project_id', $request->integer('project_id'));
+        }
+        if ($request->filled('search')) {
+            $term = '%'.$request->string('search')->toString().'%';
+            $query->where(fn ($builder) => $builder
+                ->where('policy_number', 'like', $term)
+                ->orWhere('source', 'like', $term)
+                ->orWhere('insured_situation', 'like', $term)
+                ->orWhereHas('project', fn ($project) => $project->where('name', 'like', $term))
+                ->orWhereHas('employees', fn ($employees) => $employees->where('name', 'like', $term))
+                ->orWhereHas('equipment', fn ($equipment) => $equipment
+                    ->where('asset_code', 'like', $term)
+                    ->orWhere('brand', 'like', $term)
+                    ->orWhere('model', 'like', $term)));
+        }
+        if ($request->filled('status')) {
+            $today = now()->startOfDay();
+            $query->when($request->string('status')->toString() === 'expired', fn ($builder) => $builder->whereDate('ends_on', '<', $today))
+                ->when($request->string('status')->toString() === 'soon', fn ($builder) => $builder->whereBetween('ends_on', [$today, $today->copy()->addDays(30)]))
+                ->when($request->string('status')->toString() === 'active', fn ($builder) => $builder->where(fn ($active) => $active->whereNull('ends_on')->orWhereDate('ends_on', '>', $today->copy()->addDays(30))));
+        }
+
+        $categoryCounts = (clone $query)
+            ->reorder()
+            ->selectRaw('insurance_type, COUNT(*) as aggregate')
+            ->groupBy('insurance_type')
+            ->pluck('aggregate', 'insurance_type');
         if ($request->filled('insurance_type')) {
             $query->where('insurance_type', $request->string('insurance_type')->toString());
         }
 
-        return InsurancePolicyResource::collection($query->get());
+        $perPage = max(1, min(100, $request->integer('per_page', 10)));
+
+        return InsurancePolicyResource::collection($query->paginate($perPage))
+            ->additional(['category_counts' => $categoryCounts]);
     }
 
     public function equipmentOptions(Request $request): JsonResponse
@@ -79,7 +114,7 @@ class InsurancePolicyController extends Controller
 
         return response()->json([
             'data' => [
-                'sent' => $reminders->sendForPolicy($insurancePolicy, withinThirtyDays: true),
+                'queued' => $reminders->sendForPolicy($insurancePolicy, withinThirtyDays: true),
             ],
         ]);
     }

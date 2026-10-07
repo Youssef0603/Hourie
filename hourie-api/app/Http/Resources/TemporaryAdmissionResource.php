@@ -11,7 +11,7 @@ class TemporaryAdmissionResource extends JsonResource
     {
         $renewalCount = $this->relationLoaded('documents')
             ? $this->documents->where('document_type', 'renewal')->count()
-            : 0;
+            : (int) ($this->renewal_documents_count ?? 0);
         $expiresOn = $this->entered_on?->copy()->addYears($renewalCount + 1);
         $status = in_array($this->status, ['returned', 'cleared'], true)
             ? $this->status
@@ -29,6 +29,7 @@ class TemporaryAdmissionResource extends JsonResource
             'clearance_reference' => $this->clearance_reference,
             'customs_duty_amount' => $this->customs_duty_amount,
             'notes' => $this->notes,
+            'documents_count' => $this->whenCounted('documents'),
             'equipment' => $this->whenLoaded('equipment', fn () => $this->equipment->map(fn ($item) => [
                 'id' => $item->id,
                 'asset_code' => $item->asset_code,

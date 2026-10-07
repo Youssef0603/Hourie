@@ -35,7 +35,28 @@ const people = Array.from({ length: 12 }, (_, index) => ({
 
 describe('PeoplePage', () => {
   beforeEach(() => {
-    getEmployees.mockResolvedValue(people)
+    getEmployees.mockImplementation((page: number, filters: Record<string, string>) => {
+      let filtered = people
+      if (filters.search) {
+        const term = filters.search.toLowerCase()
+        filtered = filtered.filter((person) => `${person.name} ${person.email ?? ''}`.toLowerCase().includes(term))
+      }
+      if (filters.access === 'with_access') filtered = filtered.filter((person) => person.user !== null)
+      if (filters.access === 'without_access') filtered = filtered.filter((person) => person.user === null)
+      const perPage = 10
+      const data = filtered.slice((page - 1) * perPage, page * perPage)
+      return Promise.resolve({
+        data,
+        meta: {
+          current_page: page,
+          from: data.length ? (page - 1) * perPage + 1 : null,
+          last_page: Math.max(1, Math.ceil(filtered.length / perPage)),
+          per_page: perPage,
+          to: data.length ? (page - 1) * perPage + data.length : null,
+          total: filtered.length,
+        },
+      })
+    })
     getEmployee.mockResolvedValue({
       ...people[0],
       equipment_in_custody: [],

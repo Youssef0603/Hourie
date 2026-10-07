@@ -52,7 +52,7 @@ it('emails equipment managers one month before a car inspection and then weekly'
     ]);
 
     $this->artisan(SendCarInspectionReminders::class, ['--date' => '2026-09-25'])
-        ->expectsOutput('Sent 1 car inspection reminder(s).')
+        ->expectsOutput('Queued 1 car inspection reminder(s).')
         ->assertSuccessful();
 
     Mail::assertSent(CarInspectionReminder::class, function (CarInspectionReminder $mail) use ($car, $manager): bool {
@@ -60,13 +60,13 @@ it('emails equipment managers one month before a car inspection and then weekly'
     });
 
     $this->artisan(SendCarInspectionReminders::class, ['--date' => '2026-09-25'])
-        ->expectsOutput('Sent 0 car inspection reminder(s).')
+        ->expectsOutput('Queued 0 car inspection reminder(s).')
         ->assertSuccessful();
 
     expect(EquipmentInspectionReminder::query()->firstOrFail()->reminder_date->toDateString())->toBe('2026-09-25');
 
     $this->artisan(SendCarInspectionReminders::class, ['--date' => '2026-10-02'])
-        ->expectsOutput('Sent 1 car inspection reminder(s).')
+        ->expectsOutput('Queued 1 car inspection reminder(s).')
         ->assertSuccessful();
 
     Mail::assertSent(CarInspectionReminder::class, 2);
@@ -79,7 +79,7 @@ it('emails equipment managers one month before a car inspection and then weekly'
 
     $car->update(['asset_details' => ['inspection_date' => '2026-11-25']]);
     $this->artisan(SendCarInspectionReminders::class, ['--date' => '2026-10-25'])
-        ->expectsOutput('Sent 1 car inspection reminder(s).')
+        ->expectsOutput('Queued 1 car inspection reminder(s).')
         ->assertSuccessful();
 
     $this->assertDatabaseHas('equipment_inspection_reminders', [

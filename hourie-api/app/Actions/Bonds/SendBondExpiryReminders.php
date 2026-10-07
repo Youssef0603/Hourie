@@ -2,12 +2,12 @@
 
 namespace App\Actions\Bonds;
 
-use App\Mail\BondExpiryReminder;
+use App\Jobs\SendBondExpiryReminderJob;
 use App\Models\ApplicationSetting;
 use App\Models\Bond;
 use App\Models\BondReminder;
 use Carbon\CarbonImmutable;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\DB;
 
 class SendBondExpiryReminders
 {
@@ -18,7 +18,10 @@ class SendBondExpiryReminders
         $today ??= CarbonImmutable::today();
         $sent = 0;
 
-        foreach (Bond::query()->whereNotNull('expires_on')->whereDate('expires_on', '>=', $today)->get() as $bond) {
+        foreach (Bond::query()
+            ->whereNotNull('expires_on')
+            ->whereDate('expires_on', '>=', $today)
+            ->lazyById() as $bond) {
             if ($this->sendForBond($bond, $today)) {
                 $sent++;
             }
@@ -39,24 +42,27 @@ class SendBondExpiryReminders
             return false;
         }
 
-        $recipients = ApplicationSetting::reminderRecipients();
-        if ($recipients === [] || BondReminder::query()
-            ->where('bond_id', $bond->id)
-            ->whereDate('expiry_date', $bond->expires_on)
-            ->whereDate('reminder_date', $today)
-            ->exists()) {
+        if (ApplicationSetting::reminderRecipients() === []) {
             return false;
         }
 
-        Mail::to($recipients)->send(new BondExpiryReminder($bond));
-        BondReminder::query()->create([
-            'bond_id' => $bond->id,
-            'expiry_date' => $bond->expires_on->toDateString(),
-            'reminder_date' => $today->toDateString(),
-            'reminder_type' => $days === 0 ? 'expiry' : "{$days}_days",
-            'sent_at' => now(),
-        ]);
+        $reminder = DB::transaction(function () use ($bond, $days, $today): BondReminder {
+            $reminder = BondReminder::query()->firstOrCreate([
+                'bond_id' => $bond->id,
+                'expiry_date' => $bond->expires_on->toDateString(),
+                'reminder_date' => $today->toDateString(),
+            ], [
+                'reminder_type' => $days === 0 ? 'expiry' : "{$days}_days",
+                'queued_at' => now(),
+            ]);
 
-        return true;
+            if ($reminder->wasRecentlyCreated) {
+                SendBondExpiryReminderJob::dispatch($reminder->id)->afterCommit();
+            }
+
+            return $reminder;
+        });
+
+        return $reminder->wasRecentlyCreated;
     }
 }

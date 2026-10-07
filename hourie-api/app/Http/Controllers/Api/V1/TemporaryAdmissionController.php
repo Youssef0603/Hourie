@@ -39,9 +39,18 @@ class TemporaryAdmissionController extends Controller
         return response()->json(['data' => $equipment]);
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        return TemporaryAdmissionResource::collection(TemporaryAdmission::query()->with(['equipment', 'documents'])->latest('entered_on')->get());
+        $perPage = max(1, min(100, $request->integer('per_page', 10)));
+
+        return TemporaryAdmissionResource::collection(
+            TemporaryAdmission::query()
+                ->withCount(['documents', 'documents as renewal_documents_count' => fn ($query) => $query->where('document_type', 'renewal')])
+                ->when($request->filled('search'), fn ($query) => $query->where('customs_reference', 'like', '%'.$request->string('search')->toString().'%'))
+                ->latest('entered_on')
+                ->latest('id')
+                ->paginate($perPage),
+        );
     }
 
     public function store(StoreTemporaryAdmissionRequest $request)

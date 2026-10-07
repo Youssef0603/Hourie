@@ -20,9 +20,34 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class BondController extends Controller
 {
-    public function index(): AnonymousResourceCollection
+    public function index(Request $request): AnonymousResourceCollection
     {
-        return BondResource::collection(Bond::query()->with(['project:id,name', 'location:id,project_id,name', 'documents'])->latest('expires_on')->latest('id')->get());
+        $query = Bond::query()
+            ->with(['project:id,name', 'location:id,project_id,name'])
+            ->latest('expires_on')
+            ->latest('id');
+        if ($request->filled('bond_type')) {
+            $query->where('bond_type', $request->string('bond_type')->toString());
+        }
+        if ($request->filled('project_id')) {
+            $query->where('project_id', $request->integer('project_id'));
+        }
+        if ($request->filled('search')) {
+            $term = '%'.$request->string('search')->toString().'%';
+            $query->where(fn ($builder) => $builder->where('issuer', 'like', $term)
+                ->orWhereHas('project', fn ($project) => $project->where('name', 'like', $term))
+                ->orWhereHas('location', fn ($location) => $location->where('name', 'like', $term)));
+        }
+        if ($request->filled('status')) {
+            $today = now()->startOfDay();
+            $query->when($request->string('status')->toString() === 'expired', fn ($builder) => $builder->whereDate('expires_on', '<', $today))
+                ->when($request->string('status')->toString() === 'soon', fn ($builder) => $builder->whereBetween('expires_on', [$today, $today->copy()->addDays(30)]))
+                ->when($request->string('status')->toString() === 'active', fn ($builder) => $builder->where(fn ($active) => $active->whereNull('expires_on')->orWhereDate('expires_on', '>', $today->copy()->addDays(30))));
+        }
+
+        $perPage = max(1, min(100, $request->integer('per_page', 10)));
+
+        return BondResource::collection($query->paginate($perPage));
     }
 
     public function store(StoreBondRequest $request): JsonResponse
@@ -70,7 +95,7 @@ class BondController extends Controller
 
         return response()->json([
             'data' => [
-                'sent' => $reminders->sendForBond($bond, withinThirtyDays: true),
+                'queued' => $reminders->sendForBond($bond, withinThirtyDays: true),
             ],
         ]);
     }

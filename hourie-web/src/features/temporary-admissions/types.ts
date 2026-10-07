@@ -27,6 +27,7 @@ export type TemporaryAdmission = {
   clearance_reference: string | null;
   customs_duty_amount: string | null;
   notes: string | null;
+  documents_count?: number;
   equipment: AdmissionEquipment[];
   documents: AdmissionDocument[];
 };

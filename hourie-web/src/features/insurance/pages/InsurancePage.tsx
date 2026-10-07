@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { apiRequest } from "../../../shared/api/http";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { EmptyState } from "../../../shared/components/EmptyState";
@@ -24,6 +24,7 @@ import { RelatedEquipmentDetailPanel } from "../../equipment/components/RelatedE
 import type { AuthenticatedUser } from "../../auth/types";
 import type { Language } from "../../../i18n/fr";
 import type { EquipmentFilterOptions } from "../../equipment/types";
+import type { PaginatedResponse, PaginationMeta } from "../../../shared/api/pagination";
 
 export function InsurancePage({
   initialSiteId = null,
@@ -39,6 +40,9 @@ export function InsurancePage({
   };
 }) {
   const [policies, setPolicies] = useState<Policy[]>([]);
+  const [pagination, setPagination] = useState<PaginationMeta | null>(null);
+  const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
+  const [page, setPage] = useState(1);
   const [activeType, setActiveType] = useState<Kind | "all">(
     initialSiteId ? "trc_rc" : "all",
   );
@@ -60,14 +64,26 @@ export function InsurancePage({
     Array<{ id: number; name: string; birth_date: string | null }>
   >([]);
   const [selectedId, setSelectedId] = useState<number | null>(initialPolicyId);
+  const [selected, setSelected] = useState<Policy | null>(null);
   const [relatedEquipmentId, setRelatedEquipmentId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
-  function loadPolicies() {
-    apiRequest<{ data: Policy[] }>("/api/v1/insurance-policies")
-      .then((value) => setPolicies(value.data))
-      .finally(() => setLoading(false));
-  }
+  const loadPolicies = useCallback(async () => {
+    setLoading(true);
+    const params = new URLSearchParams({ page: String(page) });
+    if (activeType !== "all") params.set("insurance_type", activeType);
+    if (search.trim()) params.set("search", search.trim());
+    if (status !== "all") params.set("status", status);
+    if (projectId) params.set("project_id", projectId);
+    try {
+      const response = await apiRequest<PaginatedResponse<Policy> & { category_counts: Record<string, number> }>(`/api/v1/insurance-policies?${params}`);
+      setPolicies(response.data ?? []);
+      setPagination(response.meta ?? null);
+      setCategoryCounts(response.category_counts ?? {});
+    } finally {
+      setLoading(false);
+    }
+  }, [activeType, page, projectId, search, status]);
 
   function refreshPolicies() {
     setLoading(true);
@@ -75,8 +91,12 @@ export function InsurancePage({
   }
 
   useEffect(() => {
-    loadPolicies();
-    apiRequest<{ data: Array<{ id: number; name: string }> }>("/api/v1/sites")
+    const timer = window.setTimeout(() => void loadPolicies(), 200);
+    return () => window.clearTimeout(timer);
+  }, [loadPolicies]);
+
+  useEffect(() => {
+    apiRequest<PaginatedResponse<{ id: number; name: string }>>("/api/v1/sites?per_page=100")
       .then((value) => setSites(value.data))
       .catch(() => setSites([]));
     apiRequest<{ data: InsuranceEquipmentOption[] }>(
@@ -84,47 +104,24 @@ export function InsurancePage({
     )
       .then((value) => setEquipmentOptions(value.data))
       .catch(() => setEquipmentOptions([]));
-    apiRequest<{
-      data: Array<{ id: number; name: string; birth_date: string | null }>;
-    }>("/api/v1/employees")
+    apiRequest<PaginatedResponse<{ id: number; name: string; birth_date: string | null }>>("/api/v1/employees?per_page=100")
       .then((value) => setEmployeeOptions(value.data))
       .catch(() => setEmployeeOptions([]));
   }, []);
 
-  const filterMatchedPolicies = useMemo(
-    () =>
-      policies.filter((policy) => {
-        const term = search.trim().toLowerCase();
-        const searchable = [
-          policy.policy_number,
-          policy.source,
-          policy.project?.name,
-          policy.insured_situation,
-          ...(policy.employees?.map((employee) => employee.name) ?? []),
-          ...(policy.equipment?.map(
-            (equipment) =>
-              `${equipment.brand ?? ""} ${equipment.model ?? ""} ${equipment.asset_code}`,
-          ) ?? []),
-        ]
-          .join(" ")
-          .toLowerCase();
-        return (
-          (!projectId || policy.project?.id === Number(projectId)) &&
-          (status === "all" || insurancePolicyStatus(policy) === status) &&
-          (!term || searchable.includes(term))
-        );
-      }),
-    [policies, projectId, search, status],
-  );
-  const filteredPolicies = useMemo(
-    () =>
-      filterMatchedPolicies.filter(
-        (policy) =>
-          activeType === "all" || policy.insurance_type === activeType,
-      ),
-    [activeType, filterMatchedPolicies],
-  );
-  const selected = policies.find((policy) => policy.id === selectedId) ?? null;
+  useEffect(() => {
+    if (selectedId === null) {
+      const timer = window.setTimeout(() => setSelected(null), 0);
+      return () => window.clearTimeout(timer);
+    }
+    let active = true;
+    apiRequest<{ data: Policy }>(`/api/v1/insurance-policies/${selectedId}`)
+      .then((response) => { if (active) setSelected(response.data); })
+      .catch(() => { if (active) setSelectedId(null); });
+    return () => { active = false; };
+  }, [selectedId]);
+
+  const filteredPolicies = policies;
   const filteredSiteName = sites.find(
     (site) => String(site.id) === projectId,
   )?.name;
@@ -148,10 +145,10 @@ export function InsurancePage({
           <button
             className={`asset-category-card${activeType === "all" ? " active" : ""}`}
             type="button"
-            onClick={() => setActiveType("all")}
+            onClick={() => { setActiveType("all"); setPage(1); }}
           >
             <span>Toutes les polices</span>
-            <strong>{filterMatchedPolicies.length}</strong>
+            <strong>{Object.values(categoryCounts).reduce((total, count) => total + count, 0)}</strong>
           </button>
           {insuranceTypes.map((type) => (
             <button
@@ -160,15 +157,14 @@ export function InsurancePage({
               type="button"
               onClick={() => {
                 setActiveType(type.code);
+                setPage(1);
                 if (type.code !== "trc_rc") setProjectId("");
               }}
             >
               <span>{type.label}</span>
               <strong>
                 {
-                  filterMatchedPolicies.filter(
-                    (policy) => policy.insurance_type === type.code,
-                  ).length
+                  categoryCounts[type.code] ?? 0
                 }
               </strong>
             </button>
@@ -183,7 +179,7 @@ export function InsurancePage({
               id="insurance-search"
               type="search"
               value={search}
-              onChange={(event) => setSearch(event.target.value)}
+              onChange={(event) => { setSearch(event.target.value); setPage(1); }}
               placeholder="N° de police, assureur, projet ou équipement"
             />
           </div>
@@ -288,17 +284,13 @@ export function InsurancePage({
         </div>
         {!loading && (
           <nav className="pagination insurance-pagination">
-            <span>
-              {filteredPolicies.length} police
-              {filteredPolicies.length !== 1 ? "s" : ""} affichée
-              {filteredPolicies.length !== 1 ? "s" : "e"}
-            </span>
+            <span>{pagination ? `${pagination.from ?? 0}–${pagination.to ?? 0} sur ${pagination.total}` : `${filteredPolicies.length} police(s)`}</span>
             <div>
-              <button type="button" disabled>
+              <button type="button" disabled={!pagination || pagination.current_page === 1 || loading} onClick={() => setPage((current) => current - 1)}>
                 Précédent
               </button>
-              <span>1</span>
-              <button type="button" disabled>
+              <span>{pagination?.current_page ?? 1} / {pagination?.last_page ?? 1}</span>
+              <button type="button" disabled={!pagination || pagination.current_page === pagination.last_page || loading} onClick={() => setPage((current) => current + 1)}>
                 Suivant
               </button>
             </div>
@@ -310,15 +302,17 @@ export function InsurancePage({
           status={status}
           projectId={projectId}
           sites={sites}
-          onStatusChange={setStatus}
+          onStatusChange={(value) => { setStatus(value); setPage(1); }}
           onProjectChange={(value) => {
             setProjectId(value);
+            setPage(1);
             if (value) setActiveType("trc_rc");
           }}
           onClose={() => setShowFilters(false)}
           onClear={() => {
             setStatus("all");
             setProjectId("");
+            setPage(1);
           }}
         />
       )}
@@ -362,13 +356,14 @@ export function InsurancePage({
             setSelectedId(null);
             setEditingPolicy(selected);
           }}
-          onDocumentsChanged={(documents) =>
+          onDocumentsChanged={(documents) => {
+            setSelected((current) => current ? { ...current, documents } : current);
             setPolicies((current) =>
               current.map((item) =>
                 item.id === selected.id ? { ...item, documents } : item,
               ),
-            )
-          }
+            );
+          }}
           onDeleted={() => {
             setPolicies((current) =>
               current.filter((item) => item.id !== selected.id),

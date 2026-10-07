@@ -45,6 +45,33 @@ it('returns a stable paginated equipment list for an authenticated user', functi
         ->assertJsonPath('meta.per_page', 2);
 });
 
+it('returns all filtered category counts with the equipment page in one response', function () {
+    $user = User::factory()->create();
+    $generatorCategory = EquipmentCategory::factory()->create(['code' => 'generator']);
+    $carCategory = EquipmentCategory::factory()->create(['code' => 'car']);
+
+    Equipment::factory()->for($generatorCategory, 'category')->create([
+        'brand' => 'MATCHING BRAND',
+        'condition' => EquipmentCondition::Good,
+    ]);
+    Equipment::factory()->for($carCategory, 'category')->create([
+        'brand' => 'MATCHING BRAND',
+        'condition' => EquipmentCondition::Good,
+    ]);
+    Equipment::factory()->for($generatorCategory, 'category')->create([
+        'brand' => 'MATCHING BRAND',
+        'condition' => EquipmentCondition::Defective,
+    ]);
+
+    $this
+        ->actingAs($user, 'web')
+        ->getJson('/api/v1/equipment?category=generator&q=MATCHING&condition=good&with_category_counts=1')
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('category_counts.generator', 1)
+        ->assertJsonPath('category_counts.car', 1);
+});
+
 it('defaults to manufacturing-year sorting and exposes a three digit display id', function () {
     $user = User::factory()->create();
     Equipment::factory()->create(['manufacture_year' => 2015, 'asset_code' => 'OLD']);

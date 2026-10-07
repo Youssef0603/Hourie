@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { fr } from "../../../i18n/fr";
 import { deleteEmployee, getEmployee, getEmployees } from "../api";
 import type { Employee, EmployeeDetails } from "../types";
@@ -18,6 +18,7 @@ import {
   type RoleFilter,
 } from "../components/PeopleFilterDrawer";
 import { PersonDetail } from "../components/PersonDetail";
+import type { PaginationMeta } from "../../../shared/api/pagination";
 
 type PeoplePageProps = {
   canAdd: boolean;
@@ -40,6 +41,7 @@ export function PeoplePage({
   const [people, setPeople] = useState<Employee[]>([]);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState<PaginationMeta | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [accessFilter, setAccessFilter] = useState<AccessFilter>("");
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("");
@@ -83,31 +85,36 @@ export function PeoplePage({
   const activeFilterCount = [accessFilter, roleFilter, activityFilter].filter(
     Boolean,
   ).length;
-  const peoplePerPage = 10;
-  const totalPages = Math.max(
-    1,
-    Math.ceil(visiblePeople.length / peoplePerPage),
-  );
-  const page = Math.min(currentPage, totalPages);
-  const paginatedPeople = visiblePeople.slice(
-    (page - 1) * peoplePerPage,
-    page * peoplePerPage,
-  );
+  const page = pagination?.current_page ?? currentPage;
+  const totalPages = pagination?.last_page ?? 1;
 
-  useEffect(() => {
-    refreshPeople();
-  }, []);
-
-  async function refreshPeople() {
+  const loadPeople = useCallback(async (pageToLoad: number) => {
     setError(null);
     setIsRefreshing(true);
     try {
-      setPeople(await getEmployees());
+      const response = await getEmployees(pageToLoad, {
+        ...(search.trim() ? { search: search.trim() } : {}),
+        ...(accessFilter ? { access: accessFilter } : {}),
+        ...(roleFilter ? { role: roleFilter } : {}),
+        ...(activityFilter ? { activity: activityFilter } : {}),
+      });
+      setPeople(response.data ?? []);
+      setPagination(response.meta ?? null);
+      if (response.meta) setCurrentPage(response.meta.current_page);
     } catch {
       setError(fr.directory.loadError);
     } finally {
       setIsRefreshing(false);
     }
+  }, [accessFilter, activityFilter, roleFilter, search]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => void loadPeople(1), 200);
+    return () => window.clearTimeout(timer);
+  }, [loadPeople]);
+
+  async function refreshPeople(pageToLoad = currentPage) {
+    await loadPeople(pageToLoad);
   }
 
   async function openPerson(id: number) {
@@ -220,7 +227,7 @@ export function PeoplePage({
             <button
               className="table-refresh-button filter-refresh-button"
               type="button"
-              onClick={refreshPeople}
+                    onClick={() => void refreshPeople()}
               disabled={isRefreshing}
               aria-label={fr.common.refresh}
               title={fr.common.refresh}
@@ -279,7 +286,7 @@ export function PeoplePage({
                 </tr>
               </thead>
               <tbody>
-                {paginatedPeople.map((person) => (
+                {visiblePeople.map((person) => (
                   <tr
                     key={person.id}
                     tabIndex={0}
@@ -322,25 +329,22 @@ export function PeoplePage({
                 ))}
               </tbody>
             </DataTable>
-            {totalPages > 1 && (
+            {pagination && (
               <nav className="pagination" aria-label={fr.equipment.pagination}>
-                <span>
-                  {visiblePeople.length} personne
-                  {visiblePeople.length > 1 ? "s" : ""}
-                </span>
+                <span>{fr.equipment.results(pagination.from, pagination.to, pagination.total)}</span>
                 <div>
                   <button
                     type="button"
-                    disabled={page === 1}
-                    onClick={() => setCurrentPage(page - 1)}
+                    disabled={page === 1 || isRefreshing}
+                    onClick={() => void refreshPeople(page - 1)}
                   >
                     {fr.common.previous}
                   </button>
                   <span>{fr.equipment.page(page, totalPages)}</span>
                   <button
                     type="button"
-                    disabled={page === totalPages}
-                    onClick={() => setCurrentPage(page + 1)}
+                    disabled={page === totalPages || isRefreshing}
+                    onClick={() => void refreshPeople(page + 1)}
                   >
                     {fr.common.next}
                   </button>
