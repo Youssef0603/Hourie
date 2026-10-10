@@ -19,16 +19,17 @@ beforeEach(function (): void {
         'asset_code' => 'AT-001',
         'brand' => 'Caterpillar',
         'model' => 'D8',
+        'serial_number' => 'SER-D8-001',
         'asset_details' => ['chassis_number' => 'CAT-D8-001'],
         'is_active' => true,
     ]);
 });
 
-it('lists equipment options by name and chassis number', function (): void {
+it('lists equipment options by name and serial number', function (): void {
     $this->actingAs($this->user)->getJson('/api/v1/temporary-admission-equipment-options')
         ->assertOk()
         ->assertJsonPath('data.0.name', 'Caterpillar D8')
-        ->assertJsonPath('data.0.chassis_number', 'CAT-D8-001');
+        ->assertJsonPath('data.0.serial_number', 'SER-D8-001');
 });
 
 it('creates an admission linked to equipment with a one year validity', function (): void {
@@ -38,7 +39,18 @@ it('creates an admission linked to equipment with a one year validity', function
         'equipment_ids' => [$this->equipment->id],
     ]);
 
-    $response->assertCreated()->assertJsonPath('data.customs_reference', 'S1445')->assertJsonPath('data.expires_on', '2027-10-06')->assertJsonPath('data.equipment.0.id', $this->equipment->id);
+    $response->assertCreated()
+        ->assertJsonPath('data.customs_reference', 'S1445')
+        ->assertJsonPath('data.expires_on', '2027-10-06')
+        ->assertJsonPath('data.equipment.0.id', $this->equipment->id)
+        ->assertJsonPath('data.equipment.0.serial_number', 'SER-D8-001')
+        ->assertJsonPath('data.changes.0.action', 'created')
+        ->assertJsonPath('data.changes.0.actor.name', $this->user->name);
+
+    $this->actingAs($this->user)->getJson("/api/v1/temporary-admissions/{$response->json('data.id')}")
+        ->assertOk()
+        ->assertJsonPath('data.equipment.0.serial_number', 'SER-D8-001')
+        ->assertJsonPath('data.changes.0.action', 'created');
 
     $this->actingAs($this->user)->getJson("/api/v1/equipment/{$this->equipment->id}")
         ->assertOk()

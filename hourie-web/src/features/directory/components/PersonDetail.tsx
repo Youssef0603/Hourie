@@ -40,6 +40,7 @@ export function PersonDetail({
       policy.ends_on >= new Date().toISOString().slice(0, 10),
   );
   const policy = activePolicy ?? person.health_insurance_policies[0];
+  const assignments = person.project_assignments ?? [];
   return (
     <div className="person-detail">
       <section className="person-profile-summary">
@@ -47,12 +48,8 @@ export function PersonDetail({
           <span className="person-profile-avatar">{initials(person.name)}</span>
           <div>
             <h3>{person.name}</h3>
-            <p>
-              {person.user
-                ? fr.roles[person.user.role]
-                : fr.directory.noSystemAccess}
-            </p>
-            {person.user?.username && <small>@{person.user.username}</small>}
+            <p>{catalogLabel(catalogs, "employee_job_title", person.job_title)}</p>
+            <small>{person.user ? `@${person.user.username} · ${fr.roles[person.user.role]}` : fr.directory.noSystemAccess}</small>
           </div>
           {canEdit && (
             <button
@@ -116,6 +113,21 @@ export function PersonDetail({
               : fr.directory.viewAssignedAssets}
           </button>
         </div>
+      </section>
+      <section className="person-project-assignments">
+        <h3><ActionIcon name="location" />Affectations chantier</h3>
+        {assignments.length ? <div className="person-project-assignment-list">
+          {assignments.map((assignment) => <article key={assignment.id}>
+            <div>
+              <strong>{assignment.project.name}</strong>
+              <span>{assignment.project_role}</span>
+            </div>
+            <div>
+              <span className={`person-assignment-status${assignment.ended_on ? " ended" : ""}`}>{assignment.ended_on ? "Terminée" : "En cours"}</span>
+              <small>{date(assignment.started_on)}{assignment.ended_on ? ` — ${date(assignment.ended_on)}` : ""}</small>
+            </div>
+          </article>)}
+        </div> : <EmptyState compact icon="location" title="Aucune affectation chantier" description="Cette personne n’est actuellement affectée à aucun chantier." />}
       </section>
       <section className="person-health-insurance">
         <h3>

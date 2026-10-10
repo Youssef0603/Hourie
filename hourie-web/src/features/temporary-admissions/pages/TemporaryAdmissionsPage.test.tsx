@@ -29,6 +29,7 @@ const admission = {
       name: "Perkins 250 KVA",
       brand: "Perkins",
       model: "250 KVA",
+      serial_number: "SER-008",
       chassis_number: "CH-008",
     },
     {
@@ -37,6 +38,7 @@ const admission = {
       name: "SinoTruck Howo 17m3 HOWO 336",
       brand: "SinoTruck",
       model: "Howo 17m3 HOWO 336",
+      serial_number: "SER-009",
       chassis_number: null,
     },
   ],
@@ -83,12 +85,12 @@ describe("TemporaryAdmissionsPage", () => {
 
     await user.click(screen.getByText("S1445"));
     expect(await screen.findByText("Perkins 250 KVA")).toBeVisible();
-    expect(screen.getByText("N° de châssis : CH-008")).toBeVisible();
+    expect(screen.getByText("N° de série : SER-008")).toBeVisible();
     expect(screen.getByText("AT-S1445.pdf")).toBeVisible();
     await waitFor(() => expect(apiRequest).toHaveBeenCalledTimes(3));
   });
 
-  it("shows equipment names and chassis numbers in the add dropdown", async () => {
+  it("shows equipment names and serial numbers in the add dropdown", async () => {
     const user = userEvent.setup();
     render(<TemporaryAdmissionsPage canManage />);
     await screen.findByText("S1445");
@@ -99,10 +101,28 @@ describe("TemporaryAdmissionsPage", () => {
     await user.click(
       screen.getByRole("combobox", { name: "Ajouter un équipement" }),
     );
+    await user.type(
+      screen.getByRole("combobox", { name: "Ajouter un équipement" }),
+      "perkins",
+    );
 
     expect(
-      await screen.findByText("Perkins 250 KVA — N° de châssis : CH-008"),
+      await screen.findByText("Perkins 250 KVA — N° de série : SER-008"),
     ).toBeVisible();
+    await user.click(screen.getByText("Perkins 250 KVA — N° de série : SER-008"));
+    expect(screen.getByRole("combobox", { name: "Ajouter un équipement" })).toHaveValue("perkins");
+
+    await user.clear(screen.getByRole("combobox", { name: "Ajouter un équipement" }));
+    await user.type(
+      screen.getByRole("combobox", { name: "Ajouter un équipement" }),
+      "sinotruck",
+    );
+    await user.click(screen.getByText("SinoTruck Howo 17m3 HOWO 336 — N° de série : SER-009"));
+    await user.keyboard("{Escape}");
+
+    expect(screen.getByRole("combobox", { name: "Ajouter un équipement" })).toHaveValue("2 équipements sélectionnés");
+    expect(screen.getByText("Perkins 250 KVA")).toBeVisible();
+    expect(screen.getByText("SinoTruck Howo 17m3 HOWO 336")).toBeVisible();
     expect(screen.queryByText(/^8$/)).not.toBeInTheDocument();
   });
 

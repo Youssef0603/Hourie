@@ -13,7 +13,8 @@ export type CatalogOption = {
     | "operational_situation"
     | "maintenance_type"
     | "fuel_type"
-    | "project_status";
+    | "project_status"
+    | "employee_job_title";
   code: string;
   label_fr: string;
   label_ar: string | null;

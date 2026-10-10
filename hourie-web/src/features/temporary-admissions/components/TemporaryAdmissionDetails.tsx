@@ -7,6 +7,7 @@ import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { DocumentUploadDropzone } from "../../../shared/components/DocumentUploadDropzone";
 import { LoadingSpinner } from "../../../shared/components/LoadingSpinner";
 import { PaginatedDocumentList } from "../../../shared/components/PaginatedDocumentList";
+import { RecordHistory } from "../../../shared/components/RecordHistory";
 import {
   admissionError,
   fetchTemporaryAdmission,
@@ -212,7 +213,7 @@ export function TemporaryAdmissionDetails({
     return terms.length
       ? item.equipment.filter((equipment) => {
           const searchable = normalizeSearch(
-            [equipment.name, equipment.asset_code, equipment.chassis_number]
+            [equipment.name, equipment.asset_code, equipment.serial_number]
               .filter(Boolean)
               .join(" "),
           );
@@ -304,8 +305,9 @@ export function TemporaryAdmissionDetails({
           </button>
         </header>
         <div className="detail-content insurance-side-content">
-          {canManage && (
-            <div className="detail-primary-actions">
+          <div className="detail-primary-actions">
+            {canManage && (
+              <>
               <button
                 className="equipment-edit-button detail-toolbar-button"
                 type="button"
@@ -323,7 +325,7 @@ export function TemporaryAdmissionDetails({
                   disabled={busy}
                 >
                   <ActionIcon name="transfer" />
-                  Retourner les équipements
+                  Retourner
                 </button>
               )}
               {!["returned", "cleared"].includes(item.status) && (
@@ -337,17 +339,38 @@ export function TemporaryAdmissionDetails({
                   Dédouaner
                 </button>
               )}
+              </>
+            )}
+            <button
+              className="equipment-history-button detail-toolbar-button temporary-admission-history-button"
+              type="button"
+              aria-label="Voir l’historique"
+              title="Voir l’historique"
+              onClick={() => {
+                const history = document.getElementById(
+                  `temporary-admission-history-${item.id}`,
+                ) as HTMLDetailsElement | null;
+                if (history) {
+                  history.open = true;
+                  history.scrollIntoView({ behavior: "smooth", block: "start" });
+                }
+              }}
+            >
+              <ActionIcon name="history" />
+            </button>
+            {canManage && (
               <button
                 type="button"
                 className="danger-button detail-delete-button"
                 onClick={() => void removeAdmission()}
                 disabled={busy}
                 aria-label="Supprimer"
+                title="Supprimer"
               >
                 <ActionIcon name="delete" />
               </button>
-            </div>
-          )}
+            )}
+          </div>
           {error && (
             <div className="form-alert" role="alert">
               {error}
@@ -460,9 +483,9 @@ export function TemporaryAdmissionDetails({
                     >
                       <strong>{entry.name}</strong>
                       <small>
-                        {entry.chassis_number
-                          ? `N° de châssis : ${entry.chassis_number}`
-                          : "N° de châssis non renseigné"}
+                        {entry.serial_number
+                          ? `N° de série : ${entry.serial_number}`
+                          : "N° de série non renseigné"}
                       </small>
                     </button>
                   </li>
@@ -578,6 +601,33 @@ export function TemporaryAdmissionDetails({
               {item.notes || "Aucune observation."}
             </p>
           </section>
+          <details
+            id={`temporary-admission-history-${item.id}`}
+            className="detail-section"
+          >
+            <summary>
+              <h3>
+                <ActionIcon name="history" />
+                Historique
+              </h3>
+              <ActionIcon name="expand" />
+            </summary>
+            <div className="detail-section-body">
+              <RecordHistory
+                entries={item.changes ?? []}
+                actionLabels={{
+                  created: "Admission créée",
+                  updated: "Admission modifiée",
+                  renewed: "Admission renouvelée",
+                  document_added: "Document ajouté",
+                  document_deleted: "Document supprimé",
+                  returned: "Équipements retournés",
+                  customs_cleared: "Admission dédouanée",
+                }}
+                emptyDescription="Les modifications de cette admission apparaîtront ici."
+              />
+            </div>
+          </details>
           {canManage && !["returned", "cleared"].includes(item.status) && (
             <>
               {showReturnForm && (

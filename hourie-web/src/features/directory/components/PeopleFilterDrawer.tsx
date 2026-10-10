@@ -1,6 +1,8 @@
 import { fr } from "../../../i18n/fr";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { SearchableSelect } from "../../../shared/components/SearchableSelect";
+import { catalogLabel, catalogOptions } from "../../equipment/catalogs";
+import type { CatalogOption } from "../../equipment/types";
 
 export type AccessFilter = "" | "with_access" | "without_access";
 export type ActivityFilter = "" | "active" | "inactive";
@@ -10,9 +12,12 @@ export type RoleFilter =
 type PeopleFilterDrawerProps = {
   accessFilter: AccessFilter;
   roleFilter: RoleFilter;
+  jobTitleFilter: string;
   activityFilter: ActivityFilter;
+  catalogs?: CatalogOption[];
   onAccessChange: (value: AccessFilter) => void;
   onRoleChange: (value: RoleFilter) => void;
+  onJobTitleChange: (value: string) => void;
   onActivityChange: (value: ActivityFilter) => void;
   onClose: () => void;
 };
@@ -20,9 +25,12 @@ type PeopleFilterDrawerProps = {
 export function PeopleFilterDrawer({
   accessFilter,
   roleFilter,
+  jobTitleFilter,
   activityFilter,
+  catalogs,
   onAccessChange,
   onRoleChange,
+  onJobTitleChange,
   onActivityChange,
   onClose,
 }: PeopleFilterDrawerProps) {
@@ -71,6 +79,19 @@ export function PeopleFilterDrawer({
                   options={Object.entries(fr.roles).map(([value, label]) => ({
                     value,
                     label,
+                  }))}
+                />
+              </label>
+              <label>
+                <span>{fr.directory.jobTitle}</span>
+                <SearchableSelect
+                  ariaLabel={fr.directory.jobTitle}
+                  value={jobTitleFilter}
+                  onChange={onJobTitleChange}
+                  placeholder={fr.common.all}
+                  options={catalogOptions(catalogs, "employee_job_title").map((option) => ({
+                    value: option.code,
+                    label: catalogLabel(catalogs, "employee_job_title", option.code),
                   }))}
                 />
               </label>

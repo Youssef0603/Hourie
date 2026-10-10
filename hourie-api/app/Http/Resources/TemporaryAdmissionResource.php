@@ -36,9 +36,16 @@ class TemporaryAdmissionResource extends JsonResource
                 'name' => trim(implode(' ', array_filter([$item->brand, $item->model]))) ?: $item->asset_code,
                 'brand' => $item->brand,
                 'model' => $item->model,
+                'serial_number' => $item->serial_number,
                 'chassis_number' => $item->asset_details['chassis_number'] ?? null,
             ])),
             'documents' => $this->whenLoaded('documents', fn () => $this->documents->map(fn ($document) => ['id' => $document->id, 'document_type' => $document->document_type, 'document_date' => $document->document_date?->format('Y-m-d'), 'original_name' => $document->original_name, 'size_bytes' => $document->size_bytes, 'url' => "/api/v1/temporary-admissions/{$this->id}/documents/{$document->id}/file"])),
+            'changes' => $this->whenLoaded('changes', fn () => $this->changes->map(fn ($change) => [
+                'id' => $change->id,
+                'action' => $change->action,
+                'actor' => $change->actor === null ? null : ['id' => $change->actor->id, 'name' => $change->actor->name],
+                'occurred_at' => $change->occurred_at?->toISOString(),
+            ])),
         ];
     }
 }

@@ -21,6 +21,7 @@ class EmployeeFactory extends Factory
             'user_id' => null,
             'employee_code' => fake()->unique()->bothify('EMP-####'),
             'name' => fake()->name(),
+            'job_title' => 'not_specified',
             'phone_number' => '+225 '.fake()->numerify('## ## ## ## ##'),
             'passport_number' => null,
             'employment_date' => null,

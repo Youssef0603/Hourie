@@ -3,21 +3,28 @@ import { fr } from "../../../i18n/fr";
 import { ApiError } from "../../../shared/api/http";
 import { LoadingSpinner } from "../../../shared/components/LoadingSpinner";
 import { SearchableSelect } from "../../../shared/components/SearchableSelect";
+import { catalogLabel, catalogOptions } from "../../equipment/catalogs";
+import type { CatalogOption, NamedReference } from "../../equipment/types";
 import { updateEmployee } from "../api";
 import type { EmployeeDetails } from "../types";
 
 type EditPersonFormProps = {
   person: EmployeeDetails;
+  catalogs?: CatalogOption[];
+  projects?: NamedReference[];
   canManageManagerAccounts: boolean;
   onSaved: (person: EmployeeDetails) => void;
 };
 
 export function EditPersonForm({
   person,
+  catalogs,
+  projects = [],
   canManageManagerAccounts,
   onSaved,
 }: EditPersonFormProps) {
   const [name, setName] = useState(person.name);
+  const [jobTitle, setJobTitle] = useState(person.job_title);
   const [phoneNumber, setPhoneNumber] = useState(person.phone_number ?? "");
   const [passportNumber, setPassportNumber] = useState(
     person.passport_number ?? "",
@@ -26,6 +33,11 @@ export function EditPersonForm({
     person.employment_date ?? "",
   );
   const [birthDate, setBirthDate] = useState(person.birth_date ?? "");
+  const currentAssignment = person.project_assignments.find((assignment) => assignment.ended_on === null);
+  const [projectId, setProjectId] = useState(currentAssignment ? String(currentAssignment.project.id) : "");
+  const [projectRole, setProjectRole] = useState(currentAssignment?.project_role ?? "");
+  const [assignmentStartedOn, setAssignmentStartedOn] = useState(currentAssignment?.started_on ?? "");
+  const [assignmentEndedOn, setAssignmentEndedOn] = useState(currentAssignment?.ended_on ?? "");
   const [username, setUsername] = useState(person.user?.username ?? "");
   const [email, setEmail] = useState(person.email ?? "");
   const [role, setRole] = useState<
@@ -38,6 +50,12 @@ export function EditPersonForm({
   const roleEntries = Object.entries(fr.roles).filter(
     ([value]) => canManageManagerAccounts || value !== "manager",
   );
+  const jobTitles = catalogOptions(catalogs, "employee_job_title").filter(
+    (option) => option.code !== "not_specified",
+  );
+  const currentJobTitleIsUnavailable = !jobTitles.some(
+    (option) => option.code === jobTitle,
+  );
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -47,10 +65,15 @@ export function EditPersonForm({
       onSaved(
         await updateEmployee(person.id, {
           name: name.trim(),
+          job_title: jobTitle,
           phone_number: phoneNumber.trim() || null,
           passport_number: passportNumber.trim() || null,
           employment_date: employmentDate || null,
           birth_date: birthDate || null,
+          project_id: projectId ? Number(projectId) : null,
+          project_role: projectId ? projectRole.trim() : null,
+          assignment_started_on: projectId && assignmentStartedOn ? assignmentStartedOn : null,
+          assignment_ended_on: projectId && assignmentEndedOn ? assignmentEndedOn : null,
           username: username.trim() || null,
           email: email.trim() || null,
           role,
@@ -89,6 +112,26 @@ export function EditPersonForm({
               autoComplete="name"
               value={name}
               onChange={(event) => setName(event.target.value)}
+            />
+          </label>
+          <label>
+            <span>{fr.directory.jobTitle}</span>
+            <SearchableSelect
+              required
+              ariaLabel={fr.directory.jobTitle}
+              value={jobTitle}
+              onChange={setJobTitle}
+              placeholder="Sélectionner un poste"
+              includeEmpty={false}
+              options={[
+                ...(currentJobTitleIsUnavailable
+                  ? [{ value: jobTitle, label: catalogLabel(catalogs, "employee_job_title", jobTitle) }]
+                  : []),
+                ...jobTitles.map((option) => ({
+                  value: option.code,
+                  label: catalogLabel(catalogs, "employee_job_title", option.code),
+                })),
+              ]}
             />
           </label>
           <label>
@@ -134,6 +177,40 @@ export function EditPersonForm({
               onChange={(event) => setBirthDate(event.target.value)}
             />
           </label>
+        </div>
+      </section>
+      <section className="people-form-section">
+        <h3>Affectation chantier <small>(facultatif)</small></h3>
+        <div className="people-form-fields">
+          <label>
+            <span>Chantier actuel</span>
+            <SearchableSelect
+              ariaLabel="Chantier actuel"
+              value={projectId}
+              onChange={setProjectId}
+              placeholder="Aucun chantier"
+              options={[
+                ...(currentAssignment && !projects.some((project) => project.id === currentAssignment.project.id)
+                  ? [{ value: String(currentAssignment.project.id), label: currentAssignment.project.name }]
+                  : []),
+                ...projects.map((project) => ({ value: String(project.id), label: project.name })),
+              ]}
+            />
+          </label>
+          {projectId && <>
+            <label>
+              <span>Fonction sur le chantier</span>
+              <input required value={projectRole} onChange={(event) => setProjectRole(event.target.value)} />
+            </label>
+            <label>
+              <span>Début de l’affectation</span>
+              <input type="date" value={assignmentStartedOn} onChange={(event) => setAssignmentStartedOn(event.target.value)} />
+            </label>
+            <label>
+              <span>Fin de l’affectation</span>
+              <input type="date" min={assignmentStartedOn || undefined} value={assignmentEndedOn} onChange={(event) => setAssignmentEndedOn(event.target.value)} />
+            </label>
+          </>}
         </div>
       </section>
       <section className="people-form-section">

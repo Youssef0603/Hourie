@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Api\V1\Auth\PasswordController;
 use App\Http\Controllers\Api\V1\BondController;
 use App\Http\Controllers\Api\V1\CatalogOptionController;
+use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\EmployeeController;
 use App\Http\Controllers\Api\V1\Equipment\AssetImportController;
 use App\Http\Controllers\Api\V1\Equipment\EquipmentController;
@@ -38,6 +39,7 @@ Route::prefix('v1/auth')->name('auth.')->group(function (): void {
 });
 
 Route::prefix('v1')->middleware(['auth:sanctum', EnsureUserIsActive::class, EnsurePasswordWasChanged::class])->group(function (): void {
+    Route::get('dashboard', DashboardController::class)->name('dashboard');
     Route::apiResource('catalog-options', CatalogOptionController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::get('notification-settings', [NotificationSettingsController::class, 'show']);
     Route::put('notification-settings', [NotificationSettingsController::class, 'update']);

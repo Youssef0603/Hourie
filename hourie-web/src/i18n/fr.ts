@@ -267,6 +267,7 @@ const french = {
     phoneNumber: 'Numéro de téléphone',
     passportNumber: 'Numéro de passeport',
     employmentDate: 'Date d’embauche',
+    jobTitle: 'Poste',
     role: 'Rôle',
     assignedEquipment: 'Équipements attribués',
     assignedSites: 'Sites affectés',
@@ -303,7 +304,7 @@ const french = {
   },
   catalogs: {
     section: 'Configuration', title: 'Listes et statuts', subtitle: 'Gérez les valeurs utilisées dans les formulaires sans modifier l’application.', add: 'Ajouter une valeur', edit: 'Modifier la valeur', code: 'Code technique', labelFr: 'Libellé français', labelAr: 'Libellé arabe', color: 'Couleur', enabled: 'Valeur active', deleteConfirmation: 'Supprimer cette valeur des listes disponibles ?', loadError: 'Impossible de charger les listes et statuts.', saveError: 'Impossible d’enregistrer cette valeur.',
-    groups: { equipment_condition: 'État des actifs', operational_situation: 'Situations', maintenance_type: 'Types d’intervention', fuel_type: 'Carburants', project_status: 'Statuts des sites' },
+    groups: { equipment_condition: 'État des actifs', operational_situation: 'Situations', maintenance_type: 'Types d’intervention', fuel_type: 'Carburants', project_status: 'Statuts des sites', employee_job_title: 'Postes du personnel' },
   },
   maintenance: {
     title: 'Historique de maintenance',
@@ -750,6 +751,7 @@ const arabic = {
     phoneNumber: 'رقم الهاتف',
     passportNumber: 'رقم جواز السفر',
     employmentDate: 'تاريخ التوظيف',
+    jobTitle: 'المنصب',
     role: 'الدور',
     assignedEquipment: 'المعدات المسندة',
     assignedSites: 'المواقع المعيّنة',
@@ -786,7 +788,7 @@ const arabic = {
   },
   catalogs: {
     section: 'الإعدادات', title: 'القوائم والحالات', subtitle: 'إدارة القيم المستخدمة في النماذج دون تعديل التطبيق.', add: 'إضافة قيمة', edit: 'تعديل القيمة', code: 'الرمز التقني', labelFr: 'التسمية الفرنسية', labelAr: 'التسمية العربية', color: 'اللون', enabled: 'قيمة مفعلة', deleteConfirmation: 'هل تريد حذف هذه القيمة من القوائم المتاحة؟', loadError: 'تعذر تحميل القوائم والحالات.', saveError: 'تعذر حفظ هذه القيمة.',
-    groups: { equipment_condition: 'حالة الأصول', operational_situation: 'الوضعيات', maintenance_type: 'أنواع التدخل', fuel_type: 'أنواع الوقود', project_status: 'حالات المواقع' },
+    groups: { equipment_condition: 'حالة الأصول', operational_situation: 'الوضعيات', maintenance_type: 'أنواع التدخل', fuel_type: 'أنواع الوقود', project_status: 'حالات المواقع', employee_job_title: 'مناصب الموظفين' },
   },
   maintenance: {
     title: 'سجل الصيانة',

@@ -32,6 +32,11 @@ class TemporaryAdmission extends Model
         return $this->hasMany(TemporaryAdmissionDocument::class);
     }
 
+    public function changes(): HasMany
+    {
+        return $this->hasMany(TemporaryAdmissionChange::class)->latest('occurred_at')->latest('id');
+    }
+
     public function reminders(): HasMany
     {
         return $this->hasMany(TemporaryAdmissionReminder::class);

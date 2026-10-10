@@ -2582,6 +2582,51 @@ html[dir="rtl"] .directory-form select {
   font-size: 0.73rem;
 }
 
+.person-project-assignments h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.42rem;
+}
+
+.person-project-assignments h3 svg {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: var(--color-primary);
+  stroke-width: 1.8;
+}
+
+.person-project-assignment-list {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.person-project-assignment-list article {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.35rem;
+  padding: 0.7rem;
+}
+
+.person-project-assignment-list article > div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.person-project-assignment-list article > div:last-child {
+  justify-items: end;
+  text-align: end;
+}
+
+.person-project-assignment-list strong { font-size: 0.75rem; }
+.person-project-assignment-list span,
+.person-project-assignment-list small { color: var(--color-text-muted); font-size: 0.65rem; }
+.person-assignment-status { border-radius: 99px; padding: 0.18rem 0.4rem; color: #237a4b !important; background: #e8f5ed; font-weight: 700; }
+.person-assignment-status.ended { color: var(--color-text-muted) !important; background: #f0f1f3; }
+
 .person-detail section + section {
   border-top: 1px solid var(--color-border);
   padding-top: 1.1rem;
@@ -4982,6 +5027,31 @@ html[dir="rtl"] .maintenance-form-grid select {
   font-weight: 700;
 }
 
+.searchable-multi-option {
+  display: grid;
+  grid-template-columns: 1.2rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.searchable-multi-check {
+  display: grid;
+  width: 1.05rem;
+  height: 1.05rem;
+  place-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: 0.2rem;
+  color: white;
+  background: white;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.searchable-multi-option[data-selected] .searchable-multi-check {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+}
+
 .searchable-select-empty {
   color: var(--color-text-muted);
 }
@@ -6277,7 +6347,26 @@ html[dir="rtl"] .maintenance-form-grid select {
 }
 
 .temporary-admission-panel .detail-primary-actions .detail-delete-button {
+  margin-inline-start: 0;
+}
+
+.temporary-admission-panel
+  .detail-primary-actions
+  .temporary-admission-history-button {
+  width: 2rem;
+  min-width: 2rem;
   margin-inline-start: auto;
+  padding: 0 !important;
+}
+
+.temporary-admission-panel
+  .detail-primary-actions
+  .temporary-admission-history-button
+  svg {
+  width: 0.95rem !important;
+  height: 0.95rem !important;
+  flex: 0 0 0.95rem;
+  stroke-width: 1.8;
 }
 
 .temporary-admission-panel
@@ -7125,12 +7214,15 @@ html[dir="rtl"] .insurance-filter-content .searchable-select-input {
 .insurance-covered-equipment li button svg {
   width: 0.85rem;
   height: 0.85rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
 }
 
 .insurance-covered-equipment li .insurance-covered-remove {
-  font-size: 1.35rem;
-  font-weight: 400;
-  line-height: 1;
+  color: var(--color-primary);
 }
 
 .insurance-covered-equipment-empty {

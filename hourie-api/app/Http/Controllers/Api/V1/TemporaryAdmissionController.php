@@ -28,11 +28,12 @@ class TemporaryAdmissionController extends Controller
             ->orderBy('brand')
             ->orderBy('model')
             ->orderBy('asset_code')
-            ->get(['id', 'asset_code', 'brand', 'model', 'asset_details'])
+            ->get(['id', 'asset_code', 'brand', 'model', 'serial_number', 'asset_details'])
             ->map(fn (Equipment $item) => [
                 'id' => $item->id,
                 'asset_code' => $item->asset_code,
                 'name' => trim(implode(' ', array_filter([$item->brand, $item->model]))) ?: $item->asset_code,
+                'serial_number' => $item->serial_number,
                 'chassis_number' => $item->asset_details['chassis_number'] ?? null,
             ]);
 
@@ -58,26 +59,40 @@ class TemporaryAdmissionController extends Controller
         $item = DB::transaction(function () use ($request) {
             $item = TemporaryAdmission::query()->create([...$request->safe()->except('equipment_ids'), 'created_by_user_id' => $request->user()->id]);
             $item->equipment()->sync($request->validated('equipment_ids'));
+            $item->changes()->create([
+                'actor_user_id' => $request->user()->id,
+                'action' => 'created',
+                'new_values' => $this->auditValues($item, $request->validated('equipment_ids')),
+                'occurred_at' => now(),
+            ]);
 
             return $item;
         });
 
-        return (new TemporaryAdmissionResource($item->load(['equipment', 'documents'])))->response()->setStatusCode(201);
+        return (new TemporaryAdmissionResource($item->load(['equipment', 'documents', 'changes.actor:id,name'])))->response()->setStatusCode(201);
     }
 
     public function show(TemporaryAdmission $temporaryAdmission)
     {
-        return new TemporaryAdmissionResource($temporaryAdmission->load(['equipment', 'documents']));
+        return new TemporaryAdmissionResource($temporaryAdmission->load(['equipment', 'documents', 'changes.actor:id,name']));
     }
 
     public function update(UpdateTemporaryAdmissionRequest $request, TemporaryAdmission $temporaryAdmission)
     {
         DB::transaction(function () use ($request, $temporaryAdmission) {
+            $previousValues = $this->auditValues($temporaryAdmission, $temporaryAdmission->equipment()->pluck('equipment.id')->all());
             $temporaryAdmission->update($request->safe()->except('equipment_ids'));
             $temporaryAdmission->equipment()->sync($request->validated('equipment_ids'));
+            $temporaryAdmission->changes()->create([
+                'actor_user_id' => $request->user()->id,
+                'action' => 'updated',
+                'previous_values' => $previousValues,
+                'new_values' => $this->auditValues($temporaryAdmission, $request->validated('equipment_ids')),
+                'occurred_at' => now(),
+            ]);
         });
 
-        return new TemporaryAdmissionResource($temporaryAdmission->fresh()->load(['equipment', 'documents']));
+        return new TemporaryAdmissionResource($temporaryAdmission->fresh()->load(['equipment', 'documents', 'changes.actor:id,name']));
     }
 
     public function return(Request $request, TemporaryAdmission $temporaryAdmission)
@@ -85,8 +100,9 @@ class TemporaryAdmissionController extends Controller
         abort_unless($request->user()?->role->canManageEquipment(), 403);
         $request->validate(['returned_on' => ['required', 'date', 'after_or_equal:'.$temporaryAdmission->entered_on->format('Y-m-d')], 'closure_reason' => ['nullable', 'string', 'max:500']]);
         $temporaryAdmission->update(['status' => 'returned', 'returned_on' => $request->input('returned_on'), 'closure_reason' => $request->input('closure_reason')]);
+        $temporaryAdmission->changes()->create(['actor_user_id' => $request->user()->id, 'action' => 'returned', 'new_values' => ['returned_on' => $request->input('returned_on'), 'closure_reason' => $request->input('closure_reason')], 'occurred_at' => now()]);
 
-        return new TemporaryAdmissionResource($temporaryAdmission->fresh()->load(['equipment', 'documents']));
+        return new TemporaryAdmissionResource($temporaryAdmission->fresh()->load(['equipment', 'documents', 'changes.actor:id,name']));
     }
 
     public function clearCustoms(Request $request, TemporaryAdmission $temporaryAdmission)
@@ -106,8 +122,9 @@ class TemporaryAdmissionController extends Controller
             'clearance_reference' => $request->input('clearance_reference'),
             'customs_duty_amount' => $request->input('customs_duty_amount'),
         ]);
+        $temporaryAdmission->changes()->create(['actor_user_id' => $request->user()->id, 'action' => 'customs_cleared', 'new_values' => ['cleared_on' => $request->input('cleared_on'), 'clearance_reference' => $request->input('clearance_reference'), 'customs_duty_amount' => $request->input('customs_duty_amount')], 'occurred_at' => now()]);
 
-        return new TemporaryAdmissionResource($temporaryAdmission->fresh()->load(['equipment', 'documents']));
+        return new TemporaryAdmissionResource($temporaryAdmission->fresh()->load(['equipment', 'documents', 'changes.actor:id,name']));
     }
 
     public function storeDocument(Request $request, TemporaryAdmission $temporaryAdmission)
@@ -130,8 +147,9 @@ class TemporaryAdmissionController extends Controller
         if ($document->document_type === 'renewal') {
             $temporaryAdmission->update(['status' => 'renewed']);
         }
+        $temporaryAdmission->changes()->create(['actor_user_id' => $request->user()->id, 'action' => $document->document_type === 'renewal' ? 'renewed' : 'document_added', 'new_values' => ['document_id' => $document->id, 'document_type' => $document->document_type, 'name' => $document->original_name, 'document_date' => $document->document_date?->format('Y-m-d')], 'occurred_at' => now()]);
 
-        return response()->json(['data' => (new TemporaryAdmissionResource($temporaryAdmission->fresh()->load(['equipment', 'documents'])))->resolve()], 201);
+        return response()->json(['data' => (new TemporaryAdmissionResource($temporaryAdmission->fresh()->load(['equipment', 'documents', 'changes.actor:id,name'])))->resolve()], 201);
     }
 
     public function showDocument(TemporaryAdmission $temporaryAdmission, TemporaryAdmissionDocument $document)
@@ -145,6 +163,7 @@ class TemporaryAdmissionController extends Controller
     {
         abort_unless($request->user()?->role->canManageEquipment(), 403);
         abort_unless($document->temporary_admission_id === $temporaryAdmission->id, 404);
+        $temporaryAdmission->changes()->create(['actor_user_id' => $request->user()->id, 'action' => 'document_deleted', 'previous_values' => ['document_id' => $document->id, 'document_type' => $document->document_type, 'name' => $document->original_name], 'new_values' => [], 'occurred_at' => now()]);
         Storage::disk($document->disk)->delete($document->path);
         $wasRenewal = $document->document_type === 'renewal';
         $document->delete();
@@ -165,5 +184,17 @@ class TemporaryAdmissionController extends Controller
         $temporaryAdmission->delete();
 
         return response()->noContent();
+    }
+
+    /** @param array<int, int|string> $equipmentIds */
+    private function auditValues(TemporaryAdmission $temporaryAdmission, array $equipmentIds): array
+    {
+        return [
+            'customs_reference' => $temporaryAdmission->customs_reference,
+            'entered_on' => $temporaryAdmission->entered_on?->format('Y-m-d'),
+            'status' => $temporaryAdmission->status,
+            'notes' => $temporaryAdmission->notes,
+            'equipment_ids' => array_map('intval', $equipmentIds),
+        ];
     }
 }

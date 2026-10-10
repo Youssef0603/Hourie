@@ -19,6 +19,7 @@ vi.mock('../api', () => ({
 const people = Array.from({ length: 12 }, (_, index) => ({
   id: index + 1,
   name: index === 0 ? 'Youssef Yassine' : `Employé ${index + 1}`,
+  job_title: index === 0 ? 'software_engineer' : 'site_engineer',
   email: index === 0 ? 'youssef@hourie.ci' : null,
   phone_number: index === 0 ? '+225 07 00 00 00 00' : null,
   passport_number: null,
@@ -32,6 +33,11 @@ const people = Array.from({ length: 12 }, (_, index) => ({
       ? { id: 2, username: 'viewer', email: 'viewer@hourie.ci', role: 'viewer' as const }
       : null,
 }))
+
+const catalogs = [
+  { id: 1, group: 'employee_job_title' as const, code: 'software_engineer', label_fr: 'Ingénieur logiciel', label_ar: null, color: null, sort_order: 1, is_active: true },
+  { id: 2, group: 'employee_job_title' as const, code: 'site_engineer', label_fr: 'Ingénieur de chantier', label_ar: null, color: null, sort_order: 2, is_active: true },
+]
 
 describe('PeoplePage', () => {
   beforeEach(() => {
@@ -61,16 +67,18 @@ describe('PeoplePage', () => {
       ...people[0],
       equipment_in_custody: [],
       assigned_sites: [],
+      project_assignments: [],
       health_insurance_policies: [],
     })
   })
 
   it('shows people in a paginated table and searches by e-mail', async () => {
     const user = userEvent.setup()
-    render(<PeoplePage canAdd />)
+    render(<PeoplePage canAdd catalogs={catalogs} />)
 
     expect(await screen.findByText('Youssef Yassine')).toBeVisible()
     expect(screen.getByRole('columnheader', { name: 'E-mail' })).toBeVisible()
+    expect(screen.getByText('Ingénieur logiciel')).toBeVisible()
     expect(screen.queryByText('Employé 12')).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Suivant' }))
@@ -84,7 +92,7 @@ describe('PeoplePage', () => {
 
   it('filters people by system access and opens a selected person', async () => {
     const user = userEvent.setup()
-    render(<PeoplePage canAdd />)
+    render(<PeoplePage canAdd catalogs={catalogs} />)
 
     await screen.findByText('Youssef Yassine')
     await user.click(screen.getByRole('button', { name: 'Filtres' }))

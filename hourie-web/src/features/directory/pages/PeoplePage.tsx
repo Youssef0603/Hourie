@@ -6,7 +6,8 @@ import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { Modal } from "../../../shared/components/Modal";
 import { ApiError } from "../../../shared/api/http";
 import { LoadingSpinner } from "../../../shared/components/LoadingSpinner";
-import type { CatalogOption } from "../../equipment/types";
+import type { CatalogOption, NamedReference } from "../../equipment/types";
+import { catalogLabel } from "../../equipment/catalogs";
 import { EmptyState } from "../../../shared/components/EmptyState";
 import { DataTable } from "../../../shared/components/DataTable";
 import { AddPersonForm } from "../components/AddPersonForm";
@@ -24,6 +25,7 @@ type PeoplePageProps = {
   canAdd: boolean;
   canManageManagerAccounts?: boolean;
   catalogs?: CatalogOption[];
+  projects?: NamedReference[];
 };
 
 function normalizeSearch(value: string) {
@@ -37,6 +39,7 @@ export function PeoplePage({
   canAdd,
   canManageManagerAccounts = false,
   catalogs,
+  projects,
 }: PeoplePageProps) {
   const [people, setPeople] = useState<Employee[]>([]);
   const [search, setSearch] = useState("");
@@ -46,6 +49,7 @@ export function PeoplePage({
   const [accessFilter, setAccessFilter] = useState<AccessFilter>("");
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("");
   const [activityFilter, setActivityFilter] = useState<ActivityFilter>("");
+  const [jobTitleFilter, setJobTitleFilter] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -66,6 +70,7 @@ export function PeoplePage({
             person.user?.email,
             person.phone_number,
             person.passport_number,
+            catalogLabel(catalogs, "employee_job_title", person.job_title),
           ]
             .filter(Boolean)
             .join(" "),
@@ -79,10 +84,11 @@ export function PeoplePage({
           ? person.user !== null
           : person.user === null)) &&
       (roleFilter === "" || person.user?.role === roleFilter) &&
+      (jobTitleFilter === "" || person.job_title === jobTitleFilter) &&
       (activityFilter === "" ||
         (activityFilter === "active" ? person.is_active : !person.is_active)),
   );
-  const activeFilterCount = [accessFilter, roleFilter, activityFilter].filter(
+  const activeFilterCount = [accessFilter, roleFilter, jobTitleFilter, activityFilter].filter(
     Boolean,
   ).length;
   const page = pagination?.current_page ?? currentPage;
@@ -96,6 +102,7 @@ export function PeoplePage({
         ...(search.trim() ? { search: search.trim() } : {}),
         ...(accessFilter ? { access: accessFilter } : {}),
         ...(roleFilter ? { role: roleFilter } : {}),
+        ...(jobTitleFilter ? { job_title: jobTitleFilter } : {}),
         ...(activityFilter ? { activity: activityFilter } : {}),
       });
       setPeople(response.data ?? []);
@@ -106,7 +113,7 @@ export function PeoplePage({
     } finally {
       setIsRefreshing(false);
     }
-  }, [accessFilter, activityFilter, roleFilter, search]);
+  }, [accessFilter, activityFilter, jobTitleFilter, roleFilter, search]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => void loadPeople(1), 200);
@@ -181,6 +188,8 @@ export function PeoplePage({
         >
           <AddPersonForm
             canManageManagerAccounts={canManageManagerAccounts}
+            catalogs={catalogs}
+            projects={projects}
             onSaved={async () => {
               await refreshPeople();
               setShowForm(false);
@@ -241,6 +250,7 @@ export function PeoplePage({
                 onClick={() => {
                   setAccessFilter("");
                   setRoleFilter("");
+                  setJobTitleFilter("");
                   setActivityFilter("");
                   setCurrentPage(1);
                 }}
@@ -254,13 +264,19 @@ export function PeoplePage({
           <PeopleFilterDrawer
             accessFilter={accessFilter}
             roleFilter={roleFilter}
+            jobTitleFilter={jobTitleFilter}
             activityFilter={activityFilter}
+            catalogs={catalogs}
             onAccessChange={(value) => {
               setAccessFilter(value);
               setCurrentPage(1);
             }}
             onRoleChange={(value) => {
               setRoleFilter(value);
+              setCurrentPage(1);
+            }}
+            onJobTitleChange={(value) => {
+              setJobTitleFilter(value);
               setCurrentPage(1);
             }}
             onActivityChange={(value) => {
@@ -279,6 +295,7 @@ export function PeoplePage({
               <thead>
                 <tr>
                   <th>{fr.directory.fullName}</th>
+                  <th>{fr.directory.jobTitle}</th>
                   <th>{fr.directory.email}</th>
                   <th>{fr.directory.phoneNumber}</th>
                   <th>{fr.directory.employmentDate}</th>
@@ -307,6 +324,7 @@ export function PeoplePage({
                         </span>
                       </span>
                     </td>
+                    <td>{catalogLabel(catalogs, "employee_job_title", person.job_title)}</td>
                     <td>{person.email ?? fr.common.notAssigned}</td>
                     <td>{person.phone_number ?? fr.common.notAssigned}</td>
                     <td>
@@ -390,6 +408,8 @@ export function PeoplePage({
             (isEditingPerson ? (
               <EditPersonForm
                 person={selectedPerson}
+                catalogs={catalogs}
+                projects={projects}
                 canManageManagerAccounts={canManageManagerAccounts}
                 onSaved={(updated) => {
                   setSelectedPerson(updated);

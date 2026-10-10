@@ -7,12 +7,19 @@ export type AdmissionDocument = {
   size_bytes: number;
   url: string;
 };
+export type AdmissionHistoryEntry = {
+  id: number;
+  action: string;
+  actor: { id: number; name: string } | null;
+  occurred_at: string;
+};
 export type AdmissionEquipment = {
   id: number;
   asset_code: string;
   name: string;
   brand: string | null;
   model: string | null;
+  serial_number?: string | null;
   chassis_number: string | null;
 };
 export type TemporaryAdmission = {
@@ -30,4 +37,5 @@ export type TemporaryAdmission = {
   documents_count?: number;
   equipment: AdmissionEquipment[];
   documents: AdmissionDocument[];
+  changes?: AdmissionHistoryEntry[];
 };

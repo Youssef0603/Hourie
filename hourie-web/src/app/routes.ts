@@ -4,6 +4,7 @@ import {
 } from "../features/equipment/assetCategories";
 
 export type WorkspaceRoute =
+  | { section: "dashboard"; equipmentId: null; siteId: null }
   | { section: "generators"; equipmentId: number | null; siteId: null }
   | {
       section: "assets";
@@ -40,6 +41,9 @@ export function parseWorkspaceRoute(pathname: string): WorkspaceRoute {
   const parts = pathname.split("/").filter(Boolean);
   const id = (value: string | undefined) =>
     value && /^[1-9]\d*$/.test(value) ? Number(value) : null;
+
+  if ((parts[0] === "dashboard" && parts.length === 1) || parts.length === 0)
+    return { section: "dashboard", siteId: null, equipmentId: null };
 
   if (
     parts[0] === "sites" &&
@@ -151,10 +155,11 @@ export function parseWorkspaceRoute(pathname: string): WorkspaceRoute {
   if (parts[0] === "settings" && parts.length === 1)
     return { section: "catalogs", siteId: null, equipmentId: null };
 
-  return { section: "generators", siteId: null, equipmentId: null };
+  return { section: "dashboard", siteId: null, equipmentId: null };
 }
 
 export function workspacePath(route: WorkspaceRoute): string {
+  if (route.section === "dashboard") return "/dashboard";
   if (route.section === "sites" && route.siteId)
     return `/sites/${route.siteId}${route.siteView === "insurance" ? "/insurance" : route.equipmentId ? `/generators/${route.equipmentId}` : ""}`;
   if (route.section === "generators")

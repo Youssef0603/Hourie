@@ -129,6 +129,15 @@ export function WorkspaceSidebar({
         </button>
       </div>
       <nav aria-label={fr.navigation.title}>
+        <button
+          title="Tableau de bord"
+          className={activeSection === "dashboard" ? "active" : ""}
+          type="button"
+          onClick={() => onNavigate("dashboard")}
+        >
+          <NavigationIcon name="dashboard" />
+          <span className="nav-label">Tableau de bord</span>
+        </button>
         <div className="sidebar-navigation-group">
           <p className="sidebar-group-label">{fr.navigation.inventory}</p>
           <div

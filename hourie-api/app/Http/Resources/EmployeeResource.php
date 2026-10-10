@@ -14,6 +14,7 @@ class EmployeeResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'job_title' => $this->job_title,
             'phone_number' => $this->phone_number,
             'email' => $this->email,
             'passport_number' => $this->passport_number,
@@ -37,6 +38,16 @@ class EmployeeResource extends JsonResource
                 ->where('is_active', true)
                 ->map(fn ($project) => ['id' => $project->id, 'name' => $project->name])
                 ->values()),
+            'project_assignments' => $this->whenLoaded('projectAssignments', fn () => $this->projectAssignments->map(fn ($assignment) => [
+                'id' => $assignment->id,
+                'project' => [
+                    'id' => $assignment->project->id,
+                    'name' => $assignment->project->name,
+                ],
+                'project_role' => $assignment->project_role,
+                'started_on' => $assignment->started_on?->format('Y-m-d'),
+                'ended_on' => $assignment->ended_on?->format('Y-m-d'),
+            ])->values()),
             'health_insurance_policies' => $this->whenLoaded('insurancePolicies', fn () => $this->insurancePolicies->map(fn ($policy) => [
                 'id' => $policy->id,
                 'policy_number' => $policy->policy_number,

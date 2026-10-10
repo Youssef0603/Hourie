@@ -56,6 +56,7 @@ export type Employee = {
   employment_date: string | null
   birth_date: string | null
   name: string
+  job_title: string
   is_active: boolean
   equipment_in_custody_count: number
   user: { id: number; username: string; email: string | null; role: 'manager' | 'cms_manager' | 'generator_manager' | 'viewer' } | null
@@ -64,6 +65,13 @@ export type Employee = {
 export type EmployeeDetails = Employee & {
   equipment_in_custody: EquipmentSummary[]
   assigned_sites: Array<{ id: number; name: string }>
+  project_assignments: Array<{
+    id: number
+    project: { id: number; name: string }
+    project_role: string
+    started_on: string | null
+    ended_on: string | null
+  }>
   health_insurance_policies: Array<{
     id: number
     policy_number: string
@@ -75,10 +83,15 @@ export type EmployeeDetails = Employee & {
 
 export type CreateEmployeePayload = {
   name: string
+  job_title: string
   phone_number: string | null
   passport_number: string | null
   employment_date: string | null
   birth_date: string | null
+  project_id: number | null
+  project_role: string | null
+  assignment_started_on: string | null
+  assignment_ended_on: string | null
   create_account: boolean
   email: string | null
   role: 'manager' | 'cms_manager' | 'generator_manager' | 'viewer' | null
@@ -88,10 +101,15 @@ export type CreateEmployeePayload = {
 
 export type UpdateEmployeePayload = {
   name: string
+  job_title: string
   phone_number: string | null
   passport_number: string | null
   employment_date: string | null
   birth_date: string | null
+  project_id: number | null
+  project_role: string | null
+  assignment_started_on: string | null
+  assignment_ended_on: string | null
   username: string | null
   email: string | null
   role: 'manager' | 'cms_manager' | 'generator_manager' | 'viewer'

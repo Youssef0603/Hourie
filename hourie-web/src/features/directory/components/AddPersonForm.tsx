@@ -2,10 +2,14 @@ import { useState, type FormEvent } from "react";
 import { fr } from "../../../i18n/fr";
 import { ApiError } from "../../../shared/api/http";
 import { SearchableSelect } from "../../../shared/components/SearchableSelect";
+import { catalogLabel, catalogOptions } from "../../equipment/catalogs";
+import type { CatalogOption, NamedReference } from "../../equipment/types";
 import { createEmployee } from "../api";
 
 type AddPersonFormProps = {
   canManageManagerAccounts: boolean;
+  catalogs?: CatalogOption[];
+  projects?: NamedReference[];
   onSaved: () => Promise<void> | void;
 };
 
@@ -21,13 +25,20 @@ function generatedUsername(name: string) {
 
 export function AddPersonForm({
   canManageManagerAccounts,
+  catalogs,
+  projects = [],
   onSaved,
 }: AddPersonFormProps) {
   const [name, setName] = useState("");
+  const [jobTitle, setJobTitle] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [passportNumber, setPassportNumber] = useState("");
   const [employmentDate, setEmploymentDate] = useState("");
   const [birthDate, setBirthDate] = useState("");
+  const [projectId, setProjectId] = useState("");
+  const [projectRole, setProjectRole] = useState("");
+  const [assignmentStartedOn, setAssignmentStartedOn] = useState("");
+  const [assignmentEndedOn, setAssignmentEndedOn] = useState("");
   const [createAccount, setCreateAccount] = useState(false);
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<
@@ -38,6 +49,9 @@ export function AddPersonForm({
   const [formError, setFormError] = useState<string | null>(null);
   const roleEntries = Object.entries(fr.roles).filter(
     ([value]) => canManageManagerAccounts || value !== "manager",
+  );
+  const jobTitles = catalogOptions(catalogs, "employee_job_title").filter(
+    (option) => option.code !== "not_specified",
   );
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -50,10 +64,15 @@ export function AddPersonForm({
     try {
       await createEmployee({
         name: name.trim(),
+        job_title: jobTitle,
         phone_number: phoneNumber.trim() || null,
         passport_number: passportNumber.trim() || null,
         employment_date: employmentDate || null,
         birth_date: birthDate || null,
+        project_id: projectId ? Number(projectId) : null,
+        project_role: projectId ? projectRole.trim() : null,
+        assignment_started_on: projectId && assignmentStartedOn ? assignmentStartedOn : null,
+        assignment_ended_on: projectId && assignmentEndedOn ? assignmentEndedOn : null,
         create_account: createAccount,
         email: email.trim() || null,
         role: createAccount ? role : null,
@@ -90,6 +109,21 @@ export function AddPersonForm({
               autoComplete="name"
               value={name}
               onChange={(event) => setName(event.target.value)}
+            />
+          </label>
+          <label>
+            <span>{fr.directory.jobTitle}</span>
+            <SearchableSelect
+              required
+              ariaLabel={fr.directory.jobTitle}
+              value={jobTitle}
+              onChange={setJobTitle}
+              placeholder="Sélectionner un poste"
+              includeEmpty={false}
+              options={jobTitles.map((option) => ({
+                value: option.code,
+                label: catalogLabel(catalogs, "employee_job_title", option.code),
+              }))}
             />
           </label>
           <label>
@@ -137,6 +171,35 @@ export function AddPersonForm({
               onChange={(event) => setBirthDate(event.target.value)}
             />
           </label>
+        </div>
+      </section>
+      <section className="people-form-section">
+        <h3>Affectation chantier <small>(facultatif)</small></h3>
+        <div className="people-form-fields">
+          <label>
+            <span>Chantier</span>
+            <SearchableSelect
+              ariaLabel="Chantier"
+              value={projectId}
+              onChange={setProjectId}
+              placeholder="Aucun chantier"
+              options={projects.map((project) => ({ value: String(project.id), label: project.name }))}
+            />
+          </label>
+          {projectId && <>
+            <label>
+              <span>Fonction sur le chantier</span>
+              <input required value={projectRole} onChange={(event) => setProjectRole(event.target.value)} placeholder="Ex. Ingénieur de chantier" />
+            </label>
+            <label>
+              <span>Début de l’affectation</span>
+              <input type="date" value={assignmentStartedOn} onChange={(event) => setAssignmentStartedOn(event.target.value)} />
+            </label>
+            <label>
+              <span>Fin de l’affectation</span>
+              <input type="date" min={assignmentStartedOn || undefined} value={assignmentEndedOn} onChange={(event) => setAssignmentEndedOn(event.target.value)} />
+            </label>
+          </>}
         </div>
       </section>
       <section

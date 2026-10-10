@@ -42,7 +42,7 @@ class CatalogOptionController extends Controller
     /** @return array<string, mixed> */
     private function validated(Request $request, ?CatalogOption $option = null): array
     {
-        $groups = ['equipment_condition', 'operational_situation', 'maintenance_type', 'fuel_type', 'project_status'];
+        $groups = ['equipment_condition', 'operational_situation', 'maintenance_type', 'fuel_type', 'project_status', 'employee_job_title'];
 
         return $request->validate([
             'group' => ['required', Rule::in($option === null ? $groups : [$option->group])],

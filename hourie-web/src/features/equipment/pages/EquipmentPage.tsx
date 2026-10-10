@@ -83,6 +83,11 @@ const TemporaryAdmissionsPage = lazy(() =>
     }),
   ),
 );
+const DashboardPage = lazy(() =>
+  import("../../dashboard/pages/DashboardPage").then((module) => ({
+    default: module.DashboardPage,
+  })),
+);
 
 type EquipmentPageProps = {
   user: AuthenticatedUser;
@@ -146,6 +151,10 @@ export function EquipmentPage({
     route.section === "assets" ? route.assetCategory : "generator",
   );
   const activeSection = route.section;
+  const usesInventory =
+    route.section === "generators" ||
+    route.section === "assets" ||
+    route.siteId !== null;
   const needsCategoryCounts =
     route.section === "assets" || route.siteId !== null;
   const [filters, setFilters] = useState(() => ({
@@ -343,6 +352,9 @@ export function EquipmentPage({
   }, []);
 
   useEffect(() => {
+    if (!usesInventory) {
+      return;
+    }
     let cancelled = false;
 
     getEquipment(filters, needsCategoryCounts)
@@ -369,7 +381,7 @@ export function EquipmentPage({
     return () => {
       cancelled = true;
     };
-  }, [filters, needsCategoryCounts, refreshToken]);
+  }, [filters, needsCategoryCounts, refreshToken, usesInventory]);
 
   function refreshInventory() {
     setIsLoading(true);
@@ -539,7 +551,11 @@ export function EquipmentPage({
           onNavigateAsset={navigateAsset}
         />
 
-        {activeSection === "generators" ? (
+        {activeSection === "dashboard" ? (
+          <Suspense fallback={<FeaturePageLoading />}>
+            <DashboardPage onNavigate={(path) => navigate(path)} />
+          </Suspense>
+        ) : activeSection === "generators" ? (
           <main className="equipment-page">
             {isSiteView && (
               <nav
@@ -947,6 +963,7 @@ export function EquipmentPage({
               canAdd={user.permissions.manage_users}
               canManageManagerAccounts={user.role === "manager"}
               catalogs={options?.catalogs}
+              projects={options?.projects}
             />
           </Suspense>
         )}

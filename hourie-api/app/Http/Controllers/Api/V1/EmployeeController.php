@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Employees\StoreEmployeeRequest;
 use App\Http\Requests\Employees\UpdateEmployeeRequest;
 use App\Http\Resources\EmployeeResource;
+use App\Models\CatalogOption;
 use App\Models\Employee;
 use App\Models\Equipment;
 use App\Models\Project;
@@ -33,6 +34,11 @@ class EmployeeController extends Controller
             ->when($request->filled('search'), function ($query) use ($request): void {
                 $term = '%'.$request->string('search')->toString().'%';
                 $query->where(fn ($builder) => $builder->where('name', 'like', $term)
+                    ->orWhere('job_title', 'like', $term)
+                    ->orWhereIn('job_title', CatalogOption::query()
+                        ->select('code')
+                        ->where('group', 'employee_job_title')
+                        ->where(fn ($catalog) => $catalog->where('label_fr', 'like', $term)->orWhere('label_ar', 'like', $term)))
                     ->orWhere('email', 'like', $term)
                     ->orWhere('phone_number', 'like', $term)
                     ->orWhere('passport_number', 'like', $term)
@@ -41,9 +47,10 @@ class EmployeeController extends Controller
             ->when($request->string('access')->toString() === 'with_access', fn ($query) => $query->whereNotNull('user_id'))
             ->when($request->string('access')->toString() === 'without_access', fn ($query) => $query->whereNull('user_id'))
             ->when($request->filled('role'), fn ($query) => $query->whereHas('user', fn ($user) => $user->where('role', $request->string('role')->toString())))
+            ->when($request->filled('job_title'), fn ($query) => $query->where('job_title', $request->string('job_title')->toString()))
             ->with('user:id,username,email,role')
             ->orderBy('name')
-            ->paginate($perPage, ['id', 'user_id', 'name', 'phone_number', 'email', 'passport_number', 'employment_date', 'birth_date', 'is_active']);
+            ->paginate($perPage, ['id', 'user_id', 'name', 'job_title', 'phone_number', 'email', 'passport_number', 'employment_date', 'birth_date', 'is_active']);
 
         $employeeIds = $employees->getCollection()->modelKeys();
 
@@ -93,9 +100,10 @@ class EmployeeController extends Controller
                 ]);
             }
 
-            return Employee::query()->create([
+            $employee = Employee::query()->create([
                 'user_id' => $user?->id,
                 'name' => $data['name'],
+                'job_title' => $data['job_title'] ?? 'not_specified',
                 'phone_number' => $data['phone_number'] ?? null,
                 'email' => $data['email'] ?? null,
                 'passport_number' => $data['passport_number'] ?? null,
@@ -103,9 +111,20 @@ class EmployeeController extends Controller
                 'birth_date' => $data['birth_date'] ?? null,
                 'is_active' => true,
             ]);
+
+            if (filled($data['project_id'] ?? null)) {
+                $employee->projectAssignments()->create([
+                    'project_id' => $data['project_id'],
+                    'project_role' => $data['project_role'],
+                    'started_on' => $data['assignment_started_on'] ?? null,
+                    'ended_on' => $data['assignment_ended_on'] ?? null,
+                ]);
+            }
+
+            return $employee;
         });
 
-        $employee->load('user:id,username,email,role')->loadCount('equipmentInCustody');
+        $employee->load(['user:id,username,email,role', 'projectAssignments.project:id,name,is_active'])->loadCount('equipmentInCustody');
 
         return (new EmployeeResource($employee))->response()->setStatusCode(201);
     }
@@ -115,6 +134,7 @@ class EmployeeController extends Controller
         $employee->load([
             'user:id,username,email,role',
             'responsibleProjects:id,name,responsible_employee_id,is_active',
+            'projectAssignments.project:id,name,is_active',
             'insurancePolicies' => fn ($query) => $query
                 ->where('insurance_type', 'group_health')
                 ->orderByDesc('ends_on'),
@@ -144,6 +164,7 @@ class EmployeeController extends Controller
         DB::transaction(function () use ($data, $employee): void {
             $employee->update([
                 'name' => $data['name'],
+                'job_title' => $data['job_title'] ?? $employee->job_title,
                 'phone_number' => $data['phone_number'] ?? null,
                 'email' => $data['email'] ?? null,
                 'passport_number' => $data['passport_number'] ?? null,
@@ -171,6 +192,8 @@ class EmployeeController extends Controller
                 $user = User::query()->create($accountData);
                 $employee->update(['user_id' => $user->id]);
             }
+
+            $this->syncProjectAssignment($employee, $data);
         });
 
         return $this->show($employee->fresh());
@@ -204,6 +227,7 @@ class EmployeeController extends Controller
             }
 
             $employee->equipmentInCustody()->update(['custodian_employee_id' => null]);
+            $employee->projectAssignments()->whereNull('ended_on')->update(['ended_on' => today()]);
             $employee->update(['is_active' => false]);
             $employee->user?->update(['is_active' => false]);
         });
@@ -224,5 +248,38 @@ class EmployeeController extends Controller
         }
 
         return $username;
+    }
+
+    /** @param array<string, mixed> $data */
+    private function syncProjectAssignment(Employee $employee, array $data): void
+    {
+        if (! array_key_exists('project_id', $data)) {
+            return;
+        }
+
+        $current = $employee->projectAssignments()->whereNull('ended_on')->latest('id')->first();
+        $projectId = $data['project_id'] ?? null;
+
+        if ($projectId === null) {
+            $current?->update(['ended_on' => $data['assignment_ended_on'] ?? today()]);
+
+            return;
+        }
+
+        $assignment = [
+            'project_id' => $projectId,
+            'project_role' => $data['project_role'],
+            'started_on' => $data['assignment_started_on'] ?? null,
+            'ended_on' => $data['assignment_ended_on'] ?? null,
+        ];
+
+        if ($current !== null && $current->project_id === (int) $projectId) {
+            $current->update($assignment);
+
+            return;
+        }
+
+        $current?->update(['ended_on' => $data['assignment_started_on'] ?? today()]);
+        $employee->projectAssignments()->create($assignment);
     }
 }

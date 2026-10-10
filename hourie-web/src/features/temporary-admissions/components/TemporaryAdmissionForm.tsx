@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { apiRequest } from "../../../shared/api/http";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { DocumentUploadDropzone } from "../../../shared/components/DocumentUploadDropzone";
-import { SearchableSelect } from "../../../shared/components/SearchableSelect";
+import { SearchableMultiSelect } from "../../../shared/components/SearchableMultiSelect";
 import { admissionError, uploadAdmissionDocument } from "../api";
 import type {
   AdmissionDocumentType,
@@ -157,17 +157,13 @@ export function TemporaryAdmissionForm({
               Équipements couverts
             </h3>
             <div className="insurance-covered-equipment">
-              <SearchableSelect
+              <SearchableMultiSelect
                 ariaLabel="Ajouter un équipement"
-                value=""
-                onChange={(value) =>
-                  value &&
-                  setIds((all) => [...new Set([...all, Number(value)])])
-                }
+                values={ids.map(String)}
+                onChange={(values) => setIds(values.map(Number))}
                 placeholder="Sélectionner un équipement"
-                includeEmpty={false}
+                selectedLabel={(count) => `${count} équipement${count > 1 ? "s" : ""} sélectionné${count > 1 ? "s" : ""}`}
                 options={equipment
-                  .filter((entry) => !ids.includes(entry.id))
                   .map((entry) => ({
                     value: String(entry.id),
                     label: equipmentLabel(entry),
@@ -182,16 +178,18 @@ export function TemporaryAdmissionForm({
                     <li key={id}>
                       <span>
                         <strong>{entry?.name}</strong>
-                        <small>{entry ? chassisLabel(entry) : ""}</small>
+                        <small>{entry ? serialLabel(entry) : ""}</small>
                       </span>
                       <button
+                        className="insurance-covered-remove"
                         type="button"
                         aria-label={`Retirer ${entry?.asset_code ?? "l’équipement"}`}
+                        title="Retirer"
                         onClick={() =>
                           setIds((all) => all.filter((value) => value !== id))
                         }
                       >
-                        <ActionIcon name="close" />
+                        <ActionIcon name="delete" />
                       </button>
                     </li>
                   );
@@ -236,12 +234,12 @@ export function TemporaryAdmissionForm({
   );
 }
 
-function chassisLabel(item: AdmissionEquipment) {
-  return item.chassis_number
-    ? `N° de châssis : ${item.chassis_number}`
-    : "N° de châssis non renseigné";
+function serialLabel(item: AdmissionEquipment) {
+  return item.serial_number
+    ? `N° de série : ${item.serial_number}`
+    : "N° de série non renseigné";
 }
 
 function equipmentLabel(item: AdmissionEquipment) {
-  return `${item.name} — ${chassisLabel(item)}`;
+  return `${item.name} — ${serialLabel(item)}`;
 }

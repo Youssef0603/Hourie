@@ -29,10 +29,15 @@ class StoreEmployeeRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
+            'job_title' => ['sometimes', 'required', 'string', Rule::exists('catalog_options', 'code')->where(fn ($query) => $query->where('group', 'employee_job_title')->where('is_active', true))],
             'phone_number' => ['nullable', 'string', 'max:30'],
             'passport_number' => ['nullable', 'string', 'max:100', 'unique:employees,passport_number'],
             'employment_date' => ['nullable', 'date_format:Y-m-d', 'before_or_equal:today'],
             'birth_date' => ['nullable', 'date_format:Y-m-d', 'before_or_equal:today'],
+            'project_id' => ['nullable', 'integer', Rule::exists('projects', 'id')->where('is_active', true)],
+            'project_role' => ['nullable', 'required_with:project_id', 'string', 'max:255'],
+            'assignment_started_on' => ['nullable', 'date_format:Y-m-d'],
+            'assignment_ended_on' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:assignment_started_on'],
             'create_account' => ['required', 'boolean'],
             'email' => ['nullable', 'string', 'email', 'max:255', 'unique:users,email'],
             'role' => [Rule::requiredIf($this->boolean('create_account')), 'nullable', Rule::enum(UserRole::class)],

@@ -14,6 +14,7 @@ const groups: CatalogOption["group"][] = [
   "maintenance_type",
   "fuel_type",
   "project_status",
+  "employee_job_title",
 ];
 type SettingsSection = CatalogOption["group"] | "reminder_recipients";
 

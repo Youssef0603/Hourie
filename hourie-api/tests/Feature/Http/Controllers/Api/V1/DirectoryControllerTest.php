@@ -118,6 +118,7 @@ it('stores and updates personnel passport and employment information', function 
 
     $response = $this->actingAs($manager, 'web')->postJson('/api/v1/employees', [
         'name' => 'Mariam Kouassi',
+        'job_title' => 'accountant',
         'phone_number' => null,
         'passport_number' => ' ci-45879 ',
         'employment_date' => '2026-01-15',
@@ -126,6 +127,7 @@ it('stores and updates personnel passport and employment information', function 
         'password' => 'Temporary-2026',
         'password_confirmation' => 'Temporary-2026',
     ])->assertCreated()
+        ->assertJsonPath('data.job_title', 'accountant')
         ->assertJsonPath('data.passport_number', 'CI-45879')
         ->assertJsonPath('data.employment_date', '2026-01-15');
 
@@ -134,6 +136,7 @@ it('stores and updates personnel passport and employment information', function 
 
     $this->actingAs($manager, 'web')->patchJson("/api/v1/employees/{$employeeId}", [
         'name' => 'Mariam Kouassi',
+        'job_title' => 'software_engineer',
         'phone_number' => null,
         'passport_number' => 'CI-90001',
         'employment_date' => '2026-02-01',
@@ -143,14 +146,61 @@ it('stores and updates personnel passport and employment information', function 
         'password' => null,
         'password_confirmation' => null,
     ])->assertOk()
+        ->assertJsonPath('data.job_title', 'software_engineer')
         ->assertJsonPath('data.passport_number', 'CI-90001')
         ->assertJsonPath('data.employment_date', '2026-02-01');
 
     $this->assertDatabaseHas('employees', [
         'id' => $employeeId,
+        'job_title' => 'software_engineer',
         'passport_number' => 'CI-90001',
     ]);
     expect($employee->fresh()->employment_date?->toDateString())->toBe('2026-02-01');
+});
+
+it('optionally assigns new personnel to a chantier with a project function', function () {
+    $manager = User::factory()->create(['role' => UserRole::Manager]);
+    $project = Project::factory()->create(['name' => 'CHANTIER GESCO', 'is_active' => true]);
+
+    $response = $this->actingAs($manager, 'web')->postJson('/api/v1/employees', [
+        'name' => 'Jean Kouadio',
+        'job_title' => 'civil_engineer',
+        'project_id' => $project->id,
+        'project_role' => 'Ingénieur de chantier',
+        'assignment_started_on' => '2026-10-01',
+        'assignment_ended_on' => null,
+        'create_account' => false,
+    ])->assertCreated()
+        ->assertJsonPath('data.job_title', 'civil_engineer')
+        ->assertJsonPath('data.project_assignments.0.project.id', $project->id)
+        ->assertJsonPath('data.project_assignments.0.project_role', 'Ingénieur de chantier')
+        ->assertJsonPath('data.project_assignments.0.started_on', '2026-10-01')
+        ->assertJsonPath('data.project_assignments.0.ended_on', null);
+
+    $this->assertDatabaseHas('employee_project_assignments', [
+        'employee_id' => $response->json('data.id'),
+        'project_id' => $project->id,
+        'project_role' => 'Ingénieur de chantier',
+        'ended_on' => null,
+    ]);
+
+    $nextProject = Project::factory()->create(['name' => 'CHANTIER BASSAM', 'is_active' => true]);
+    $this->actingAs($manager, 'web')->patchJson('/api/v1/employees/'.$response->json('data.id'), [
+        'name' => 'Jean Kouadio',
+        'job_title' => 'civil_engineer',
+        'project_id' => $nextProject->id,
+        'project_role' => 'Conducteur de travaux',
+        'assignment_started_on' => '2026-11-01',
+        'assignment_ended_on' => null,
+    ])->assertOk()
+        ->assertJsonPath('data.project_assignments.0.project.id', $nextProject->id)
+        ->assertJsonPath('data.project_assignments.0.project_role', 'Conducteur de travaux');
+
+    $this->assertDatabaseHas('employee_project_assignments', [
+        'employee_id' => $response->json('data.id'),
+        'project_id' => $project->id,
+        'ended_on' => '2026-11-01 00:00:00',
+    ]);
 });
 
 it('rejects duplicate passport numbers and future employment dates', function () {
