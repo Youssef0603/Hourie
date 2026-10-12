@@ -14,7 +14,7 @@ class SendTemporaryAdmissionExpiryReminders extends Command
                             {--admission= : Send for one admission ID}
                             {--force : Send a settings-recipient test outside the normal 30-day date}';
 
-    protected $description = 'Send AT reminders 30 days before expiry, then weekly until renewal or closure';
+    protected $description = 'Send AT reminders 30 days before expiry, then weekly until a newer AT or closure';
 
     public function handle(SendTemporaryAdmissionExpiryRemindersAction $action): int
     {

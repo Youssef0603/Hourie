@@ -70,8 +70,8 @@ class BuildExecutiveDashboard
 
         $admissions = TemporaryAdmission::query()
             ->whereNotIn('status', ['returned', 'cleared'])
-            ->with('documents:id,temporary_admission_id,document_type')
-            ->get(['id', 'customs_reference', 'entered_on', 'status'])
+            ->with('documents:id,temporary_admission_id,document_type,document_date,validity_months')
+            ->get(['id', 'customs_reference', 'entered_on', 'validity_months', 'status'])
             ->map(fn (TemporaryAdmission $admission) => $this->deadline('temporary_admission', $admission->id, 'AT '.$admission->customs_reference, $admission->expiresOn(), "/temporary-admissions/{$admission->id}", $today))
             ->filter(fn (array $deadline) => $deadline['days_remaining'] <= 90);
 

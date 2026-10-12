@@ -146,8 +146,9 @@ export type EquipmentTemporaryAdmission = {
   id: number;
   customs_reference: string;
   entered_on: string | null;
+  validity_months: number;
   expires_on: string | null;
-  status: "active" | "renewed" | "returned" | "cleared" | "expired";
+  status: "active" | "returned" | "cleared" | "expired";
   cleared_on: string | null;
   customs_duty_amount: string | null;
 };

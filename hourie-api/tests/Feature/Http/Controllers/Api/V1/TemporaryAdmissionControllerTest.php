@@ -32,16 +32,20 @@ it('lists equipment options by name and serial number', function (): void {
         ->assertJsonPath('data.0.serial_number', 'SER-D8-001');
 });
 
-it('creates an admission linked to equipment with a one year validity', function (): void {
+it('creates an admission linked to equipment with the selected validity', function (): void {
     $response = $this->actingAs($this->user)->postJson('/api/v1/temporary-admissions', [
         'customs_reference' => 'S1445',
+        'supplier_name' => 'Caterpillar Export',
         'entered_on' => '2026-10-06',
+        'validity_months' => 6,
         'equipment_ids' => [$this->equipment->id],
     ]);
 
     $response->assertCreated()
         ->assertJsonPath('data.customs_reference', 'S1445')
-        ->assertJsonPath('data.expires_on', '2027-10-06')
+        ->assertJsonPath('data.supplier_name', 'Caterpillar Export')
+        ->assertJsonPath('data.validity_months', 6)
+        ->assertJsonPath('data.expires_on', '2027-04-06')
         ->assertJsonPath('data.equipment.0.id', $this->equipment->id)
         ->assertJsonPath('data.equipment.0.serial_number', 'SER-D8-001')
         ->assertJsonPath('data.changes.0.action', 'created')
@@ -55,7 +59,8 @@ it('creates an admission linked to equipment with a one year validity', function
     $this->actingAs($this->user)->getJson("/api/v1/equipment/{$this->equipment->id}")
         ->assertOk()
         ->assertJsonPath('data.temporary_admissions.0.customs_reference', 'S1445')
-        ->assertJsonPath('data.temporary_admissions.0.expires_on', '2027-10-06');
+        ->assertJsonPath('data.temporary_admissions.0.validity_months', 6)
+        ->assertJsonPath('data.temporary_admissions.0.expires_on', '2027-04-06');
 });
 
 it('paginates admission summaries without covered equipment or documents', function (): void {
@@ -104,25 +109,35 @@ it('marks an admission as cleared when customs duties are paid', function (): vo
         ->assertJsonPath('data.customs_duty_amount', '12500000.00');
 });
 
-it('extends expiry from the original entrance-date anniversary for each renewal', function (): void {
+it('calculates expiry from the date of the latest AT document', function (): void {
     Storage::fake((string) config('filesystems.equipment_documents_disk'));
     $admission = TemporaryAdmission::query()->create([
         'customs_reference' => 'S3000',
         'entered_on' => '2021-10-12',
+        'validity_months' => 3,
         'created_by_user_id' => $this->user->id,
     ]);
     $admission->equipment()->attach($this->equipment);
 
     $this->actingAs($this->user)->post('/api/v1/temporary-admissions/'.$admission->id.'/documents', [
-        'document' => UploadedFile::fake()->create('renewal.pdf', 100, 'application/pdf'),
-        'document_type' => 'renewal',
+        'document' => UploadedFile::fake()->create('at-2022.pdf', 100, 'application/pdf'),
+        'document_type' => 'admission',
         'document_date' => '2022-10-08',
+        'validity_months' => 3,
     ])->assertCreated()
         ->assertJsonPath('data.status', 'expired')
-        ->assertJsonPath('data.expires_on', '2023-10-12')
-        ->assertJsonPath('data.documents.0.document_type', 'renewal');
+        ->assertJsonPath('data.expires_on', '2022-10-12')
+        ->assertJsonPath('data.documents.0.document_type', 'admission');
 
-    expect($admission->fresh()->status)->toBe('renewed');
+    $this->actingAs($this->user)->post('/api/v1/temporary-admissions/'.$admission->id.'/documents', [
+        'document' => UploadedFile::fake()->create('at-2022-2.pdf', 100, 'application/pdf'),
+        'document_type' => 'admission',
+        'document_date' => '2022-12-20',
+        'validity_months' => 6,
+    ])->assertCreated()
+        ->assertJsonPath('data.expires_on', '2023-04-12');
+
+    expect($admission->fresh()->status)->toBe('active');
 });
 
 it('updates an admission through the camel-case resource binding', function (): void {
@@ -135,10 +150,22 @@ it('updates an admission through the camel-case resource binding', function (): 
 
     $this->actingAs($this->user)->patchJson('/api/v1/temporary-admissions/'.$admission->id, [
         'customs_reference' => 'S4000-A',
+        'supplier_name' => 'Komatsu Trading',
         'entered_on' => '2026-02-01',
+        'validity_months' => 12,
         'equipment_ids' => [$this->equipment->id],
         'notes' => 'Dossier corrigé',
     ])->assertOk()
         ->assertJsonPath('data.customs_reference', 'S4000-A')
+        ->assertJsonPath('data.supplier_name', 'Komatsu Trading')
         ->assertJsonPath('data.notes', 'Dossier corrigé');
+});
+
+it('only accepts positive reasonable admission validity periods', function (): void {
+    $this->actingAs($this->user)->postJson('/api/v1/temporary-admissions', [
+        'customs_reference' => 'S5000',
+        'entered_on' => '2026-10-06',
+        'validity_months' => 0,
+        'equipment_ids' => [$this->equipment->id],
+    ])->assertUnprocessable()->assertJsonValidationErrors('validity_months');
 });

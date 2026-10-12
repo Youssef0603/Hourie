@@ -15,7 +15,6 @@ import type { PaginatedResponse, PaginationMeta } from "../../../shared/api/pagi
 
 const statusLabel = {
   active: "Active",
-  renewed: "Renouvelée",
   returned: "Retournée",
   cleared: "Dédouanée",
   expired: "Expirée",
@@ -119,7 +118,7 @@ export function TemporaryAdmissionsPage({
           <p className="section-label">Gestion</p>
           <h1>Admissions temporaires</h1>
           <p>
-            Suivez les références douanières, renouvellements et retours
+            Suivez les références douanières, les documents AT et les retours
             d’équipements.
           </p>
         </div>
@@ -139,7 +138,7 @@ export function TemporaryAdmissionsPage({
                 setSearch(event.target.value);
                 setPage(1);
               }}
-              placeholder="Référence douane"
+              placeholder="Référence douane ou fournisseur"
             />
           </label>
           {canManage && (
@@ -180,7 +179,7 @@ export function TemporaryAdmissionsPage({
                     <td>{item.documents_count ?? item.documents?.length ?? 0}</td>
                     <td>
                       <em
-                        className={`insurance-status ${item.status === "renewed" ? "active" : item.status}`}
+                        className={`insurance-status ${item.status}`}
                       >
                         {statusLabel[item.status]}
                       </em>

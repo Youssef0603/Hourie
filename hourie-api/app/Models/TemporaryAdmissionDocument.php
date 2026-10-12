@@ -6,10 +6,10 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['temporary_admission_id', 'uploaded_by_user_id', 'document_type', 'document_date', 'disk', 'path', 'original_name', 'mime_type', 'size_bytes'])]
+#[Fillable(['temporary_admission_id', 'uploaded_by_user_id', 'document_type', 'document_date', 'validity_months', 'disk', 'path', 'original_name', 'mime_type', 'size_bytes'])]
 class TemporaryAdmissionDocument extends Model
 {
-    public const TYPES = ['initial', 'renewal', 'invoice'];
+    public const TYPES = ['initial', 'admission', 'invoice'];
 
     public function temporaryAdmission(): BelongsTo
     {
@@ -18,6 +18,6 @@ class TemporaryAdmissionDocument extends Model
 
     protected function casts(): array
     {
-        return ['document_date' => 'date:Y-m-d'];
+        return ['document_date' => 'date:Y-m-d', 'validity_months' => 'integer'];
     }
 }

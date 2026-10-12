@@ -27,14 +27,14 @@
                                 <td align="right"><span style="display:inline-block; border:1px solid rgba(255,255,255,.45); border-radius:999px; padding:6px 11px; font-size:11px; line-height:15px; font-weight:700; color:#ffffff;">Admission temporaire</span></td>
                             </tr>
                         </table>
-                        <div style="padding-top:18px; font-size:28px; line-height:35px; font-weight:700;">{{ $isOverdue ? 'Admission expirée' : 'Renouvellement à prévoir' }}</div>
+                        <div style="padding-top:18px; font-size:28px; line-height:35px; font-weight:700;">{{ $isOverdue ? 'Admission expirée' : 'Nouvel AT à prévoir' }}</div>
                         <div style="padding-top:6px; font-size:15px; line-height:22px; color:#fde5ed;">{{ $isOverdue ? 'Une admission temporaire a dépassé son échéance.' : 'Une admission temporaire arrive prochainement à échéance.' }}</div>
                     </td>
                 </tr>
                 <tr>
                     <td style="padding:30px 36px 14px;">
                         <p style="margin:0; font-size:16px; line-height:24px; color:#383b40;">Bonjour,</p>
-                        <p style="margin:10px 0 0; font-size:16px; line-height:24px; color:#383b40;">{{ $isOverdue ? 'Merci de renouveler ou régulariser cette admission dès que possible.' : 'Merci de préparer le renouvellement ou la régularisation de cette admission avant son échéance.' }}</p>
+                        <p style="margin:10px 0 0; font-size:16px; line-height:24px; color:#383b40;">{{ $isOverdue ? 'Merci d’ajouter le nouvel AT ou de régulariser cette admission dès que possible.' : 'Merci de préparer le nouvel AT ou la régularisation de cette admission avant son échéance.' }}</p>
                     </td>
                 </tr>
                 <tr>
@@ -92,7 +92,7 @@
                             <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border:1px solid #e2e3e6; border-radius:10px;">
                                 <tr>
                                     <td width="42" align="center" style="padding:14px 0 14px 14px; font-size:20px; color:#d31245;">▤</td>
-                                    <td style="padding:14px 16px; font-size:13px; line-height:20px; color:#65676c;"><strong style="display:block; color:#18191c;">Document{{ $documentCount > 1 ? 's' : '' }} joint{{ $documentCount > 1 ? 's' : '' }} ({{ $documentCount }})</strong>Les documents initiaux, renouvellements et factures associés sont joints à ce rappel.</td>
+                                    <td style="padding:14px 16px; font-size:13px; line-height:20px; color:#65676c;"><strong style="display:block; color:#18191c;">Document{{ $documentCount > 1 ? 's' : '' }} joint{{ $documentCount > 1 ? 's' : '' }} ({{ $documentCount }})</strong>Les documents initiaux, AT et factures associés sont joints à ce rappel.</td>
                                 </tr>
                             </table>
                         </td>
@@ -100,7 +100,7 @@
                 @endif
                 <tr>
                     <td style="padding:10px 36px 34px;">
-                        <p style="margin:0; font-size:14px; line-height:21px; color:#65676c;">Après traitement, ajoutez le document de renouvellement ou clôturez l’admission dans Hourie afin de mettre à jour sa prochaine échéance.</p>
+                        <p style="margin:0; font-size:14px; line-height:21px; color:#65676c;">Après traitement, ajoutez le nouvel AT ou clôturez l’admission dans Hourie afin de mettre à jour sa prochaine échéance.</p>
                     </td>
                 </tr>
             </table>

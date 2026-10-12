@@ -17,7 +17,6 @@ import type { AdmissionDocument, TemporaryAdmission } from "../types";
 
 const labels = {
   active: "Active",
-  renewed: "Renouvelée",
   returned: "Retournée",
   cleared: "Dédouanée",
   expired: "Expirée",
@@ -46,7 +45,7 @@ export function TemporaryAdmissionDetails({
   const [deletingDocumentId, setDeletingDocumentId] = useState<number | null>(
     null,
   );
-  const [renewalDocument, setRenewalDocument] = useState<File | null>(null);
+  const [admissionDocuments, setAdmissionDocuments] = useState<File[]>([]);
   const [showReturnForm, setShowReturnForm] = useState(false);
   const [showClearanceForm, setShowClearanceForm] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -73,41 +72,51 @@ export function TemporaryAdmissionDetails({
     }
   }, [showClearanceForm]);
 
-  async function renew(event: FormEvent<HTMLFormElement>) {
+  async function addAdmissionDocuments(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!renewalDocument) return;
+    if (!admissionDocuments.length) return;
     const form = new FormData(event.currentTarget);
     await perform(async () => {
-      onChanged(
-        await uploadAdmissionDocument(
+      let saved = item;
+      for (const file of admissionDocuments) {
+        saved = await uploadAdmissionDocument(
           item.id,
-          "renewal",
-          renewalDocument,
-          String(form.get("renewed_on")),
-        ),
-      );
-      setRenewalDocument(null);
+          "admission",
+          file,
+          String(form.get("document_date")),
+          Number(form.get("validity_months")),
+        );
+        onChanged(saved);
+        setAdmissionDocuments((current) => current.filter((entry) => entry !== file));
+      }
+      setAdmissionDocuments([]);
       event.currentTarget.reset();
-    }, "Impossible d’ajouter ce renouvellement.");
+    }, "Impossible d’ajouter ce document AT.");
   }
 
-  async function addInvoice(file: File) {
+  async function addInvoices(files: File[]) {
     await perform(async () => {
-      onChanged(await uploadAdmissionDocument(item.id, "invoice", file));
+      let saved = item;
+      for (const file of files) {
+        saved = await uploadAdmissionDocument(item.id, "invoice", file);
+      }
+      onChanged(saved);
     }, "Impossible d’ajouter cette facture.");
   }
 
-  async function addInitialDocument(file: File) {
+  async function addInitialDocuments(files: File[]) {
     await perform(async () => {
-      onChanged(
-        await uploadAdmissionDocument(
+      let saved = item;
+      for (const file of files) {
+        saved = await uploadAdmissionDocument(
           item.id,
           "initial",
           file,
           item.entered_on,
-        ),
-      );
-    }, "Impossible d’ajouter le document initial.");
+        );
+      }
+      onChanged(saved);
+    }, "Impossible d’ajouter ce document initial.");
   }
 
   async function closeAdmission(event: FormEvent<HTMLFormElement>) {
@@ -202,8 +211,8 @@ export function TemporaryAdmissionDetails({
   const initialDocuments = item.documents.filter(
     (document) => document.document_type === "initial",
   );
-  const renewalDocuments = item.documents.filter(
-    (document) => document.document_type === "renewal",
+  const atDocuments = item.documents.filter(
+    (document) => document.document_type === "admission",
   );
   const invoiceDocuments = item.documents.filter(
     (document) => document.document_type === "invoice",
@@ -387,6 +396,10 @@ export function TemporaryAdmissionDetails({
                 <dd>{item.customs_reference}</dd>
               </div>
               <div>
+                <dt>Fournisseur</dt>
+                <dd>{item.supplier_name || "À compléter"}</dd>
+              </div>
+              <div>
                 <dt>Équipements couverts</dt>
                 <dd>
                   {item.equipment.length} équipement
@@ -406,6 +419,10 @@ export function TemporaryAdmissionDetails({
                 <dd>{formatDate(item.entered_on)}</dd>
               </div>
               <div>
+                <dt>Durée de validité</dt>
+                <dd>{item.validity_months} mois</dd>
+              </div>
+              <div>
                 <dt>Échéance actuelle</dt>
                 <dd>{formatDate(item.expires_on)}</dd>
               </div>
@@ -413,7 +430,7 @@ export function TemporaryAdmissionDetails({
                 <dt>Statut</dt>
                 <dd>
                   <em
-                    className={`insurance-status ${item.status === "renewed" ? "active" : item.status}`}
+                    className={`insurance-status ${item.status}`}
                   >
                     {labels[item.status]}
                   </em>
@@ -528,52 +545,90 @@ export function TemporaryAdmissionDetails({
               Documents
             </h3>
             <div className="temporary-admission-documents-group">
-              <h4>Document initial</h4>
-              {documentList(initialDocuments, "Aucun document initial.")}
-              {canManage && initialDocuments.length === 0 && (
+              <h4>Documents initiaux</h4>
+              {documentList(
+                initialDocuments,
+                "Aucun document initial enregistré.",
+              )}
+              {canManage && (
                 <DocumentUploadDropzone
                   compact
                   disabled={busy}
                   title={
-                    busy ? "Ajout en cours…" : "Ajouter le document initial"
+                    busy ? "Ajout en cours…" : "Ajouter des documents initiaux"
                   }
-                  description="Document initial PDF · 10 Mo maximum"
-                  onFiles={(files) =>
-                    files[0] && void addInitialDocument(files[0])
-                  }
+                  description="Un ou plusieurs documents initiaux · PDF · 10 Mo maximum par fichier"
+                  onFiles={(files) => void addInitialDocuments(files)}
                 />
               )}
             </div>
             <div className="temporary-admission-documents-group">
-              <h4>Renouvellements</h4>
-              {documentList(
-                renewalDocuments,
-                "Aucun renouvellement enregistré.",
-              )}
+              <h4>Documents AT</h4>
+              {documentList(atDocuments, "Aucun document AT enregistré.")}
               {canManage && !["returned", "cleared"].includes(item.status) && (
                 <form
-                  className="temporary-admission-renewal-form"
-                  onSubmit={renew}
+                  className="temporary-admission-document-form"
+                  onSubmit={addAdmissionDocuments}
                 >
+                  <p className="temporary-admission-action-hint">
+                    La date de l’AT le plus récent devient la nouvelle date de
+                    référence pour calculer l’échéance.
+                  </p>
                   <label>
-                    Date du renouvellement
-                    <input required type="date" name="renewed_on" />
+                    Date de l’AT
+                    <input required type="date" name="document_date" />
+                  </label>
+                  <label>
+                    Durée de validité (mois)
+                    <input
+                      required
+                      type="number"
+                      name="validity_months"
+                      min={1}
+                      max={120}
+                      step={1}
+                      defaultValue={item.validity_months}
+                    />
                   </label>
                   <DocumentUploadDropzone
                     compact
                     disabled={busy}
-                    title={
-                      renewalDocument?.name ??
-                      "Ajouter le document de renouvellement"
+                    title={selectedAtDocumentsTitle(admissionDocuments)}
+                    description="Un ou plusieurs documents AT · PDF · 10 Mo maximum par fichier"
+                    onFiles={(files) =>
+                      setAdmissionDocuments((current) => [
+                        ...current,
+                        ...files,
+                      ])
                     }
-                    description="Document de renouvellement · PDF · 10 Mo maximum"
-                    onFiles={(files) => setRenewalDocument(files[0] ?? null)}
                   />
+                  {admissionDocuments.length > 0 && (
+                    <ul className="temporary-admission-selected-files">
+                      {admissionDocuments.map((file, index) => (
+                        <li key={`${file.name}-${file.lastModified}-${index}`}>
+                          <span>{file.name}</span>
+                          <button
+                            type="button"
+                            aria-label={`Retirer ${file.name}`}
+                            onClick={() =>
+                              setAdmissionDocuments((current) =>
+                                current.filter(
+                                  (_, candidate) => candidate !== index,
+                                ),
+                              )
+                            }
+                          >
+                            <ActionIcon name="close" />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                   <button
                     className="primary-button temporary-admission-document-action"
-                    disabled={busy || !renewalDocument}
+                    disabled={busy || !admissionDocuments.length}
                   >
-                    Renouveler
+                    Ajouter l’AT
                   </button>
                 </form>
               )}
@@ -586,8 +641,8 @@ export function TemporaryAdmissionDetails({
                   compact
                   disabled={busy}
                   title={busy ? "Ajout en cours…" : "Ajouter une facture"}
-                  description="Facture PDF · 10 Mo maximum"
-                  onFiles={(files) => files[0] && void addInvoice(files[0])}
+                  description="Une ou plusieurs factures · PDF · 10 Mo maximum par fichier"
+                  onFiles={(files) => void addInvoices(files)}
                 />
               )}
             </div>
@@ -618,7 +673,7 @@ export function TemporaryAdmissionDetails({
                 actionLabels={{
                   created: "Admission créée",
                   updated: "Admission modifiée",
-                  renewed: "Admission renouvelée",
+                  renewed: "Document AT ajouté",
                   document_added: "Document ajouté",
                   document_deleted: "Document supprimé",
                   returned: "Équipements retournés",
@@ -745,6 +800,11 @@ function formatMoney(value: string) {
   return `${new Intl.NumberFormat("fr-FR", {
     maximumFractionDigits: 0,
   }).format(Number(value))} FCFA`;
+}
+
+function selectedAtDocumentsTitle(files: File[]) {
+  if (!files.length) return "Ajouter des documents AT";
+  return `${files.length} document${files.length > 1 ? "s" : ""} AT sélectionné${files.length > 1 ? "s" : ""}`;
 }
 
 function normalizeSearch(value: string) {

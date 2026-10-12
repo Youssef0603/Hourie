@@ -112,7 +112,7 @@ export function EquipmentTemporaryAdmissions({
       {admissions.map((admission) => (
         <article key={admission.id}>
           <div className="equipment-insurance-coverage-heading">
-            <span className={`insurance-status ${admission.status === "renewed" ? "active" : admission.status}`}>
+            <span className={`insurance-status ${admission.status}`}>
               {temporaryAdmissionStatusLabel(admission.status)}
             </span>
           </div>
@@ -142,7 +142,6 @@ export function EquipmentTemporaryAdmissions({
 function temporaryAdmissionStatusLabel(status: Equipment["temporary_admissions"][number]["status"]) {
   return {
     active: "Active",
-    renewed: "Renouvelée",
     returned: "Retournée",
     cleared: "Dédouanée",
     expired: "Expirée",

@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -9,10 +10,9 @@ class TemporaryAdmissionResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        $renewalCount = $this->relationLoaded('documents')
-            ? $this->documents->where('document_type', 'renewal')->count()
-            : (int) ($this->renewal_documents_count ?? 0);
-        $expiresOn = $this->entered_on?->copy()->addYears($renewalCount + 1);
+        $expiresOn = $this->calculated_expires_on !== null
+            ? CarbonImmutable::parse($this->calculated_expires_on)
+            : $this->expiresOn();
         $status = in_array($this->status, ['returned', 'cleared'], true)
             ? $this->status
             : (($expiresOn?->isBefore(now()->startOfDay())) ? 'expired' : $this->status);
@@ -20,7 +20,9 @@ class TemporaryAdmissionResource extends JsonResource
         return [
             'id' => $this->id,
             'customs_reference' => $this->customs_reference,
+            'supplier_name' => $this->supplier_name,
             'entered_on' => $this->entered_on?->format('Y-m-d'),
+            'validity_months' => $this->validity_months,
             'expires_on' => $expiresOn?->format('Y-m-d'),
             'status' => $status,
             'returned_on' => $this->returned_on?->format('Y-m-d'),
@@ -39,7 +41,7 @@ class TemporaryAdmissionResource extends JsonResource
                 'serial_number' => $item->serial_number,
                 'chassis_number' => $item->asset_details['chassis_number'] ?? null,
             ])),
-            'documents' => $this->whenLoaded('documents', fn () => $this->documents->map(fn ($document) => ['id' => $document->id, 'document_type' => $document->document_type, 'document_date' => $document->document_date?->format('Y-m-d'), 'original_name' => $document->original_name, 'size_bytes' => $document->size_bytes, 'url' => "/api/v1/temporary-admissions/{$this->id}/documents/{$document->id}/file"])),
+            'documents' => $this->whenLoaded('documents', fn () => $this->documents->map(fn ($document) => ['id' => $document->id, 'document_type' => $document->document_type, 'document_date' => $document->document_date?->format('Y-m-d'), 'validity_months' => $document->validity_months, 'original_name' => $document->original_name, 'size_bytes' => $document->size_bytes, 'url' => "/api/v1/temporary-admissions/{$this->id}/documents/{$document->id}/file"])),
             'changes' => $this->whenLoaded('changes', fn () => $this->changes->map(fn ($change) => [
                 'id' => $change->id,
                 'action' => $change->action,

@@ -10,7 +10,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'customs_reference',
+    'supplier_name',
     'entered_on',
+    'validity_months',
     'status',
     'returned_on',
     'closure_reason',
@@ -48,17 +50,51 @@ class TemporaryAdmission extends Model
             return null;
         }
 
-        $renewalCount = $this->relationLoaded('documents')
-            ? $this->documents->where('document_type', 'renewal')->count()
-            : $this->documents()->where('document_type', 'renewal')->count();
+        $admissionDocuments = match (true) {
+            $this->relationLoaded('documents') => $this->documents
+                ->where('document_type', 'admission')
+                ->values(),
+            default => $this->documents()
+                ->where('document_type', 'admission')
+                ->get(),
+        };
 
-        return CarbonImmutable::parse($this->entered_on)->addYears($renewalCount + 1);
+        $enteredOn = CarbonImmutable::parse($this->entered_on);
+        $initialValidityMonths = (int) ($this->validity_months ?? 12);
+        $expiresOn = $enteredOn->addMonthsNoOverflow($initialValidityMonths);
+        $hasPreviousAt = false;
+
+        foreach ($admissionDocuments
+            ->filter(fn (TemporaryAdmissionDocument $document) => $document->document_date !== null)
+            ->sortBy(fn (TemporaryAdmissionDocument $document) => ($document->document_date?->format('Y-m-d') ?? '').'-'.str_pad((string) $document->id, 20, '0', STR_PAD_LEFT))
+            ->groupBy(fn (TemporaryAdmissionDocument $document) => $document->document_date?->format('Y-m-d')) as $documentsForDate) {
+            $document = $documentsForDate->last();
+            $documentDate = CarbonImmutable::parse($document->document_date);
+            $validityMonths = (int) ($document->validity_months ?? $initialValidityMonths);
+
+            if ($documentDate->lessThanOrEqualTo($expiresOn)) {
+                if ($hasPreviousAt) {
+                    $expiresOn = $expiresOn->addMonthsNoOverflow($validityMonths);
+                }
+            } else {
+                $period = 1;
+                do {
+                    $expiresOn = $enteredOn->addMonthsNoOverflow($validityMonths * $period);
+                    $period++;
+                } while ($expiresOn->lessThanOrEqualTo($documentDate));
+            }
+
+            $hasPreviousAt = true;
+        }
+
+        return $expiresOn;
     }
 
     protected function casts(): array
     {
         return [
             'entered_on' => 'date:Y-m-d',
+            'validity_months' => 'integer',
             'returned_on' => 'date:Y-m-d',
             'cleared_on' => 'date:Y-m-d',
             'customs_duty_amount' => 'decimal:2',

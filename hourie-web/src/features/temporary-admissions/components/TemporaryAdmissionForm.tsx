@@ -26,8 +26,9 @@ export function TemporaryAdmissionForm({
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [initialDocument, setInitialDocument] = useState<File | null>(null);
-  const [invoiceDocument, setInvoiceDocument] = useState<File | null>(null);
+  const [initialDocuments, setInitialDocuments] = useState<File[]>([]);
+  const [atDocuments, setAtDocuments] = useState<File[]>([]);
+  const [invoiceDocuments, setInvoiceDocuments] = useState<File[]>([]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -44,7 +45,9 @@ export function TemporaryAdmissionForm({
           method: item ? "PATCH" : "POST",
           body: JSON.stringify({
             customs_reference: form.get("customs_reference"),
+            supplier_name: form.get("supplier_name") || null,
             entered_on: form.get("entered_on"),
+            validity_months: Number(form.get("validity_months")),
             notes: form.get("notes") || null,
             equipment_ids: ids,
           }),
@@ -53,16 +56,25 @@ export function TemporaryAdmissionForm({
       let saved = response.data;
       if (!item) {
         createdId = saved.id;
-        for (const [type, file] of [
-          ["initial", initialDocument],
-          ["invoice", invoiceDocument],
-        ] as Array<[AdmissionDocumentType, File | null]>) {
-          if (file?.size) {
+        for (const [type, files, documentDate, validityMonths] of [
+          ["initial", initialDocuments, saved.entered_on, null],
+          [
+            "admission",
+            atDocuments,
+            String(form.get("at_document_date")),
+            Number(form.get("validity_months")),
+          ],
+          ["invoice", invoiceDocuments, null, null],
+        ] as Array<
+          [AdmissionDocumentType, File[], string | null, number | null]
+        >) {
+          for (const file of files) {
             saved = await uploadAdmissionDocument(
               saved.id,
               type,
               file,
-              type === "initial" ? saved.entered_on : null,
+              documentDate,
+              validityMonths,
             );
           }
         }
@@ -105,7 +117,9 @@ export function TemporaryAdmissionForm({
               type="submit"
               form="temporary-admission-form"
               disabled={
-                saving || !ids.length || (!item && initialDocument === null)
+                saving ||
+                !ids.length ||
+                (!item && (!initialDocuments.length || !atDocuments.length))
               }
             >
               {saving ? "Enregistrement…" : "Enregistrer"}
@@ -120,6 +134,13 @@ export function TemporaryAdmissionForm({
           className="insurance-add-form"
           onSubmit={submit}
         >
+          {item && (
+            <input
+              type="hidden"
+              name="validity_months"
+              value={item.validity_months}
+            />
+          )}
           {error && (
             <div className="form-alert" role="alert">
               {error}
@@ -147,6 +168,14 @@ export function TemporaryAdmissionForm({
                   type="date"
                   name="entered_on"
                   defaultValue={item?.entered_on}
+                />
+              </label>
+              <label>
+                Fournisseur
+                <input
+                  name="supplier_name"
+                  placeholder="Nom du fournisseur"
+                  defaultValue={item?.supplier_name ?? ""}
                 />
               </label>
             </div>
@@ -203,19 +232,90 @@ export function TemporaryAdmissionForm({
                 <ActionIcon name="invoice" />
                 Documents
               </h3>
-              <div className="insurance-form-grid">
-                <DocumentUploadDropzone
-                  compact
-                  title={initialDocument?.name ?? "Ajouter le document initial"}
-                  description="Document initial obligatoire · PDF · 10 Mo maximum"
-                  onFiles={(files) => setInitialDocument(files[0] ?? null)}
-                />
-                <DocumentUploadDropzone
-                  compact
-                  title={invoiceDocument?.name ?? "Ajouter une facture"}
-                  description="Facture facultative · PDF · 10 Mo maximum"
-                  onFiles={(files) => setInvoiceDocument(files[0] ?? null)}
-                />
+              <div className="temporary-admission-create-documents">
+                <div className="temporary-admission-upload-group">
+                  <DocumentUploadDropzone
+                    compact
+                    title={selectedFilesTitle(
+                      initialDocuments,
+                      "initial",
+                    )}
+                    description="Un ou plusieurs documents initiaux obligatoires · PDF · 10 Mo maximum par fichier"
+                    onFiles={(files) =>
+                      setInitialDocuments((current) => [
+                        ...current,
+                        ...files,
+                      ])
+                    }
+                  />
+                  <SelectedFiles
+                    files={initialDocuments}
+                    onRemove={(index) =>
+                      setInitialDocuments((current) =>
+                        current.filter((_, candidate) => candidate !== index),
+                      )
+                    }
+                  />
+                </div>
+                <div className="temporary-admission-upload-group">
+                  <div className="temporary-admission-at-fields">
+                    <label>
+                      Date de l’AT
+                      <input
+                        type="date"
+                        name="at_document_date"
+                        required
+                      />
+                    </label>
+                    <label>
+                      Durée de validité (mois)
+                      <input
+                        required
+                        type="number"
+                        name="validity_months"
+                        min={1}
+                        max={120}
+                        step={1}
+                        defaultValue={12}
+                        placeholder="Ex. 3, 6 ou 12"
+                      />
+                    </label>
+                  </div>
+                  <DocumentUploadDropzone
+                    compact
+                    title={selectedFilesTitle(atDocuments, "at")}
+                    description="Un ou plusieurs documents AT obligatoires · PDF · 10 Mo maximum par fichier"
+                    onFiles={(files) =>
+                      setAtDocuments((current) => [...current, ...files])
+                    }
+                  />
+                  <SelectedFiles
+                    files={atDocuments}
+                    onRemove={(index) =>
+                      setAtDocuments((current) =>
+                        current.filter((_, candidate) => candidate !== index),
+                      )
+                    }
+                  />
+                </div>
+                <div className="temporary-admission-upload-group">
+                  <DocumentUploadDropzone
+                    compact
+                    title={selectedFilesTitle(invoiceDocuments, "invoice")}
+                    description="Une ou plusieurs factures facultatives · PDF · 10 Mo maximum par fichier"
+                    onFiles={(files) =>
+                      setInvoiceDocuments((current) => [...current, ...files])
+                    }
+                  />
+                  <SelectedFiles
+                    files={invoiceDocuments}
+                    onRemove={(index) =>
+                      setInvoiceDocuments((current) =>
+                        current.filter((_, candidate) => candidate !== index),
+                      )
+                    }
+                  />
+                </div>
               </div>
             </section>
           )}
@@ -242,4 +342,50 @@ function serialLabel(item: AdmissionEquipment) {
 
 function equipmentLabel(item: AdmissionEquipment) {
   return `${item.name} — ${serialLabel(item)}`;
+}
+
+function selectedFilesTitle(
+  files: File[],
+  kind: "initial" | "at" | "invoice",
+) {
+  if (!files.length)
+    return {
+      initial: "Ajouter des documents initiaux",
+      at: "Ajouter des documents AT",
+      invoice: "Ajouter des factures",
+    }[kind];
+  if (kind === "invoice") {
+    return `${files.length} facture${files.length > 1 ? "s" : ""} sélectionnée${files.length > 1 ? "s" : ""}`;
+  }
+  if (kind === "initial") {
+    return `${files.length} document${files.length > 1 ? "s initiaux" : " initial"} sélectionné${files.length > 1 ? "s" : ""}`;
+  }
+  return `${files.length} document${files.length > 1 ? "s" : ""} AT sélectionné${files.length > 1 ? "s" : ""}`;
+}
+
+function SelectedFiles({
+  files,
+  onRemove,
+}: {
+  files: File[];
+  onRemove: (index: number) => void;
+}) {
+  if (!files.length) return null;
+
+  return (
+    <ul className="temporary-admission-selected-files">
+      {files.map((file, index) => (
+        <li key={`${file.name}-${file.lastModified}-${index}`}>
+          <span>{file.name}</span>
+          <button
+            type="button"
+            aria-label={`Retirer ${file.name}`}
+            onClick={() => onRemove(index)}
+          >
+            <ActionIcon name="close" />
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
 }

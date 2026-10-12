@@ -22,11 +22,14 @@ export async function uploadAdmissionDocument(
   type: AdmissionDocumentType,
   file: File,
   documentDate: string | null = null,
+  validityMonths: number | null = null,
 ) {
   const form = new FormData();
   form.append("document", file);
   form.append("document_type", type);
   if (documentDate) form.append("document_date", documentDate);
+  if (validityMonths !== null)
+    form.append("validity_months", String(validityMonths));
 
   return (
     await apiRequest<{ data: TemporaryAdmission }>(

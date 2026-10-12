@@ -44,14 +44,27 @@ class TemporaryAdmissionController extends Controller
     {
         $perPage = max(1, min(100, $request->integer('per_page', 10)));
 
-        return TemporaryAdmissionResource::collection(
-            TemporaryAdmission::query()
-                ->withCount(['documents', 'documents as renewal_documents_count' => fn ($query) => $query->where('document_type', 'renewal')])
-                ->when($request->filled('search'), fn ($query) => $query->where('customs_reference', 'like', '%'.$request->string('search')->toString().'%'))
-                ->latest('entered_on')
-                ->latest('id')
-                ->paginate($perPage),
-        );
+        $admissions = TemporaryAdmission::query()
+            ->withCount('documents')
+            ->with(['documents' => fn ($query) => $query
+                ->where('document_type', 'admission')
+                ->select(['id', 'temporary_admission_id', 'document_type', 'document_date', 'validity_months'])])
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $search = '%'.$request->string('search')->toString().'%';
+                $query->where(fn ($searchQuery) => $searchQuery
+                    ->where('customs_reference', 'like', $search)
+                    ->orWhere('supplier_name', 'like', $search));
+            })
+            ->latest('entered_on')
+            ->latest('id')
+            ->paginate($perPage);
+
+        $admissions->getCollection()->each(function (TemporaryAdmission $admission): void {
+            $admission->setAttribute('calculated_expires_on', $admission->expiresOn()?->toDateString());
+            $admission->unsetRelation('documents');
+        });
+
+        return TemporaryAdmissionResource::collection($admissions);
     }
 
     public function store(StoreTemporaryAdmissionRequest $request)
@@ -130,24 +143,18 @@ class TemporaryAdmissionController extends Controller
     public function storeDocument(Request $request, TemporaryAdmission $temporaryAdmission)
     {
         abort_unless($request->user()?->role->canManageEquipment(), 403);
-        $validated = $request->validate(['document' => ['required', 'file', 'mimes:pdf', 'max:10240'], 'document_type' => ['required', Rule::in(TemporaryAdmissionDocument::TYPES)], 'document_date' => ['nullable', 'date', 'required_if:document_type,renewal']]);
-        if ($validated['document_type'] === 'renewal' && in_array($temporaryAdmission->status, ['returned', 'cleared'], true)) {
-            throw ValidationException::withMessages(['document' => ['Une admission clôturée ne peut plus être renouvelée.']]);
+        $validated = $request->validate(['document' => ['required', 'file', 'mimes:pdf', 'max:10240'], 'document_type' => ['required', Rule::in(TemporaryAdmissionDocument::TYPES)], 'document_date' => ['nullable', 'date', 'required_if:document_type,initial,admission'], 'validity_months' => ['nullable', 'integer', 'min:1', 'max:120', 'required_if:document_type,admission']]);
+        if ($validated['document_type'] === 'admission' && in_array($temporaryAdmission->status, ['returned', 'cleared'], true)) {
+            throw ValidationException::withMessages(['document' => ['Une admission clôturée ne peut plus recevoir de nouvel AT.']]);
         }
-        if ($validated['document_type'] === 'initial' && $temporaryAdmission->documents()->where('document_type', 'initial')->exists()) {
-            throw ValidationException::withMessages(['document' => ['Le document initial est déjà enregistré.']]);
-        }
-        if (($validated['document_type'] ?? null) === 'renewal' && CarbonImmutable::parse($validated['document_date'])->isBefore($temporaryAdmission->entered_on)) {
-            throw ValidationException::withMessages(['document_date' => ['La date de renouvellement doit être postérieure à la date d’entrée.']]);
+        if (($validated['document_type'] ?? null) === 'admission' && CarbonImmutable::parse($validated['document_date'])->isBefore($temporaryAdmission->entered_on)) {
+            throw ValidationException::withMessages(['document_date' => ['La date de l’AT doit être postérieure ou égale à la date d’entrée.']]);
         }
         $file = $request->file('document');
         $disk = (string) config('filesystems.equipment_documents_disk');
         $path = $file->store("temporary-admissions/{$temporaryAdmission->id}", $disk);
-        $document = $temporaryAdmission->documents()->create(['uploaded_by_user_id' => $request->user()->id, 'document_type' => $validated['document_type'], 'document_date' => $validated['document_date'] ?? null, 'disk' => $disk, 'path' => $path, 'original_name' => $file->getClientOriginalName(), 'mime_type' => $file->getMimeType() ?? 'application/pdf', 'size_bytes' => $file->getSize()]);
-        if ($document->document_type === 'renewal') {
-            $temporaryAdmission->update(['status' => 'renewed']);
-        }
-        $temporaryAdmission->changes()->create(['actor_user_id' => $request->user()->id, 'action' => $document->document_type === 'renewal' ? 'renewed' : 'document_added', 'new_values' => ['document_id' => $document->id, 'document_type' => $document->document_type, 'name' => $document->original_name, 'document_date' => $document->document_date?->format('Y-m-d')], 'occurred_at' => now()]);
+        $document = $temporaryAdmission->documents()->create(['uploaded_by_user_id' => $request->user()->id, 'document_type' => $validated['document_type'], 'document_date' => $validated['document_date'] ?? null, 'validity_months' => $validated['validity_months'] ?? null, 'disk' => $disk, 'path' => $path, 'original_name' => $file->getClientOriginalName(), 'mime_type' => $file->getMimeType() ?? 'application/pdf', 'size_bytes' => $file->getSize()]);
+        $temporaryAdmission->changes()->create(['actor_user_id' => $request->user()->id, 'action' => 'document_added', 'new_values' => ['document_id' => $document->id, 'document_type' => $document->document_type, 'name' => $document->original_name, 'document_date' => $document->document_date?->format('Y-m-d'), 'validity_months' => $document->validity_months], 'occurred_at' => now()]);
 
         return response()->json(['data' => (new TemporaryAdmissionResource($temporaryAdmission->fresh()->load(['equipment', 'documents', 'changes.actor:id,name'])))->resolve()], 201);
     }
@@ -165,11 +172,7 @@ class TemporaryAdmissionController extends Controller
         abort_unless($document->temporary_admission_id === $temporaryAdmission->id, 404);
         $temporaryAdmission->changes()->create(['actor_user_id' => $request->user()->id, 'action' => 'document_deleted', 'previous_values' => ['document_id' => $document->id, 'document_type' => $document->document_type, 'name' => $document->original_name], 'new_values' => [], 'occurred_at' => now()]);
         Storage::disk($document->disk)->delete($document->path);
-        $wasRenewal = $document->document_type === 'renewal';
         $document->delete();
-        if ($wasRenewal && in_array($temporaryAdmission->status, ['active', 'renewed'], true) && ! $temporaryAdmission->documents()->where('document_type', 'renewal')->exists()) {
-            $temporaryAdmission->update(['status' => 'active']);
-        }
 
         return response()->noContent();
     }
@@ -191,7 +194,9 @@ class TemporaryAdmissionController extends Controller
     {
         return [
             'customs_reference' => $temporaryAdmission->customs_reference,
+            'supplier_name' => $temporaryAdmission->supplier_name,
             'entered_on' => $temporaryAdmission->entered_on?->format('Y-m-d'),
+            'validity_months' => $temporaryAdmission->validity_months,
             'status' => $temporaryAdmission->status,
             'notes' => $temporaryAdmission->notes,
             'equipment_ids' => array_map('intval', $equipmentIds),

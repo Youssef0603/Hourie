@@ -13,7 +13,9 @@ vi.mock("../../../shared/api/http", async (importOriginal) => ({
 const admission = {
   id: 1,
   customs_reference: "S1445",
+  supplier_name: "SinoTruk International",
   entered_on: "2026-10-06",
+  validity_months: 12,
   expires_on: "2027-10-06",
   status: "active",
   returned_on: null,
@@ -124,6 +126,46 @@ describe("TemporaryAdmissionsPage", () => {
     expect(screen.getByText("Perkins 250 KVA")).toBeVisible();
     expect(screen.getByText("SinoTruck Howo 17m3 HOWO 336")).toBeVisible();
     expect(screen.queryByText(/^8$/)).not.toBeInTheDocument();
+  });
+
+  it("accepts several initial, AT, and invoice documents while creating an admission", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<TemporaryAdmissionsPage canManage />);
+    await screen.findByText("S1445");
+
+    await user.click(
+      screen.getByRole("button", { name: "Ajouter une admission temporaire" }),
+    );
+
+    const fileInputs = container.querySelectorAll<HTMLInputElement>(
+      'input[type="file"]',
+    );
+    await user.upload(fileInputs[0], [
+      new File(["initial-1"], "initial-page-1.pdf", {
+        type: "application/pdf",
+      }),
+      new File(["initial-2"], "initial-page-2.pdf", {
+        type: "application/pdf",
+      }),
+    ]);
+    await user.upload(fileInputs[1], [
+      new File(["at-1"], "AT-page-1.pdf", { type: "application/pdf" }),
+      new File(["at-2"], "AT-page-2.pdf", { type: "application/pdf" }),
+    ]);
+    await user.upload(fileInputs[2], [
+      new File(["invoice-1"], "facture-1.pdf", {
+        type: "application/pdf",
+      }),
+      new File(["invoice-2"], "facture-2.pdf", {
+        type: "application/pdf",
+      }),
+    ]);
+
+    expect(screen.getByText("2 documents initiaux sélectionnés")).toBeVisible();
+    expect(screen.getByText("2 documents AT sélectionnés")).toBeVisible();
+    expect(screen.getByText("2 factures sélectionnées")).toBeVisible();
+    expect(screen.getByText("AT-page-1.pdf")).toBeVisible();
+    expect(screen.getByText("facture-2.pdf")).toBeVisible();
   });
 
   it("matches covered equipment without requiring literal spacing", async () => {

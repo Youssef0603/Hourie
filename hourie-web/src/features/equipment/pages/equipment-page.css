@@ -6690,6 +6690,74 @@ html[dir="rtl"] .maintenance-form-grid select {
   gap: 0.65rem;
 }
 
+.temporary-admission-upload-group {
+  display: grid;
+  align-content: start;
+  gap: 0.45rem;
+}
+
+.temporary-admission-create-documents {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.85rem;
+}
+
+.temporary-admission-at-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+@media (max-width: 560px) {
+  .temporary-admission-at-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.temporary-admission-selected-files {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.temporary-admission-selected-files li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-width: 0;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--control-radius);
+  color: var(--color-text-muted);
+  background: var(--color-surface-soft);
+  font-size: 0.68rem;
+}
+
+.temporary-admission-selected-files li span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.temporary-admission-selected-files li button {
+  display: grid;
+  width: 1.35rem;
+  height: 1.35rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 0;
+  color: var(--color-primary);
+  background: transparent;
+}
+
+.temporary-admission-selected-files li svg {
+  width: 0.8rem;
+  height: 0.8rem;
+}
+
 .insurance-add-form label {
   display: grid;
   gap: 0.3rem;
@@ -7471,12 +7539,12 @@ html[dir="rtl"] .insurance-filter-content .searchable-select-input {
   font-size: 0.72rem;
 }
 
-.temporary-admission-renewal-form {
+.temporary-admission-document-form {
   display: grid;
   gap: 0.55rem;
 }
 
-.temporary-admission-renewal-form > label {
+.temporary-admission-document-form > label {
   display: grid;
   gap: 0.3rem;
   color: var(--color-text-strong);
@@ -7484,7 +7552,7 @@ html[dir="rtl"] .insurance-filter-content .searchable-select-input {
   font-weight: 700;
 }
 
-.temporary-admission-renewal-form input {
+.temporary-admission-document-form input {
   width: 100%;
   height: var(--control-height);
   min-height: var(--control-height);
@@ -7497,13 +7565,13 @@ html[dir="rtl"] .insurance-filter-content .searchable-select-input {
   font-size: 0.72rem;
 }
 
-.temporary-admission-renewal-form input:focus {
+.temporary-admission-document-form input:focus {
   outline: 0;
   border-color: var(--color-primary);
   box-shadow: 0 0 0 3px var(--color-primary-soft);
 }
 
-.temporary-admission-renewal-form .temporary-admission-document-action {
+.temporary-admission-document-form .temporary-admission-document-action {
   display: inline-flex;
   width: max-content;
   height: 2rem !important;

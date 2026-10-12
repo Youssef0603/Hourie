@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Storage;
 
 uses(LazilyRefreshDatabase::class);
 
-it('sends an AT reminder 30 days before its anniversary expiry only to settings recipients', function () {
+it('sends an AT reminder 30 days before the latest AT expiry only to settings recipients', function () {
     Mail::fake();
     Storage::fake('equipment-documents');
     $recipient = Employee::factory()->create(['email' => 'finance@example.test', 'is_active' => true]);
@@ -25,11 +25,11 @@ it('sends an AT reminder 30 days before its anniversary expiry only to settings 
     $admission = TemporaryAdmission::query()->create([
         'customs_reference' => 'S1445',
         'entered_on' => '2021-10-12',
-        'status' => 'renewed',
+        'status' => 'active',
     ]);
     $admission->documents()->create([
-        'document_type' => 'renewal',
-        'document_date' => '2022-10-08',
+        'document_type' => 'admission',
+        'document_date' => '2022-10-13',
         'disk' => 'equipment-documents',
         'path' => "temporary-admissions/{$admission->id}/renewal.pdf",
         'original_name' => 'Renouvellement S1445.pdf',
@@ -84,7 +84,7 @@ it('does not remind for an AT that has been returned', function () {
     Mail::assertNothingSent();
 });
 
-it('repeats weekly before and after expiry until a renewal changes the expiry', function () {
+it('repeats weekly before and after expiry until a newer AT changes the expiry', function () {
     Mail::fake();
     ApplicationSetting::query()->create(['key' => 'reminder_recipients', 'value' => ['finance@example.test']]);
     $admission = TemporaryAdmission::query()->create([
@@ -113,7 +113,7 @@ it('repeats weekly before and after expiry until a renewal changes the expiry', 
     ]);
 
     $admission->documents()->create([
-        'document_type' => 'renewal',
+        'document_type' => 'admission',
         'document_date' => '2026-11-07',
         'disk' => 'equipment-documents',
         'path' => "temporary-admissions/{$admission->id}/renewal-2026.pdf",

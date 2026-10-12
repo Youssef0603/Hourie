@@ -19,7 +19,7 @@ class SendTemporaryAdmissionExpiryReminders
         foreach (TemporaryAdmission::query()
             ->whereNotIn('status', ['returned', 'cleared'])
             ->whereNotNull('entered_on')
-            ->with('documents:id,temporary_admission_id,document_type')
+            ->with('documents:id,temporary_admission_id,document_type,document_date,validity_months')
             ->lazyById() as $admission) {
             if ($this->sendForAdmission($admission, $today)) {
                 $sent++;

@@ -1,8 +1,9 @@
-export type AdmissionDocumentType = "initial" | "renewal" | "invoice";
+export type AdmissionDocumentType = "initial" | "admission" | "invoice";
 export type AdmissionDocument = {
   id: number;
   document_type: AdmissionDocumentType;
   document_date: string | null;
+  validity_months: number | null;
   original_name: string;
   size_bytes: number;
   url: string;
@@ -25,9 +26,11 @@ export type AdmissionEquipment = {
 export type TemporaryAdmission = {
   id: number;
   customs_reference: string;
+  supplier_name: string | null;
   entered_on: string;
+  validity_months: number;
   expires_on: string;
-  status: "active" | "renewed" | "returned" | "cleared" | "expired";
+  status: "active" | "returned" | "cleared" | "expired";
   returned_on: string | null;
   closure_reason: string | null;
   cleared_on: string | null;
