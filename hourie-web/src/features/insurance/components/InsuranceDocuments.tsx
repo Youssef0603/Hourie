@@ -1,10 +1,11 @@
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 import {
   ApiError,
   apiRequest,
   getAuthenticatedFileObjectUrl,
 } from "../../../shared/api/http";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
+import { DocumentUploadDropzone } from "../../../shared/components/DocumentUploadDropzone";
 import { EmptyState } from "../../../shared/components/EmptyState";
 import { LoadingSpinner } from "../../../shared/components/LoadingSpinner";
 import { PaginatedDocumentList } from "../../../shared/components/PaginatedDocumentList";
@@ -38,10 +39,8 @@ export function InsuranceDocuments({
     window.open(url, "_blank", "noopener,noreferrer");
   }
 
-  async function upload(event: FormEvent<HTMLInputElement>) {
-    const files = Array.from(event.currentTarget.files ?? []);
+  async function upload(files: File[]) {
     if (!files.length) return;
-    const input = event.currentTarget;
     setError(null);
     setUploading(true);
     try {
@@ -67,7 +66,6 @@ export function InsuranceDocuments({
     } finally {
       setUploading(false);
       setUploadProgress(null);
-      input.value = "";
     }
   }
 
@@ -105,6 +103,15 @@ export function InsuranceDocuments({
         <div className="form-alert" role="alert">
           {error}
         </div>
+      )}
+      {!readOnly && (
+        <DocumentUploadDropzone
+          compact
+          disabled={uploading}
+          title={uploading ? uploadLabel : "Ajouter des documents"}
+          description="Contrats ou attestations · PDF uniquement · 10 Mo maximum par fichier"
+          onFiles={(files) => void upload(files)}
+        />
       )}
       {documents.length ? (
         <PaginatedDocumentList
@@ -149,17 +156,6 @@ export function InsuranceDocuments({
           description="Les contrats et attestations associés apparaîtront ici."
         />
       )}
-      {!readOnly && <label className="detail-upload-button insurance-document-upload">
-        <ActionIcon name="add" />
-        <span>{uploading ? uploadLabel : "Ajouter des documents"}</span>
-        <input
-          type="file"
-          accept="application/pdf,.pdf"
-          multiple
-          disabled={uploading}
-          onChange={(event) => void upload(event)}
-        />
-      </label>}
     </section>
   );
 }

@@ -1,4 +1,4 @@
-import { useRef, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { fr } from '../../../i18n/fr'
 import { ApiError } from '../../../shared/api/http'
 import { createEquipment, uploadEquipmentImages, uploadEquipmentInvoices } from '../api'
@@ -6,6 +6,7 @@ import { locationOptionLabel } from '../locationLabel'
 import type { Equipment, EquipmentFilterOptions } from '../types'
 import { catalogLabel, catalogOptions } from '../catalogs'
 import { ActionIcon } from '../../../shared/components/ActionIcon'
+import { DocumentUploadDropzone, ImageUploadDropzone } from '../../../shared/components/DocumentUploadDropzone'
 import { SearchableSelect } from '../../../shared/components/SearchableSelect'
 import { InventoryFormSection } from './AssetForm'
 
@@ -36,8 +37,6 @@ export function AddGeneratorForm({ options, initialProjectId, onCreated, formId 
   const [photos, setPhotos] = useState<File[]>([])
   const [invoices, setInvoices] = useState<File[]>([])
   const [createdEquipment, setCreatedEquipment] = useState<Equipment | null>(null)
-  const photoInput = useRef<HTMLInputElement>(null)
-  const invoiceInput = useRef<HTMLInputElement>(null)
   const physicalLocationOptions = options.locations.filter((location) => form.project_id
     ? location.parent_id !== null && String(location.project_id) === form.project_id
     : location.location_type === 'company_location' && location.project_id === null)
@@ -134,10 +133,10 @@ export function AddGeneratorForm({ options, initialProjectId, onCreated, formId 
       </div></InventoryFormSection>
       <InventoryFormSection title={fr.equipment.observations} icon="note"><div className="maintenance-form-grid"><label className="field-wide"><span>{fr.equipment.observations}</span><textarea rows={3} value={form.observations} onChange={(event) => update('observations', event.target.value)} /></label></div></InventoryFormSection>
       <InventoryFormSection title={fr.assets.photos} icon="photo"><div className="maintenance-form-grid">
-        <div className="generator-photo-field field-wide"><span>{fr.images.optionalTitle}</span><input ref={photoInput} hidden multiple accept="image/jpeg,image/png,image/webp" type="file" onChange={(event) => setPhotos(Array.from(event.target.files ?? []))} /><button type="button" onClick={() => photoInput.current?.click()}><ActionIcon name="upload" /><span>{photos.length > 0 ? fr.images.selected(photos.length) : fr.images.addOnCreate}</span><small>{fr.images.formats}</small></button>{photos.length > 0 && <div className="selected-photo-list">{photos.map((photo) => <span key={`${photo.name}-${photo.lastModified}`}>{photo.name}</span>)}</div>}</div>
+        <div className="field-wide"><ImageUploadDropzone compact title={photos.length > 0 ? fr.images.selected(photos.length) : fr.images.add} description={fr.images.formats} onFiles={(files) => setPhotos((current) => [...current, ...files])} />{photos.length > 0 && <div className="selected-photo-list">{photos.map((photo) => <span key={`${photo.name}-${photo.lastModified}`}>{photo.name}</span>)}</div>}</div>
       </div></InventoryFormSection>
       <InventoryFormSection title={fr.assets.invoices} icon="invoice"><div className="maintenance-form-grid">
-        <div className="generator-photo-field field-wide"><span>{fr.invoices.title}</span><input ref={invoiceInput} hidden multiple accept="application/pdf,.pdf" type="file" onChange={(event) => setInvoices(Array.from(event.target.files ?? []))} /><button type="button" onClick={() => invoiceInput.current?.click()}><ActionIcon name="upload" /><span>{invoices.length > 0 ? fr.invoices.count(invoices.length) : fr.invoices.add}</span><small>{fr.invoices.formats}</small></button>{invoices.length > 0 && <div className="selected-photo-list">{invoices.map((invoice) => <span key={`${invoice.name}-${invoice.lastModified}`}>{invoice.name}</span>)}</div>}</div>
+        <div className="field-wide"><DocumentUploadDropzone compact title={invoices.length > 0 ? fr.invoices.count(invoices.length) : fr.invoices.add} description={fr.invoices.formats} onFiles={(files) => setInvoices((current) => [...current, ...files])} />{invoices.length > 0 && <div className="selected-photo-list">{invoices.map((invoice) => <span key={`${invoice.name}-${invoice.lastModified}`}>{invoice.name}</span>)}</div>}</div>
       </div></InventoryFormSection></div>
     </form>
   )

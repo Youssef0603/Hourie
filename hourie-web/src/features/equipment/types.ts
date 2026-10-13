@@ -122,6 +122,7 @@ export type Equipment = EquipmentSummary & {
   changes: EquipmentChange[];
   images: EquipmentImage[];
   invoices: EquipmentInvoice[];
+  vehicle_documents: EquipmentVehicleDocument[];
   insurance_policies: EquipmentInsurancePolicy[];
   temporary_admissions: EquipmentTemporaryAdmission[];
 };
@@ -172,6 +173,16 @@ export type EquipmentInvoice = {
   created_at: string;
 };
 
+export type EquipmentVehicleDocument = {
+  id: number;
+  url: string;
+  original_name: string;
+  mime_type: string;
+  size_bytes: number;
+  uploaded_by: NamedReference | null;
+  created_at: string;
+};
+
 export type EquipmentChange = {
   id: number;
   type:
@@ -190,6 +201,8 @@ export type EquipmentChange = {
     | "image_deleted"
     | "invoice_added"
     | "invoice_deleted"
+    | "vehicle_document_added"
+    | "vehicle_document_deleted"
     | "archived";
   source: "import" | "manual" | "transfer" | "maintenance";
   actor: NamedReference | null;

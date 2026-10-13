@@ -6,6 +6,7 @@ import type {
   EquipmentImportResult,
   EquipmentImage,
   EquipmentInvoice,
+  EquipmentVehicleDocument,
   EquipmentListResponse,
   CatalogOption,
   EquipmentMaintenance,
@@ -193,6 +194,37 @@ export async function deleteEquipmentInvoice(equipmentId: number, invoiceId: num
 
 export async function downloadEquipmentInvoice(invoice: EquipmentInvoice): Promise<void> {
   await downloadAuthenticatedFile(invoice.url, invoice.original_name)
+}
+
+export async function uploadEquipmentVehicleDocument(
+  equipmentId: number,
+  document: File,
+): Promise<EquipmentVehicleDocument> {
+  await initializeCsrfProtection()
+  const form = new FormData()
+  form.append('document', document)
+
+  return (await apiRequest<{ data: EquipmentVehicleDocument }>(`/api/v1/equipment/${equipmentId}/vehicle-documents`, {
+    method: 'POST',
+    body: form,
+  })).data
+}
+
+export async function deleteEquipmentVehicleDocument(equipmentId: number, documentId: number): Promise<void> {
+  await initializeCsrfProtection()
+  await apiRequest<void>(`/api/v1/equipment/${equipmentId}/vehicle-documents/${documentId}`, { method: 'DELETE' })
+}
+
+export async function downloadEquipmentVehicleDocument(document: EquipmentVehicleDocument): Promise<void> {
+  await downloadAuthenticatedFile(document.url, document.original_name)
+}
+
+export function previewEquipmentVehicleDocument(document: EquipmentVehicleDocument): boolean {
+  const url = new URL(document.url, window.location.origin)
+  url.searchParams.set('preview', '1')
+  const previewWindow = window.open(url.toString(), '_blank')
+  if (previewWindow) previewWindow.opener = null
+  return previewWindow !== null
 }
 
 export function previewEquipmentInvoice(invoice: EquipmentInvoice): boolean {

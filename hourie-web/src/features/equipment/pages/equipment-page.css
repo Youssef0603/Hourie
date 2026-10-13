@@ -4543,6 +4543,27 @@ html[dir="rtl"] .catalog-copy small {
   cursor: pointer;
 }
 
+.equipment-vehicle-documents {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.equipment-vehicle-documents .paginated-document-list,
+.equipment-vehicle-documents .invoice-list {
+  margin-top: 0;
+}
+
+@media (max-width: 640px) {
+  .equipment-vehicle-documents .invoice-list article {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .equipment-vehicle-documents .invoice-preview-button {
+    flex-basis: 100%;
+  }
+}
+
 .invoice-preview-button:hover strong {
   color: var(--color-primary);
   text-decoration: underline;

@@ -55,6 +55,18 @@ class EquipmentResource extends JsonResource
                 ],
                 'created_at' => $invoice->created_at->toISOString(),
             ])),
+            'vehicle_documents' => $this->whenLoaded('vehicleDocuments', fn () => $this->vehicleDocuments->map(fn ($document) => [
+                'id' => $document->id,
+                'url' => route('equipment.vehicle-documents.show', [$this->resource, $document], false),
+                'original_name' => $document->original_name,
+                'mime_type' => $document->mime_type,
+                'size_bytes' => $document->size_bytes,
+                'uploaded_by' => $document->uploader === null ? null : [
+                    'id' => $document->uploader->id,
+                    'name' => $document->uploader->name,
+                ],
+                'created_at' => $document->created_at->toISOString(),
+            ])),
             'insurance_policies' => $this->whenLoaded('insurancePolicies', fn () => $this->insurancePolicies->map(fn ($policy) => [
                 'id' => $policy->id,
                 'policy_number' => $policy->policy_number,

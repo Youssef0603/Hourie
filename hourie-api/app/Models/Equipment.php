@@ -94,6 +94,11 @@ class Equipment extends Model
         return $this->hasMany(EquipmentInvoice::class)->latest()->latest('id');
     }
 
+    public function vehicleDocuments(): HasMany
+    {
+        return $this->hasMany(EquipmentVehicleDocument::class)->latest()->latest('id');
+    }
+
     public function inspectionReminders(): HasMany
     {
         return $this->hasMany(EquipmentInspectionReminder::class);

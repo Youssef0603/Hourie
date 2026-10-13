@@ -1,7 +1,8 @@
-import { useRef, useState, type ChangeEvent, type DragEvent, type KeyboardEvent } from 'react'
+import { useState } from 'react'
 import { fr } from '../../../i18n/fr'
 import { ApiError } from '../../../shared/api/http'
 import { ActionIcon } from '../../../shared/components/ActionIcon'
+import { ImageUploadDropzone } from '../../../shared/components/DocumentUploadDropzone'
 import { LoadingSpinner } from '../../../shared/components/LoadingSpinner'
 import { Modal } from '../../../shared/components/Modal'
 import { EmptyState } from '../../../shared/components/EmptyState'
@@ -17,12 +18,10 @@ type EquipmentImagesProps = {
 }
 
 export function EquipmentImages({ equipment, canManage, onChanged, title = fr.images.title, hideHeading = false }: EquipmentImagesProps) {
-  const input = useRef<HTMLInputElement>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [deletingId, setDeletingId] = useState<number | null>(null)
   const [preview, setPreview] = useState<EquipmentImage | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [isDragging, setIsDragging] = useState(false)
 
   async function uploadFiles(files: File[]) {
     if (files.length === 0) return
@@ -36,24 +35,7 @@ export function EquipmentImages({ equipment, canManage, onChanged, title = fr.im
       setError(caught instanceof ApiError ? Object.values(caught.errors)[0]?.[0] ?? fr.images.uploadError : fr.images.uploadError)
     } finally {
       setIsUploading(false)
-      if (input.current) input.current.value = ''
     }
-  }
-
-  function upload(event: ChangeEvent<HTMLInputElement>) {
-    void uploadFiles(Array.from(event.target.files ?? []))
-  }
-
-  function drop(event: DragEvent<HTMLDivElement>) {
-    event.preventDefault()
-    setIsDragging(false)
-    if (!isUploading) void uploadFiles(Array.from(event.dataTransfer.files))
-  }
-
-  function openPicker(event?: KeyboardEvent<HTMLDivElement>) {
-    if (event && event.key !== 'Enter' && event.key !== ' ') return
-    event?.preventDefault()
-    if (!isUploading) input.current?.click()
   }
 
   async function remove(image: EquipmentImage) {
@@ -74,10 +56,8 @@ export function EquipmentImages({ equipment, canManage, onChanged, title = fr.im
   return <section className="equipment-images-section">
     {!hideHeading && <div className="section-heading-row"><div><h3>{title}</h3><p>{fr.images.count(equipment.images.length)}</p></div></div>}
     {error && <div className="form-alert" role="alert">{error}</div>}
-    {canManage && <input ref={input} hidden multiple accept="image/jpeg,image/png,image/webp" type="file" onChange={upload} />}
-    {canManage && !hideHeading && <div className={`equipment-image-dropzone${isDragging ? ' is-dragging' : ''}${isUploading ? ' is-uploading' : ''}`} role="button" tabIndex={0} aria-disabled={isUploading} onClick={() => openPicker()} onKeyDown={openPicker} onDragEnter={(event) => { event.preventDefault(); setIsDragging(true) }} onDragOver={(event) => event.preventDefault()} onDragLeave={(event) => { if (event.currentTarget === event.target) setIsDragging(false) }} onDrop={drop}>{isUploading ? <LoadingSpinner label={fr.images.uploading} /> : <><span className="equipment-dropzone-icon"><ActionIcon name="upload" /></span><strong>{fr.images.dropPrompt}</strong><span>{fr.images.formats}</span><button type="button" onClick={(event) => { event.stopPropagation(); input.current?.click() }}>{fr.images.browse}</button></>}</div>}
-    {hideHeading && equipment.images.length === 0 ? <EmptyState compact icon="photo" title={fr.images.empty} description="Les photos ajoutées à cet actif apparaîtront ici." action={canManage && <button className="detail-upload-button" type="button" disabled={isUploading} onClick={() => input.current?.click()}><ActionIcon name="add" />{isUploading ? <LoadingSpinner compact label={fr.images.uploading} /> : fr.images.addOne}</button>} /> : <>
-      {hideHeading && canManage && <div className="detail-section-actions"><button className="detail-upload-button" type="button" disabled={isUploading} onClick={() => input.current?.click()}><ActionIcon name="add" />{isUploading ? <LoadingSpinner compact label={fr.images.uploading} /> : fr.images.addOne}</button></div>}
+    {canManage && <ImageUploadDropzone compact title={isUploading ? fr.images.uploading : fr.images.add} description={fr.images.formats} disabled={isUploading} onFiles={(files) => void uploadFiles(files)} />}
+    {hideHeading && equipment.images.length === 0 ? <EmptyState compact icon="photo" title={fr.images.empty} description="Les photos ajoutées à cet actif apparaîtront ici." /> : <>
       {equipment.images.length > 0 ? <div className="equipment-image-grid">{equipment.images.map((image) => <article key={image.id}><button className="equipment-image-preview" type="button" onClick={() => setPreview(image)}><img src={image.url} alt={image.original_name} loading="lazy" /></button>{canManage && <button className="equipment-image-delete" type="button" disabled={deletingId === image.id} onClick={() => remove(image)} aria-label={fr.common.delete}>{deletingId === image.id ? <LoadingSpinner compact label={fr.common.loading} /> : <ActionIcon name="close" />}</button>}</article>)}</div> : !canManage && <EmptyState compact icon="photo" title={fr.images.empty} />}
     </>}
     {preview && <Modal title={preview.original_name} size="wide" onClose={() => setPreview(null)}><img className="equipment-image-full" src={preview.url} alt={preview.original_name} /></Modal>}

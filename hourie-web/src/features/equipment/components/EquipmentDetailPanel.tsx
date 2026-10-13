@@ -14,6 +14,7 @@ import { EquipmentEditDrawer } from "./EquipmentEditDrawer";
 import { EquipmentAuditHistory, GeneratorTransferHistory } from "./EquipmentHistoryDetails";
 import { EquipmentImages } from "./EquipmentImages";
 import { EquipmentInvoices } from "./EquipmentInvoices";
+import { EquipmentVehicleDocuments } from "./EquipmentVehicleDocuments";
 import {
   AssetSpecificationDetails,
   EquipmentAssignmentDetails,
@@ -152,6 +153,16 @@ export function EquipmentDetailPanel({
                   readOnly={readOnly}
                   onOpenRecord={setRelatedRecord}
                 />
+
+                {categoryCode === "car" && (
+                  <EquipmentDetailSection title={fr.vehicleDocuments.title} icon="invoice" defaultOpen>
+                    <EquipmentVehicleDocuments
+                      equipment={selected}
+                      canManage={canManageEquipment}
+                      onChanged={onRefreshSelected}
+                    />
+                  </EquipmentDetailSection>
+                )}
 
                 {assetDefinition && (
                   <EquipmentDetailSection title={fr.assets.specifications} icon="specifications" defaultOpen className="detail-characteristics">

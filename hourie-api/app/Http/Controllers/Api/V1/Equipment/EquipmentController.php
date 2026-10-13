@@ -69,6 +69,7 @@ class EquipmentController extends Controller
             'maintenances.createdBy',
             'images.uploader',
             'invoices.uploader',
+            'vehicleDocuments.uploader',
             'insurancePolicies' => fn ($query) => $query
                 ->where('insurance_type', 'equipment')
                 ->with('documents')

@@ -9,16 +9,22 @@ type DocumentUploadDropzoneProps = {
   onFiles: (files: File[]) => void;
 };
 
-export function DocumentUploadDropzone({ title, description = "PDF uniquement · 10 Mo maximum par fichier", compact = false, disabled = false, onFiles }: DocumentUploadDropzoneProps) {
+type FileUploadDropzoneProps = DocumentUploadDropzoneProps & {
+  accept: string;
+  maxSizeMb: number;
+  validateType: (file: File) => string | null;
+};
+
+function FileUploadDropzone({ title, description, compact = false, disabled = false, onFiles, accept, maxSizeMb, validateType }: FileUploadDropzoneProps) {
   const input = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [validationError, setValidationError] = useState("");
 
   function selectFiles(files: File[]) {
-    const invalidType = files.find((file) => file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf"));
-    const oversized = files.find((file) => file.size > 10 * 1024 * 1024);
-    if (invalidType) setValidationError(`« ${invalidType.name} » n’est pas un fichier PDF.`);
-    else if (oversized) setValidationError(`« ${oversized.name} » dépasse la limite de 10 Mo.`);
+    const typeError = files.map(validateType).find((error) => error !== null);
+    const oversized = files.find((file) => file.size > maxSizeMb * 1024 * 1024);
+    if (typeError) setValidationError(typeError);
+    else if (oversized) setValidationError(`« ${oversized.name} » dépasse la limite de ${maxSizeMb} Mo.`);
     else {
       setValidationError("");
       if (!disabled && files.length > 0) onFiles(files);
@@ -38,10 +44,35 @@ export function DocumentUploadDropzone({ title, description = "PDF uniquement ·
     selectFiles(Array.from(event.dataTransfer.files));
   }
 
-  return <><input ref={input} hidden type="file" accept="application/pdf,.pdf" multiple onChange={(event) => selectFiles(Array.from(event.target.files ?? []))} />
+  return <><input ref={input} hidden type="file" accept={accept} multiple onChange={(event) => selectFiles(Array.from(event.target.files ?? []))} />
     <div className={`document-upload-dropzone${compact ? " compact" : ""}${isDragging ? " is-dragging" : ""}${disabled ? " is-disabled" : ""}`} role="button" tabIndex={disabled ? -1 : 0} aria-disabled={disabled} onClick={() => openPicker()} onKeyDown={openPicker} onDragEnter={(event) => { event.preventDefault(); setIsDragging(true); }} onDragOver={(event) => event.preventDefault()} onDragLeave={(event) => { if (event.currentTarget === event.target) setIsDragging(false); }} onDrop={drop}>
       <ActionIcon name="upload" /><strong>{title}</strong><span>{description}</span>
     </div>
     {validationError && <p className="form-alert" role="alert">{validationError}</p>}
   </>;
+}
+
+export function DocumentUploadDropzone(props: DocumentUploadDropzoneProps) {
+  return <FileUploadDropzone
+    {...props}
+    description={props.description ?? "PDF uniquement · 10 Mo maximum par fichier"}
+    accept="application/pdf,.pdf"
+    maxSizeMb={10}
+    validateType={(file) => file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")
+      ? null
+      : `« ${file.name} » n’est pas un fichier PDF.`}
+  />;
+}
+
+export function ImageUploadDropzone(props: DocumentUploadDropzoneProps) {
+  return <FileUploadDropzone
+    {...props}
+    description={props.description ?? "JPG, PNG ou WebP · 5 Mo maximum par photo"}
+    accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+    maxSizeMb={5}
+    validateType={(file) => ["image/jpeg", "image/png", "image/webp"].includes(file.type)
+      || /\.(jpe?g|png|webp)$/i.test(file.name)
+      ? null
+      : `« ${file.name} » n’est pas une image JPG, PNG ou WebP.`}
+  />;
 }
