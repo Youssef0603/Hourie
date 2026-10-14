@@ -92,7 +92,7 @@ class EquipmentResource extends JsonResource
                     'id' => $admission->id,
                     'customs_reference' => $admission->customs_reference,
                     'entered_on' => $admission->entered_on?->format('Y-m-d'),
-                    'validity_months' => $admission->validity_months,
+                    'validity_months' => 12,
                     'expires_on' => $expiresOn?->format('Y-m-d'),
                     'status' => $status,
                     'cleared_on' => $admission->cleared_on?->format('Y-m-d'),

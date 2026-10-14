@@ -22,7 +22,7 @@ class TemporaryAdmissionResource extends JsonResource
             'customs_reference' => $this->customs_reference,
             'supplier_name' => $this->supplier_name,
             'entered_on' => $this->entered_on?->format('Y-m-d'),
-            'validity_months' => $this->validity_months,
+            'validity_months' => 12,
             'expires_on' => $expiresOn?->format('Y-m-d'),
             'status' => $status,
             'returned_on' => $this->returned_on?->format('Y-m-d'),

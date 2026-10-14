@@ -20,6 +20,8 @@ import {
   getBondStatus,
 } from "../bondDisplay";
 import type { Bond, BondDocument } from "../types";
+import { activeLanguage } from "../../../i18n/fr";
+import { operationPhrase } from "../../../i18n/operations";
 
 export function BondDetails({
   bond,
@@ -50,7 +52,7 @@ export function BondDetails({
       );
       setHistory(response.data.changes ?? []);
     } catch {
-      setHistoryError("Impossible de charger l’historique de cette caution.");
+      setHistoryError(operationPhrase("Impossible de charger l’historique de cette caution."));
     } finally {
       setHistoryLoading(false);
     }
@@ -64,7 +66,7 @@ export function BondDetails({
       .catch(() => {
         if (active)
           setHistoryError(
-            "Impossible de charger l’historique de cette caution.",
+            operationPhrase("Impossible de charger l’historique de cette caution."),
           );
       })
       .finally(() => {
@@ -87,7 +89,7 @@ export function BondDetails({
   async function remove() {
     if (
       !window.confirm(
-        `Supprimer la caution liée au site ${bond.project.name} ?`,
+        activeLanguage === "ar" ? `هل تريد حذف الضمان المرتبط بالموقع ${bond.project.name}؟` : `Supprimer la caution liée au site ${bond.project.name} ?`,
       )
     )
       return;
@@ -105,16 +107,16 @@ export function BondDetails({
         className="detail-panel insurance-side-panel"
         role="dialog"
         aria-modal="true"
-        aria-label="Détail de la caution"
+        aria-label={operationPhrase("Détail de la caution")}
         onMouseDown={(event) => event.stopPropagation()}
       >
         <header className="detail-header">
           <div>
-            <p className="section-label">Caution</p>
+            <p className="section-label">{operationPhrase("Caution")}</p>
             <h2>{bond.project.name}</h2>
-            <p>{bond.location?.name || "Localisation à compléter"}</p>
+            <p>{bond.location?.name || operationPhrase("Localisation à compléter")}</p>
           </div>
-          <button type="button" aria-label="Fermer" onClick={onClose}>
+          <button type="button" aria-label={operationPhrase("Fermer")} onClick={onClose}>
             <ActionIcon name="close" />
           </button>
         </header>
@@ -126,7 +128,7 @@ export function BondDetails({
               onClick={onEdit}
             >
               <ActionIcon name="edit" />
-              Modifier
+              {operationPhrase("Modifier")}
             </button>
             <button
               className="equipment-history-button detail-toolbar-button"
@@ -134,14 +136,14 @@ export function BondDetails({
               onClick={() => void openHistory()}
             >
               <ActionIcon name="history" />
-              Voir l’historique
+              {operationPhrase("Voir l’historique")}
             </button>
             <button
               className="danger-button detail-delete-button"
               type="button"
               disabled={deleting}
               onClick={() => void remove()}
-              aria-label="Supprimer"
+              aria-label={operationPhrase("Supprimer")}
             >
               <ActionIcon name="delete" />
             </button>
@@ -149,35 +151,35 @@ export function BondDetails({
           <section>
             <h3>
               <ActionIcon name="identification" />
-              Informations principales
+              {operationPhrase("Informations principales")}
             </h3>
             <dl>
               <div>
-                <dt>Site / projet</dt>
+                <dt>{operationPhrase("Site / projet")}</dt>
                 <dd>{bond.project.name}</dd>
               </div>
               <div>
-                <dt>Localisation physique</dt>
-                <dd>{bond.location?.name || "À compléter"}</dd>
+                <dt>{operationPhrase("Localisation physique")}</dt>
+                <dd>{bond.location?.name || operationPhrase("À compléter")}</dd>
               </div>
               <div>
-                <dt>Type de caution</dt>
+                <dt>{operationPhrase("Type de caution")}</dt>
                 <dd>{bondTypeLabel(bond.bond_type)}</dd>
               </div>
               <div>
-                <dt>Banque / émetteur</dt>
-                <dd>{bond.issuer || "À compléter"}</dd>
+                <dt>{operationPhrase("Banque / émetteur")}</dt>
+                <dd>{bond.issuer || operationPhrase("À compléter")}</dd>
               </div>
             </dl>
           </section>
           <section>
             <h3>
               <ActionIcon name="invoice" />
-              Montant de la caution
+              {operationPhrase("Montant de la caution")}
             </h3>
             <dl>
               <div>
-                <dt>Montant</dt>
+                <dt>{operationPhrase("Montant")}</dt>
                 <dd>{formatBondAmount(bond.amount, bond.currency)}</dd>
               </div>
             </dl>
@@ -185,19 +187,19 @@ export function BondDetails({
           <section>
             <h3>
               <ActionIcon name="history" />
-              Période et statut
+              {operationPhrase("Période et statut")}
             </h3>
             <dl>
               <div>
-                <dt>Date d’émission</dt>
+                <dt>{operationPhrase("Date d’émission")}</dt>
                 <dd>{formatBondDate(bond.issued_on)}</dd>
               </div>
               <div>
-                <dt>Date d’expiration</dt>
+                <dt>{operationPhrase("Date d’expiration")}</dt>
                 <dd>{formatBondDate(bond.expires_on)}</dd>
               </div>
               <div>
-                <dt>Statut</dt>
+                <dt>{operationPhrase("Statut")}</dt>
                 <dd>
                   <em className={`insurance-status ${state}`}>
                     {bondStatusLabel(state)}
@@ -213,17 +215,17 @@ export function BondDetails({
           <section>
             <h3>
               <ActionIcon name="note" />
-              Observations
+              {operationPhrase("Observations")}
             </h3>
             <p className="observations">
-              {bond.notes || "Aucune observation."}
+              {bond.notes || operationPhrase("Aucune observation.")}
             </p>
           </section>
           <details id={`bond-history-${bond.id}`} className="detail-section">
             <summary>
               <h3>
                 <ActionIcon name="history" />
-                Historique
+                {operationPhrase("Historique")}
               </h3>
               <ActionIcon name="expand" />
             </summary>
@@ -233,12 +235,12 @@ export function BondDetails({
                 loading={historyLoading}
                 error={historyError}
                 actionLabels={{
-                  created: "Caution créée",
-                  updated: "Caution modifiée",
-                  document_added: "Document ajouté",
-                  document_deleted: "Document supprimé",
+                  created: operationPhrase("Caution créée"),
+                  updated: operationPhrase("Caution modifiée"),
+                  document_added: operationPhrase("Document ajouté"),
+                  document_deleted: operationPhrase("Document supprimé"),
                 }}
-                emptyDescription="Les modifications de cette caution apparaîtront ici."
+                emptyDescription={operationPhrase("Les modifications de cette caution apparaîtront ici.")}
               />
             </div>
           </details>
@@ -275,14 +277,14 @@ function BondDocuments({
         onChanged(documents);
       }
     } catch {
-      setError("Impossible d’ajouter les documents.");
+      setError(operationPhrase("Impossible d’ajouter les documents."));
     } finally {
       setUploading(false);
     }
   }
   async function remove(document: BondDocument) {
     if (
-      !window.confirm(`Supprimer le document « ${document.original_name} » ?`)
+      !window.confirm(activeLanguage === "ar" ? `هل تريد حذف المستند « ${document.original_name} »؟` : `Supprimer le document « ${document.original_name} » ?`)
     )
       return;
     setDeletingId(document.id);
@@ -293,7 +295,7 @@ function BondDocuments({
       });
       onChanged(bond.documents.filter((item) => item.id !== document.id));
     } catch {
-      setError("Impossible de supprimer ce document.");
+      setError(operationPhrase("Impossible de supprimer ce document."));
     } finally {
       setDeletingId(null);
     }
@@ -308,7 +310,7 @@ function BondDocuments({
     <section className="insurance-documents-section">
       <h3>
         <ActionIcon name="invoice" />
-        Documents
+        {operationPhrase("Documents")}
       </h3>
       {error && (
         <div className="form-alert" role="alert">
@@ -318,7 +320,7 @@ function BondDocuments({
       {bond.documents.length ? (
         <PaginatedDocumentList
           documents={bond.documents}
-          emptyMessage="Aucun document ajouté."
+          emptyMessage={operationPhrase("Aucun document ajouté.")}
           renderDocument={(document) => (
             <article key={document.id}>
               <button
@@ -339,10 +341,10 @@ function BondDocuments({
                 type="button"
                 disabled={deletingId === document.id}
                 onClick={() => void remove(document)}
-                aria-label={`Supprimer ${document.original_name}`}
+                aria-label={`${operationPhrase("Supprimer")} ${document.original_name}`}
               >
                 {deletingId === document.id ? (
-                  <LoadingSpinner compact label="Suppression" />
+                  <LoadingSpinner compact label={operationPhrase("Suppression")} />
                 ) : (
                   <ActionIcon name="delete" />
                 )}
@@ -354,14 +356,14 @@ function BondDocuments({
         <EmptyState
           compact
           icon="invoice"
-          title="Aucun document ajouté"
-          description="Les garanties et avenants associés apparaîtront ici."
+          title={operationPhrase("Aucun document ajouté")}
+          description={operationPhrase("Les garanties et avenants associés apparaîtront ici.")}
         />
       )}
       <DocumentUploadDropzone
         compact
         disabled={uploading}
-        title={uploading ? "Ajout en cours…" : "Ajouter des documents"}
+        title={operationPhrase(uploading ? "Ajout en cours…" : "Ajouter des documents")}
         onFiles={(files) => void upload(files)}
       />
     </section>

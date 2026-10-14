@@ -1,6 +1,7 @@
 import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { SearchableSelect } from "../../../shared/components/SearchableSelect";
-import { bondTypeOptions } from "../bondDisplay";
+import { bondTypeLabel, bondTypeOptions } from "../bondDisplay";
+import { operationPhrase } from "../../../i18n/operations";
 import type { BondSite as Site, BondStatus, BondType } from "../types";
 
 export function BondFilters({
@@ -30,56 +31,56 @@ export function BondFilters({
         className="detail-panel insurance-filter-drawer"
         role="dialog"
         aria-modal="true"
-        aria-label="Filtres"
+        aria-label={operationPhrase("Filtres")}
         onMouseDown={(event) => event.stopPropagation()}
       >
         <header className="detail-header">
           <div>
-            <p className="section-label">Cautions</p>
-            <h2>Filtres</h2>
+            <p className="section-label">{operationPhrase("Cautions")}</p>
+            <h2>{operationPhrase("Filtres")}</h2>
           </div>
-          <button type="button" aria-label="Fermer" onClick={onClose}>
+          <button type="button" aria-label={operationPhrase("Fermer")} onClick={onClose}>
             <ActionIcon name="close" />
           </button>
         </header>
         <div className="insurance-filter-content">
           <label>
-            Statut
+            {operationPhrase("Statut")}
             <SearchableSelect
-              ariaLabel="Statut"
+              ariaLabel={operationPhrase("Statut")}
               value={status}
               onChange={(value) => onStatus(value as BondStatus | "all")}
-              placeholder="Tous les statuts"
+              placeholder={operationPhrase("Tous les statuts")}
               includeEmpty={false}
               options={[
-                { value: "all", label: "Tous les statuts" },
-                { value: "active", label: "Active" },
-                { value: "soon", label: "Expire bientôt" },
-                { value: "expired", label: "Expirée" },
+                { value: "all", label: operationPhrase("Tous les statuts") },
+                { value: "active", label: operationPhrase("Active") },
+                { value: "soon", label: operationPhrase("Expire bientôt") },
+                { value: "expired", label: operationPhrase("Expirée") },
               ]}
             />
           </label>
           <label>
-            Type de caution
+            {operationPhrase("Type de caution")}
             <SearchableSelect
-              ariaLabel="Type de caution"
+              ariaLabel={operationPhrase("Type de caution")}
               value={type}
               onChange={(value) => onType(value as BondType | "all")}
-              placeholder="Tous les types"
+              placeholder={operationPhrase("Tous les types")}
               includeEmpty={false}
               options={[
-                { value: "all", label: "Tous les types" },
-                ...bondTypeOptions,
+                { value: "all", label: operationPhrase("Tous les types") },
+                ...bondTypeOptions.map((option) => ({ ...option, label: bondTypeLabel(option.value) })),
               ]}
             />
           </label>
           <label>
-            Site / projet
+            {operationPhrase("Site / projet")}
             <SearchableSelect
-              ariaLabel="Site"
+              ariaLabel={operationPhrase("Site")}
               value={siteId}
               onChange={onSite}
-              placeholder="Tous les sites"
+              placeholder={operationPhrase("Tous les sites")}
               options={sites.map((site) => ({
                 value: String(site.id),
                 label: site.name,
@@ -89,10 +90,10 @@ export function BondFilters({
         </div>
         <footer className="insurance-filter-actions">
           <button type="button" onClick={onClear}>
-            Effacer les filtres
+            {operationPhrase("Effacer les filtres")}
           </button>
           <button className="save-button" type="button" onClick={onClose}>
-            Afficher les résultats
+            {operationPhrase("Afficher les résultats")}
           </button>
         </footer>
       </aside>

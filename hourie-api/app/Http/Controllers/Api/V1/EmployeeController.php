@@ -185,7 +185,7 @@ class EmployeeController extends Controller
             }
 
             if ($employee->user_id !== null) {
-                $employee->user()->update($accountData);
+                $employee->user->update($accountData);
             } elseif (filled($data['username'] ?? null)) {
                 $accountData['password'] = $data['password'];
                 $accountData['must_change_password'] = true;

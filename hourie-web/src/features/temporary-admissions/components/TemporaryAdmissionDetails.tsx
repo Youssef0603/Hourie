@@ -8,19 +8,14 @@ import { DocumentUploadDropzone } from "../../../shared/components/DocumentUploa
 import { LoadingSpinner } from "../../../shared/components/LoadingSpinner";
 import { PaginatedDocumentList } from "../../../shared/components/PaginatedDocumentList";
 import { RecordHistory } from "../../../shared/components/RecordHistory";
+import { activeLanguage } from "../../../i18n/fr";
+import { operationPhrase, operationsLocale, operationsText } from "../../../i18n/operations";
 import {
   admissionError,
   fetchTemporaryAdmission,
   uploadAdmissionDocument,
 } from "../api";
 import type { AdmissionDocument, TemporaryAdmission } from "../types";
-
-const labels = {
-  active: "Active",
-  returned: "Retournée",
-  cleared: "Dédouanée",
-  expired: "Expirée",
-};
 
 export function TemporaryAdmissionDetails({
   item,
@@ -41,6 +36,7 @@ export function TemporaryAdmissionDetails({
   onOpenEquipment?: (equipmentId: number) => void;
   nested?: boolean;
 }) {
+  const text = operationsText().admissions;
   const [busy, setBusy] = useState(false);
   const [deletingDocumentId, setDeletingDocumentId] = useState<number | null>(
     null,
@@ -75,7 +71,8 @@ export function TemporaryAdmissionDetails({
   async function addAdmissionDocuments(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!admissionDocuments.length) return;
-    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     await perform(async () => {
       let saved = item;
       for (const file of admissionDocuments) {
@@ -90,8 +87,8 @@ export function TemporaryAdmissionDetails({
         setAdmissionDocuments((current) => current.filter((entry) => entry !== file));
       }
       setAdmissionDocuments([]);
-      event.currentTarget.reset();
-    }, "Impossible d’ajouter ce document AT.");
+      formElement.reset();
+    }, operationPhrase("Impossible d’ajouter ce document AT."));
   }
 
   async function addInvoices(files: File[]) {
@@ -101,7 +98,7 @@ export function TemporaryAdmissionDetails({
         saved = await uploadAdmissionDocument(item.id, "invoice", file);
       }
       onChanged(saved);
-    }, "Impossible d’ajouter cette facture.");
+    }, operationPhrase("Impossible d’ajouter cette facture."));
   }
 
   async function addInitialDocuments(files: File[]) {
@@ -116,7 +113,7 @@ export function TemporaryAdmissionDetails({
         );
       }
       onChanged(saved);
-    }, "Impossible d’ajouter ce document initial.");
+    }, operationPhrase("Impossible d’ajouter la déclaration."));
   }
 
   async function closeAdmission(event: FormEvent<HTMLFormElement>) {
@@ -135,7 +132,7 @@ export function TemporaryAdmissionDetails({
       );
       onChanged(result.data);
       setShowReturnForm(false);
-    }, "Impossible de clôturer cette admission.");
+    }, operationPhrase("Impossible de clôturer cette admission."));
   }
 
   async function clearCustoms(event: FormEvent<HTMLFormElement>) {
@@ -160,7 +157,7 @@ export function TemporaryAdmissionDetails({
       );
       onChanged(result.data);
       setShowClearanceForm(false);
-    }, "Impossible d’enregistrer le dédouanement.");
+    }, operationPhrase("Impossible d’enregistrer le dédouanement."));
   }
 
   async function preview(document: AdmissionDocument) {
@@ -169,11 +166,11 @@ export function TemporaryAdmissionDetails({
         `${document.url}?preview=1`,
       );
       window.open(url, "_blank", "noopener,noreferrer");
-    }, "Impossible d’ouvrir ce document.");
+    }, operationPhrase("Impossible d’ouvrir ce document."));
   }
 
   async function removeDocument(document: AdmissionDocument) {
-    if (!window.confirm(`Supprimer « ${document.original_name} » ?`)) return;
+    if (!window.confirm(activeLanguage === "ar" ? `هل تريد حذف « ${document.original_name} »؟` : `Supprimer « ${document.original_name} » ?`)) return;
     setDeletingDocumentId(document.id);
     await perform(async () => {
       await apiRequest(
@@ -181,19 +178,19 @@ export function TemporaryAdmissionDetails({
         { method: "DELETE" },
       );
       onChanged(await fetchTemporaryAdmission(item.id));
-    }, "Impossible de supprimer ce document.");
+    }, operationPhrase("Impossible de supprimer ce document."));
     setDeletingDocumentId(null);
   }
 
   async function removeAdmission() {
-    if (!window.confirm(`Supprimer l’AT « ${item.customs_reference} » ?`))
+    if (!window.confirm(activeLanguage === "ar" ? `هل تريد حذف الإدخال المؤقت « ${item.customs_reference} »؟` : `Supprimer l’AT « ${item.customs_reference} » ?`))
       return;
     await perform(async () => {
       await apiRequest(`/api/v1/temporary-admissions/${item.id}`, {
         method: "DELETE",
       });
       onDeleted();
-    }, "Impossible de supprimer cette admission.");
+    }, operationPhrase("Impossible de supprimer cette admission."));
   }
 
   async function perform(action: () => Promise<void>, fallback: string) {
@@ -214,6 +211,14 @@ export function TemporaryAdmissionDetails({
   const atDocuments = item.documents.filter(
     (document) => document.document_type === "admission",
   );
+  const latestAtDocument = [...atDocuments]
+    .filter((document) => document.document_date)
+    .sort((left, right) =>
+      String(left.document_date).localeCompare(String(right.document_date)) ||
+      left.id - right.id,
+    )
+    .at(-1);
+  const currentValidityMonths = latestAtDocument?.validity_months ?? 12;
   const invoiceDocuments = item.documents.filter(
     (document) => document.document_type === "invoice",
   );
@@ -274,12 +279,12 @@ export function TemporaryAdmissionDetails({
               <button
                 type="button"
                 className="invoice-delete-button"
-                aria-label={`Supprimer ${document.original_name}`}
+                aria-label={`${operationPhrase("Supprimer")} ${document.original_name}`}
                 onClick={() => void removeDocument(document)}
                 disabled={deletingDocumentId === document.id}
               >
                 {deletingDocumentId === document.id ? (
-                  <LoadingSpinner compact label="Suppression" />
+                  <LoadingSpinner compact label={operationPhrase("Suppression")} />
                 ) : (
                   <ActionIcon name="delete" />
                 )}
@@ -300,16 +305,16 @@ export function TemporaryAdmissionDetails({
         className="detail-panel insurance-side-panel temporary-admission-panel"
         role="dialog"
         aria-modal="true"
-        aria-label="Détail de l’admission temporaire"
+        aria-label={operationPhrase("Détail de l’admission temporaire")}
         onMouseDown={(event) => event.stopPropagation()}
       >
         <header className="detail-header">
           <div>
-            <p className="section-label">Admission temporaire</p>
+            <p className="section-label">{operationPhrase("Admission temporaire")}</p>
             <h2>{item.customs_reference}</h2>
-            <p>Échéance actuelle : {formatDate(item.expires_on)}</p>
+            <p>{operationPhrase("Échéance actuelle")} : {formatDate(item.expires_on)}</p>
           </div>
-          <button type="button" onClick={onClose} aria-label="Fermer">
+          <button type="button" onClick={onClose} aria-label={operationPhrase("Fermer")}>
             <ActionIcon name="close" />
           </button>
         </header>
@@ -324,7 +329,7 @@ export function TemporaryAdmissionDetails({
                 disabled={busy}
               >
                 <ActionIcon name="edit" />
-                Modifier
+                {operationPhrase("Modifier")}
               </button>
               {!["returned", "cleared"].includes(item.status) && (
                 <button
@@ -334,7 +339,7 @@ export function TemporaryAdmissionDetails({
                   disabled={busy}
                 >
                   <ActionIcon name="transfer" />
-                  Retourner
+                  {operationPhrase("Retourner")}
                 </button>
               )}
               {!["returned", "cleared"].includes(item.status) && (
@@ -345,7 +350,7 @@ export function TemporaryAdmissionDetails({
                   disabled={busy}
                 >
                   <ActionIcon name="invoice" />
-                  Dédouaner
+                  {operationPhrase("Dédouaner")}
                 </button>
               )}
               </>
@@ -353,8 +358,8 @@ export function TemporaryAdmissionDetails({
             <button
               className="equipment-history-button detail-toolbar-button temporary-admission-history-button"
               type="button"
-              aria-label="Voir l’historique"
-              title="Voir l’historique"
+              aria-label={operationPhrase("Voir l’historique")}
+              title={operationPhrase("Voir l’historique")}
               onClick={() => {
                 const history = document.getElementById(
                   `temporary-admission-history-${item.id}`,
@@ -373,37 +378,36 @@ export function TemporaryAdmissionDetails({
                 className="danger-button detail-delete-button"
                 onClick={() => void removeAdmission()}
                 disabled={busy}
-                aria-label="Supprimer"
-                title="Supprimer"
+                aria-label={operationPhrase("Supprimer")}
+                title={operationPhrase("Supprimer")}
               >
                 <ActionIcon name="delete" />
               </button>
             )}
           </div>
           {error && (
-            <div className="form-alert" role="alert">
+            <div className="form-alert temporary-admission-detail-alert" role="alert">
               {error}
             </div>
           )}
           <section>
             <h3>
               <ActionIcon name="identification" />
-              Informations principales
+              {operationPhrase("Informations principales")}
             </h3>
             <dl>
               <div>
-                <dt>Référence douane</dt>
+                <dt>{operationPhrase("Référence douane")}</dt>
                 <dd>{item.customs_reference}</dd>
               </div>
               <div>
-                <dt>Fournisseur</dt>
-                <dd>{item.supplier_name || "À compléter"}</dd>
+                <dt>{operationPhrase("Fournisseur")}</dt>
+                <dd>{item.supplier_name || operationPhrase("À compléter")}</dd>
               </div>
               <div>
-                <dt>Équipements couverts</dt>
+                <dt>{operationPhrase("Équipements couverts")}</dt>
                 <dd>
-                  {item.equipment.length} équipement
-                  {item.equipment.length !== 1 ? "s" : ""}
+                  {activeLanguage === "ar" ? `${item.equipment.length} معدات` : `${item.equipment.length} équipement${item.equipment.length !== 1 ? "s" : ""}`}
                 </dd>
               </div>
             </dl>
@@ -411,58 +415,58 @@ export function TemporaryAdmissionDetails({
           <section>
             <h3>
               <ActionIcon name="history" />
-              Période et statut
+              {operationPhrase("Période et statut")}
             </h3>
             <dl>
               <div>
-                <dt>Date d’entrée initiale</dt>
+                <dt>{operationPhrase("Date d’entrée initiale")}</dt>
                 <dd>{formatDate(item.entered_on)}</dd>
               </div>
               <div>
-                <dt>Durée de validité</dt>
-                <dd>{item.validity_months} mois</dd>
+                <dt>{operationPhrase("Durée de la période actuelle")}</dt>
+                <dd>{currentValidityMonths} {activeLanguage === "ar" ? "شهر" : "mois"}</dd>
               </div>
               <div>
-                <dt>Échéance actuelle</dt>
+                <dt>{operationPhrase("Échéance actuelle")}</dt>
                 <dd>{formatDate(item.expires_on)}</dd>
               </div>
               <div>
-                <dt>Statut</dt>
+                <dt>{operationPhrase("Statut")}</dt>
                 <dd>
                   <em
                     className={`insurance-status ${item.status}`}
                   >
-                    {labels[item.status]}
+                    {text.statuses[item.status]}
                   </em>
                 </dd>
               </div>
               {item.returned_on && (
                 <div>
-                  <dt>Date de retour</dt>
+                  <dt>{operationPhrase("Date de retour")}</dt>
                   <dd>{formatDate(item.returned_on)}</dd>
                 </div>
               )}
               {item.closure_reason && (
                 <div>
-                  <dt>Motif de clôture</dt>
+                  <dt>{operationPhrase("Motif de clôture")}</dt>
                   <dd>{item.closure_reason}</dd>
                 </div>
               )}
               {item.cleared_on && (
                 <div>
-                  <dt>Date de dédouanement</dt>
+                  <dt>{operationPhrase("Date de dédouanement")}</dt>
                   <dd>{formatDate(item.cleared_on)}</dd>
                 </div>
               )}
               {item.clearance_reference && (
                 <div>
-                  <dt>Référence de dédouanement</dt>
+                  <dt>{operationPhrase("Référence de dédouanement")}</dt>
                   <dd>{item.clearance_reference}</dd>
                 </div>
               )}
               {item.customs_duty_amount !== null && (
                 <div>
-                  <dt>Droits de douane payés</dt>
+                  <dt>{operationPhrase("Droits de douane payés")}</dt>
                   <dd>{formatMoney(item.customs_duty_amount)}</dd>
                 </div>
               )}
@@ -471,7 +475,7 @@ export function TemporaryAdmissionDetails({
           <section>
             <h3>
               <ActionIcon name="specifications" />
-              Équipements couverts
+              {operationPhrase("Équipements couverts")}
             </h3>
             <div className="insurance-covered-equipment">
               {item.equipment.length > 0 && (
@@ -484,8 +488,8 @@ export function TemporaryAdmissionDetails({
                       setEquipmentQuery(event.target.value);
                       setEquipmentPage(0);
                     }}
-                    placeholder="Rechercher un équipement"
-                    aria-label="Rechercher un équipement couvert"
+                    placeholder={operationPhrase("Rechercher un équipement")}
+                    aria-label={operationPhrase("Rechercher un équipement couvert")}
                   />
                 </label>
               )}
@@ -501,8 +505,8 @@ export function TemporaryAdmissionDetails({
                       <strong>{entry.name}</strong>
                       <small>
                         {entry.serial_number
-                          ? `N° de série : ${entry.serial_number}`
-                          : "N° de série non renseigné"}
+                          ? `${activeLanguage === "ar" ? "رقم التسلسل" : "N° de série"} : ${entry.serial_number}`
+                          : operationPhrase("N° de série non renseigné")}
                       </small>
                     </button>
                   </li>
@@ -510,20 +514,20 @@ export function TemporaryAdmissionDetails({
               </ul>
               {item.equipment.length > 0 && visibleEquipment.length === 0 && (
                 <p className="document-list-empty">
-                  Aucun équipement ne correspond à cette recherche.
+                  {operationPhrase("Aucun équipement ne correspond à cette recherche.")}
                 </p>
               )}
               {equipmentPageCount > 1 && (
                 <nav
                   className="document-list-pagination"
-                  aria-label="Pagination des équipements couverts"
+                  aria-label={operationPhrase("Pagination des équipements couverts")}
                 >
                   <button
                     type="button"
                     disabled={currentEquipmentPage === 0}
                     onClick={() => setEquipmentPage((page) => page - 1)}
                   >
-                    Précédent
+                    {operationPhrase("Précédent")}
                   </button>
                   <span>
                     {currentEquipmentPage + 1} / {equipmentPageCount}
@@ -533,7 +537,7 @@ export function TemporaryAdmissionDetails({
                     disabled={currentEquipmentPage === equipmentPageCount - 1}
                     onClick={() => setEquipmentPage((page) => page + 1)}
                   >
-                    Suivant
+                    {operationPhrase("Suivant")}
                   </button>
                 </nav>
               )}
@@ -542,44 +546,43 @@ export function TemporaryAdmissionDetails({
           <section className="insurance-documents-section">
             <h3>
               <ActionIcon name="invoice" />
-              Documents
+              {operationPhrase("Documents")}
             </h3>
             <div className="temporary-admission-documents-group">
-              <h4>Documents initiaux</h4>
+              <h4>{operationPhrase("Déclaration")}</h4>
               {documentList(
                 initialDocuments,
-                "Aucun document initial enregistré.",
+                operationPhrase("Aucune déclaration enregistrée."),
               )}
               {canManage && (
                 <DocumentUploadDropzone
                   compact
                   disabled={busy}
                   title={
-                    busy ? "Ajout en cours…" : "Ajouter des documents initiaux"
+                    operationPhrase(busy ? "Ajout en cours…" : "Ajouter la déclaration")
                   }
-                  description="Un ou plusieurs documents initiaux · PDF · 10 Mo maximum par fichier"
+                  description={operationPhrase("Un ou plusieurs documents de déclaration · PDF · 10 Mo maximum par fichier")}
                   onFiles={(files) => void addInitialDocuments(files)}
                 />
               )}
             </div>
             <div className="temporary-admission-documents-group">
-              <h4>Documents AT</h4>
-              {documentList(atDocuments, "Aucun document AT enregistré.")}
+              <h4>{operationPhrase("Documents AT")}</h4>
+              {documentList(atDocuments, operationPhrase("Aucun document AT enregistré."))}
               {canManage && !["returned", "cleared"].includes(item.status) && (
                 <form
                   className="temporary-admission-document-form"
                   onSubmit={addAdmissionDocuments}
                 >
                   <p className="temporary-admission-action-hint">
-                    La date de l’AT le plus récent devient la nouvelle date de
-                    référence pour calculer l’échéance.
+                    {operationPhrase("L’échéance reste calculée depuis la date d’entrée de la déclaration. La durée de cet AT prolonge la période actuelle.")}
                   </p>
                   <label>
-                    Date de l’AT
+                    {operationPhrase("Date de l’AT")}
                     <input required type="date" name="document_date" />
                   </label>
                   <label>
-                    Durée de validité (mois)
+                    {operationPhrase("Durée de validité (mois)")}
                     <input
                       required
                       type="number"
@@ -587,14 +590,14 @@ export function TemporaryAdmissionDetails({
                       min={1}
                       max={120}
                       step={1}
-                      defaultValue={item.validity_months}
+                      defaultValue={currentValidityMonths}
                     />
                   </label>
                   <DocumentUploadDropzone
                     compact
                     disabled={busy}
                     title={selectedAtDocumentsTitle(admissionDocuments)}
-                    description="Un ou plusieurs documents AT · PDF · 10 Mo maximum par fichier"
+                    description={operationPhrase("Un ou plusieurs documents AT · PDF · 10 Mo maximum par fichier")}
                     onFiles={(files) =>
                       setAdmissionDocuments((current) => [
                         ...current,
@@ -618,7 +621,7 @@ export function TemporaryAdmissionDetails({
                               )
                             }
                           >
-                            <ActionIcon name="close" />
+                            <ActionIcon name="delete" />
                           </button>
                         </li>
                       ))}
@@ -628,20 +631,20 @@ export function TemporaryAdmissionDetails({
                     className="primary-button temporary-admission-document-action"
                     disabled={busy || !admissionDocuments.length}
                   >
-                    Ajouter l’AT
+                    {operationPhrase("Ajouter l’AT")}
                   </button>
                 </form>
               )}
             </div>
             <div className="temporary-admission-documents-group">
-              <h4>Factures</h4>
-              {documentList(invoiceDocuments, "Aucune facture ajoutée.")}
+              <h4>{operationPhrase("Factures")}</h4>
+              {documentList(invoiceDocuments, operationPhrase("Aucune facture ajoutée."))}
               {canManage && (
                 <DocumentUploadDropzone
                   compact
                   disabled={busy}
-                  title={busy ? "Ajout en cours…" : "Ajouter une facture"}
-                  description="Une ou plusieurs factures · PDF · 10 Mo maximum par fichier"
+                  title={operationPhrase(busy ? "Ajout en cours…" : "Ajouter une facture")}
+                  description={operationPhrase("Une ou plusieurs factures · PDF · 10 Mo maximum par fichier")}
                   onFiles={(files) => void addInvoices(files)}
                 />
               )}
@@ -650,10 +653,10 @@ export function TemporaryAdmissionDetails({
           <section>
             <h3>
               <ActionIcon name="note" />
-              Observations
+              {operationPhrase("Observations")}
             </h3>
             <p className="observations">
-              {item.notes || "Aucune observation."}
+              {item.notes || operationPhrase("Aucune observation.")}
             </p>
           </section>
           <details
@@ -663,7 +666,7 @@ export function TemporaryAdmissionDetails({
             <summary>
               <h3>
                 <ActionIcon name="history" />
-                Historique
+                {operationPhrase("Historique")}
               </h3>
               <ActionIcon name="expand" />
             </summary>
@@ -671,15 +674,15 @@ export function TemporaryAdmissionDetails({
               <RecordHistory
                 entries={item.changes ?? []}
                 actionLabels={{
-                  created: "Admission créée",
-                  updated: "Admission modifiée",
-                  renewed: "Document AT ajouté",
-                  document_added: "Document ajouté",
-                  document_deleted: "Document supprimé",
-                  returned: "Équipements retournés",
-                  customs_cleared: "Admission dédouanée",
+                  created: operationPhrase("Admission créée"),
+                  updated: operationPhrase("Admission modifiée"),
+                  renewed: operationPhrase("Document AT ajouté"),
+                  document_added: operationPhrase("Document ajouté"),
+                  document_deleted: operationPhrase("Document supprimé"),
+                  returned: operationPhrase("Équipements retournés"),
+                  customs_cleared: operationPhrase("Admission dédouanée"),
                 }}
-                emptyDescription="Les modifications de cette admission apparaîtront ici."
+                emptyDescription={operationPhrase("Les modifications de cette admission apparaîtront ici.")}
               />
             </div>
           </details>
@@ -692,23 +695,22 @@ export function TemporaryAdmissionDetails({
                 >
                   <h3>
                     <ActionIcon name="transfer" />
-                    Retour des équipements
+                    {operationPhrase("Retour des équipements")}
                   </h3>
                   <p className="temporary-admission-action-hint">
-                    Utilisez cette action lorsque les équipements quittent le
-                    pays et ne sont plus couverts par cette admission.
+                    {operationPhrase("Utilisez cette action lorsque les équipements quittent le pays et ne sont plus couverts par cette admission.")}
                   </p>
                   <form onSubmit={closeAdmission}>
                     <div className="temporary-admission-form-grid">
                       <label>
-                        Date de retour
+                        {operationPhrase("Date de retour")}
                         <input required type="date" name="returned_on" />
                       </label>
                       <label>
-                        Motif
+                        {operationPhrase("Motif")}
                         <input
                           name="closure_reason"
-                          placeholder="Fin du projet, réexportation…"
+                          placeholder={operationPhrase("Fin du projet, réexportation…")}
                         />
                       </label>
                     </div>
@@ -718,13 +720,13 @@ export function TemporaryAdmissionDetails({
                         className="secondary-button temporary-admission-form-action-button"
                         onClick={() => setShowReturnForm(false)}
                       >
-                        Annuler
+                        {operationPhrase("Annuler")}
                       </button>
                       <button
                         className="primary-button temporary-admission-form-action-button"
                         disabled={busy}
                       >
-                        Confirmer le retour
+                        {operationPhrase("Confirmer le retour")}
                       </button>
                     </div>
                   </form>
@@ -737,32 +739,31 @@ export function TemporaryAdmissionDetails({
                 >
                   <h3>
                     <ActionIcon name="invoice" />
-                    Dédouanement
+                    {operationPhrase("Dédouanement")}
                   </h3>
                   <p className="temporary-admission-action-hint">
-                    Utilisez cette action quand les droits de douane sont payés
-                    et que les équipements restent dans le pays.
+                    {operationPhrase("Utilisez cette action quand les droits de douane sont payés et que les équipements restent dans le pays.")}
                   </p>
                   <form onSubmit={clearCustoms}>
                     <div className="temporary-admission-form-grid">
                       <label>
-                        Date de dédouanement
+                        {operationPhrase("Date de dédouanement")}
                         <input required type="date" name="cleared_on" />
                       </label>
                       <label>
-                        Référence de dédouanement
+                        {operationPhrase("Référence de dédouanement")}
                         <input
                           name="clearance_reference"
-                          placeholder="N° de liquidation ou quittance"
+                          placeholder={operationPhrase("N° de liquidation ou quittance")}
                         />
                       </label>
                       <label className="field-wide">
-                        Droits de douane payés (FCFA)
+                        {operationPhrase("Droits de douane payés (FCFA)")}
                         <input
                           required
                           inputMode="numeric"
                           name="customs_duty_amount"
-                          placeholder="Ex. 12 500 000"
+                          placeholder={operationPhrase("Ex. 12 500 000")}
                         />
                       </label>
                     </div>
@@ -772,13 +773,13 @@ export function TemporaryAdmissionDetails({
                         className="secondary-button temporary-admission-form-action-button"
                         onClick={() => setShowClearanceForm(false)}
                       >
-                        Annuler
+                        {operationPhrase("Annuler")}
                       </button>
                       <button
                         className="primary-button temporary-admission-form-action-button"
                         disabled={busy}
                       >
-                        Confirmer le dédouanement
+                        {operationPhrase("Confirmer le dédouanement")}
                       </button>
                     </div>
                   </form>
@@ -793,18 +794,18 @@ export function TemporaryAdmissionDetails({
 }
 
 function formatDate(value: string) {
-  return new Intl.DateTimeFormat("fr-FR").format(new Date(`${value}T00:00:00`));
+  return new Intl.DateTimeFormat(operationsLocale()).format(new Date(`${value}T00:00:00`));
 }
 
 function formatMoney(value: string) {
-  return `${new Intl.NumberFormat("fr-FR", {
+  return `${new Intl.NumberFormat(operationsLocale(), {
     maximumFractionDigits: 0,
   }).format(Number(value))} FCFA`;
 }
 
 function selectedAtDocumentsTitle(files: File[]) {
-  if (!files.length) return "Ajouter des documents AT";
-  return `${files.length} document${files.length > 1 ? "s" : ""} AT sélectionné${files.length > 1 ? "s" : ""}`;
+  if (!files.length) return operationPhrase("Ajouter des documents AT");
+  return activeLanguage === "ar" ? `${files.length} مستند إدخال مؤقت محدد` : `${files.length} document${files.length > 1 ? "s" : ""} AT sélectionné${files.length > 1 ? "s" : ""}`;
 }
 
 function normalizeSearch(value: string) {

@@ -9,6 +9,8 @@ import { DocumentUploadDropzone } from "../../../shared/components/DocumentUploa
 import { EmptyState } from "../../../shared/components/EmptyState";
 import { LoadingSpinner } from "../../../shared/components/LoadingSpinner";
 import { PaginatedDocumentList } from "../../../shared/components/PaginatedDocumentList";
+import { activeLanguage } from "../../../i18n/fr";
+import { operationPhrase } from "../../../i18n/operations";
 import type {
   InsurancePolicy as Policy,
   InsurancePolicyDocument as PolicyDocument,
@@ -61,7 +63,7 @@ export function InsuranceDocuments({
       setError(
         caught instanceof ApiError
           ? (Object.values(caught.errors)[0]?.[0] ?? caught.message)
-          : "Impossible d’ajouter les documents.",
+          : operationPhrase("Impossible d’ajouter les documents."),
       );
     } finally {
       setUploading(false);
@@ -71,7 +73,7 @@ export function InsuranceDocuments({
 
   async function remove(document: PolicyDocument) {
     if (
-      !window.confirm(`Supprimer le document « ${document.original_name} » ?`)
+      !window.confirm(activeLanguage === "ar" ? `هل تريد حذف المستند « ${document.original_name} »؟` : `Supprimer le document « ${document.original_name} » ?`)
     )
       return;
     setError(null);
@@ -83,21 +85,21 @@ export function InsuranceDocuments({
       );
       onChanged(documents.filter((item) => item.id !== document.id));
     } catch {
-      setError("Impossible de supprimer ce document.");
+      setError(operationPhrase("Impossible de supprimer ce document."));
     } finally {
       setDeletingId(null);
     }
   }
 
   const uploadLabel = uploadProgress
-    ? `Ajout ${uploadProgress.current}/${uploadProgress.total}…`
-    : "Ajouter des documents";
+    ? activeLanguage === "ar" ? `إضافة ${uploadProgress.current}/${uploadProgress.total}…` : `Ajout ${uploadProgress.current}/${uploadProgress.total}…`
+    : operationPhrase("Ajouter des documents");
 
   return (
     <section className="insurance-documents-section">
       <h3>
         <ActionIcon name="invoice" />
-        Documents
+        {operationPhrase("Documents")}
       </h3>
       {error && (
         <div className="form-alert" role="alert">
@@ -108,15 +110,15 @@ export function InsuranceDocuments({
         <DocumentUploadDropzone
           compact
           disabled={uploading}
-          title={uploading ? uploadLabel : "Ajouter des documents"}
-          description="Contrats ou attestations · PDF uniquement · 10 Mo maximum par fichier"
+          title={uploading ? uploadLabel : operationPhrase("Ajouter des documents")}
+          description={operationPhrase("Contrats ou attestations · PDF uniquement · 10 Mo maximum par fichier")}
           onFiles={(files) => void upload(files)}
         />
       )}
       {documents.length ? (
         <PaginatedDocumentList
           documents={documents}
-          emptyMessage="Aucun document ajouté."
+          emptyMessage={operationPhrase("Aucun document ajouté.")}
           renderDocument={(document) => (
             <article key={document.id}>
               <button
@@ -137,10 +139,10 @@ export function InsuranceDocuments({
                 type="button"
                 disabled={deletingId === document.id}
                 onClick={() => void remove(document)}
-                aria-label={`Supprimer ${document.original_name}`}
+                aria-label={`${operationPhrase("Supprimer")} ${document.original_name}`}
               >
                 {deletingId === document.id ? (
-                  <LoadingSpinner compact label="Suppression" />
+                  <LoadingSpinner compact label={operationPhrase("Suppression")} />
                 ) : (
                   <ActionIcon name="delete" />
                 )}
@@ -152,8 +154,8 @@ export function InsuranceDocuments({
         <EmptyState
           compact
           icon="invoice"
-          title="Aucun document ajouté"
-          description="Les contrats et attestations associés apparaîtront ici."
+          title={operationPhrase("Aucun document ajouté")}
+          description={operationPhrase("Les contrats et attestations associés apparaîtront ici.")}
         />
       )}
     </section>

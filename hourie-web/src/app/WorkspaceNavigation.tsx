@@ -23,13 +23,17 @@ function userInitials(name: string) {
 export function WorkspaceHeader({
   user,
   language,
+  activeSection,
   onToggleLanguage,
+  onNavigateSettings,
   onLogout,
   isLoggingOut,
 }: {
   user: AuthenticatedUser;
   language: Language;
+  activeSection: WorkspaceRoute["section"];
   onToggleLanguage: () => void;
+  onNavigateSettings: () => void;
   onLogout: () => void;
   isLoggingOut: boolean;
 }) {
@@ -62,9 +66,22 @@ export function WorkspaceHeader({
                 <strong>{user.name}</strong>
                 <span>{fr.roles[user.role]}</span>
               </div>
+              {user.permissions.manage_sites && (
+                <MenuItem>
+                  <button
+                    className={`account-menu-action${activeSection === "catalogs" ? " active" : ""}`}
+                    type="button"
+                    onClick={onNavigateSettings}
+                    aria-current={activeSection === "catalogs" ? "page" : undefined}
+                  >
+                    <NavigationIcon name="settings" />
+                    {fr.navigation.settings}
+                  </button>
+                </MenuItem>
+              )}
               <MenuItem disabled={isLoggingOut}>
                 <button
-                  className="account-logout"
+                  className="account-menu-action account-logout"
                   type="button"
                   onClick={onLogout}
                 >
@@ -85,7 +102,6 @@ export function WorkspaceHeader({
 }
 
 export function WorkspaceSidebar({
-  user,
   language,
   activeSection,
   activeAssetCategory,
@@ -94,7 +110,6 @@ export function WorkspaceSidebar({
   onNavigate,
   onNavigateAsset,
 }: {
-  user: AuthenticatedUser;
   language: Language;
   activeSection: WorkspaceRoute["section"];
   activeAssetCategory: AssetView;
@@ -130,13 +145,13 @@ export function WorkspaceSidebar({
       </div>
       <nav aria-label={fr.navigation.title}>
         <button
-          title="Tableau de bord"
-          className={activeSection === "dashboard" ? "active" : ""}
+          title={fr.navigation.dashboard}
+          className={`sidebar-dashboard-link${activeSection === "dashboard" ? " active" : ""}`}
           type="button"
           onClick={() => onNavigate("dashboard")}
         >
           <NavigationIcon name="dashboard" />
-          <span className="nav-label">Tableau de bord</span>
+          <span className="nav-label">{fr.navigation.dashboard}</span>
         </button>
         <div className="sidebar-navigation-group">
           <p className="sidebar-group-label">{fr.navigation.inventory}</p>
@@ -213,35 +228,35 @@ export function WorkspaceSidebar({
           </div>
         </div>
         <button
-          title="Assurances"
-          className={activeSection === "insurance" ? "active" : ""}
+          title={fr.navigation.insurance}
+          className={`sidebar-section-link${activeSection === "insurance" ? " active" : ""}`}
           type="button"
           onClick={() => onNavigate("insurance")}
         >
           <NavigationIcon name="insurance" />
-          <span className="nav-label">Assurances</span>
+          <span className="nav-label">{fr.navigation.insurance}</span>
         </button>
         <button
-          title="Cautions"
-          className={activeSection === "bonds" ? "active" : ""}
+          title={fr.navigation.bonds}
+          className={`sidebar-section-link${activeSection === "bonds" ? " active" : ""}`}
           type="button"
           onClick={() => onNavigate("bonds")}
         >
           <NavigationIcon name="bonds" />
-          <span className="nav-label">Cautions</span>
+          <span className="nav-label">{fr.navigation.bonds}</span>
         </button>
         <button
-          title="Admissions temporaires"
-          className={activeSection === "temporary-admissions" ? "active" : ""}
+          title={fr.navigation.temporaryAdmissions}
+          className={`sidebar-section-link${activeSection === "temporary-admissions" ? " active" : ""}`}
           type="button"
           onClick={() => onNavigate("temporary-admissions")}
         >
           <NavigationIcon name="insurance" />
-          <span className="nav-label">Admissions temporaires</span>
+          <span className="nav-label">{fr.navigation.temporaryAdmissions}</span>
         </button>
         <button
           title={fr.navigation.sites}
-          className={activeSection === "sites" ? "active" : ""}
+          className={`sidebar-section-link${activeSection === "sites" ? " active" : ""}`}
           type="button"
           onClick={() => onNavigate("sites")}
         >
@@ -250,24 +265,13 @@ export function WorkspaceSidebar({
         </button>
         <button
           title={fr.navigation.people}
-          className={activeSection === "people" ? "active" : ""}
+          className={`sidebar-section-link${activeSection === "people" ? " active" : ""}`}
           type="button"
           onClick={() => onNavigate("people")}
         >
           <NavigationIcon name="people" />
           <span className="nav-label">{fr.navigation.people}</span>
         </button>
-        {user.permissions.manage_sites && (
-          <button
-            title={fr.navigation.settings}
-            className={`sidebar-settings-link${activeSection === "catalogs" ? " active" : ""}`}
-            type="button"
-            onClick={() => onNavigate("catalogs")}
-          >
-            <NavigationIcon name="settings" />
-            <span className="nav-label">{fr.navigation.settings}</span>
-          </button>
-        )}
       </nav>
     </aside>
   );

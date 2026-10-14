@@ -30,15 +30,16 @@ it('sends an AT reminder 30 days before the latest AT expiry only to settings re
     $admission->documents()->create([
         'document_type' => 'admission',
         'document_date' => '2022-10-13',
+        'validity_months' => 12,
         'disk' => 'equipment-documents',
-        'path' => "temporary-admissions/{$admission->id}/renewal.pdf",
-        'original_name' => 'Renouvellement S1445.pdf',
+        'path' => "temporary-admissions/{$admission->id}/at.pdf",
+        'original_name' => 'AT S1445.pdf',
         'mime_type' => 'application/pdf',
         'size_bytes' => 18,
     ]);
     Storage::disk('equipment-documents')->put(
-        "temporary-admissions/{$admission->id}/renewal.pdf",
-        'renewal document',
+        "temporary-admissions/{$admission->id}/at.pdf",
+        'AT document',
     );
     $today = CarbonImmutable::parse('2023-09-12');
 
@@ -52,8 +53,8 @@ it('sends an AT reminder 30 days before the latest AT expiry only to settings re
         $mail->assertHasAttachment(
             Attachment::fromStorageDisk(
                 'equipment-documents',
-                "temporary-admissions/{$admission->id}/renewal.pdf",
-            )->as('Renouvellement S1445.pdf')->withMime('application/pdf'),
+                "temporary-admissions/{$admission->id}/at.pdf",
+            )->as('AT S1445.pdf')->withMime('application/pdf'),
         );
 
         return $mail->hasTo('finance@example.test') && ! $mail->hasTo('excluded@example.test');
@@ -115,9 +116,10 @@ it('repeats weekly before and after expiry until a newer AT changes the expiry',
     $admission->documents()->create([
         'document_type' => 'admission',
         'document_date' => '2026-11-07',
+        'validity_months' => 12,
         'disk' => 'equipment-documents',
-        'path' => "temporary-admissions/{$admission->id}/renewal-2026.pdf",
-        'original_name' => 'Renouvellement 2026.pdf',
+        'path' => "temporary-admissions/{$admission->id}/at-2026.pdf",
+        'original_name' => 'AT 2026.pdf',
         'mime_type' => 'application/pdf',
         'size_bytes' => 18,
     ]);

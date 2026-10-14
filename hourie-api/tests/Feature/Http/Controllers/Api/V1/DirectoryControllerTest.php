@@ -362,6 +362,28 @@ it('allows managers to update personnel and their login account', function () {
     ]);
 });
 
+it('hashes passwords changed by a manager from the personnel panel', function () {
+    $manager = User::factory()->create(['role' => UserRole::Manager]);
+    $account = User::factory()->create(['role' => UserRole::Viewer]);
+    $employee = Employee::factory()->for($account)->create();
+
+    $this->actingAs($manager, 'web')->patchJson("/api/v1/employees/{$employee->id}", [
+        'name' => $employee->name,
+        'username' => $account->username,
+        'email' => $account->email,
+        'role' => $account->role->value,
+        'password' => 'Updated-password-2026',
+        'password_confirmation' => 'Updated-password-2026',
+    ])->assertOk();
+
+    $account->refresh();
+
+    expect($account->password)
+        ->not->toBe('Updated-password-2026')
+        ->and(Hash::check('Updated-password-2026', $account->password))->toBeTrue()
+        ->and($account->must_change_password)->toBeTrue();
+});
+
 it('allows managers to add sites and personnel', function () {
     $manager = User::factory()->create(['role' => UserRole::Manager]);
     $responsible = Employee::factory()->create(['name' => 'Responsable SAN PEDRO']);

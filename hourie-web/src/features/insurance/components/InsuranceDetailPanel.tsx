@@ -19,6 +19,7 @@ import {
 } from "./InsuranceCoveredItems";
 import { InsuranceDocuments } from "./InsuranceDocuments";
 import { InsuranceHistory } from "./InsuranceHistory";
+import { operationsText } from "../../../i18n/operations";
 
 export function InsuranceDetailPanel({
   policy,
@@ -39,6 +40,7 @@ export function InsuranceDetailPanel({
   readOnly?: boolean;
   nested?: boolean;
 }) {
+  const text = operationsText().insurance;
   const state = insurancePolicyStatus(policy);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -53,7 +55,7 @@ export function InsuranceDetailPanel({
   }
 
   async function remove() {
-    if (!window.confirm(`Supprimer la police ${policy.policy_number} ?`))
+    if (!window.confirm(text.deleteConfirmation(policy.policy_number)))
       return;
     setIsDeleting(true);
     try {
@@ -75,7 +77,7 @@ export function InsuranceDetailPanel({
         className="detail-panel insurance-side-panel"
         role="dialog"
         aria-modal="true"
-        aria-label="Détail de la police"
+        aria-label={text.detail}
         onMouseDown={(event) => event.stopPropagation()}
       >
         <header className="detail-header">
@@ -84,9 +86,9 @@ export function InsuranceDetailPanel({
               {insuranceTypeLabel(policy.insurance_type)}
             </p>
             <h2>{policy.policy_number}</h2>
-            <p>{policy.source || "Assureur à compléter"}</p>
+            <p>{policy.source || text.insurerToComplete}</p>
           </div>
-          <button type="button" aria-label="Fermer" onClick={onClose}>
+          <button type="button" aria-label={text.close} onClick={onClose}>
             <ActionIcon name="close" />
           </button>
         </header>
@@ -99,7 +101,7 @@ export function InsuranceDetailPanel({
                 onClick={onEdit}
               >
                 <ActionIcon name="edit" />
-                Modifier
+                {text.edit}
               </button>
               <button
                 className="equipment-history-button detail-toolbar-button"
@@ -107,14 +109,14 @@ export function InsuranceDetailPanel({
                 onClick={() => void openHistory()}
               >
                 <ActionIcon name="history" />
-                Voir l’historique
+                {text.history}
               </button>
               <button
                 className="danger-button detail-delete-button"
                 type="button"
                 disabled={isDeleting}
                 onClick={() => void remove()}
-                aria-label={isDeleting ? "Suppression en cours" : "Supprimer"}
+                aria-label={isDeleting ? text.deleting : text.delete}
               >
                 <ActionIcon name="delete" />
               </button>
@@ -123,21 +125,21 @@ export function InsuranceDetailPanel({
           <section>
             <h3>
               <ActionIcon name="identification" />
-              Informations de la police
+              {text.policyInformation}
             </h3>
             <dl>
               <div>
-                <dt>Assureur</dt>
-                <dd>{policy.source || "À compléter"}</dd>
+                <dt>{text.columns.insurer}</dt>
+                <dd>{policy.source || text.toComplete}</dd>
               </div>
               {policy.insurance_type === "trc_rc" && (
                 <div>
-                  <dt>Site / projet</dt>
-                  <dd>{policy.project?.name || "À compléter"}</dd>
+                  <dt>{text.siteProject}</dt>
+                  <dd>{policy.project?.name || text.toComplete}</dd>
                 </div>
               )}
               <div>
-                <dt>Éléments couverts</dt>
+                <dt>{text.columns.covered}</dt>
                 <dd>{coveredInsuranceLabel(policy)}</dd>
               </div>
             </dl>
@@ -145,19 +147,19 @@ export function InsuranceDetailPanel({
           <section>
             <h3>
               <ActionIcon name="history" />
-              Période et statut
+              {text.periodStatus}
             </h3>
             <dl>
               <div>
-                <dt>Date de début</dt>
+                <dt>{text.startDate}</dt>
                 <dd>{formatInsuranceDate(policy.starts_on)}</dd>
               </div>
               <div>
-                <dt>Date d’expiration</dt>
+                <dt>{text.expiryDate}</dt>
                 <dd>{formatInsuranceDate(policy.ends_on)}</dd>
               </div>
               <div>
-                <dt>Statut</dt>
+                <dt>{text.columns.status}</dt>
                 <dd>
                   <em className={`insurance-status ${state}`}>
                     {insuranceStatusLabel(state)}
@@ -180,12 +182,12 @@ export function InsuranceDetailPanel({
               <section>
                 <h3>
                   <ActionIcon name="specifications" />
-                  Couverture
+                  {text.coverage}
                 </h3>
                 <dl>
                   <div>
-                    <dt>Situation assurée</dt>
-                    <dd>{policy.insured_situation || "À compléter"}</dd>
+                    <dt>{text.insuredSituation}</dt>
+                    <dd>{policy.insured_situation || text.toComplete}</dd>
                   </div>
                 </dl>
               </section>
@@ -193,11 +195,11 @@ export function InsuranceDetailPanel({
           <section>
             <h3>
               <ActionIcon name="invoice" />
-              Informations financières
+              {text.financialInformation}
             </h3>
             <dl>
               <div>
-                <dt>Prime nette</dt>
+                <dt>{text.netPremium}</dt>
                 <dd>{formatInsuranceMoney(policy.net_premium)}</dd>
               </div>
               <div>
@@ -207,11 +209,11 @@ export function InsuranceDetailPanel({
                 </dd>
               </div>
               <div>
-                <dt>Taxe</dt>
+                <dt>{text.tax}</dt>
                 <dd>{formatInsuranceMoney(policy.tax_amount)}</dd>
               </div>
               <div>
-                <dt>Prime TTC</dt>
+                <dt>{text.totalPremium}</dt>
                 <dd>{formatInsuranceMoney(policy.total_amount)}</dd>
               </div>
             </dl>
@@ -224,10 +226,10 @@ export function InsuranceDetailPanel({
           <section>
             <h3>
               <ActionIcon name="note" />
-              Observations
+              {text.observations}
             </h3>
             <p className="observations">
-              {policy.notes || "Aucune observation."}
+              {policy.notes || text.noObservation}
             </p>
           </section>
           <InsuranceHistory policy={policy} />

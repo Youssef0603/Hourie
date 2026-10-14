@@ -1,5 +1,6 @@
 import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { SearchableSelect } from "../../../shared/components/SearchableSelect";
+import { operationsText } from "../../../i18n/operations";
 
 export function InsuranceFilterPanel({
   status,
@@ -18,49 +19,51 @@ export function InsuranceFilterPanel({
   onClose: () => void;
   onClear: () => void;
 }) {
+  const text = operationsText().insurance;
+
   return (
     <div className="detail-backdrop" onMouseDown={onClose}>
       <aside
         className="detail-panel insurance-filter-drawer"
         role="dialog"
         aria-modal="true"
-        aria-label="Filtres"
+        aria-label={text.filters}
         onMouseDown={(event) => event.stopPropagation()}
       >
         <header className="detail-header">
           <div>
-            <p className="section-label">Assurances</p>
-            <h2>Filtres</h2>
-            <p>Affinez la liste des polices.</p>
+            <p className="section-label">{text.title}</p>
+            <h2>{text.filters}</h2>
+            <p>{text.filterSubtitle}</p>
           </div>
-          <button type="button" aria-label="Fermer" onClick={onClose}>
+          <button type="button" aria-label={text.close} onClick={onClose}>
             <ActionIcon name="close" />
           </button>
         </header>
         <div className="insurance-filter-content">
           <label>
-            Statut
+            {text.policyStatus}
             <SearchableSelect
-              ariaLabel="Statut de la police"
+              ariaLabel={text.policyStatusAria}
               value={status}
               onChange={(value) => onStatusChange(value as typeof status)}
-              placeholder="Tous les statuts"
+              placeholder={text.allStatuses}
               includeEmpty={false}
               options={[
-                { value: "all", label: "Tous les statuts" },
-                { value: "active", label: "Active" },
-                { value: "soon", label: "Expire bientôt" },
-                { value: "expired", label: "Expirée" },
+                { value: "all", label: text.allStatuses },
+                { value: "active", label: text.statuses.active },
+                { value: "soon", label: text.statuses.soon },
+                { value: "expired", label: text.statuses.expired },
               ]}
             />
           </label>
           <label>
-            Site / projet
+            {text.siteProject}
             <SearchableSelect
-              ariaLabel="Site ou projet assuré"
+              ariaLabel={text.insuredProjectAria}
               value={projectId}
               onChange={onProjectChange}
-              placeholder="Tous les sites et projets"
+              placeholder={text.allProjects}
               options={sites.map((site) => ({
                 value: String(site.id),
                 label: site.name,
@@ -70,10 +73,10 @@ export function InsuranceFilterPanel({
         </div>
         <footer className="insurance-filter-actions">
           <button type="button" onClick={onClear}>
-            Effacer les filtres
+            {text.clearFilters}
           </button>
           <button className="save-button" type="button" onClick={onClose}>
-            Afficher les résultats
+            {text.showResults}
           </button>
         </footer>
       </aside>

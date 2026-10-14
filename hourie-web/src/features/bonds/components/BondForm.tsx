@@ -3,7 +3,9 @@ import { ApiError, apiRequest } from "../../../shared/api/http";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { DocumentUploadDropzone } from "../../../shared/components/DocumentUploadDropzone";
 import { SearchableSelect } from "../../../shared/components/SearchableSelect";
-import { bondTypeOptions } from "../bondDisplay";
+import { bondTypeLabel, bondTypeOptions } from "../bondDisplay";
+import { activeLanguage } from "../../../i18n/fr";
+import { operationPhrase } from "../../../i18n/operations";
 import type { Bond, BondDocument, BondSite as Site, BondType } from "../types";
 
 export function BondForm({
@@ -86,7 +88,7 @@ export function BondForm({
       setError(
         reason instanceof ApiError
           ? (Object.values(reason.errors)[0]?.[0] ?? reason.message)
-          : "Impossible d’enregistrer la caution.",
+          : operationPhrase("Impossible d’enregistrer la caution."),
       );
     } finally {
       setSaving(false);
@@ -99,14 +101,14 @@ export function BondForm({
         className="detail-panel insurance-add-drawer"
         role="dialog"
         aria-modal="true"
-        aria-label={bond ? "Modifier la caution" : "Ajouter une caution"}
+        aria-label={operationPhrase(bond ? "Modifier la caution" : "Ajouter une caution")}
         onMouseDown={(event) => event.stopPropagation()}
       >
         <header className="detail-header insurance-add-header">
           <div>
-            <p className="section-label">Cautions</p>
-            <h2>{bond ? "Modifier la caution" : "Ajouter une caution"}</h2>
-            <p>Renseignez la garantie financière et sa localisation précise.</p>
+            <p className="section-label">{operationPhrase("Cautions")}</p>
+            <h2>{operationPhrase(bond ? "Modifier la caution" : "Ajouter une caution")}</h2>
+            <p>{operationPhrase("Renseignez la garantie financière et sa localisation précise.")}</p>
           </div>
           <div>
             <button
@@ -115,9 +117,9 @@ export function BondForm({
               form="bond-form"
               disabled={saving || !siteId || !locationId}
             >
-              {saving ? "Enregistrement…" : "Enregistrer"}
+              {operationPhrase(saving ? "Enregistrement…" : "Enregistrer")}
             </button>
-            <button type="button" aria-label="Fermer" onClick={onClose}>
+            <button type="button" aria-label={operationPhrase("Fermer")} onClick={onClose}>
               <ActionIcon name="close" />
             </button>
           </div>
@@ -131,19 +133,19 @@ export function BondForm({
           <section>
             <h3>
               <ActionIcon name="identification" />
-              Informations de la caution
+              {operationPhrase("Informations de la caution")}
             </h3>
             <div className="insurance-form-grid">
               <label>
-                Site / projet
+                {operationPhrase("Site / projet")}
                 <SearchableSelect
-                  ariaLabel="Site lié"
+                  ariaLabel={operationPhrase("Site lié")}
                   value={siteId}
                   onChange={(value) => {
                     setSiteId(value);
                     setLocationId("");
                   }}
-                  placeholder="Sélectionner un site"
+                  placeholder={operationPhrase("Sélectionner un site")}
                   includeEmpty={false}
                   options={sites.map((site) => ({
                     value: String(site.id),
@@ -152,15 +154,15 @@ export function BondForm({
                 />
               </label>
               <label>
-                Localisation physique
+                {operationPhrase("Localisation physique")}
                 <SearchableSelect
-                  ariaLabel="Localisation physique"
+                  ariaLabel={operationPhrase("Localisation physique")}
                   value={locationId}
                   onChange={setLocationId}
                   placeholder={
                     siteId
-                      ? "Sélectionner une localisation"
-                      : "Sélectionnez d’abord un site"
+                      ? operationPhrase("Sélectionner une localisation")
+                      : operationPhrase("Sélectionnez d’abord un site")
                   }
                   includeEmpty={false}
                   disabled={!siteId}
@@ -171,18 +173,18 @@ export function BondForm({
                 />
               </label>
               <label>
-                Type de caution
+                {operationPhrase("Type de caution")}
                 <SearchableSelect
-                  ariaLabel="Type de caution"
+                  ariaLabel={operationPhrase("Type de caution")}
                   value={bondType}
                   onChange={(value) => setBondType(value as BondType)}
-                  placeholder="Sélectionner un type"
+                  placeholder={operationPhrase("Sélectionner un type")}
                   includeEmpty={false}
-                  options={bondTypeOptions}
+                  options={bondTypeOptions.map((option) => ({ ...option, label: bondTypeLabel(option.value) }))}
                 />
               </label>
               <label>
-                Banque / émetteur
+                {operationPhrase("Banque / émetteur")}
                 <input name="issuer" defaultValue={bond?.issuer ?? ""} />
               </label>
             </div>
@@ -190,11 +192,11 @@ export function BondForm({
           <section>
             <h3>
               <ActionIcon name="invoice" />
-              Montant de la caution
+              {operationPhrase("Montant de la caution")}
             </h3>
             <div className="insurance-form-grid bond-payment-grid">
               <label>
-                Montant
+                {operationPhrase("Montant")}
                 <input
                   inputMode="numeric"
                   value={Number(amount || 0).toLocaleString("en-US")}
@@ -204,17 +206,17 @@ export function BondForm({
                 />
               </label>
               <label>
-                Devise
+                {operationPhrase("Devise")}
                 <SearchableSelect
-                  ariaLabel="Devise"
+                  ariaLabel={operationPhrase("Devise")}
                   value={currency}
                   onChange={setCurrency}
-                  placeholder="Sélectionner une devise"
+                  placeholder={operationPhrase("Sélectionner une devise")}
                   includeEmpty={false}
                   options={[
                     { value: "XOF", label: "FCFA (XOF)" },
-                    { value: "EUR", label: "Euro (EUR)" },
-                    { value: "USD", label: "Dollar (USD)" },
+                    { value: "EUR", label: operationPhrase("Euro (EUR)") },
+                    { value: "USD", label: operationPhrase("Dollar (USD)") },
                   ]}
                 />
               </label>
@@ -223,11 +225,11 @@ export function BondForm({
           <section>
             <h3>
               <ActionIcon name="history" />
-              Dates
+              {operationPhrase("Dates")}
             </h3>
             <div className="insurance-form-grid">
               <label>
-                Date d’émission
+                {operationPhrase("Date d’émission")}
                 <input
                   type="date"
                   name="issued_on"
@@ -235,7 +237,7 @@ export function BondForm({
                 />
               </label>
               <label>
-                Date d’expiration
+                {operationPhrase("Date d’expiration")}
                 <input
                   type="date"
                   name="expires_on"
@@ -247,7 +249,7 @@ export function BondForm({
           <section>
             <h3>
               <ActionIcon name="note" />
-              Observations
+              {operationPhrase("Observations")}
             </h3>
             <label className="insurance-form-notes">
               <textarea
@@ -260,16 +262,16 @@ export function BondForm({
           <section>
             <h3>
               <ActionIcon name="invoice" />
-              Documents
+              {operationPhrase("Documents")}
             </h3>
             <DocumentUploadDropzone
               compact
               title={
                 documents.length
-                  ? `${documents.length} document${documents.length > 1 ? "s" : ""} sélectionné${documents.length > 1 ? "s" : ""}`
-                  : "Ajouter des documents"
+                  ? activeLanguage === "ar" ? `${documents.length} مستند محدد` : `${documents.length} document${documents.length > 1 ? "s" : ""} sélectionné${documents.length > 1 ? "s" : ""}`
+                  : operationPhrase("Ajouter des documents")
               }
-              description="Garanties, attestations ou avenants · PDF uniquement · 10 Mo maximum par fichier"
+              description={operationPhrase("Garanties, attestations ou avenants · PDF uniquement · 10 Mo maximum par fichier")}
               onFiles={(files) =>
                 setDocuments((current) => [...current, ...files])
               }
@@ -281,7 +283,7 @@ export function BondForm({
                     <span>{document.name}</span>
                     <button
                       type="button"
-                      aria-label={`Retirer ${document.name}`}
+                      aria-label={`${operationPhrase("Retirer")} ${document.name}`}
                       onClick={() =>
                         setDocuments((current) =>
                           current.filter((_, itemIndex) => itemIndex !== index),

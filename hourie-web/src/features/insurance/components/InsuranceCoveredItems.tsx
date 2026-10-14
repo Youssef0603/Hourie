@@ -1,6 +1,8 @@
 import { useState, type ReactNode } from "react";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { EmptyState } from "../../../shared/components/EmptyState";
+import { activeLanguage } from "../../../i18n/fr";
+import { operationPhrase } from "../../../i18n/operations";
 import { formatInsuranceDate } from "../policyDisplay";
 import type { InsurancePolicy as Policy } from "../types";
 
@@ -13,11 +15,11 @@ export function InsuranceCoveredEquipment({
 }) {
   return (
     <InsuranceCoveredItems
-      title="Équipements couverts"
+      title={operationPhrase("Équipements couverts")}
       icon="specifications"
       countLabel="actif"
-      emptyTitle="Aucun équipement couvert"
-      emptyDescription="Les actifs liés à cette assurance apparaîtront ici."
+      emptyTitle={operationPhrase("Aucun équipement couvert")}
+      emptyDescription={operationPhrase("Les actifs liés à cette assurance apparaîtront ici.")}
       items={equipment}
       onOpenItem={onOpenEquipment}
       renderItem={(item) => (
@@ -40,24 +42,24 @@ export function InsuranceCoveredPeople({
 }) {
   return (
     <InsuranceCoveredItems
-      title="Personnes couvertes"
+      title={operationPhrase("Personnes couvertes")}
       icon="people"
       countLabel="personne"
       coveredLabel="couverte"
-      emptyTitle="Aucune personne couverte"
-      emptyDescription="Les employés liés à cette assurance santé apparaîtront ici."
+      emptyTitle={operationPhrase("Aucune personne couverte")}
+      emptyDescription={operationPhrase("Les employés liés à cette assurance santé apparaîtront ici.")}
       items={employees}
-      searchPlaceholder="Rechercher une personne"
-      noSearchResults="Aucune personne ne correspond à cette recherche."
+      searchPlaceholder={operationPhrase("Rechercher une personne")}
+      noSearchResults={operationPhrase("Aucune personne ne correspond à cette recherche.")}
       getSearchText={(employee) => employee.name}
       renderItem={(employee) => (
         <>
           <strong>{employee.name}</strong>
           <small>
-            Date de naissance :{" "}
+            {operationPhrase("Date de naissance")} :{" "}
             {employee.birth_date
               ? formatInsuranceDate(employee.birth_date)
-              : "à renseigner"}
+              : operationPhrase("À compléter")}
           </small>
         </>
       )}
@@ -134,9 +136,7 @@ function InsuranceCoveredItems<T extends { id: number }>({
             </label>
           )}
           <p className="insurance-detail-covered-count">
-            {filteredItems.length} {countLabel}
-            {filteredItems.length > 1 ? "s" : ""} {coveredLabel}
-            {filteredItems.length > 1 ? "s" : ""}
+            {activeLanguage === "ar" ? `${filteredItems.length} عنصر مشمول` : <>{filteredItems.length} {countLabel}{filteredItems.length > 1 ? "s" : ""} {coveredLabel}{filteredItems.length > 1 ? "s" : ""}</>}
           </p>
           {visibleItems.length ? (
             <ul>
@@ -165,7 +165,7 @@ function InsuranceCoveredItems<T extends { id: number }>({
                 disabled={currentPage === 0}
                 onClick={() => setPage((value) => value - 1)}
               >
-                Précédent
+                {operationPhrase("Précédent")}
               </button>
               <span>
                 {currentPage + 1} / {pageCount}
@@ -175,7 +175,7 @@ function InsuranceCoveredItems<T extends { id: number }>({
                 disabled={currentPage === pageCount - 1}
                 onClick={() => setPage((value) => value + 1)}
               >
-                Suivant
+                {operationPhrase("Suivant")}
               </button>
             </nav>
           )}

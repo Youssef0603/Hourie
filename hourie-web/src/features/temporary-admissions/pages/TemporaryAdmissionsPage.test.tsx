@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TemporaryAdmissionsPage } from "./TemporaryAdmissionsPage";
@@ -68,6 +68,9 @@ describe("TemporaryAdmissionsPage", () => {
       if (path === "/api/v1/temporary-admissions/1") {
         return Promise.resolve({ data: admission });
       }
+      if (path === "/api/v1/temporary-admissions/1/documents") {
+        return Promise.resolve({ data: admission });
+      }
       if (path === "/api/v1/temporary-admission-equipment-options") {
         return Promise.resolve({ data: admission.equipment });
       }
@@ -128,7 +131,7 @@ describe("TemporaryAdmissionsPage", () => {
     expect(screen.queryByText(/^8$/)).not.toBeInTheDocument();
   });
 
-  it("accepts several initial, AT, and invoice documents while creating an admission", async () => {
+  it("accepts declaration and invoice documents without requiring an AT during creation", async () => {
     const user = userEvent.setup();
     const { container } = render(<TemporaryAdmissionsPage canManage />);
     await screen.findByText("S1445");
@@ -149,10 +152,6 @@ describe("TemporaryAdmissionsPage", () => {
       }),
     ]);
     await user.upload(fileInputs[1], [
-      new File(["at-1"], "AT-page-1.pdf", { type: "application/pdf" }),
-      new File(["at-2"], "AT-page-2.pdf", { type: "application/pdf" }),
-    ]);
-    await user.upload(fileInputs[2], [
       new File(["invoice-1"], "facture-1.pdf", {
         type: "application/pdf",
       }),
@@ -161,10 +160,10 @@ describe("TemporaryAdmissionsPage", () => {
       }),
     ]);
 
-    expect(screen.getByText("2 documents initiaux sélectionnés")).toBeVisible();
-    expect(screen.getByText("2 documents AT sélectionnés")).toBeVisible();
+    expect(fileInputs).toHaveLength(2);
+    expect(screen.getByText("2 documents de déclaration sélectionnés")).toBeVisible();
     expect(screen.getByText("2 factures sélectionnées")).toBeVisible();
-    expect(screen.getByText("AT-page-1.pdf")).toBeVisible();
+    expect(screen.queryByText("Date de l’AT")).not.toBeInTheDocument();
     expect(screen.getByText("facture-2.pdf")).toBeVisible();
   });
 
@@ -182,5 +181,28 @@ describe("TemporaryAdmissionsPage", () => {
 
     expect(screen.getByText("SinoTruck Howo 17m3 HOWO 336")).toBeVisible();
     expect(screen.queryByText("Perkins 250 KVA")).not.toBeInTheDocument();
+  });
+
+  it("does not show an error after an AT document uploads successfully", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<TemporaryAdmissionsPage canManage />);
+    await user.click(await screen.findByText("S1445"));
+
+    fireEvent.change(screen.getByLabelText("Date de l’AT"), {
+      target: { value: "2027-10-06" },
+    });
+    const fileInputs = container.querySelectorAll<HTMLInputElement>(
+      'input[type="file"]',
+    );
+    await user.upload(
+      fileInputs[1],
+      new File(["AT"], "AT-S1445-2027.pdf", { type: "application/pdf" }),
+    );
+    await user.click(screen.getByRole("button", { name: "Ajouter l’AT" }));
+
+    await waitFor(() =>
+      expect(screen.queryByText("AT-S1445-2027.pdf")).not.toBeInTheDocument(),
+    );
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 });

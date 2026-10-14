@@ -9,16 +9,10 @@ import { TemporaryAdmissionForm } from "../components/TemporaryAdmissionForm";
 import { RelatedEquipmentDetailPanel } from "../../equipment/components/RelatedEquipmentDetailPanel";
 import type { AuthenticatedUser } from "../../auth/types";
 import type { Language } from "../../../i18n/fr";
+import { operationsLocale, operationsText } from "../../../i18n/operations";
 import type { EquipmentFilterOptions } from "../../equipment/types";
 import type { AdmissionEquipment, TemporaryAdmission } from "../types";
 import type { PaginatedResponse, PaginationMeta } from "../../../shared/api/pagination";
-
-const statusLabel = {
-  active: "Active",
-  returned: "Retournée",
-  cleared: "Dédouanée",
-  expired: "Expirée",
-};
 
 export function TemporaryAdmissionsPage({
   canManage,
@@ -33,6 +27,7 @@ export function TemporaryAdmissionsPage({
     options: EquipmentFilterOptions | null;
   };
 }) {
+  const text = operationsText().admissions;
   const [items, setItems] = useState<TemporaryAdmission[]>([]);
   const [pagination, setPagination] = useState<PaginationMeta | null>(null);
   const [equipment, setEquipment] = useState<AdmissionEquipment[]>([]);
@@ -58,9 +53,9 @@ export function TemporaryAdmissionsPage({
       setItems(admissions.data ?? []);
       setPagination(admissions.meta ?? null);
     } catch (caught) {
-      setError(admissionError(caught, "Impossible de charger les admissions."));
+      setError(admissionError(caught, text.loadError));
     } finally { setLoading(false); }
-  }, [page, search]);
+  }, [page, search, text.loadError]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => void loadItems(), 200);
@@ -78,10 +73,10 @@ export function TemporaryAdmissionsPage({
       })
       .catch((caught) =>
         setError(
-          admissionError(caught, "Impossible de charger les admissions."),
+          admissionError(caught, text.loadError),
         ),
       )
-  }, []);
+  }, [text.loadError]);
 
   const visible = items;
   const pageCount = pagination?.last_page ?? 1;
@@ -95,9 +90,9 @@ export function TemporaryAdmissionsPage({
     let active = true;
     fetchTemporaryAdmission(selectedId)
       .then((item) => { if (active) setSelected(item); })
-      .catch((caught) => { if (active) { setSelectedId(null); setError(admissionError(caught, "Impossible de charger l’admission.")); } });
+      .catch((caught) => { if (active) { setSelectedId(null); setError(admissionError(caught, text.detailError)); } });
     return () => { active = false; };
-  }, [selectedId]);
+  }, [selectedId, text.detailError]);
 
   function save(item: TemporaryAdmission) {
     setSelected(item);
@@ -115,12 +110,9 @@ export function TemporaryAdmissionsPage({
     <main className="equipment-page asset-page">
       <section className="insurance-heading">
         <div>
-          <p className="section-label">Gestion</p>
-          <h1>Admissions temporaires</h1>
-          <p>
-            Suivez les références douanières, les documents AT et les retours
-            d’équipements.
-          </p>
+          <p className="section-label">{text.management}</p>
+          <h1>{text.title}</h1>
+          <p>{text.subtitle}</p>
         </div>
       </section>
       {error && (
@@ -131,21 +123,21 @@ export function TemporaryAdmissionsPage({
       <section className="inventory-panel">
         <div className="filter-bar">
           <label className="search-field">
-            <span>Rechercher</span>
+            <span>{text.search}</span>
             <input
               value={search}
               onChange={(event) => {
                 setSearch(event.target.value);
                 setPage(1);
               }}
-              placeholder="Référence douane ou fournisseur"
+              placeholder={text.searchPlaceholder}
             />
           </label>
           {canManage && (
             <button
               className="table-refresh-button table-add-button"
               type="button"
-              aria-label="Ajouter une admission temporaire"
+              aria-label={text.add}
               onClick={() => setFormItem(null)}
             >
               <ActionIcon name="add" />
@@ -154,18 +146,18 @@ export function TemporaryAdmissionsPage({
         </div>
         {loading ? (
           <div className="table-state">
-            <LoadingSpinner label="Chargement…" />
+            <LoadingSpinner label={text.loading} />
           </div>
         ) : visible.length ? (
           <div className="equipment-table-wrap">
             <table className="equipment-table">
               <thead>
                 <tr>
-                  <th>Référence douane</th>
-                  <th>Date d’entrée</th>
-                  <th>Échéance calculée</th>
-                  <th>Documents</th>
-                  <th>Statut</th>
+                  <th>{text.columns.reference}</th>
+                  <th>{text.columns.entryDate}</th>
+                  <th>{text.columns.expiry}</th>
+                  <th>{text.columns.documents}</th>
+                  <th>{text.columns.status}</th>
                 </tr>
               </thead>
               <tbody>
@@ -181,7 +173,7 @@ export function TemporaryAdmissionsPage({
                       <em
                         className={`insurance-status ${item.status}`}
                       >
-                        {statusLabel[item.status]}
+                        {text.statuses[item.status]}
                       </em>
                     </td>
                   </tr>
@@ -192,18 +184,18 @@ export function TemporaryAdmissionsPage({
         ) : (
           <EmptyState
             icon="invoice"
-            title={search ? "Aucun résultat" : "Aucune admission temporaire"}
+            title={search ? text.noResults : text.empty}
             description={
               search
-                ? "Modifiez votre recherche pour afficher des admissions."
-                : "Ajoutez une admission temporaire pour commencer le suivi."
+                ? text.noResultsDescription
+                : text.emptyDescription
             }
           />
         )}
         {!loading && (
           <nav className="pagination insurance-pagination">
             <span>
-              {pagination ? `${pagination.from ?? 0}–${pagination.to ?? 0} sur ${pagination.total}` : `${visible.length} admission(s)`}
+              {pagination ? `${pagination.from ?? 0}–${pagination.to ?? 0} ${text.of} ${pagination.total}` : text.count(visible.length)}
             </span>
             <div>
               <button
@@ -211,7 +203,7 @@ export function TemporaryAdmissionsPage({
                 disabled={currentPage === 1 || loading}
                 onClick={() => setPage(currentPage - 1)}
               >
-                Précédent
+                {text.previous}
               </button>
               <span>
                 {currentPage} / {pageCount}
@@ -221,7 +213,7 @@ export function TemporaryAdmissionsPage({
                 disabled={currentPage === pageCount || loading}
                 onClick={() => setPage(currentPage + 1)}
               >
-                Suivant
+                {text.next}
               </button>
             </div>
           </nav>
@@ -265,5 +257,5 @@ export function TemporaryAdmissionsPage({
 }
 
 function formatDate(value: string) {
-  return new Intl.DateTimeFormat("fr-FR").format(new Date(`${value}T00:00:00`));
+  return new Intl.DateTimeFormat(operationsLocale()).format(new Date(`${value}T00:00:00`));
 }

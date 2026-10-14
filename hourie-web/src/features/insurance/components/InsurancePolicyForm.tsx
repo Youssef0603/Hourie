@@ -3,7 +3,8 @@ import { apiRequest } from "../../../shared/api/http";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { DocumentUploadDropzone } from "../../../shared/components/DocumentUploadDropzone";
 import { SearchableSelect } from "../../../shared/components/SearchableSelect";
-import { formatInsuranceAmount, insuranceTypes } from "../policyDisplay";
+import { operationPhrase, operationsText } from "../../../i18n/operations";
+import { formatInsuranceAmount, insuranceTypeLabel, insuranceTypes } from "../policyDisplay";
 import type {
   InsuranceEquipmentOption,
   InsuranceKind as Kind,
@@ -36,6 +37,7 @@ export function InsuranceAddPanel({
   onClose: () => void;
   onSaved: (policy: Policy) => void;
 }) {
+  const text = operationsText().insurance;
   const [type, setType] = useState<Kind>(policy?.insurance_type ?? defaultType);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -119,7 +121,7 @@ export function InsuranceAddPanel({
       setError(
         reason instanceof Error
           ? reason.message
-          : "Impossible d’enregistrer la police.",
+          : operationPhrase("Impossible d’enregistrer la police."),
       );
     } finally {
       setSaving(false);
@@ -132,14 +134,14 @@ export function InsuranceAddPanel({
         className="detail-panel insurance-add-drawer"
         role="dialog"
         aria-modal="true"
-        aria-label="Ajouter une police"
+        aria-label={operationPhrase("Ajouter une police")}
         onMouseDown={(event) => event.stopPropagation()}
       >
         <header className="detail-header insurance-add-header">
           <div>
-            <p className="section-label">Assurances</p>
-            <h2>{policy ? "Modifier la police" : "Ajouter une police"}</h2>
-            <p>Renseignez les informations principales de la couverture.</p>
+            <p className="section-label">{text.title}</p>
+            <h2>{operationPhrase(policy ? "Modifier la police" : "Ajouter une police")}</h2>
+            <p>{operationPhrase("Renseignez les informations principales de la couverture.")}</p>
           </div>
           <div>
             <button
@@ -148,9 +150,9 @@ export function InsuranceAddPanel({
               form="insurance-add-form"
               disabled={saving}
             >
-              {saving ? "Enregistrement…" : "Enregistrer"}
+              {operationPhrase(saving ? "Enregistrement…" : "Enregistrer")}
             </button>
-            <button type="button" aria-label="Fermer" onClick={onClose}>
+            <button type="button" aria-label={text.close} onClick={onClose}>
               <ActionIcon name="close" />
             </button>
           </div>
@@ -168,25 +170,25 @@ export function InsuranceAddPanel({
           <section>
             <h3>
               <ActionIcon name="identification" />
-              Informations de la police
+              {operationPhrase("Informations de la police")}
             </h3>
             <div className="insurance-form-grid">
               <label>
-                Type d’assurance
+                {operationPhrase("Type d’assurance")}
                 <SearchableSelect
-                  ariaLabel="Type d’assurance"
+                  ariaLabel={operationPhrase("Type d’assurance")}
                   value={type}
                   onChange={(value) => setType(value as Kind)}
-                  placeholder="Sélectionner un type"
+                  placeholder={operationPhrase("Sélectionner un type")}
                   includeEmpty={false}
                   options={insuranceTypes.map((item) => ({
                     value: item.code,
-                    label: item.label,
+                    label: insuranceTypeLabel(item.code),
                   }))}
                 />
               </label>
               <label>
-                N° de police
+                {operationPhrase("N° de police")}
                 <input
                   name="policy_number"
                   required
@@ -194,7 +196,7 @@ export function InsuranceAddPanel({
                 />
               </label>
               <label>
-                Assureur
+                {operationPhrase("Assureur")}
                 <input name="source" defaultValue={policy?.source ?? ""} />
               </label>
               {type === "trc_rc" && (
@@ -207,11 +209,11 @@ export function InsuranceAddPanel({
               )}
               {type !== "equipment" && type !== "group_health" && (
                 <label className="field-wide">
-                  Situation assurée
+                  {operationPhrase("Situation assurée")}
                   <input
                     name="insured_situation"
                     defaultValue={policy?.insured_situation ?? ""}
-                    placeholder="Précisez l’élément couvert si nécessaire"
+                    placeholder={operationPhrase("Précisez l’élément couvert si nécessaire")}
                   />
                 </label>
               )}
@@ -220,11 +222,11 @@ export function InsuranceAddPanel({
           <section>
             <h3>
               <ActionIcon name="history" />
-              Période et couverture
+              {operationPhrase("Période et couverture")}
             </h3>
             <div className="insurance-form-grid">
               <label>
-                Date de début
+                {operationPhrase("Date de début")}
                 <input
                   type="date"
                   name="starts_on"
@@ -232,7 +234,7 @@ export function InsuranceAddPanel({
                 />
               </label>
               <label>
-                Date d’expiration
+                {operationPhrase("Date d’expiration")}
                 <input
                   type="date"
                   name="ends_on"
@@ -244,11 +246,11 @@ export function InsuranceAddPanel({
           <section>
             <h3>
               <ActionIcon name="invoice" />
-              Informations financières
+              {operationPhrase("Informations financières")}
             </h3>
             <div className="insurance-form-grid insurance-financial-grid">
               <label>
-                Prime nette (FCFA)
+                {operationPhrase("Prime nette (FCFA)")}
                 <input
                   inputMode="numeric"
                   value={formatInsuranceAmount(amounts.net)}
@@ -266,7 +268,7 @@ export function InsuranceAddPanel({
                 />
               </label>
               <label>
-                Taxe (FCFA)
+                {operationPhrase("Taxe (FCFA)")}
                 <input
                   inputMode="numeric"
                   value={formatInsuranceAmount(amounts.tax)}
@@ -274,13 +276,13 @@ export function InsuranceAddPanel({
                 />
               </label>
               <label>
-                Prime TTC (FCFA)
+                {operationPhrase("Prime TTC (FCFA)")}
                 <input
                   className="insurance-calculated-total"
                   type="text"
                   value={formatInsuranceAmount(total)}
                   readOnly
-                  aria-label="Prime TTC calculée automatiquement"
+                  aria-label={operationPhrase("Prime TTC calculée automatiquement")}
                 />
               </label>
             </div>
@@ -302,7 +304,7 @@ export function InsuranceAddPanel({
           <section>
             <h3>
               <ActionIcon name="note" />
-              Observations
+              {operationPhrase("Observations")}
             </h3>
             <label className="insurance-form-notes">
               <textarea
@@ -315,16 +317,16 @@ export function InsuranceAddPanel({
           <section>
             <h3>
               <ActionIcon name="invoice" />
-              Documents
+              {operationPhrase("Documents")}
             </h3>
             <DocumentUploadDropzone
               compact
               title={
                 documents.length
                   ? `${documents.length} document${documents.length > 1 ? "s" : ""} sélectionné${documents.length > 1 ? "s" : ""}`
-                  : "Ajouter des documents"
+                  : operationPhrase("Ajouter des documents")
               }
-              description="Contrats, attestations ou factures · PDF uniquement · 10 Mo maximum par fichier"
+              description={operationPhrase("Contrats, attestations ou factures · PDF uniquement · 10 Mo maximum par fichier")}
               onFiles={(files) =>
                 setDocuments((current) => [...current, ...files])
               }
@@ -347,12 +349,12 @@ function InsuranceProjectSelect({
 
   return (
     <label>
-      Site / projet
+      {operationPhrase("Site / projet")}
       <SearchableSelect
-        ariaLabel="Site ou projet"
+        ariaLabel={operationPhrase("Site ou projet")}
         value={value}
         onChange={setValue}
-        placeholder="À compléter"
+        placeholder={operationPhrase("À compléter")}
         options={sites.map((site) => ({
           value: String(site.id),
           label: site.name,

@@ -1,17 +1,22 @@
 import type { Bond, BondStatus, BondType } from './types'
+import { operationPhrase, operationsLocale } from '../../i18n/operations'
 
-export const bondTypeOptions: { value: BondType; label: string }[] = [
-  { value: 'advance_payment', label: 'Avance de démarrage' },
-  { value: 'performance', label: 'Bonne exécution' },
-  { value: 'retention', label: 'Retenue de garantie' },
+export const bondTypeOptions: { value: BondType }[] = [
+  { value: 'advance_payment' },
+  { value: 'performance' },
+  { value: 'retention' },
 ]
 
 export function bondTypeLabel(type: BondType) {
-  return bondTypeOptions.find((option) => option.value === type)?.label ?? type
+  return operationPhrase({
+    advance_payment: 'Avance de démarrage',
+    performance: 'Bonne exécution',
+    retention: 'Retenue de garantie',
+  }[type] ?? type)
 }
 
 export function formatBondDate(value: string | null) {
-  return value ? new Intl.DateTimeFormat('fr-FR').format(new Date(`${value}T00:00:00`)) : 'À compléter'
+  return value ? new Intl.DateTimeFormat(operationsLocale()).format(new Date(`${value}T00:00:00`)) : operationPhrase('À compléter')
 }
 
 export function formatBondAmount(value: string | number | null, currency = 'XOF') {
@@ -29,5 +34,5 @@ export function getBondStatus(bond: Bond): BondStatus {
 }
 
 export function bondStatusLabel(status: BondStatus) {
-  return status === 'active' ? 'Active' : status === 'soon' ? 'Expire bientôt' : 'Expirée'
+  return operationPhrase(status === 'active' ? 'Active' : status === 'soon' ? 'Expire bientôt' : 'Expirée')
 }

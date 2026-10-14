@@ -25,6 +25,7 @@ import type { AuthenticatedUser } from "../../auth/types";
 import type { Language } from "../../../i18n/fr";
 import type { EquipmentFilterOptions } from "../../equipment/types";
 import type { PaginatedResponse, PaginationMeta } from "../../../shared/api/pagination";
+import { operationsText } from "../../../i18n/operations";
 
 export function InsurancePage({
   initialSiteId = null,
@@ -39,6 +40,7 @@ export function InsurancePage({
     options: EquipmentFilterOptions | null;
   };
 }) {
+  const text = operationsText().insurance;
   const [policies, setPolicies] = useState<Policy[]>([]);
   const [pagination, setPagination] = useState<PaginationMeta | null>(null);
   const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
@@ -130,24 +132,24 @@ export function InsurancePage({
     <main className="equipment-page asset-page insurance-workspace">
       <section className="insurance-heading">
         <div>
-          <p className="section-label">Gestion</p>
-          <h1>Assurances</h1>
+          <p className="section-label">{text.management}</p>
+          <h1>{text.title}</h1>
           <p>
             {filteredSiteName
-              ? `Polices TRC / RC liées au site ${filteredSiteName}.`
-              : "Suivez les polices, les échéances et les éléments couverts."}
+              ? text.siteSubtitle(filteredSiteName)
+              : text.subtitle}
           </p>
         </div>
       </section>
       <section className="asset-category-section insurance-category-section">
-        <h2>Catégories d’assurances</h2>
-        <nav className="asset-categories" aria-label="Catégories d’assurance">
+        <h2>{text.categories}</h2>
+        <nav className="asset-categories" aria-label={text.categoryAria}>
           <button
             className={`asset-category-card${activeType === "all" ? " active" : ""}`}
             type="button"
             onClick={() => { setActiveType("all"); setPage(1); }}
           >
-            <span>Toutes les polices</span>
+            <span>{text.allPolicies}</span>
             <strong>{Object.values(categoryCounts).reduce((total, count) => total + count, 0)}</strong>
           </button>
           {insuranceTypes.map((type) => (
@@ -161,7 +163,7 @@ export function InsurancePage({
                 if (type.code !== "trc_rc") setProjectId("");
               }}
             >
-              <span>{type.label}</span>
+              <span>{insuranceTypeLabel(type.code)}</span>
               <strong>
                 {
                   categoryCounts[type.code] ?? 0
@@ -174,13 +176,13 @@ export function InsurancePage({
       <section className="insurance-list-area inventory-panel">
         <div className="filter-bar">
           <div className="search-field">
-            <label htmlFor="insurance-search">Rechercher</label>
+            <label htmlFor="insurance-search">{text.search}</label>
             <input
               id="insurance-search"
               type="search"
               value={search}
               onChange={(event) => { setSearch(event.target.value); setPage(1); }}
-              placeholder="N° de police, assureur, projet ou équipement"
+              placeholder={text.searchPlaceholder}
             />
           </div>
           <div className="filter-toolbar-actions">
@@ -190,7 +192,7 @@ export function InsurancePage({
               onClick={() => setShowFilters((value) => !value)}
             >
               <ActionIcon name="filter" />
-              <span>Filtres</span>
+              <span>{text.filters}</span>
               {(status !== "all" || projectId) && (
                 <strong>
                   {Number(status !== "all") + Number(Boolean(projectId))}
@@ -200,8 +202,8 @@ export function InsurancePage({
             <button
               className="table-refresh-button table-add-button"
               type="button"
-              aria-label="Ajouter une police"
-              title="Ajouter une police"
+              aria-label={text.addPolicy}
+              title={text.addPolicy}
               onClick={() => setShowAdd(true)}
             >
               <ActionIcon name="add" />
@@ -209,8 +211,8 @@ export function InsurancePage({
             <button
               className="table-refresh-button filter-refresh-button"
               type="button"
-              aria-label="Actualiser"
-              title="Actualiser"
+              aria-label={text.refresh}
+              title={text.refresh}
               onClick={() => refreshPolicies()}
             >
               <ActionIcon name="refresh" />
@@ -221,28 +223,28 @@ export function InsurancePage({
           <table className="equipment-table insurance-table">
             <thead>
               <tr>
-                <th>N° de police</th>
-                <th>Assureur</th>
-                <th>Type</th>
-                <th>Éléments couverts</th>
-                <th>Période</th>
-                <th>Montant total</th>
-                <th>Statut</th>
+                <th>{text.columns.policyNumber}</th>
+                <th>{text.columns.insurer}</th>
+                <th>{text.columns.type}</th>
+                <th>{text.columns.covered}</th>
+                <th>{text.columns.period}</th>
+                <th>{text.columns.total}</th>
+                <th>{text.columns.status}</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr className="insurance-empty-row">
                   <td colSpan={7} className="insurance-table-empty">
-                    <LoadingSpinner label="Chargement des polices…" />
+                    <LoadingSpinner label={text.loading} />
                   </td>
                 </tr>
               ) : filteredPolicies.length === 0 ? (
                 <tr className="insurance-empty-row">
                   <td colSpan={7} className="insurance-table-empty">
                     <EmptyState
-                      title="Aucune police trouvée"
-                      description="Ajoutez une police ou modifiez votre recherche et vos filtres."
+                      title={text.empty}
+                      description={text.emptyDescription}
                     />
                   </td>
                 </tr>
@@ -258,7 +260,7 @@ export function InsurancePage({
                       <td>
                         <strong>{policy.policy_number}</strong>
                       </td>
-                      <td>{policy.source || "À compléter"}</td>
+                      <td>{policy.source || text.toComplete}</td>
                       <td>{insuranceTypeLabel(policy.insurance_type)}</td>
                       <td>{coveredInsuranceLabel(policy)}</td>
                       <td>
@@ -284,14 +286,14 @@ export function InsurancePage({
         </div>
         {!loading && (
           <nav className="pagination insurance-pagination">
-            <span>{pagination ? `${pagination.from ?? 0}–${pagination.to ?? 0} sur ${pagination.total}` : `${filteredPolicies.length} police(s)`}</span>
+            <span>{pagination ? `${pagination.from ?? 0}–${pagination.to ?? 0} ${text.of} ${pagination.total}` : text.policiesCount(filteredPolicies.length)}</span>
             <div>
               <button type="button" disabled={!pagination || pagination.current_page === 1 || loading} onClick={() => setPage((current) => current - 1)}>
-                Précédent
+                {text.previous}
               </button>
               <span>{pagination?.current_page ?? 1} / {pagination?.last_page ?? 1}</span>
               <button type="button" disabled={!pagination || pagination.current_page === pagination.last_page || loading} onClick={() => setPage((current) => current + 1)}>
-                Suivant
+                {text.next}
               </button>
             </div>
           </nav>

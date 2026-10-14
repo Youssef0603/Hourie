@@ -32,20 +32,19 @@ it('lists equipment options by name and serial number', function (): void {
         ->assertJsonPath('data.0.serial_number', 'SER-D8-001');
 });
 
-it('creates an admission linked to equipment with the selected validity', function (): void {
+it('creates a declaration linked to equipment with one year of initial validity', function (): void {
     $response = $this->actingAs($this->user)->postJson('/api/v1/temporary-admissions', [
         'customs_reference' => 'S1445',
         'supplier_name' => 'Caterpillar Export',
         'entered_on' => '2026-10-06',
-        'validity_months' => 6,
         'equipment_ids' => [$this->equipment->id],
     ]);
 
     $response->assertCreated()
         ->assertJsonPath('data.customs_reference', 'S1445')
         ->assertJsonPath('data.supplier_name', 'Caterpillar Export')
-        ->assertJsonPath('data.validity_months', 6)
-        ->assertJsonPath('data.expires_on', '2027-04-06')
+        ->assertJsonPath('data.validity_months', 12)
+        ->assertJsonPath('data.expires_on', '2027-10-06')
         ->assertJsonPath('data.equipment.0.id', $this->equipment->id)
         ->assertJsonPath('data.equipment.0.serial_number', 'SER-D8-001')
         ->assertJsonPath('data.changes.0.action', 'created')
@@ -59,8 +58,8 @@ it('creates an admission linked to equipment with the selected validity', functi
     $this->actingAs($this->user)->getJson("/api/v1/equipment/{$this->equipment->id}")
         ->assertOk()
         ->assertJsonPath('data.temporary_admissions.0.customs_reference', 'S1445')
-        ->assertJsonPath('data.temporary_admissions.0.validity_months', 6)
-        ->assertJsonPath('data.temporary_admissions.0.expires_on', '2027-04-06');
+        ->assertJsonPath('data.temporary_admissions.0.validity_months', 12)
+        ->assertJsonPath('data.temporary_admissions.0.expires_on', '2027-10-06');
 });
 
 it('paginates admission summaries without covered equipment or documents', function (): void {
@@ -114,7 +113,6 @@ it('calculates expiry from the date of the latest AT document', function (): voi
     $admission = TemporaryAdmission::query()->create([
         'customs_reference' => 'S3000',
         'entered_on' => '2021-10-12',
-        'validity_months' => 3,
         'created_by_user_id' => $this->user->id,
     ]);
     $admission->equipment()->attach($this->equipment);
@@ -126,7 +124,7 @@ it('calculates expiry from the date of the latest AT document', function (): voi
         'validity_months' => 3,
     ])->assertCreated()
         ->assertJsonPath('data.status', 'expired')
-        ->assertJsonPath('data.expires_on', '2022-10-12')
+        ->assertJsonPath('data.expires_on', '2023-01-12')
         ->assertJsonPath('data.documents.0.document_type', 'admission');
 
     $this->actingAs($this->user)->post('/api/v1/temporary-admissions/'.$admission->id.'/documents', [
@@ -135,7 +133,7 @@ it('calculates expiry from the date of the latest AT document', function (): voi
         'document_date' => '2022-12-20',
         'validity_months' => 6,
     ])->assertCreated()
-        ->assertJsonPath('data.expires_on', '2023-04-12');
+        ->assertJsonPath('data.expires_on', '2023-07-12');
 
     expect($admission->fresh()->status)->toBe('active');
 });
@@ -152,7 +150,6 @@ it('updates an admission through the camel-case resource binding', function (): 
         'customs_reference' => 'S4000-A',
         'supplier_name' => 'Komatsu Trading',
         'entered_on' => '2026-02-01',
-        'validity_months' => 12,
         'equipment_ids' => [$this->equipment->id],
         'notes' => 'Dossier corrigé',
     ])->assertOk()
@@ -161,11 +158,18 @@ it('updates an admission through the camel-case resource binding', function (): 
         ->assertJsonPath('data.notes', 'Dossier corrigé');
 });
 
-it('only accepts positive reasonable admission validity periods', function (): void {
-    $this->actingAs($this->user)->postJson('/api/v1/temporary-admissions', [
+it('only accepts positive reasonable AT validity periods', function (): void {
+    Storage::fake((string) config('filesystems.equipment_documents_disk'));
+    $admission = TemporaryAdmission::query()->create([
         'customs_reference' => 'S5000',
         'entered_on' => '2026-10-06',
+        'created_by_user_id' => $this->user->id,
+    ]);
+
+    $this->actingAs($this->user)->post('/api/v1/temporary-admissions/'.$admission->id.'/documents', [
+        'document' => UploadedFile::fake()->create('at-invalid.pdf', 100, 'application/pdf'),
+        'document_type' => 'admission',
+        'document_date' => '2027-10-06',
         'validity_months' => 0,
-        'equipment_ids' => [$this->equipment->id],
     ])->assertUnprocessable()->assertJsonValidationErrors('validity_months');
 });

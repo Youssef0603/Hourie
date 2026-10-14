@@ -15,6 +15,8 @@ import { BondDetails } from "../components/BondDetails";
 import { BondFilters } from "../components/BondFilters";
 import { BondForm } from "../components/BondForm";
 import type { PaginatedResponse, PaginationMeta } from "../../../shared/api/pagination";
+import { activeLanguage } from "../../../i18n/fr";
+import { operationPhrase } from "../../../i18n/operations";
 
 export function BondsPage() {
   const [bonds, setBonds] = useState<Bond[]>([]);
@@ -84,18 +86,15 @@ export function BondsPage() {
     <main className="equipment-page asset-page insurance-workspace bonds-workspace">
       <section className="insurance-heading">
         <div>
-          <p className="section-label">Gestion</p>
-          <h1>Cautions</h1>
-          <p>
-            Suivez les garanties financières liées aux sites, leurs montants et
-            leurs échéances.
-          </p>
+          <p className="section-label">{operationPhrase("Gestion")}</p>
+          <h1>{operationPhrase("Cautions")}</h1>
+          <p>{operationPhrase("Suivez les garanties financières liées aux sites, leurs montants et leurs échéances.")}</p>
         </div>
       </section>
       <section className="insurance-list-area inventory-panel">
         <div className="filter-bar">
           <div className="search-field">
-            <label htmlFor="bond-search">Rechercher</label>
+            <label htmlFor="bond-search">{operationPhrase("Rechercher")}</label>
             <input
               id="bond-search"
               type="search"
@@ -104,7 +103,7 @@ export function BondsPage() {
                 setSearch(event.target.value);
                 setPage(1);
               }}
-              placeholder="Type, banque, localisation ou site"
+              placeholder={operationPhrase("Type, banque, localisation ou site")}
             />
           </div>
           <div className="filter-toolbar-actions">
@@ -114,7 +113,7 @@ export function BondsPage() {
               onClick={() => setShowFilters(true)}
             >
               <ActionIcon name="filter" />
-              <span>Filtres</span>
+              <span>{operationPhrase("Filtres")}</span>
               {(status !== "all" || type !== "all" || siteId) && (
                 <strong>
                   {Number(status !== "all") +
@@ -126,8 +125,8 @@ export function BondsPage() {
             <button
               className="table-refresh-button table-add-button"
               type="button"
-              aria-label="Ajouter une caution"
-              title="Ajouter une caution"
+              aria-label={operationPhrase("Ajouter une caution")}
+              title={operationPhrase("Ajouter une caution")}
               onClick={() => setShowAdd(true)}
             >
               <ActionIcon name="add" />
@@ -135,8 +134,8 @@ export function BondsPage() {
             <button
               className="table-refresh-button filter-refresh-button"
               type="button"
-              aria-label="Actualiser"
-              title="Actualiser"
+              aria-label={operationPhrase("Actualiser")}
+              title={operationPhrase("Actualiser")}
               onClick={refresh}
             >
               <ActionIcon name="refresh" />
@@ -147,21 +146,21 @@ export function BondsPage() {
           <table className="equipment-table insurance-table bonds-table">
             <thead>
               <tr>
-                <th>Site / projet</th>
-                <th>Localisation physique</th>
-                <th>Type de caution</th>
-                <th>Émetteur</th>
-                <th>Montant</th>
-                <th>Date de début</th>
-                <th>Date de fin</th>
-                <th>Statut</th>
+                <th>{operationPhrase("Site / projet")}</th>
+                <th>{operationPhrase("Localisation physique")}</th>
+                <th>{operationPhrase("Type de caution")}</th>
+                <th>{operationPhrase("Émetteur")}</th>
+                <th>{operationPhrase("Montant")}</th>
+                <th>{operationPhrase("Date de début")}</th>
+                <th>{operationPhrase("Date de fin")}</th>
+                <th>{operationPhrase("Statut")}</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr className="insurance-empty-row">
                   <td colSpan={8} className="insurance-table-empty">
-                    <LoadingSpinner label="Chargement des cautions…" />
+                    <LoadingSpinner label={operationPhrase("Chargement des cautions…")} />
                   </td>
                 </tr>
               ) : visible.length === 0 ? (
@@ -169,8 +168,8 @@ export function BondsPage() {
                   <td colSpan={8} className="insurance-table-empty">
                     <EmptyState
                       icon="invoice"
-                      title="Aucune caution trouvée"
-                      description="Ajoutez une caution ou modifiez votre recherche et vos filtres."
+                      title={operationPhrase("Aucune caution trouvée")}
+                      description={operationPhrase("Ajoutez une caution ou modifiez votre recherche et vos filtres.")}
                     />
                   </td>
                 </tr>
@@ -184,11 +183,11 @@ export function BondsPage() {
                       onClick={() => setSelectedId(bond.id)}
                     >
                       <td>
-                        <strong>{bond.project?.name || "À compléter"}</strong>
+                        <strong>{bond.project?.name || operationPhrase("À compléter")}</strong>
                       </td>
-                      <td>{bond.location?.name || "À compléter"}</td>
+                      <td>{bond.location?.name || operationPhrase("À compléter")}</td>
                       <td>{bondTypeLabel(bond.bond_type)}</td>
-                      <td>{bond.issuer || "À compléter"}</td>
+                      <td>{bond.issuer || operationPhrase("À compléter")}</td>
                       <td>
                         <strong>
                           {formatBondAmount(bond.amount, bond.currency)}
@@ -215,7 +214,7 @@ export function BondsPage() {
         {!loading && (
           <nav className="pagination insurance-pagination">
             <span>
-              {pagination ? `${pagination.from ?? 0}–${pagination.to ?? 0} sur ${pagination.total}` : `${visible.length} caution(s)`}
+              {pagination ? activeLanguage === "ar" ? `${pagination.from ?? 0}–${pagination.to ?? 0} من ${pagination.total}` : `${pagination.from ?? 0}–${pagination.to ?? 0} sur ${pagination.total}` : activeLanguage === "ar" ? `${visible.length} ضمان` : `${visible.length} caution(s)`}
             </span>
             <div>
               <button
@@ -223,7 +222,7 @@ export function BondsPage() {
                 disabled={currentPage === 1 || loading}
                 onClick={() => setPage(currentPage - 1)}
               >
-                Précédent
+                {operationPhrase("Précédent")}
               </button>
               <span>
                 {currentPage} / {pageCount}
@@ -233,7 +232,7 @@ export function BondsPage() {
                 disabled={currentPage === pageCount || loading}
                 onClick={() => setPage(currentPage + 1)}
               >
-                Suivant
+                {operationPhrase("Suivant")}
               </button>
             </div>
           </nav>

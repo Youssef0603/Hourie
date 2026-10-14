@@ -26,7 +26,6 @@ class StoreTemporaryAdmissionRequest extends FormRequest
             'customs_reference' => ['required', 'string', 'max:255', 'unique:temporary_admissions,customs_reference'],
             'supplier_name' => ['nullable', 'string', 'max:255'],
             'entered_on' => ['required', 'date'],
-            'validity_months' => ['required', 'integer', 'min:1', 'max:120'],
             'equipment_ids' => ['required', 'array', 'min:1'],
             'equipment_ids.*' => ['integer', 'distinct', 'exists:equipment,id'],
             'notes' => ['nullable', 'string', 'max:5000'],

@@ -526,7 +526,9 @@ export function EquipmentPage({
       <WorkspaceHeader
         user={user}
         language={language}
+        activeSection={activeSection}
         onToggleLanguage={onToggleLanguage}
+        onNavigateSettings={() => navigateSection("catalogs")}
         onLogout={onLogout}
         isLoggingOut={isLoggingOut}
       />
@@ -535,7 +537,6 @@ export function EquipmentPage({
         className={`workspace-layout${isSidebarCollapsed ? " sidebar-collapsed" : ""}`}
       >
         <WorkspaceSidebar
-          user={user}
           language={language}
           activeSection={activeSection}
           activeAssetCategory={

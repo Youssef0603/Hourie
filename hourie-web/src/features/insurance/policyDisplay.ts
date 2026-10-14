@@ -1,14 +1,15 @@
 import type { InsuranceKind, InsurancePolicy } from './types'
+import { operationsLocale, operationsText } from '../../i18n/operations'
 
-export const insuranceTypes: Array<{ code: InsuranceKind; label: string }> = [
-  { code: 'trc_rc', label: 'TRC / RC' },
-  { code: 'individual_accident', label: 'Accidents individuels' },
-  { code: 'group_health', label: 'Santé groupe' },
-  { code: 'equipment', label: 'Équipements' },
+export const insuranceTypes: Array<{ code: InsuranceKind }> = [
+  { code: 'trc_rc' },
+  { code: 'individual_accident' },
+  { code: 'group_health' },
+  { code: 'equipment' },
 ]
 
 export function insuranceTypeLabel(type: InsuranceKind) {
-  return insuranceTypes.find((item) => item.code === type)?.label ?? type
+  return operationsText().insurance.types[type] ?? type
 }
 
 export function formatInsuranceAmount(amount: string | number | null) {
@@ -16,11 +17,11 @@ export function formatInsuranceAmount(amount: string | number | null) {
 }
 
 export function formatInsuranceMoney(amount: string | null) {
-  return amount === null ? 'À compléter' : `${formatInsuranceAmount(amount)} FCFA`
+  return amount === null ? operationsText().insurance.toComplete : `${formatInsuranceAmount(amount)} FCFA`
 }
 
 export function formatInsuranceDate(date: string | null) {
-  return date ? new Intl.DateTimeFormat('fr-FR').format(new Date(`${date}T00:00:00`)) : 'À compléter'
+  return date ? new Intl.DateTimeFormat(operationsLocale()).format(new Date(`${date}T00:00:00`)) : operationsText().insurance.toComplete
 }
 
 export function insurancePolicyStatus(policy: InsurancePolicy): 'active' | 'soon' | 'expired' {
@@ -34,11 +35,12 @@ export function insurancePolicyStatus(policy: InsurancePolicy): 'active' | 'soon
 }
 
 export function insuranceStatusLabel(status: ReturnType<typeof insurancePolicyStatus>) {
-  return status === 'active' ? 'Active' : status === 'soon' ? 'Expire bientôt' : 'Expirée'
+  return operationsText().insurance.statuses[status]
 }
 
 export function coveredInsuranceLabel(policy: InsurancePolicy) {
-  if (policy.insurance_type === 'equipment') { const count = policy.covered_count ?? policy.equipment?.length ?? 0; return count ? `${count} actif${count > 1 ? 's' : ''}` : 'Équipements à compléter' }
-  if (policy.insurance_type === 'individual_accident' || policy.insurance_type === 'group_health') { const count = policy.covered_count ?? policy.employees?.length ?? 0; return count ? `${count} employé${count > 1 ? 's' : ''}` : 'Employés à compléter' }
-  return policy.project?.name || policy.insured_situation || 'Site / projet à compléter'
+  const text = operationsText().insurance
+  if (policy.insurance_type === 'equipment') { const count = policy.covered_count ?? policy.equipment?.length ?? 0; return count ? text.assetsCovered(count) : text.equipmentToComplete }
+  if (policy.insurance_type === 'individual_accident' || policy.insurance_type === 'group_health') { const count = policy.covered_count ?? policy.employees?.length ?? 0; return count ? text.employeesCovered(count) : text.employeesToComplete }
+  return policy.project?.name || policy.insured_situation || text.projectToComplete
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { apiRequest } from "../../../shared/api/http";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
+import { operationPhrase } from "../../../i18n/operations";
 import {
   RecordHistory,
   type RecordHistoryEntry,
@@ -22,7 +23,7 @@ export function InsuranceHistory({ policy }: { policy: Policy }) {
       })
       .catch(() => {
         if (active)
-          setError("Impossible de charger l’historique de cette police.");
+          setError(operationPhrase("Impossible de charger l’historique de cette police."));
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -37,7 +38,7 @@ export function InsuranceHistory({ policy }: { policy: Policy }) {
       <summary>
         <h3>
           <ActionIcon name="history" />
-          Historique
+          {operationPhrase("Historique")}
         </h3>
         <ActionIcon name="expand" />
       </summary>
@@ -47,12 +48,12 @@ export function InsuranceHistory({ policy }: { policy: Policy }) {
           loading={loading}
           error={error}
           actionLabels={{
-            created: "Police créée",
-            updated: "Police modifiée",
-            document_added: "Document ajouté",
-            document_deleted: "Document supprimé",
+            created: operationPhrase("Police créée"),
+            updated: operationPhrase("Police modifiée"),
+            document_added: operationPhrase("Document ajouté"),
+            document_deleted: operationPhrase("Document supprimé"),
           }}
-          emptyDescription="Les modifications de cette police apparaîtront ici."
+          emptyDescription={operationPhrase("Les modifications de cette police apparaîtront ici.")}
         />
       </div>
     </details>

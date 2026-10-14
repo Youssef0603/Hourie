@@ -3,6 +3,8 @@ import { apiRequest } from "../../../shared/api/http";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { DocumentUploadDropzone } from "../../../shared/components/DocumentUploadDropzone";
 import { SearchableMultiSelect } from "../../../shared/components/SearchableMultiSelect";
+import { activeLanguage } from "../../../i18n/fr";
+import { operationPhrase, operationsText } from "../../../i18n/operations";
 import { admissionError, uploadAdmissionDocument } from "../api";
 import type {
   AdmissionDocumentType,
@@ -21,13 +23,13 @@ export function TemporaryAdmissionForm({
   onClose: () => void;
   onSaved: (item: TemporaryAdmission) => void;
 }) {
+  const text = operationsText().admissions;
   const [ids, setIds] = useState<number[]>(
     item?.equipment.map((entry) => entry.id) ?? [],
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [initialDocuments, setInitialDocuments] = useState<File[]>([]);
-  const [atDocuments, setAtDocuments] = useState<File[]>([]);
   const [invoiceDocuments, setInvoiceDocuments] = useState<File[]>([]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -47,7 +49,6 @@ export function TemporaryAdmissionForm({
             customs_reference: form.get("customs_reference"),
             supplier_name: form.get("supplier_name") || null,
             entered_on: form.get("entered_on"),
-            validity_months: Number(form.get("validity_months")),
             notes: form.get("notes") || null,
             equipment_ids: ids,
           }),
@@ -58,12 +59,6 @@ export function TemporaryAdmissionForm({
         createdId = saved.id;
         for (const [type, files, documentDate, validityMonths] of [
           ["initial", initialDocuments, saved.entered_on, null],
-          [
-            "admission",
-            atDocuments,
-            String(form.get("at_document_date")),
-            Number(form.get("validity_months")),
-          ],
           ["invoice", invoiceDocuments, null, null],
         ] as Array<
           [AdmissionDocumentType, File[], string | null, number | null]
@@ -87,7 +82,7 @@ export function TemporaryAdmissionForm({
         }).catch(() => undefined);
       }
       setError(
-        admissionError(caught, "Impossible d’enregistrer cette admission."),
+        admissionError(caught, operationPhrase("Impossible d’enregistrer cette admission.")),
       );
     } finally {
       setSaving(false);
@@ -100,16 +95,14 @@ export function TemporaryAdmissionForm({
         className="detail-panel insurance-add-drawer"
         role="dialog"
         aria-modal="true"
-        aria-label={item ? "Modifier l’admission" : "Ajouter une admission"}
+        aria-label={operationPhrase(item ? "Modifier l’admission" : "Ajouter une admission")}
         onMouseDown={(event) => event.stopPropagation()}
       >
         <header className="detail-header insurance-add-header">
           <div>
-            <p className="section-label">Admissions temporaires</p>
-            <h2>{item ? "Modifier l’admission" : "Ajouter une admission"}</h2>
-            <p>
-              Renseignez la référence douanière et les équipements couverts.
-            </p>
+            <p className="section-label">{text.title}</p>
+            <h2>{operationPhrase(item ? "Modifier l’admission" : "Ajouter une admission")}</h2>
+            <p>{operationPhrase("Renseignez la référence douanière et les équipements couverts.")}</p>
           </div>
           <div>
             <button
@@ -119,12 +112,12 @@ export function TemporaryAdmissionForm({
               disabled={
                 saving ||
                 !ids.length ||
-                (!item && (!initialDocuments.length || !atDocuments.length))
+                (!item && !initialDocuments.length)
               }
             >
-              {saving ? "Enregistrement…" : "Enregistrer"}
+              {operationPhrase(saving ? "Enregistrement…" : "Enregistrer")}
             </button>
-            <button type="button" onClick={onClose} aria-label="Fermer">
+            <button type="button" onClick={onClose} aria-label={operationPhrase("Fermer")}>
               <ActionIcon name="close" />
             </button>
           </div>
@@ -134,13 +127,6 @@ export function TemporaryAdmissionForm({
           className="insurance-add-form"
           onSubmit={submit}
         >
-          {item && (
-            <input
-              type="hidden"
-              name="validity_months"
-              value={item.validity_months}
-            />
-          )}
           {error && (
             <div className="form-alert" role="alert">
               {error}
@@ -149,11 +135,11 @@ export function TemporaryAdmissionForm({
           <section>
             <h3>
               <ActionIcon name="identification" />
-              Informations de l’admission
+              {operationPhrase("Informations de l’admission")}
             </h3>
             <div className="insurance-form-grid">
               <label>
-                Référence douane
+                {operationPhrase("Référence douane")}
                 <input
                   required
                   name="customs_reference"
@@ -162,7 +148,7 @@ export function TemporaryAdmissionForm({
                 />
               </label>
               <label>
-                Date d’entrée
+                {operationPhrase("Date d’entrée")}
                 <input
                   required
                   type="date"
@@ -171,10 +157,10 @@ export function TemporaryAdmissionForm({
                 />
               </label>
               <label>
-                Fournisseur
+                {operationPhrase("Fournisseur")}
                 <input
                   name="supplier_name"
-                  placeholder="Nom du fournisseur"
+                  placeholder={operationPhrase("Nom du fournisseur")}
                   defaultValue={item?.supplier_name ?? ""}
                 />
               </label>
@@ -183,15 +169,15 @@ export function TemporaryAdmissionForm({
           <section>
             <h3>
               <ActionIcon name="specifications" />
-              Équipements couverts
+              {operationPhrase("Équipements couverts")}
             </h3>
             <div className="insurance-covered-equipment">
               <SearchableMultiSelect
-                ariaLabel="Ajouter un équipement"
+                ariaLabel={operationPhrase("Ajouter un équipement")}
                 values={ids.map(String)}
                 onChange={(values) => setIds(values.map(Number))}
-                placeholder="Sélectionner un équipement"
-                selectedLabel={(count) => `${count} équipement${count > 1 ? "s" : ""} sélectionné${count > 1 ? "s" : ""}`}
+                placeholder={operationPhrase("Sélectionner un équipement")}
+                selectedLabel={(count) => activeLanguage === "ar" ? `${count} معدات محددة` : `${count} équipement${count > 1 ? "s" : ""} sélectionné${count > 1 ? "s" : ""}`}
                 options={equipment
                   .map((entry) => ({
                     value: String(entry.id),
@@ -213,7 +199,7 @@ export function TemporaryAdmissionForm({
                         className="insurance-covered-remove"
                         type="button"
                         aria-label={`Retirer ${entry?.asset_code ?? "l’équipement"}`}
-                        title="Retirer"
+                        title={operationPhrase("Retirer")}
                         onClick={() =>
                           setIds((all) => all.filter((value) => value !== id))
                         }
@@ -230,7 +216,7 @@ export function TemporaryAdmissionForm({
             <section>
               <h3>
                 <ActionIcon name="invoice" />
-                Documents
+                {operationPhrase("Documents")}
               </h3>
               <div className="temporary-admission-create-documents">
                 <div className="temporary-admission-upload-group">
@@ -240,7 +226,7 @@ export function TemporaryAdmissionForm({
                       initialDocuments,
                       "initial",
                     )}
-                    description="Un ou plusieurs documents initiaux obligatoires · PDF · 10 Mo maximum par fichier"
+                    description={operationPhrase("Un ou plusieurs documents de déclaration obligatoires · PDF · 10 Mo maximum par fichier")}
                     onFiles={(files) =>
                       setInitialDocuments((current) => [
                         ...current,
@@ -258,51 +244,10 @@ export function TemporaryAdmissionForm({
                   />
                 </div>
                 <div className="temporary-admission-upload-group">
-                  <div className="temporary-admission-at-fields">
-                    <label>
-                      Date de l’AT
-                      <input
-                        type="date"
-                        name="at_document_date"
-                        required
-                      />
-                    </label>
-                    <label>
-                      Durée de validité (mois)
-                      <input
-                        required
-                        type="number"
-                        name="validity_months"
-                        min={1}
-                        max={120}
-                        step={1}
-                        defaultValue={12}
-                        placeholder="Ex. 3, 6 ou 12"
-                      />
-                    </label>
-                  </div>
-                  <DocumentUploadDropzone
-                    compact
-                    title={selectedFilesTitle(atDocuments, "at")}
-                    description="Un ou plusieurs documents AT obligatoires · PDF · 10 Mo maximum par fichier"
-                    onFiles={(files) =>
-                      setAtDocuments((current) => [...current, ...files])
-                    }
-                  />
-                  <SelectedFiles
-                    files={atDocuments}
-                    onRemove={(index) =>
-                      setAtDocuments((current) =>
-                        current.filter((_, candidate) => candidate !== index),
-                      )
-                    }
-                  />
-                </div>
-                <div className="temporary-admission-upload-group">
                   <DocumentUploadDropzone
                     compact
                     title={selectedFilesTitle(invoiceDocuments, "invoice")}
-                    description="Une ou plusieurs factures facultatives · PDF · 10 Mo maximum par fichier"
+                    description={operationPhrase("Une ou plusieurs factures facultatives · PDF · 10 Mo maximum par fichier")}
                     onFiles={(files) =>
                       setInvoiceDocuments((current) => [...current, ...files])
                     }
@@ -322,7 +267,7 @@ export function TemporaryAdmissionForm({
           <section>
             <h3>
               <ActionIcon name="note" />
-              Observations
+              {operationPhrase("Observations")}
             </h3>
             <label className="insurance-form-notes">
               <textarea name="notes" defaultValue={item?.notes ?? ""} />
@@ -336,8 +281,8 @@ export function TemporaryAdmissionForm({
 
 function serialLabel(item: AdmissionEquipment) {
   return item.serial_number
-    ? `N° de série : ${item.serial_number}`
-    : "N° de série non renseigné";
+    ? `${activeLanguage === "ar" ? "رقم التسلسل" : "N° de série"} : ${item.serial_number}`
+    : operationPhrase("N° de série non renseigné");
 }
 
 function equipmentLabel(item: AdmissionEquipment) {
@@ -346,21 +291,22 @@ function equipmentLabel(item: AdmissionEquipment) {
 
 function selectedFilesTitle(
   files: File[],
-  kind: "initial" | "at" | "invoice",
+  kind: "initial" | "invoice",
 ) {
   if (!files.length)
     return {
-      initial: "Ajouter des documents initiaux",
-      at: "Ajouter des documents AT",
-      invoice: "Ajouter des factures",
+      initial: operationPhrase("Ajouter la déclaration"),
+      invoice: operationPhrase("Ajouter des factures"),
     }[kind];
   if (kind === "invoice") {
+    if (activeLanguage === "ar") return `${files.length} فاتورة محددة`;
     return `${files.length} facture${files.length > 1 ? "s" : ""} sélectionnée${files.length > 1 ? "s" : ""}`;
   }
   if (kind === "initial") {
-    return `${files.length} document${files.length > 1 ? "s initiaux" : " initial"} sélectionné${files.length > 1 ? "s" : ""}`;
+    if (activeLanguage === "ar") return `${files.length} مستند تصريح محدد`;
+    return `${files.length} document${files.length > 1 ? "s de déclaration" : " de déclaration"} sélectionné${files.length > 1 ? "s" : ""}`;
   }
-  return `${files.length} document${files.length > 1 ? "s" : ""} AT sélectionné${files.length > 1 ? "s" : ""}`;
+  return operationPhrase("Ajouter des factures");
 }
 
 function SelectedFiles({
@@ -382,7 +328,7 @@ function SelectedFiles({
             aria-label={`Retirer ${file.name}`}
             onClick={() => onRemove(index)}
           >
-            <ActionIcon name="close" />
+            <ActionIcon name="delete" />
           </button>
         </li>
       ))}

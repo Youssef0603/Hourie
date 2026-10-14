@@ -70,13 +70,6 @@
   gap: 0.4rem;
 }
 
-.workspace-sidebar .sidebar-settings-link {
-  margin-top: auto;
-  border-top: 1px solid var(--color-border);
-  border-radius: 0;
-  padding-top: 1rem;
-}
-
 .sidebar-navigation-group {
   display: grid;
   gap: 0.25rem;
@@ -786,18 +779,24 @@ html[dir="rtl"] .search-clear-button {
   z-index: 30;
   inset: 0;
   display: flex;
+  height: 100vh;
+  height: 100dvh;
   justify-content: flex-end;
   background: rgb(18 20 24 / 35%);
   backdrop-filter: blur(2px);
+  overscroll-behavior: none;
 }
 
 .filter-drawer {
   display: grid;
   width: min(33rem, 100%);
-  height: 100%;
+  height: 100vh;
+  height: 100dvh;
   grid-template-rows: auto minmax(0, 1fr) auto;
   background: white;
   box-shadow: -12px 0 32px rgb(18 20 24 / 16%);
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .filter-drawer > header,
@@ -3067,10 +3066,14 @@ html[dir="rtl"] .filter-bar select {
   z-index: 30;
   inset: 0;
   display: flex;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
   align-items: stretch;
   justify-content: flex-end;
   background: rgb(10 12 16 / 44%);
   backdrop-filter: blur(2px);
+  overscroll-behavior: none;
 }
 
 /* A second live backdrop-filter over a scrolling drawer flickers in Chromium.
@@ -3083,7 +3086,9 @@ html[dir="rtl"] .filter-bar select {
 
 .detail-panel {
   width: min(100%, 30rem);
-  max-height: 100svh;
+  height: 100vh;
+  height: 100dvh;
+  max-height: none;
   overflow-y: auto;
   border: 0;
   border-left: 1px solid var(--color-border);
@@ -3091,6 +3096,7 @@ html[dir="rtl"] .filter-bar select {
   background: white;
   box-shadow: 0 24px 70px rgb(18 20 24 / 24%);
   overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
 }
 
@@ -5770,13 +5776,30 @@ html[dir="rtl"] .maintenance-form-grid select {
   }
 
   .detail-backdrop {
+    height: 100dvh;
     padding: 0;
   }
 
   .detail-panel {
-    max-height: 100svh;
+    height: 100dvh;
+    min-height: 100dvh;
+    max-height: 100dvh;
     width: 100%;
     border-radius: 0;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+
+  .detail-header {
+    padding-top: calc(0.65rem + env(safe-area-inset-top, 0));
+  }
+
+  .creation-panel-header {
+    padding-top: calc(1rem + env(safe-area-inset-top, 0));
+  }
+
+  .filter-drawer {
+    height: 100dvh;
+    padding-bottom: env(safe-area-inset-bottom, 0);
   }
 
   .maintenance-form-grid {
@@ -5793,6 +5816,14 @@ html[dir="rtl"] .maintenance-form-grid select {
 
   .detail-primary-actions .maintenance-form-grid .field-wide {
     grid-column: auto;
+  }
+}
+
+@supports (-webkit-touch-callout: none) {
+  @media (max-width: 720px) {
+    :is(.detail-panel, .filter-drawer, .modal-panel) :is(input, select, textarea) {
+      font-size: 16px !important;
+    }
   }
 }
 
@@ -5874,7 +5905,7 @@ html[dir="rtl"] .maintenance-form-grid select {
   font-size: 0.66rem;
 }
 
-.account-logout {
+.account-menu-action {
   display: flex;
   width: 100%;
   min-height: 2.1rem;
@@ -5884,7 +5915,7 @@ html[dir="rtl"] .maintenance-form-grid select {
   border-radius: 0.35rem;
   outline: none;
   padding: 0.38rem 0.55rem;
-  color: var(--color-primary);
+  color: var(--color-text-strong);
   background: transparent;
   cursor: pointer;
   font: inherit;
@@ -5893,20 +5924,24 @@ html[dir="rtl"] .maintenance-form-grid select {
   text-align: start;
 }
 
-.account-logout:hover,
-.account-logout[data-focus],
-.account-logout:focus-visible {
-  color: var(--color-primary-dark);
-  background: transparent;
-  text-decoration: underline;
+.account-menu-action:hover,
+.account-menu-action[data-focus],
+.account-menu-action:focus-visible,
+.account-menu-action.active {
+  color: var(--color-primary);
+  background: var(--color-primary-soft);
 }
 
-.account-logout:disabled {
+.account-logout {
+  color: var(--color-primary);
+}
+
+.account-menu-action:disabled {
   cursor: wait;
   opacity: 0.6;
 }
 
-.account-logout svg {
+.account-menu-action svg {
   width: 1rem;
   height: 1rem;
   flex: 0 0 auto;
@@ -5934,8 +5969,9 @@ html[dir="rtl"] .maintenance-form-grid select {
   .workspace-sidebar nav {
     display: grid;
     min-height: 0;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.35rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+    padding: 0.2rem;
   }
 
   .workspace-sidebar .sidebar-navigation-group {
@@ -5956,33 +5992,55 @@ html[dir="rtl"] .maintenance-form-grid select {
     background: transparent;
   }
 
-  .workspace-sidebar nav > button,
+  .workspace-sidebar .sidebar-dashboard-link {
+    grid-column: 1 / -1;
+    min-height: 2.9rem;
+    justify-content: flex-start;
+    flex-direction: row;
+    gap: 0.7rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    padding: 0.65rem 0.8rem;
+    text-align: start;
+    background: #f8f9fb;
+  }
+
+  .workspace-sidebar nav > .sidebar-section-link,
   .workspace-sidebar .sidebar-assets-toggle {
     width: 100%;
-    min-height: 3.35rem;
-    justify-content: flex-start;
-    gap: 0.65rem;
-    border: 1px solid transparent;
-    border-radius: 0.32rem;
-    padding: 0.65rem 0.8rem;
-    line-height: 1.25;
+    min-height: 5.1rem;
+    justify-content: center;
+    flex-direction: column;
+    gap: 0.45rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    padding: 0.65rem 0.35rem;
+    color: var(--color-text-muted);
+    line-height: 1.2;
+    text-align: center;
+    background: #fff;
+  }
+
+  .workspace-sidebar nav > .sidebar-section-link svg,
+  .workspace-sidebar .sidebar-assets-toggle svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .workspace-sidebar nav > .sidebar-section-link .nav-label,
+  .workspace-sidebar .sidebar-assets-toggle .nav-label {
+    max-width: 100%;
+    font-size: 0.68rem;
+    font-weight: 650;
+    overflow-wrap: anywhere;
   }
 
   .workspace-sidebar button.active,
   .workspace-sidebar .sidebar-assets-heading.active-group .sidebar-assets-toggle {
-    border-color: #f4cbd5;
+    border-color: var(--color-primary);
     color: var(--color-primary);
     background: #fff0f4;
-    box-shadow: none;
-  }
-
-  .workspace-sidebar .sidebar-settings-link {
-    grid-column: 1 / -1;
-    margin-top: 0.15rem;
-    border: 0;
-    border-top: 1px solid var(--color-border);
-    border-radius: 0;
-    padding-top: 0.75rem;
+    box-shadow: 0 0 0 2px var(--color-primary-soft);
   }
 
   .asset-categories {
@@ -6765,18 +6823,26 @@ html[dir="rtl"] .maintenance-form-grid select {
 
 .temporary-admission-selected-files li button {
   display: grid;
-  width: 1.35rem;
-  height: 1.35rem;
+  width: 1.8rem;
+  height: 1.8rem;
   flex: 0 0 auto;
   place-items: center;
-  border: 0;
+  border: 1px solid rgb(211 18 69 / 28%);
+  border-radius: 0.3rem;
   color: var(--color-primary);
-  background: transparent;
+  background: var(--color-primary-soft);
+  cursor: pointer;
 }
 
 .temporary-admission-selected-files li svg {
-  width: 0.8rem;
-  height: 0.8rem;
+  display: block;
+  width: 0.9rem;
+  height: 0.9rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
 }
 
 .insurance-add-form label {
@@ -7002,6 +7068,10 @@ html[dir="rtl"] .insurance-filter-content .searchable-select-input {
 
 .insurance-side-content {
   padding: 0 1rem 1rem;
+}
+
+.temporary-admission-detail-alert {
+  margin: 0.75rem 0 0;
 }
 
 .insurance-history p {

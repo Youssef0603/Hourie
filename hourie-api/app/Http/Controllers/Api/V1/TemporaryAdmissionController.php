@@ -70,7 +70,7 @@ class TemporaryAdmissionController extends Controller
     public function store(StoreTemporaryAdmissionRequest $request)
     {
         $item = DB::transaction(function () use ($request) {
-            $item = TemporaryAdmission::query()->create([...$request->safe()->except('equipment_ids'), 'created_by_user_id' => $request->user()->id]);
+            $item = TemporaryAdmission::query()->create([...$request->safe()->except('equipment_ids'), 'validity_months' => 12, 'created_by_user_id' => $request->user()->id]);
             $item->equipment()->sync($request->validated('equipment_ids'));
             $item->changes()->create([
                 'actor_user_id' => $request->user()->id,
@@ -94,7 +94,7 @@ class TemporaryAdmissionController extends Controller
     {
         DB::transaction(function () use ($request, $temporaryAdmission) {
             $previousValues = $this->auditValues($temporaryAdmission, $temporaryAdmission->equipment()->pluck('equipment.id')->all());
-            $temporaryAdmission->update($request->safe()->except('equipment_ids'));
+            $temporaryAdmission->update([...$request->safe()->except('equipment_ids'), 'validity_months' => 12]);
             $temporaryAdmission->equipment()->sync($request->validated('equipment_ids'));
             $temporaryAdmission->changes()->create([
                 'actor_user_id' => $request->user()->id,
@@ -196,7 +196,7 @@ class TemporaryAdmissionController extends Controller
             'customs_reference' => $temporaryAdmission->customs_reference,
             'supplier_name' => $temporaryAdmission->supplier_name,
             'entered_on' => $temporaryAdmission->entered_on?->format('Y-m-d'),
-            'validity_months' => $temporaryAdmission->validity_months,
+            'validity_months' => 12,
             'status' => $temporaryAdmission->status,
             'notes' => $temporaryAdmission->notes,
             'equipment_ids' => array_map('intval', $equipmentIds),
