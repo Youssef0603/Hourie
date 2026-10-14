@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { InsurancePage } from './InsurancePage'
@@ -43,6 +43,7 @@ describe('InsurancePage', () => {
           meta: { current_page: 1, from: filtered.length ? 1 : null, last_page: 1, per_page: 10, to: filtered.length || null, total: filtered.length },
         })
       }
+      if (path === '/api/v1/insurance-policies/1') return Promise.resolve({ data: policies[0] })
       if (path.startsWith('/api/v1/sites?')) return Promise.resolve({ data: [{ id: 1, name: 'Bassam' }], meta: {} })
       return Promise.resolve({ data: [] })
     })
@@ -67,5 +68,20 @@ describe('InsurancePage', () => {
     await user.clear(screen.getByRole('searchbox', { name: 'Rechercher' }))
     await user.type(screen.getByRole('searchbox', { name: 'Rechercher' }), 'inexistant')
     expect(await screen.findByText('Aucune police trouvée')).toBeVisible()
+  })
+
+  it('returns to policy details when editing is cancelled', async () => {
+    const user = userEvent.setup()
+    render(<InsurancePage />)
+
+    await user.click(await screen.findByText('TRC-2027'))
+    const details = await screen.findByRole('dialog', { name: 'Détail de la police' })
+    await user.click(within(details).getByRole('button', { name: 'Modifier' }))
+
+    expect(screen.getByText('Modifier la police')).toBeVisible()
+    const editor = screen.getByRole('dialog', { name: 'Modifier la police' })
+    await user.click(within(editor).getByRole('button', { name: 'Fermer' }))
+
+    expect(await screen.findByRole('dialog', { name: 'Détail de la police' })).toBeVisible()
   })
 })

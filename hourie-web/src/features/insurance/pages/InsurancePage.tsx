@@ -344,18 +344,17 @@ export function InsurancePage({
             setPolicies((current) =>
               current.map((item) => (item.id === policy.id ? policy : item)),
             );
-            setSelectedId(policy.id);
+            setSelected(policy);
             setEditingPolicy(null);
           }}
         />
       )}
-      {selected && (
+      {selected && !editingPolicy && (
         <InsuranceDetailPanel
           key={selected.id}
           policy={selected}
           onClose={() => setSelectedId(null)}
           onEdit={() => {
-            setSelectedId(null);
             setEditingPolicy(selected);
           }}
           onDocumentsChanged={(documents) => {

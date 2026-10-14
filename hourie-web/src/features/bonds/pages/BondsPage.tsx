@@ -283,18 +283,16 @@ export function BondsPage() {
           onClose={() => setEditing(null)}
           onSaved={(bond) => {
             updateBond(bond);
-            setSelectedId(bond.id);
             setEditing(null);
           }}
         />
       )}
-      {selected && (
+      {selected && !editing && (
         <BondDetails
           key={selected.id}
           bond={selected}
           onClose={() => setSelectedId(null)}
           onEdit={() => {
-            setSelectedId(null);
             setEditing(selected);
           }}
           onChanged={updateBond}

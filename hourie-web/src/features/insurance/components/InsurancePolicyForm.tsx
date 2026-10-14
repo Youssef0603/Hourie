@@ -134,7 +134,7 @@ export function InsuranceAddPanel({
         className="detail-panel insurance-add-drawer"
         role="dialog"
         aria-modal="true"
-        aria-label={operationPhrase("Ajouter une police")}
+        aria-label={operationPhrase(policy ? "Modifier la police" : "Ajouter une police")}
         onMouseDown={(event) => event.stopPropagation()}
       >
         <header className="detail-header insurance-add-header">

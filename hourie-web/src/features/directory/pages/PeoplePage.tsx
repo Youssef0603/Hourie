@@ -396,7 +396,11 @@ export function PeoplePage({
             isEditingPerson ? fr.directory.editPerson : fr.directory.personSheet
           }
           size={isEditingPerson ? "wide" : "person"}
-          onClose={closePerson}
+          onClose={
+            isEditingPerson
+              ? () => setIsEditingPerson(false)
+              : closePerson
+          }
         >
           {isLoadingPerson ? (
             <LoadingSpinner

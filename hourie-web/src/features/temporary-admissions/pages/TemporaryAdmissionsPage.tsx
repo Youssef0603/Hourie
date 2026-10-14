@@ -227,14 +227,13 @@ export function TemporaryAdmissionsPage({
           onSaved={save}
         />
       )}
-      {selected && (
+      {selected && formItem === undefined && (
         <TemporaryAdmissionDetails
           item={selected}
           canManage={canManage}
           onClose={() => setSelectedId(null)}
           onEdit={() => {
             setFormItem(selected);
-            setSelectedId(null);
           }}
           onChanged={save}
           onDeleted={() => {

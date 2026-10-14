@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TemporaryAdmissionsPage } from "./TemporaryAdmissionsPage";
@@ -204,5 +204,25 @@ describe("TemporaryAdmissionsPage", () => {
       expect(screen.queryByText("AT-S1445-2027.pdf")).not.toBeInTheDocument(),
     );
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("returns to admission details when editing is cancelled", async () => {
+    const user = userEvent.setup();
+    render(<TemporaryAdmissionsPage canManage />);
+
+    await user.click(await screen.findByText("S1445"));
+    const details = await screen.findByRole("dialog", {
+      name: "Détail de l’admission temporaire",
+    });
+    await user.click(within(details).getByRole("button", { name: "Modifier" }));
+
+    const editor = screen.getByRole("dialog", { name: "Modifier l’admission" });
+    await user.click(within(editor).getByRole("button", { name: "Fermer" }));
+
+    expect(
+      await screen.findByRole("dialog", {
+        name: "Détail de l’admission temporaire",
+      }),
+    ).toBeVisible();
   });
 });

@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { PeoplePage } from './PeoplePage'
@@ -108,5 +108,25 @@ describe('PeoplePage', () => {
     await user.click(screen.getByText('Youssef Yassine'))
     expect(await screen.findByText('Fiche personne')).toBeVisible()
     expect(getEmployee).toHaveBeenCalledWith(1)
+  })
+
+  it('returns to person details when editing is cancelled', async () => {
+    const user = userEvent.setup()
+    render(
+      <PeoplePage
+        canAdd
+        canManageManagerAccounts
+        catalogs={catalogs}
+      />,
+    )
+
+    await user.click(await screen.findByText('Youssef Yassine'))
+    const details = await screen.findByRole('dialog', { name: 'Fiche personne' })
+    await user.click(within(details).getByRole('button', { name: 'Modifier' }))
+
+    const editor = screen.getByRole('dialog', { name: 'Modifier la personne' })
+    await user.click(within(editor).getByRole('button', { name: 'Fermer' }))
+
+    expect(await screen.findByRole('dialog', { name: 'Fiche personne' })).toBeVisible()
   })
 })

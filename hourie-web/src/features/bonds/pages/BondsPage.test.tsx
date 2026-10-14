@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { BondsPage } from './BondsPage'
@@ -54,6 +54,7 @@ describe('BondsPage', () => {
           meta: { current_page: 1, from: filtered.length ? 1 : null, last_page: 1, per_page: 10, to: filtered.length || null, total: filtered.length },
         })
       }
+      if (path === '/api/v1/bonds/1') return Promise.resolve({ data: bonds[0] })
       if (path.startsWith('/api/v1/sites?')) return Promise.resolve({ data: [], meta: {} })
       return Promise.resolve({ data: [] })
     })
@@ -74,5 +75,19 @@ describe('BondsPage', () => {
       expect(screen.getByText('Yopougon')).toBeVisible()
       expect(screen.getByText('Centrale')).toBeVisible()
     })
+  })
+
+  it('returns to bond details when editing is cancelled', async () => {
+    const user = userEvent.setup()
+    render(<BondsPage />)
+
+    await user.click(await screen.findByText('Bassam'))
+    const details = await screen.findByRole('dialog', { name: 'Détail de la caution' })
+    await user.click(within(details).getByRole('button', { name: 'Modifier' }))
+
+    const editor = screen.getByRole('dialog', { name: 'Modifier la caution' })
+    await user.click(within(editor).getByRole('button', { name: 'Fermer' }))
+
+    expect(await screen.findByRole('dialog', { name: 'Détail de la caution' })).toBeVisible()
   })
 })
