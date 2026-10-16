@@ -29,7 +29,6 @@ const commonFields: AssetExportField[] = [
   { key: 'manufacture_year', labelFr: 'Année de fabrication', labelAr: 'سنة الصنع', value: (item) => item.manufacture_year },
   { key: 'purchase_date', labelFr: 'Date d’achat', labelAr: 'تاريخ الشراء', value: (item) => item.purchase_date },
   { key: 'condition', labelFr: 'État', labelAr: 'الحالة', value: (item, catalogs) => catalogLabel(catalogs, 'equipment_condition', item.condition) },
-  { key: 'operational_situation', labelFr: 'Situation', labelAr: 'الوضع', value: (item, catalogs) => catalogLabel(catalogs, 'operational_situation', item.operational_situation) },
   { key: 'project', labelFr: 'Site / projet', labelAr: 'الموقع / المشروع', value: (item) => item.current_project_assignment?.project.name },
   { key: 'location', labelFr: 'Localisation physique', labelAr: 'الموقع الفعلي', value: (item) => physicalLocation(item) },
   { key: 'custodian', labelFr: 'Conducteur / gardien', labelAr: 'السائق / الحارس', value: (item) => item.custodian?.name },
@@ -65,8 +64,11 @@ function technicalFields(view: AssetView): AssetExportField[] {
 }
 
 export function assetExportFields(view: AssetView): AssetExportField[] {
+  const commonExportFields = view === 'car'
+    ? commonFields.filter((field) => field.key !== 'responsible')
+    : commonFields
   const fields = [
-    ...commonFields,
+    ...commonExportFields,
     ...(view === 'all' || view === 'generator' ? generatorFields : []),
     ...technicalFields(view),
   ]

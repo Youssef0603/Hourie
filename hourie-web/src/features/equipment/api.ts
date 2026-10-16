@@ -134,6 +134,17 @@ export async function transferEquipment(
   })).data
 }
 
+export async function removeEquipmentTransfer(
+  equipmentId: number,
+  changeId: number,
+): Promise<Equipment> {
+  await initializeCsrfProtection()
+  return (await apiRequest<{ data: Equipment }>(
+    `/api/v1/equipment/${equipmentId}/transfers/${changeId}`,
+    { method: 'DELETE' },
+  )).data
+}
+
 export async function createEquipment(
   payload: Record<string, unknown>,
 ): Promise<Equipment> {

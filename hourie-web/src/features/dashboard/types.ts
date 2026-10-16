@@ -29,7 +29,7 @@ export type DashboardData = {
     path: string;
   }>;
   equipment_status: Record<
-    "assigned" | "available" | "under_maintenance" | "to_monitor" | "out_of_service",
+    "assigned" | "available" | "to_monitor" | "out_of_service",
     number
   >;
   equipment_categories: Array<{ code: string; name: string; total: number }>;

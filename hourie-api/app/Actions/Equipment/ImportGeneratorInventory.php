@@ -152,7 +152,6 @@ class ImportGeneratorInventory
                     'serial_number' => $data['serial_number'],
                     'manufacture_year' => $data['manufacture_year'],
                     'condition' => $data['condition'],
-                    'operational_situation' => null,
                     'observations' => $data['observations'],
                     'is_active' => true,
                 ]);
@@ -191,7 +190,6 @@ class ImportGeneratorInventory
                         'serial_number',
                         'manufacture_year',
                         'condition',
-                        'operational_situation',
                         'observations',
                     ]),
                     'project_id' => $project?->id,
@@ -253,10 +251,6 @@ class ImportGeneratorInventory
         };
         if ($condition !== null && $this->activeCatalogCode('equipment_condition', $condition) === null) {
             $condition = $this->warningValue($warnings, 'unknown_condition');
-        }
-
-        if ($this->nullableString($row['R'] ?? null) !== null) {
-            $warnings[] = 'operational_situation_not_imported';
         }
 
         $generatorDetails = [
@@ -459,7 +453,6 @@ class ImportGeneratorInventory
             'tank_capacity_litres' => $row['O'] ?? null,
             'current_engine_hours' => $row['P'] ?? null,
             'condition' => $row['Q'] ?? null,
-            'operational_situation' => $row['R'] ?? null,
             'manufacture_year' => $row['S'] ?? null,
             'responsible_person' => $row['T'] ?? null,
             'observations' => $row['U'] ?? null,

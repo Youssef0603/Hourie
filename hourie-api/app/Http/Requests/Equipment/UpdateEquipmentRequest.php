@@ -37,7 +37,6 @@ class UpdateEquipmentRequest extends FormRequest
             'manufacture_year' => ['present', 'nullable', 'integer', 'min:1900', 'max:'.((int) date('Y') + 1)],
             'purchase_date' => ['sometimes', 'nullable', 'date_format:Y-m-d'],
             'condition' => ['present', 'nullable', $this->activeCatalogOption('equipment_condition')],
-            'operational_situation' => ['present', 'nullable', $this->activeCatalogOption('operational_situation')],
             'project_id' => ['sometimes', 'nullable', 'integer', Rule::exists('projects', 'id')->where('is_active', true)],
             'current_location_id' => ['sometimes', 'nullable', 'integer', Rule::exists('locations', 'id')->where('is_active', true)],
             'custodian_employee_id' => ['present', 'nullable', 'integer', Rule::exists('employees', 'id')->where('is_active', true)],
@@ -146,7 +145,6 @@ class UpdateEquipmentRequest extends FormRequest
         $equipment = $this->route('equipment');
         $currentCode = $equipment instanceof Equipment ? match ($group) {
             'equipment_condition' => $equipment->condition,
-            'operational_situation' => $equipment->operational_situation,
             'fuel_type' => $equipment->generatorDetails()->value('fuel_type'),
             default => null,
         } : null;

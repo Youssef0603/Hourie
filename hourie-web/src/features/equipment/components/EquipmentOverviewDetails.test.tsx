@@ -15,7 +15,6 @@ describe("EquipmentIdentificationDetails", () => {
             manufacture_year: 2023,
             purchase_date: null,
             condition: null,
-            operational_situation: null,
             generator_details: null,
           } as Equipment
         }

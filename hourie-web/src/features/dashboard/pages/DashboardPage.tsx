@@ -13,7 +13,6 @@ import "./dashboard-page.css";
 const statusColors = {
   assigned: "#d31245",
   available: "#e989a1",
-  under_maintenance: "#d88916",
   to_monitor: "#5268d8",
   out_of_service: "#a33eb8",
 };

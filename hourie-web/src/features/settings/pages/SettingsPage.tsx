@@ -10,7 +10,6 @@ import { ReminderRecipientSettings } from "../components/ReminderRecipientSettin
 
 const groups: CatalogOption["group"][] = [
   "equipment_condition",
-  "operational_situation",
   "maintenance_type",
   "fuel_type",
   "project_status",

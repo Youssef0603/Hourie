@@ -107,6 +107,9 @@ class EquipmentResource extends JsonResource
     private function changesPayload(): Collection
     {
         $changes = $this->changes;
+        $latestTransferId = $changes->first(
+            fn ($change): bool => $change->source === EquipmentChangeSource::Transfer,
+        )?->id;
         $transferIds = $changes
             ->filter(fn ($change): bool => $change->source === EquipmentChangeSource::Transfer)
             ->flatMap(fn ($change) => [
@@ -121,7 +124,7 @@ class EquipmentResource extends JsonResource
         $projectNames = Project::query()->whereKey($transferIds)->pluck('name', 'id');
         $locationNames = Location::query()->whereKey($transferIds)->pluck('name', 'id');
 
-        return $changes->map(function ($change) use ($projectNames, $locationNames): array {
+        return $changes->map(function ($change) use ($latestTransferId, $projectNames, $locationNames): array {
             $transfer = null;
             if ($change->source === EquipmentChangeSource::Transfer) {
                 $previous = $change->previous_values ?? [];
@@ -145,6 +148,7 @@ class EquipmentResource extends JsonResource
                 'actor' => $change->actor === null ? null : ['id' => $change->actor->id, 'name' => $change->actor->name],
                 'occurred_at' => $change->occurred_at->toISOString(),
                 'transfer' => $transfer,
+                'can_remove' => $transfer !== null && $change->id === $latestTransferId,
             ];
         });
     }

@@ -31,9 +31,10 @@ return [
     'uploaded' => 'فشل رفع ملف :attribute. تحقق من أن حجمه لا يتجاوز 10 ميغابايت.',
     'location_project_mismatch' => 'يجب أن ينتمي الموقع المحدد إلى المشروع المحدد.',
     'equipment_location_project_mismatch' => 'يجب أن ينتمي الموقع المحدد إلى المشروع المحدد.',
-    'transfer_source_changed' => 'تغير التعيين الحالي. حدّث الصفحة قبل نقل المولد.',
+    'transfer_source_changed' => 'تغير التعيين الحالي. حدّث الصفحة قبل نقل هذه المعدة.',
     'transfer_destination_same' => 'يجب أن يختلف الموقع الوجهة عن الموقع الحالي.',
-    'only_generators_transferable' => 'يمكن نقل المولدات فقط باستخدام هذا الإجراء.',
+    'only_latest_transfer_removable' => 'يمكن حذف آخر عملية نقل فقط.',
+    'transfer_assignment_changed' => 'لم يعد التعيين الحالي مطابقاً لعملية النقل هذه. حدّث الصفحة ثم أعد المحاولة.',
 
     'attributes' => [
         'email' => 'البريد الإلكتروني',
@@ -48,7 +49,6 @@ return [
         'cost' => 'التكلفة',
         'cost_currency' => 'العملة',
         'condition' => 'الحالة',
-        'operational_situation' => 'الوضع التشغيلي',
         'custodian_employee_id' => 'المسؤول',
         'responsible_employee_id' => 'مسؤول الموقع',
         'generator_details' => 'المواصفات التقنية',

@@ -781,6 +781,12 @@ html[dir="rtl"] .search-clear-button {
   font-size: 0.75rem;
 }
 
+.asset-export-submit-action {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 0.15rem;
+}
+
 .filter-refresh-button,
 .table-add-button {
   min-width: 2.35rem;
@@ -3861,6 +3867,37 @@ html[dir="rtl"] .filter-bar select {
 .generator-transfer-history header {
   color: var(--color-text-muted);
   font-size: 0.68rem;
+}
+
+.transfer-history-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.transfer-history-remove {
+  flex: 0 0 2rem;
+  border-color: var(--color-border);
+  color: var(--color-primary);
+}
+
+.transfer-history-remove:hover {
+  background: var(--color-primary-soft);
+}
+
+.transfer-history-remove:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.transfer-history-remove svg {
+  width: 0.9rem;
+  height: 0.9rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
 }
 
 .generator-transfer-route {

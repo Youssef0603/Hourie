@@ -15,7 +15,6 @@ const car = {
   purchase_date: null,
   asset_details: { fuel_type: 'Diesel', odometer_km: 12000 },
   condition: null,
-  operational_situation: null,
   current_location: null,
   current_project_assignment: null,
   custodian: { id: 2, name: 'Iyad Mroueh' },
@@ -31,6 +30,13 @@ describe('asset inventory export', () => {
     const csv = buildAssetInventoryCsv([car], fields, defaultAssetExportFields('car'))
 
     expect(csv).toBe('\uFEFF"Marque";"Modèle";"Numéro de série";"Immatriculation"\r\n"Renault";"Duster";"VF1HJD202PA301098";"AB 123 CD"')
+  })
+
+  it('does not offer a duplicate responsible column for cars', () => {
+    const fieldKeys = assetExportFields('car').map((field) => field.key)
+
+    expect(fieldKeys).toContain('custodian')
+    expect(fieldKeys).not.toContain('responsible')
   })
 
   it('offers category-specific technical fields', () => {

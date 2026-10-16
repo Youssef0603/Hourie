@@ -4,13 +4,10 @@ export type NamedReference = {
 };
 
 export type EquipmentCondition = string;
-export type OperationalSituation = string;
-
 export type CatalogOption = {
   id: number;
   group:
     | "equipment_condition"
-    | "operational_situation"
     | "maintenance_type"
     | "fuel_type"
     | "project_status"
@@ -36,7 +33,6 @@ export type EquipmentSummary = {
   purchase_date: string | null;
   asset_details: Record<string, string | number | null> | null;
   condition: EquipmentCondition | null;
-  operational_situation: OperationalSituation | null;
   current_location:
     | (NamedReference & {
         parent: NamedReference | null;
@@ -191,7 +187,6 @@ export type EquipmentChange = {
     | "identity_updated"
     | "specifications_updated"
     | "condition_changed"
-    | "operational_situation_changed"
     | "location_changed"
     | "custodian_changed"
     | "project_assignment_changed"
@@ -208,6 +203,7 @@ export type EquipmentChange = {
   source: "import" | "manual" | "transfer" | "maintenance";
   actor: NamedReference | null;
   occurred_at: string;
+  can_remove: boolean;
   transfer: {
     from: { project: string | null; location: string | null };
     to: { project: string | null; location: string | null };
@@ -218,7 +214,6 @@ export type EquipmentFilters = {
   q: string;
   category: string;
   condition: string;
-  operational_situation: string;
   project_id: string;
   location_id: string;
   custodian_employee_id: string;

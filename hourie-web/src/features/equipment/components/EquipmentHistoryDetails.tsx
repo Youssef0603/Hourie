@@ -5,8 +5,18 @@ import { EmptyState } from "../../../shared/components/EmptyState";
 import { assetCategoryLabel, isAssetCategoryCode } from "../assetCategories";
 import type { Equipment } from "../types";
 
-export function GeneratorTransferHistory({ changes }: { changes: Equipment["changes"] }) {
+export function GeneratorTransferHistory({
+  changes,
+  canManage = false,
+  onRemove,
+}: {
+  changes: Equipment["changes"];
+  canManage?: boolean;
+  onRemove?: (changeId: number) => Promise<void>;
+}) {
   const [page, setPage] = useState(0);
+  const [removingId, setRemovingId] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const pageSize = 3;
   const pageCount = Math.max(1, Math.ceil(changes.length / pageSize));
   const currentPage = Math.min(page, pageCount - 1);
@@ -18,23 +28,49 @@ export function GeneratorTransferHistory({ changes }: { changes: Equipment["chan
         compact
         icon="transfer"
         title="Aucun transfert enregistré"
-        description="Les prochains déplacements de ce groupe apparaîtront ici."
+        description={fr.equipment.transferHistoryEmpty}
       />
     );
   }
 
   return (
     <div className="generator-transfer-history">
+      {error && <div className="form-alert" role="alert">{error}</div>}
       {visibleChanges.map((change) => (
         <article key={change.id}>
           <header>
             <time dateTime={change.occurred_at}>{auditDate(change.occurred_at)}</time>
-            <span>{change.actor?.name ?? fr.audit.system}</span>
+            <div className="transfer-history-meta">
+              <span>{change.actor?.name ?? fr.audit.system}</span>
+              {canManage && change.can_remove && onRemove && (
+                <button
+                  className="invoice-delete-button transfer-history-remove"
+                  type="button"
+                  aria-label={fr.equipment.removeTransfer}
+                  title={fr.equipment.removeTransfer}
+                  disabled={removingId !== null}
+                  onClick={async () => {
+                    if (!window.confirm(fr.equipment.removeTransferConfirmation)) return;
+                    setRemovingId(change.id);
+                    setError(null);
+                    try {
+                      await onRemove(change.id);
+                    } catch {
+                      setError(fr.equipment.removeTransferError);
+                    } finally {
+                      setRemovingId(null);
+                    }
+                  }}
+                >
+                  <ActionIcon name="delete" />
+                </button>
+              )}
+            </div>
           </header>
           <div className="generator-transfer-route">
-            <div><small>Depuis</small><strong>{transferPlace(change.transfer?.from)}</strong></div>
+            <div><small>{fr.equipment.transferFromLabel}</small><strong>{transferPlace(change.transfer?.from)}</strong></div>
             <ActionIcon name="transfer" />
-            <div><small>Vers</small><strong>{transferPlace(change.transfer?.to)}</strong></div>
+            <div><small>{fr.equipment.transferToLabel}</small><strong>{transferPlace(change.transfer?.to)}</strong></div>
           </div>
         </article>
       ))}

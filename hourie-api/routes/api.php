@@ -53,6 +53,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', EnsureUserIsActive::class, Ensu
     Route::apiResource('equipment', EquipmentController::class)->only(['index', 'store', 'show', 'update', 'destroy']);
     Route::post('equipment/{equipment}/transfer', EquipmentTransferController::class)
         ->name('equipment.transfer');
+    Route::delete('equipment/{equipment}/transfers/{change}', [EquipmentTransferController::class, 'destroy'])
+        ->name('equipment.transfers.destroy');
     Route::get('maintenance-warnings', MaintenanceWarningController::class)
         ->name('maintenance-warnings.index');
     Route::post('equipment/{equipment}/images', [EquipmentImageController::class, 'store']);

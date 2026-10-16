@@ -19,7 +19,6 @@ function carPayload(): array
         'registration_number' => 'AA-406-CG',
         'manufacture_year' => 2022,
         'condition' => null,
-        'operational_situation' => null,
         'custodian_employee_id' => null,
         'observations' => null,
         'asset_details' => [

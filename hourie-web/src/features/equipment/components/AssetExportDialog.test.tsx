@@ -19,6 +19,7 @@ it('lets the user choose the fields included in an asset export', async () => {
   />)
 
   expect(screen.getAllByRole('checkbox', { checked: true })).toHaveLength(4)
+  expect(screen.queryByRole('button', { name: 'Annuler' })).not.toBeInTheDocument()
   await user.click(screen.getByRole('button', { name: 'Tout désélectionner' }))
   expect(screen.getByRole('button', { name: 'Télécharger le fichier' })).toBeDisabled()
 

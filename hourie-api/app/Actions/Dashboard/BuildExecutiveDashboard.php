@@ -150,9 +150,8 @@ class BuildExecutiveDashboard
         return [
             'assigned' => $assigned,
             'available' => (clone $query)->whereDoesntHave('currentProjectAssignment')->count(),
-            'under_maintenance' => (clone $query)->where('operational_situation', 'under_maintenance')->count(),
             'to_monitor' => (clone $query)->where('condition', 'to_monitor')->count(),
-            'out_of_service' => (clone $query)->where(fn ($query) => $query->where('condition', 'out_of_service')->orWhere('operational_situation', 'out_of_service'))->count(),
+            'out_of_service' => (clone $query)->where('condition', 'out_of_service')->count(),
         ];
     }
 

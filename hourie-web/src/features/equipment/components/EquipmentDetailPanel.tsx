@@ -5,6 +5,7 @@ import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { LoadingSpinner } from "../../../shared/components/LoadingSpinner";
 import { Modal } from "../../../shared/components/Modal";
 import { assetCategory, isAssetCategoryCode } from "../assetCategories";
+import { removeEquipmentTransfer } from "../api";
 import { catalogLabel } from "../catalogs";
 import { displayedValue } from "../equipmentDisplay";
 import type { Equipment, EquipmentFilterOptions } from "../types";
@@ -137,11 +138,15 @@ export function EquipmentDetailPanel({
                   <EquipmentAssignmentDetails equipment={selected} categoryCode={categoryCode} />
                 </EquipmentDetailSection>
 
-                {categoryCode === "generator" && (
-                  <EquipmentDetailSection title="Historique des transferts" icon="transfer" defaultOpen className="detail-transfer-history">
-                    <GeneratorTransferHistory changes={selected.changes.filter((change) => change.source === "transfer")} />
-                  </EquipmentDetailSection>
-                )}
+                <EquipmentDetailSection title={fr.equipment.transferHistory} icon="transfer" defaultOpen className="detail-transfer-history">
+                  <GeneratorTransferHistory
+                    changes={selected.changes.filter((change) => change.source === "transfer")}
+                    canManage={canManageEquipment}
+                    onRemove={async (changeId) => {
+                      onChanged(await removeEquipmentTransfer(selected.id, changeId));
+                    }}
+                  />
+                </EquipmentDetailSection>
 
                 <EquipmentDetailSection title={fr.equipment.identification} icon="identification" defaultOpen className="detail-identification">
                   <EquipmentIdentificationDetails equipment={selected} categoryCode={categoryCode} catalogs={options?.catalogs} isSold={isSold} />
@@ -270,7 +275,7 @@ function DetailActions({
     <div className="detail-primary-actions">
       {canManage && <button className="equipment-edit-button detail-toolbar-button" type="button" onClick={onEdit}><ActionIcon name="edit" />{fr.common.edit}</button>}
       {canDelete && <button className="danger-button detail-delete-button" type="button" onClick={onDelete}><ActionIcon name="delete" />{isOtherAsset ? fr.assets.delete : fr.equipment.deleteGenerator}</button>}
-      {!isOtherAsset && canManage && <button className="equipment-transfer-button detail-toolbar-button" type="button" onClick={onTransfer}><ActionIcon name="transfer" />{fr.equipment.transfer}</button>}
+      {canManage && <button className="equipment-transfer-button detail-toolbar-button" type="button" onClick={onTransfer}><ActionIcon name="transfer" />{fr.equipment.transfer}</button>}
       <button className="equipment-history-button detail-toolbar-button" type="button" onClick={onHistory}><ActionIcon name="history" />{fr.audit.viewButton}</button>
     </div>
   );

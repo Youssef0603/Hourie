@@ -48,7 +48,6 @@ const french = {
     statuses: {
       assigned: "Affectés",
       available: "Disponibles",
-      under_maintenance: "En maintenance",
       to_monitor: "À surveiller",
       out_of_service: "Hors service",
     },
@@ -215,7 +214,6 @@ const arabic: typeof french = {
     statuses: {
       assigned: "معيّنة",
       available: "متاحة",
-      under_maintenance: "قيد الصيانة",
       to_monitor: "تحتاج إلى متابعة",
       out_of_service: "خارج الخدمة",
     },

@@ -70,16 +70,6 @@ export function EquipmentIdentificationDetails({
       {categoryCode === "generator" && isSold && (
         <div><dt>Acheteur</dt><dd>{equipment.generator_details?.sold_to ?? fr.common.notProvided}</dd></div>
       )}
-      <div>
-        <dt>{fr.equipment.situation}</dt>
-        <dd>
-          {equipment.operational_situation ? (
-            <span className="status-badge" style={catalogBadgeStyle(catalogs, "operational_situation", equipment.operational_situation)}>
-              {catalogLabel(catalogs, "operational_situation", equipment.operational_situation)}
-            </span>
-          ) : fr.common.notProvided}
-        </dd>
-      </div>
     </dl>
   );
 }

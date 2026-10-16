@@ -24,7 +24,7 @@ const dashboard = {
   },
   urgent_actions: [{ key: "insurance-1", title: "Assurance POL-1", description: "Échéance dans 10 jours", severity: "warning", path: "/insurance/1" }],
   deadlines: [{ id: 1, type: "insurance", label: "Assurance POL-1", due_on: "2026-10-18", days_remaining: 10, severity: "warning", path: "/insurance/1" }],
-  equipment_status: { assigned: 44, available: 240, under_maintenance: 1, to_monitor: 2, out_of_service: 0 },
+  equipment_status: { assigned: 44, available: 240, to_monitor: 2, out_of_service: 0 },
   equipment_categories: [{ code: "generator", name: "Générateurs", total: 24 }],
   project_health: [{
     id: 1,

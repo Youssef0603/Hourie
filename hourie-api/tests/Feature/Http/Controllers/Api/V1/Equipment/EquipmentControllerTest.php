@@ -1,7 +1,6 @@
 <?php
 
 use App\Enums\EquipmentCondition;
-use App\Enums\OperationalSituation;
 use App\Enums\UserRole;
 use App\Models\CatalogOption;
 use App\Models\Employee;
@@ -106,7 +105,7 @@ it('sorts by manufacturing year and always places missing years last', function 
         ->assertJsonPath('data.2.id', $missingYear->id);
 });
 
-it('filters equipment by search, category, condition, situation, project, and location', function () {
+it('filters equipment by search, category, condition, project, and location', function () {
     $user = User::factory()->create();
     $generatorCategory = EquipmentCategory::factory()->create(['code' => 'generator']);
     $vehicleCategory = EquipmentCategory::factory()->create(['code' => 'vehicle']);
@@ -120,7 +119,6 @@ it('filters equipment by search, category, condition, situation, project, and lo
             'asset_code' => 'A.H-001',
             'brand' => 'KHOLER',
             'condition' => EquipmentCondition::Good,
-            'operational_situation' => OperationalSituation::InUse,
         ]);
     EquipmentProjectAssignment::factory()->for($matching)->for($vridi)->create();
     Equipment::factory()->for($vehicleCategory, 'category')->create([
@@ -132,7 +130,6 @@ it('filters equipment by search, category, condition, situation, project, and lo
         'q' => 'KHOLER',
         'category' => 'generator',
         'condition' => 'good',
-        'operational_situation' => 'in_use',
         'project_id' => $vridi->id,
         'location_id' => $base->id,
     ]);
@@ -366,7 +363,6 @@ it('returns generator details without inventing missing values', function () {
     $equipment = Equipment::factory()->for($category, 'category')->create([
         'asset_code' => 'A.H-0010',
         'manufacture_year' => null,
-        'operational_situation' => null,
     ]);
     GeneratorDetail::factory()->for($equipment)->create([
         'voltage_rating' => '220/380',
@@ -379,7 +375,6 @@ it('returns generator details without inventing missing values', function () {
         ->assertOk()
         ->assertJsonPath('data.asset_code', 'A.H-0010')
         ->assertJsonPath('data.manufacture_year', null)
-        ->assertJsonPath('data.operational_situation', null)
         ->assertJsonPath('data.generator_details.voltage_rating', '220/380')
         ->assertJsonPath('data.generator_details.tank_capacity_litres', null)
         ->assertJsonMissingPath('data.password');
@@ -410,7 +405,6 @@ it('allows a generator manager to fill every inventory field without changing th
         'manufacture_year' => 2023,
         'purchase_date' => '2024-05-20',
         'condition' => 'sold',
-        'operational_situation' => 'in_use',
         'custodian_employee_id' => $custodian->id,
         'observations' => 'Essai en charge validé.',
         'generator_details' => [
@@ -473,7 +467,6 @@ it('allows a generator manager to change the assigned site and physical location
         'serial_number' => $equipment->serial_number,
         'manufacture_year' => $equipment->manufacture_year,
         'condition' => $equipment->condition->value,
-        'operational_situation' => $equipment->operational_situation?->value,
         'project_id' => $newProject->id,
         'current_location_id' => $newLocation->id,
         'custodian_employee_id' => null,
@@ -509,7 +502,6 @@ it('returns 422 when a physical location belongs to a different site', function 
         'serial_number' => null,
         'manufacture_year' => null,
         'condition' => null,
-        'operational_situation' => null,
         'project_id' => $selectedProject->id,
         'current_location_id' => $otherLocation->id,
         'custodian_employee_id' => null,
@@ -549,7 +541,6 @@ it('allows a generator manager to add a generator with an automatic code and com
         'serial_number' => 'SERIAL-NEW',
         'manufacture_year' => 2026,
         'condition' => 'good',
-        'operational_situation' => 'in_reserve',
         'custodian_employee_id' => null,
         'observations' => 'Nouveau groupe.',
         'project_id' => $project->id,

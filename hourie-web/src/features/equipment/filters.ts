@@ -1,7 +1,7 @@
 import type { EquipmentFilters } from './types'
 
 export const initialFilters: EquipmentFilters = {
-  q: '', category: '', condition: '', operational_situation: '', project_id: '', location_id: '',
+  q: '', category: '', condition: '', project_id: '', location_id: '',
   custodian_employee_id: '', brand: '', model: '', serial_number: '', registration_number: '', manufacture_year_from: '',
   manufacture_year_to: '', apparent_power_kva_min: '',
   apparent_power_kva_max: '', active_power_kw_min: '', active_power_kw_max: '', frequency_hz_min: '',

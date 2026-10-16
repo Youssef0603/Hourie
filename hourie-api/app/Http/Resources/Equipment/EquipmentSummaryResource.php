@@ -32,7 +32,6 @@ class EquipmentSummaryResource extends JsonResource
             'purchase_date' => $this->purchase_date?->toDateString(),
             'asset_details' => $this->asset_details,
             'condition' => $this->condition,
-            'operational_situation' => $this->operational_situation,
             'current_location' => $this->whenLoaded('currentLocation', function (): ?array {
                 if ($this->currentLocation === null) {
                     return null;

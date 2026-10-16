@@ -24,7 +24,6 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'manufacture_year',
     'purchase_date',
     'condition',
-    'operational_situation',
     'observations',
     'asset_details',
     'is_active',

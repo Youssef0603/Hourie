@@ -21,6 +21,11 @@ export function InsuranceCoveredEquipment({
       emptyTitle={operationPhrase("Aucun équipement couvert")}
       emptyDescription={operationPhrase("Les actifs liés à cette assurance apparaîtront ici.")}
       items={equipment}
+      searchPlaceholder={operationPhrase("Rechercher un équipement")}
+      noSearchResults={operationPhrase("Aucun équipement ne correspond à cette recherche.")}
+      getSearchText={(item) =>
+        [item.brand, item.model, item.asset_code].filter(Boolean).join(" ")
+      }
       onOpenItem={onOpenEquipment}
       renderItem={(item) => (
         <>

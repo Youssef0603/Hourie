@@ -30,7 +30,6 @@ class EquipmentFactory extends Factory
             'manufacture_year' => fake()->numberBetween(2015, 2026),
             'purchase_date' => null,
             'condition' => EquipmentCondition::Good,
-            'operational_situation' => null,
             'observations' => null,
             'is_active' => true,
         ];

@@ -97,10 +97,6 @@ class ListEquipment
                 $query->whereRaw("LOWER({$column}) like ?", ['%'.strtolower(trim($filters['asset_value'])).'%']);
             })
             ->when($filters['condition'] ?? null, fn (Builder $query, string $condition) => $query->where('condition', $condition))
-            ->when(
-                $filters['operational_situation'] ?? null,
-                fn (Builder $query, string $situation) => $query->where('operational_situation', $situation),
-            )
             ->when($filters['project_id'] ?? null, function (Builder $query, int $projectId): void {
                 $query->whereHas('currentProjectAssignment', fn (Builder $query) => $query->where('project_id', $projectId));
             })

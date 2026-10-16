@@ -83,7 +83,6 @@ it('imports generator rows with standardized codes, nulls, provenance, and separ
     expect($vridiGenerator->model)->toBeNull();
     expect($vridiGenerator->manufacture_year)->toBeNull();
     expect($vridiGenerator->condition)->toBe(EquipmentCondition::Defective->value);
-    expect($vridiGenerator->operational_situation)->toBeNull();
     expect($vridiGenerator->generatorDetails->voltage_rating)->toBe('220/380');
     expect($vridiGenerator->generatorDetails->current_rating)->toBe('23/40');
 

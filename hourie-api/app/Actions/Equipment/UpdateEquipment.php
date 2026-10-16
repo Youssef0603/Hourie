@@ -20,7 +20,7 @@ class UpdateEquipment
             $previousValues = [
                 'equipment' => $equipment->only([
                     'brand', 'model', 'serial_number', 'registration_number', 'manufacture_year', 'purchase_date', 'condition',
-                    'operational_situation', 'current_location_id', 'custodian_employee_id', 'observations',
+                    'current_location_id', 'custodian_employee_id', 'observations',
                 ]),
                 'project_id' => $equipment->currentProjectAssignment?->project_id,
                 'generator_details' => $equipment->generatorDetails?->toArray(),
@@ -61,7 +61,7 @@ class UpdateEquipment
                 'new_values' => [
                     'equipment' => $equipment->only([
                         'brand', 'model', 'serial_number', 'registration_number', 'manufacture_year', 'purchase_date', 'condition',
-                        'operational_situation', 'current_location_id', 'custodian_employee_id', 'observations',
+                        'current_location_id', 'custodian_employee_id', 'observations',
                     ]),
                     'project_id' => $equipment->currentProjectAssignment?->project_id,
                     'generator_details' => $equipment->generatorDetails?->toArray(),

@@ -50,8 +50,7 @@ export function AssetExportDialog({
         </label>)}
       </div>
       {selectedFields.length === 0 && <p className="asset-export-required">{fr.assets.exportFieldRequired}</p>}
-      <div className="form-actions">
-        <button type="button" className="secondary-button" onClick={onClose}>{fr.common.cancel}</button>
+      <div className="asset-export-submit-action">
         <button type="submit" className="primary-button" disabled={isExporting || selectedFields.length === 0}>
           {isExporting ? fr.assets.exporting : fr.assets.exportDownload}
         </button>

@@ -8,7 +8,6 @@ enum EquipmentChangeType: string
     case IdentityUpdated = 'identity_updated';
     case SpecificationsUpdated = 'specifications_updated';
     case ConditionChanged = 'condition_changed';
-    case OperationalSituationChanged = 'operational_situation_changed';
     case LocationChanged = 'location_changed';
     case CustodianChanged = 'custodian_changed';
     case ProjectAssignmentChanged = 'project_assignment_changed';
