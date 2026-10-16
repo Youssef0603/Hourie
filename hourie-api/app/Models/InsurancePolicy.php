@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['insurance_type', 'policy_number', 'starts_on', 'ends_on', 'net_premium', 'accessories_amount', 'tax_amount', 'policy_cost', 'total_amount', 'coverage_amount', 'invoice_number', 'territory', 'insured_situation', 'project_id', 'source', 'notes', 'created_by_user_id'])]
+#[Fillable(['insurance_type', 'policy_number', 'starts_on', 'ends_on', 'net_premium', 'accessories_amount', 'tax_amount', 'policy_cost', 'total_amount', 'coverage_amount', 'invoice_number', 'territory', 'insured_situation', 'project_id', 'location_id', 'source', 'notes', 'created_by_user_id'])]
 class InsurancePolicy extends Model
 {
     public const TYPES = ['trc_rc', 'individual_accident', 'group_health', 'equipment'];
@@ -23,6 +23,11 @@ class InsurancePolicy extends Model
         return $this->belongsTo(Project::class);
     }
 
+    public function location(): BelongsTo
+    {
+        return $this->belongsTo(Location::class);
+    }
+
     public function documents(): HasMany
     {
         return $this->hasMany(InsurancePolicyDocument::class);
@@ -31,6 +36,11 @@ class InsurancePolicy extends Model
     public function changes(): HasMany
     {
         return $this->hasMany(InsurancePolicyChange::class)->latest('occurred_at')->latest('id');
+    }
+
+    public function reminders(): HasMany
+    {
+        return $this->hasMany(InsurancePolicyReminder::class);
     }
 
     public function employees(): BelongsToMany

@@ -20,7 +20,6 @@ beforeEach(function (): void {
         'brand' => 'Caterpillar',
         'model' => 'D8',
         'serial_number' => 'SER-D8-001',
-        'asset_details' => ['chassis_number' => 'CAT-D8-001'],
         'is_active' => true,
     ]);
 });
@@ -60,6 +59,35 @@ it('creates a declaration linked to equipment with one year of initial validity'
         ->assertJsonPath('data.temporary_admissions.0.customs_reference', 'S1445')
         ->assertJsonPath('data.temporary_admissions.0.validity_months', 12)
         ->assertJsonPath('data.temporary_admissions.0.expires_on', '2027-10-06');
+});
+
+it('creates an admission with an unknown entry date and accepts AT documents', function (): void {
+    Storage::fake((string) config('filesystems.equipment_documents_disk'));
+    $response = $this->actingAs($this->user)->postJson('/api/v1/temporary-admissions', [
+        'customs_reference' => 'MATFORCE',
+        'supplier_name' => 'MATFORCE',
+        'entered_on' => null,
+        'equipment_ids' => [$this->equipment->id],
+    ]);
+
+    $response->assertCreated()
+        ->assertJsonPath('data.entered_on', null)
+        ->assertJsonPath('data.expires_on', null);
+
+    $this->actingAs($this->user)->post('/api/v1/temporary-admissions/'.$response->json('data.id').'/documents', [
+        'document' => UploadedFile::fake()->create('at-matforce.pdf', 100, 'application/pdf'),
+        'document_type' => 'admission',
+        'document_date' => '2026-02-25',
+        'validity_months' => 12,
+    ])->assertCreated()
+        ->assertJsonPath('data.entered_on', null)
+        ->assertJsonPath('data.expires_on', null)
+        ->assertJsonPath('data.documents.0.document_type', 'admission');
+
+    $this->assertDatabaseHas('temporary_admissions', [
+        'customs_reference' => 'MATFORCE',
+        'entered_on' => null,
+    ]);
 });
 
 it('paginates admission summaries without covered equipment or documents', function (): void {
@@ -136,6 +164,63 @@ it('calculates expiry from the date of the latest AT document', function (): voi
         ->assertJsonPath('data.expires_on', '2023-07-12');
 
     expect($admission->fresh()->status)->toBe('active');
+});
+
+it('keeps the initial AT authorization separate without extending the declaration period twice', function (): void {
+    $admission = TemporaryAdmission::query()->create([
+        'customs_reference' => 'S797',
+        'entered_on' => '2021-02-25',
+        'created_by_user_id' => $this->user->id,
+    ]);
+    $admission->documents()->createMany([
+        [
+            'document_type' => 'admission',
+            'document_date' => '2021-02-17',
+            'validity_months' => 12,
+            'disk' => 'equipment-documents',
+            'path' => "temporary-admissions/{$admission->id}/initial-at.pdf",
+            'original_name' => 'AT initiale 2021.pdf',
+            'mime_type' => 'application/pdf',
+            'size_bytes' => 100,
+        ],
+        [
+            'document_type' => 'admission',
+            'document_date' => '2022-03-07',
+            'validity_months' => 12,
+            'disk' => 'equipment-documents',
+            'path' => "temporary-admissions/{$admission->id}/renewal-2022.pdf",
+            'original_name' => 'AT 2022.pdf',
+            'mime_type' => 'application/pdf',
+            'size_bytes' => 100,
+        ],
+    ]);
+
+    $this->actingAs($this->user)->getJson("/api/v1/temporary-admissions/{$admission->id}")
+        ->assertOk()
+        ->assertJsonPath('data.expires_on', '2023-02-25')
+        ->assertJsonCount(2, 'data.documents');
+});
+
+it('keeps a later renewal expiry anchored to the declaration date', function (): void {
+    $admission = TemporaryAdmission::query()->create([
+        'customs_reference' => 'S1404',
+        'entered_on' => '2021-06-23',
+        'created_by_user_id' => $this->user->id,
+    ]);
+    $admission->documents()->create([
+        'document_type' => 'admission',
+        'document_date' => '2023-06-20',
+        'validity_months' => 12,
+        'disk' => 'equipment-documents',
+        'path' => "temporary-admissions/{$admission->id}/at-2023.pdf",
+        'original_name' => 'AT 2023.pdf',
+        'mime_type' => 'application/pdf',
+        'size_bytes' => 100,
+    ]);
+
+    $this->actingAs($this->user)->getJson("/api/v1/temporary-admissions/{$admission->id}")
+        ->assertOk()
+        ->assertJsonPath('data.expires_on', '2024-06-23');
 });
 
 it('updates an admission through the camel-case resource binding', function (): void {

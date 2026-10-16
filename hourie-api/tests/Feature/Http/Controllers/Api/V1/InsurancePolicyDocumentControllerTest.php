@@ -5,6 +5,9 @@ use App\Models\Employee;
 use App\Models\Equipment;
 use App\Models\InsurancePolicy;
 use App\Models\InsurancePolicyDocument;
+use App\Models\InsurancePolicyReminder;
+use App\Models\Location;
+use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Storage;
@@ -72,6 +75,48 @@ it('records policy creation and updates in the history', function () {
         ->assertJsonPath('data.changes.1.action', 'created');
 });
 
+it('stores an optional physical location belonging to the selected trc project', function () {
+    $manager = User::factory()->create(['role' => UserRole::Manager]);
+    $project = Project::factory()->create(['name' => 'Bassam']);
+    $location = Location::factory()->for($project)->create(['name' => 'Lot 1']);
+
+    $response = $this->actingAs($manager, 'web')->postJson('/api/v1/insurance-policies', [
+        'insurance_type' => 'trc_rc',
+        'policy_number' => 'TRC-BASSAM-LOT-1',
+        'project_id' => $project->id,
+        'location_id' => $location->id,
+    ]);
+
+    $response->assertCreated()
+        ->assertJsonPath('data.project.id', $project->id)
+        ->assertJsonPath('data.location.id', $location->id)
+        ->assertJsonPath('data.location.name', 'Lot 1');
+    $this->assertDatabaseHas('insurance_policies', [
+        'policy_number' => 'TRC-BASSAM-LOT-1',
+        'project_id' => $project->id,
+        'location_id' => $location->id,
+    ]);
+});
+
+it('rejects a physical location from another project', function () {
+    $manager = User::factory()->create(['role' => UserRole::Manager]);
+    $project = Project::factory()->create();
+    $otherProject = Project::factory()->create();
+    $otherLocation = Location::factory()->for($otherProject)->create();
+
+    $response = $this->actingAs($manager, 'web')->postJson('/api/v1/insurance-policies', [
+        'insurance_type' => 'trc_rc',
+        'policy_number' => 'TRC-WRONG-LOCATION',
+        'project_id' => $project->id,
+        'location_id' => $otherLocation->id,
+    ]);
+
+    $response->assertUnprocessable()->assertJsonValidationErrors('location_id');
+    $this->assertDatabaseMissing('insurance_policies', [
+        'policy_number' => 'TRC-WRONG-LOCATION',
+    ]);
+});
+
 it('deletes an insurance policy document and its private file', function () {
     Storage::fake('equipment-documents');
     $manager = User::factory()->create(['role' => UserRole::Manager]);
@@ -123,4 +168,40 @@ it('does not delete an insurance document through another policy', function () {
         ->assertNotFound();
 
     $this->assertDatabaseHas('insurance_policy_documents', ['id' => $document->id]);
+});
+
+it('deletes an insurance policy with its reminders and stored documents', function () {
+    Storage::fake('equipment-documents');
+    $manager = User::factory()->create(['role' => UserRole::Manager]);
+    $policy = InsurancePolicy::query()->create([
+        'insurance_type' => 'equipment',
+        'policy_number' => 'POL-WITH-REMINDER',
+        'created_by_user_id' => $manager->id,
+    ]);
+    $path = "insurance/{$policy->id}/documents/policy.pdf";
+    Storage::disk('equipment-documents')->put($path, "%PDF-1.4\n%%EOF");
+    $document = $policy->documents()->create([
+        'uploaded_by_user_id' => $manager->id,
+        'disk' => 'equipment-documents',
+        'path' => $path,
+        'original_name' => 'policy.pdf',
+        'mime_type' => 'application/pdf',
+        'size_bytes' => 19,
+    ]);
+    $reminder = InsurancePolicyReminder::query()->create([
+        'insurance_policy_id' => $policy->id,
+        'expiry_date' => '2026-12-31',
+        'reminder_date' => '2026-12-01',
+        'reminder_type' => '30_days',
+        'sent_at' => now(),
+    ]);
+
+    $this->actingAs($manager, 'web')
+        ->deleteJson("/api/v1/insurance-policies/{$policy->id}")
+        ->assertNoContent();
+
+    Storage::disk('equipment-documents')->assertMissing($path);
+    $this->assertDatabaseMissing('insurance_policies', ['id' => $policy->id]);
+    $this->assertDatabaseMissing('insurance_policy_documents', ['id' => $document->id]);
+    $this->assertDatabaseMissing('insurance_policy_reminders', ['id' => $reminder->id]);
 });

@@ -27,6 +27,7 @@ class EquipmentSummaryResource extends JsonResource
             'brand' => $this->brand,
             'model' => $this->model,
             'serial_number' => $this->serial_number,
+            'registration_number' => $this->registration_number,
             'manufacture_year' => $this->manufacture_year,
             'purchase_date' => $this->purchase_date?->toDateString(),
             'asset_details' => $this->asset_details,

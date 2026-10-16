@@ -10,7 +10,7 @@ class SendInsuranceExpiryReminders extends Command
 {
     protected $signature = 'insurance:send-expiry-reminders {--date=}';
 
-    protected $description = 'Send reminders 30, 14, 7, 1 and 0 days before insurance expiry';
+    protected $description = 'Send insurance reminders one month before expiry, then weekly through the expiry date';
 
     public function handle(SendInsuranceExpiryRemindersAction $action): int
     {

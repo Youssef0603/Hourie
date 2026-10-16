@@ -58,7 +58,11 @@ export function InsurancePage({
   const [showFilters, setShowFilters] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [editingPolicy, setEditingPolicy] = useState<Policy | null>(null);
-  const [sites, setSites] = useState<Array<{ id: number; name: string }>>([]);
+  const [sites, setSites] = useState<Array<{
+    id: number;
+    name: string;
+    locations: Array<{ id: number; project_id: number; parent_id: number | null; name: string }>;
+  }>>([]);
   const [equipmentOptions, setEquipmentOptions] = useState<
     InsuranceEquipmentOption[]
   >([]);
@@ -98,7 +102,11 @@ export function InsurancePage({
   }, [loadPolicies]);
 
   useEffect(() => {
-    apiRequest<PaginatedResponse<{ id: number; name: string }>>("/api/v1/sites?per_page=100")
+    apiRequest<PaginatedResponse<{
+      id: number;
+      name: string;
+      locations: Array<{ id: number; project_id: number; parent_id: number | null; name: string }>;
+    }>>("/api/v1/sites?per_page=100")
       .then((value) => setSites(value.data))
       .catch(() => setSites([]));
     apiRequest<{ data: InsuranceEquipmentOption[] }>(

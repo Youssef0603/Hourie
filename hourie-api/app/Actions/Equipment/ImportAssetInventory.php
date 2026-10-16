@@ -53,8 +53,10 @@ class ImportAssetInventory
                     continue;
                 }
 
-                $existing = $data['serial_number'] === null ? null : Equipment::query()
-                    ->whereRaw('lower(serial_number) = ?', [mb_strtolower($data['serial_number'])])
+                $identifier = $data['serial_number'] ?? $data['registration_number'];
+                $identifierColumn = $data['serial_number'] !== null ? 'serial_number' : 'registration_number';
+                $existing = $identifier === null ? null : Equipment::query()
+                    ->whereRaw("lower({$identifierColumn}) = ?", [mb_strtolower($identifier)])
                     ->first();
 
                 if ($existing !== null) {
@@ -75,6 +77,7 @@ class ImportAssetInventory
                     'brand' => $data['brand'],
                     'model' => $data['model'],
                     'serial_number' => $data['serial_number'],
+                    'registration_number' => $data['registration_number'],
                     'manufacture_year' => $data['manufacture_year'],
                     'purchase_date' => $data['purchase_date'],
                     'condition' => $data['condition'],

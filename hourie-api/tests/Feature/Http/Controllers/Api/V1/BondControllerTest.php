@@ -83,6 +83,23 @@ it('validates the bond type, site, dates and currency', function () {
         ->assertJsonValidationErrors(['project_id', 'bond_type', 'currency', 'expires_on']);
 });
 
+it('accepts an environmental and social performance bond', function () {
+    $manager = User::factory()->create(['role' => UserRole::Manager]);
+    $site = Project::factory()->create();
+    $siteRoot = Location::factory()->for($site)->create(['parent_id' => null, 'location_type' => 'project_site']);
+    $location = Location::factory()->for($site)->for($siteRoot, 'parent')->create(['location_type' => 'project_area']);
+
+    $this->actingAs($manager, 'web')->postJson('/api/v1/bonds', [
+        'project_id' => $site->id,
+        'location_id' => $location->id,
+        'bond_type' => 'eshs',
+        'amount' => 42619356,
+        'currency' => 'XOF',
+    ])->assertCreated()->assertJsonPath('data.bond_type', 'eshs');
+
+    expect(Bond::query()->sole()->typeLabel())->toBe('Performance ESHS');
+});
+
 it('uploads and deletes private bond documents', function () {
     Storage::fake('equipment-documents');
     $manager = User::factory()->create(['role' => UserRole::CmsManager]);

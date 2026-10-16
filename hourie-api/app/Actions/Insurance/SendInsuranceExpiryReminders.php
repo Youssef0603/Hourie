@@ -11,8 +11,6 @@ use Illuminate\Support\Facades\DB;
 
 class SendInsuranceExpiryReminders
 {
-    private const REMINDER_DAYS = [30, 14, 7, 1, 0];
-
     public function handle(?CarbonImmutable $today = null): int
     {
         $today ??= CarbonImmutable::today();
@@ -37,9 +35,25 @@ class SendInsuranceExpiryReminders
             return false;
         }
 
-        // Carbon 3 returns a float from diffInDays. Normalize it before the strict milestone check.
         $days = (int) $today->diffInDays($policy->ends_on, false);
-        if ($withinThirtyDays ? ($days < 0 || $days > 30) : ! in_array($days, self::REMINDER_DAYS, true)) {
+        if ($withinThirtyDays) {
+            if ($days < 0 || $days > 30) {
+                return false;
+            }
+        } elseif ($today->isAfter($policy->ends_on)
+            || $today->isBefore(CarbonImmutable::parse($policy->ends_on)->subMonthNoOverflow())) {
+            return false;
+        }
+
+        $lastReminderDate = InsurancePolicyReminder::query()
+            ->where('insurance_policy_id', $policy->id)
+            ->whereDate('expiry_date', $policy->ends_on)
+            ->max('reminder_date');
+
+        if (! $withinThirtyDays
+            && $days !== 0
+            && $lastReminderDate !== null
+            && $today->isBefore(CarbonImmutable::parse($lastReminderDate)->addWeek())) {
             return false;
         }
 
@@ -47,13 +61,15 @@ class SendInsuranceExpiryReminders
             return false;
         }
 
-        $reminder = DB::transaction(function () use ($days, $policy, $today): InsurancePolicyReminder {
+        $reminder = DB::transaction(function () use ($days, $lastReminderDate, $policy, $today): InsurancePolicyReminder {
             $reminder = InsurancePolicyReminder::query()->firstOrCreate([
                 'insurance_policy_id' => $policy->id,
                 'expiry_date' => $policy->ends_on->toDateString(),
                 'reminder_date' => $today->toDateString(),
             ], [
-                'reminder_type' => $days === 0 ? 'expiry' : "{$days}_days",
+                'reminder_type' => $days === 0
+                    ? 'expiry'
+                    : ($lastReminderDate === null ? 'one_month' : 'weekly'),
                 'queued_at' => now(),
             ]);
 

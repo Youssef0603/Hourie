@@ -63,7 +63,37 @@ it('sends a bond reminder 30 days before expiry with its documents only once per
         'bond_id' => $bond->id,
         'expiry_date' => '2026-10-30',
         'reminder_date' => '2026-09-30',
-        'reminder_type' => '30_days',
+        'reminder_type' => 'one_month',
+    ]);
+});
+
+it('repeats bond reminders weekly through expiry and stops afterwards', function () {
+    Mail::fake();
+    ApplicationSetting::query()->create(['key' => 'reminder_recipients', 'value' => ['finance@example.test']]);
+    $bond = Bond::query()->create([
+        'project_id' => Project::factory()->create()->id,
+        'bond_type' => 'performance',
+        'amount' => 1000,
+        'currency' => 'XOF',
+        'expires_on' => '2026-10-30',
+    ]);
+    $action = app(SendBondExpiryReminders::class);
+
+    expect($action->sendForBond($bond, CarbonImmutable::parse('2026-09-30')))->toBeTrue()
+        ->and($action->sendForBond($bond, CarbonImmutable::parse('2026-10-06')))->toBeFalse()
+        ->and($action->sendForBond($bond, CarbonImmutable::parse('2026-10-07')))->toBeTrue()
+        ->and($action->sendForBond($bond, CarbonImmutable::parse('2026-10-30')))->toBeTrue()
+        ->and($action->sendForBond($bond, CarbonImmutable::parse('2026-10-31')))->toBeFalse();
+
+    $this->assertDatabaseHas('bond_reminders', [
+        'bond_id' => $bond->id,
+        'reminder_date' => '2026-10-07',
+        'reminder_type' => 'weekly',
+    ]);
+    $this->assertDatabaseHas('bond_reminders', [
+        'bond_id' => $bond->id,
+        'reminder_date' => '2026-10-30',
+        'reminder_type' => 'expiry',
     ]);
 });
 

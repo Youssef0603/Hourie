@@ -5,6 +5,7 @@ export const bondTypeOptions: { value: BondType }[] = [
   { value: 'advance_payment' },
   { value: 'performance' },
   { value: 'retention' },
+  { value: 'eshs' },
 ]
 
 export function bondTypeLabel(type: BondType) {
@@ -12,6 +13,7 @@ export function bondTypeLabel(type: BondType) {
     advance_payment: 'Avance de démarrage',
     performance: 'Bonne exécution',
     retention: 'Retenue de garantie',
+    eshs: 'Performance ESHS',
   }[type] ?? type)
 }
 

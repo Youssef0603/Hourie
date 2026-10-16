@@ -75,17 +75,18 @@ class ListEquipment
             ->where('equipment.is_active', true)
             ->when($filters['q'] ?? null, function (Builder $query, string $search): void {
                 $query->where(function (Builder $query) use ($search): void {
-                    $pattern = '%'.trim($search).'%';
+                    $trimmedSearch = trim($search);
+                    $pattern = '%'.$trimmedSearch.'%';
 
                     $query
-                        ->where('asset_code', 'like', $pattern)
-                        ->orWhere('brand', 'like', $pattern)
-                        ->orWhere('model', 'like', $pattern)
-                        ->orWhere('serial_number', 'like', $pattern)
+                        ->whereRaw(
+                            "CONCAT_WS(' ', asset_code, brand, model, serial_number, registration_number) like ?",
+                            [$pattern],
+                        )
                         ->orWhere('asset_details', 'like', $pattern)
                         ->orWhere('observations', 'like', $pattern)
                         ->orWhereHas('custodian', fn (Builder $custodianQuery) => $custodianQuery
-                            ->whereRaw('LOWER(name) like ?', ['%'.mb_strtolower(trim($search)).'%']));
+                            ->whereRaw('LOWER(name) like ?', ['%'.mb_strtolower($trimmedSearch).'%']));
                 });
             })
             ->when($includeCategory ? ($filters['category'] ?? null) : null, function (Builder $query, string $category): void {
@@ -108,7 +109,7 @@ class ListEquipment
             ->when($filters['brand'] ?? null, fn (Builder $query, string $value) => $query->where('brand', 'like', '%'.trim($value).'%'))
             ->when($filters['model'] ?? null, fn (Builder $query, string $value) => $query->where('model', 'like', '%'.trim($value).'%'))
             ->when($filters['serial_number'] ?? null, fn (Builder $query, string $value) => $query->where('serial_number', 'like', '%'.trim($value).'%'))
-            ->when($filters['chassis_number'] ?? null, fn (Builder $query, string $value) => $this->whereAssetText($query, 'chassis_number', $value))
+            ->when($filters['registration_number'] ?? null, fn (Builder $query, string $value) => $query->where('registration_number', 'like', '%'.trim($value).'%'))
             ->when(isset($filters['manufacture_year_from']), fn (Builder $query) => $query->where('manufacture_year', '>=', $filters['manufacture_year_from']))
             ->when(isset($filters['manufacture_year_to']), fn (Builder $query) => $query->where('manufacture_year', '<=', $filters['manufacture_year_to']))
             ->when($filters['equipment_type'] ?? null, fn (Builder $query, string $value) => $this->whereAssetText($query, 'equipment_type', $value))

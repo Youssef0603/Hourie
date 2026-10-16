@@ -15,7 +15,8 @@ const policies = [
     id: 1, insurance_type: 'trc_rc', policy_number: 'TRC-2027', source: 'GNA-CI',
     starts_on: '2027-01-01', ends_on: '2027-12-31', total_amount: '1000000',
     net_premium: null, accessories_amount: null, tax_amount: null, territory: null,
-    insured_situation: null, notes: null, project: { id: 1, name: 'Bassam' }, documents: [],
+    insured_situation: null, notes: null, project: { id: 1, name: 'Bassam' },
+    location: { id: 22, project_id: 1, name: 'Lot 1' }, documents: [],
   },
   {
     id: 2, insurance_type: 'equipment', policy_number: 'EQ-2027', source: 'NSIA',
@@ -44,7 +45,17 @@ describe('InsurancePage', () => {
         })
       }
       if (path === '/api/v1/insurance-policies/1') return Promise.resolve({ data: policies[0] })
-      if (path.startsWith('/api/v1/sites?')) return Promise.resolve({ data: [{ id: 1, name: 'Bassam' }], meta: {} })
+      if (path.startsWith('/api/v1/sites?')) return Promise.resolve({
+        data: [{
+          id: 1,
+          name: 'Bassam',
+          locations: [
+            { id: 1, project_id: 1, parent_id: null, name: 'Bassam' },
+            { id: 22, project_id: 1, parent_id: 1, name: 'Lot 1' },
+          ],
+        }],
+        meta: {},
+      })
       return Promise.resolve({ data: [] })
     })
   })
@@ -76,10 +87,13 @@ describe('InsurancePage', () => {
 
     await user.click(await screen.findByText('TRC-2027'))
     const details = await screen.findByRole('dialog', { name: 'Détail de la police' })
+    expect(within(details).getByText('Localisation physique')).toBeVisible()
+    expect(within(details).getByText('Lot 1')).toBeVisible()
     await user.click(within(details).getByRole('button', { name: 'Modifier' }))
 
     expect(screen.getByText('Modifier la police')).toBeVisible()
     const editor = screen.getByRole('dialog', { name: 'Modifier la police' })
+    expect(within(editor).getByRole('combobox', { name: 'Localisation physique' })).toHaveValue('Lot 1')
     await user.click(within(editor).getByRole('button', { name: 'Fermer' }))
 
     expect(await screen.findByRole('dialog', { name: 'Détail de la police' })).toBeVisible()

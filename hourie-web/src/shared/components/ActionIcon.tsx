@@ -1,5 +1,5 @@
 type ActionIconProps = {
-  name: 'add' | 'close' | 'collapse' | 'expand' | 'logout' | 'filter' | 'search' | 'refresh' | 'location' | 'transfer' | 'upload' | 'edit' | 'history' | 'delete' | 'photo' | 'invoice' | 'maintenance' | 'identification' | 'specifications' | 'note' | 'inbox' | 'people'
+  name: 'add' | 'close' | 'collapse' | 'expand' | 'logout' | 'filter' | 'search' | 'refresh' | 'location' | 'transfer' | 'upload' | 'download' | 'edit' | 'history' | 'delete' | 'photo' | 'invoice' | 'maintenance' | 'identification' | 'specifications' | 'note' | 'inbox' | 'people'
 }
 
 export function ActionIcon({ name }: ActionIconProps) {
@@ -25,6 +25,8 @@ export function ActionIcon({ name }: ActionIconProps) {
         <><path d="M4 6h11M12 3l3 3-3 3M16 14H5M8 11l-3 3 3 3" /></>
       ) : name === 'upload' ? (
         <><path d="M10 13V4M6.5 7.5 10 4l3.5 3.5M4 12.5v2A1.5 1.5 0 0 0 5.5 16h9a1.5 1.5 0 0 0 1.5-1.5v-2" /></>
+      ) : name === 'download' ? (
+        <><path d="M10 4v9M6.5 9.5 10 13l3.5-3.5M4 12.5v2A1.5 1.5 0 0 0 5.5 16h9a1.5 1.5 0 0 0 1.5-1.5v-2" /></>
       ) : name === 'edit' ? (
         <><path d="M4.5 13.5 4 16l2.5-.5L15 7a1.4 1.4 0 0 0-2-2L4.5 13.5Z" /><path d="m11.5 6.5 2 2" /></>
       ) : name === 'history' ? (

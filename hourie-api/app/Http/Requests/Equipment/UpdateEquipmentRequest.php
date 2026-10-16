@@ -31,6 +31,9 @@ class UpdateEquipmentRequest extends FormRequest
             'brand' => ['present', 'nullable', 'string', 'max:255'],
             'model' => ['present', 'nullable', 'string', 'max:255'],
             'serial_number' => ['present', 'nullable', 'string', 'max:255'],
+            'registration_number' => $categoryCode === 'car'
+                ? ['present', 'nullable', 'string', 'max:255']
+                : ['prohibited'],
             'manufacture_year' => ['present', 'nullable', 'integer', 'min:1900', 'max:'.((int) date('Y') + 1)],
             'purchase_date' => ['sometimes', 'nullable', 'date_format:Y-m-d'],
             'condition' => ['present', 'nullable', $this->activeCatalogOption('equipment_condition')],

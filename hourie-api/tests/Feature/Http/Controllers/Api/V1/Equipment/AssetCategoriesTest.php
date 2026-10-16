@@ -15,14 +15,14 @@ function carPayload(): array
         'category_code' => 'car',
         'brand' => 'Toyota',
         'model' => 'Hilux',
-        'serial_number' => '1234 AB 01',
+        'serial_number' => 'JTEBX3FJ50K123456',
+        'registration_number' => 'AA-406-CG',
         'manufacture_year' => 2022,
         'condition' => null,
         'operational_situation' => null,
         'custodian_employee_id' => null,
         'observations' => null,
         'asset_details' => [
-            'chassis_number' => 'JTEBX3FJ50K123456',
             'inspection_date' => '2026-10-15',
             'fuel_type' => 'Diesel',
             'odometer_km' => 42000,
@@ -37,8 +37,9 @@ it('creates and lists a car without generator details', function () {
         ->postJson('/api/v1/equipment', carPayload())
         ->assertCreated()
         ->assertJsonPath('data.category.code', 'car')
-        ->assertJsonPath('data.serial_number', '1234 AB 01')
-        ->assertJsonPath('data.asset_details.chassis_number', 'JTEBX3FJ50K123456')
+        ->assertJsonPath('data.serial_number', 'JTEBX3FJ50K123456')
+        ->assertJsonPath('data.registration_number', 'AA-406-CG')
+        ->assertJsonMissingPath('data.asset_details.chassis_number')
         ->assertJsonPath('data.asset_details.inspection_date', '2026-10-15')
         ->assertJsonPath('data.asset_details.fuel_type', 'Diesel')
         ->assertJsonPath('data.generator_details', null);
@@ -112,6 +113,9 @@ it('supports every non-generator category and the all-assets inventory', functio
         $payload = carPayload();
         $payload['category_code'] = $code;
         $payload['asset_details'] = array_fill_keys(array_keys($definition['fields']), null);
+        if ($code !== 'car') {
+            unset($payload['registration_number']);
+        }
 
         $this->actingAs($manager, 'web')->postJson('/api/v1/equipment', $payload)
             ->assertCreated()

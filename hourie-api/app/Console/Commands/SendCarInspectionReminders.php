@@ -14,7 +14,7 @@ class SendCarInspectionReminders extends Command
                             {--equipment= : Asset code for one car only}
                             {--force : Send immediately, ignoring the normal reminder timing}';
 
-    protected $description = 'Send inspection reminders one month before and weekly until the car visit date changes';
+    protected $description = 'Send inspection reminders one month before, then weekly through the visit date';
 
     public function handle(SendCarInspectionReminder $sendCarInspectionReminder): int
     {

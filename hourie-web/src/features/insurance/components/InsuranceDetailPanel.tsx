@@ -19,7 +19,7 @@ import {
 } from "./InsuranceCoveredItems";
 import { InsuranceDocuments } from "./InsuranceDocuments";
 import { InsuranceHistory } from "./InsuranceHistory";
-import { operationsText } from "../../../i18n/operations";
+import { operationPhrase, operationsText } from "../../../i18n/operations";
 
 export function InsuranceDetailPanel({
   policy,
@@ -133,10 +133,16 @@ export function InsuranceDetailPanel({
                 <dd>{policy.source || text.toComplete}</dd>
               </div>
               {policy.insurance_type === "trc_rc" && (
-                <div>
-                  <dt>{text.siteProject}</dt>
-                  <dd>{policy.project?.name || text.toComplete}</dd>
-                </div>
+                <>
+                  <div>
+                    <dt>{text.siteProject}</dt>
+                    <dd>{policy.project?.name || text.toComplete}</dd>
+                  </div>
+                  <div>
+                    <dt>{operationPhrase("Localisation physique")}</dt>
+                    <dd>{policy.location?.name || text.toComplete}</dd>
+                  </div>
+                </>
               )}
               <div>
                 <dt>{text.columns.covered}</dt>

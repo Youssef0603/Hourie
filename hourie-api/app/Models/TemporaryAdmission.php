@@ -50,6 +50,8 @@ class TemporaryAdmission extends Model
             return null;
         }
 
+        $enteredOn = CarbonImmutable::parse($this->entered_on);
+
         $admissionDocuments = match (true) {
             $this->relationLoaded('documents') => $this->documents
                 ->where('document_type', 'admission')
@@ -59,14 +61,38 @@ class TemporaryAdmission extends Model
                 ->get(),
         };
 
-        $atValidityMonths = $admissionDocuments
-            ->filter(fn (TemporaryAdmissionDocument $document) => $document->document_date !== null)
+        $renewals = $admissionDocuments
+            ->filter(fn (TemporaryAdmissionDocument $document) => $document->document_date?->isAfter($enteredOn) === true)
             ->sortBy(fn (TemporaryAdmissionDocument $document) => ($document->document_date?->format('Y-m-d') ?? '').'-'.str_pad((string) $document->id, 20, '0', STR_PAD_LEFT))
             ->groupBy(fn (TemporaryAdmissionDocument $document) => $document->document_date?->format('Y-m-d'))
-            ->sum(fn ($documentsForDate) => (int) ($documentsForDate->last()?->validity_months ?? 12));
+            ->map(fn ($documentsForDate) => $documentsForDate->last());
 
-        return CarbonImmutable::parse($this->entered_on)
-            ->addMonthsNoOverflow(12 + $atValidityMonths);
+        $expiresOn = $enteredOn->addMonthsNoOverflow(12);
+
+        foreach ($renewals as $renewal) {
+            $validityMonths = max(1, (int) ($renewal->validity_months ?? 12));
+            $renewalDate = CarbonImmutable::parse($renewal->document_date);
+            $renewalStartsOn = $expiresOn;
+
+            // Keep every period anchored to the declaration day. When historical
+            // renewal documents are missing, use the scheduled boundary closest
+            // to the dated AT instead of shifting the expiry to the AT issue date.
+            while (true) {
+                $nextScheduledStart = $renewalStartsOn->addMonthsNoOverflow($validityMonths);
+                $currentDistance = abs($renewalStartsOn->diffInDays($renewalDate, false));
+                $nextDistance = abs($nextScheduledStart->diffInDays($renewalDate, false));
+
+                if ($nextDistance >= $currentDistance) {
+                    break;
+                }
+
+                $renewalStartsOn = $nextScheduledStart;
+            }
+
+            $expiresOn = $renewalStartsOn->addMonthsNoOverflow($validityMonths);
+        }
+
+        return $expiresOn;
     }
 
     protected function casts(): array

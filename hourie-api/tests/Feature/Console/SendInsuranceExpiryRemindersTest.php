@@ -57,7 +57,35 @@ it('sends an insurance reminder exactly 30 days before expiry only once per day'
         'insurance_policy_id' => $policy->id,
         'expiry_date' => '2026-10-29',
         'reminder_date' => '2026-09-29',
-        'reminder_type' => '30_days',
+        'reminder_type' => 'one_month',
+    ]);
+});
+
+it('repeats insurance reminders weekly through expiry and stops afterwards', function () {
+    Mail::fake();
+    ApplicationSetting::query()->create(['key' => 'reminder_recipients', 'value' => ['insurance@example.test']]);
+    $policy = InsurancePolicy::query()->create([
+        'insurance_type' => 'equipment',
+        'policy_number' => 'WEEKLY-TEST',
+        'ends_on' => '2026-10-29',
+    ]);
+    $action = app(SendInsuranceExpiryReminders::class);
+
+    expect($action->sendForPolicy($policy, CarbonImmutable::parse('2026-09-29')))->toBeTrue()
+        ->and($action->sendForPolicy($policy, CarbonImmutable::parse('2026-10-05')))->toBeFalse()
+        ->and($action->sendForPolicy($policy, CarbonImmutable::parse('2026-10-06')))->toBeTrue()
+        ->and($action->sendForPolicy($policy, CarbonImmutable::parse('2026-10-29')))->toBeTrue()
+        ->and($action->sendForPolicy($policy, CarbonImmutable::parse('2026-10-30')))->toBeFalse();
+
+    $this->assertDatabaseHas('insurance_policy_reminders', [
+        'insurance_policy_id' => $policy->id,
+        'reminder_date' => '2026-10-06',
+        'reminder_type' => 'weekly',
+    ]);
+    $this->assertDatabaseHas('insurance_policy_reminders', [
+        'insurance_policy_id' => $policy->id,
+        'reminder_date' => '2026-10-29',
+        'reminder_type' => 'expiry',
     ]);
 });
 

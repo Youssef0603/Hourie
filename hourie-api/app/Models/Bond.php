@@ -11,13 +11,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable(['project_id', 'location_id', 'bond_type', 'issuer', 'amount', 'currency', 'issued_on', 'expires_on', 'notes', 'created_by_user_id'])]
 class Bond extends Model
 {
-    public const TYPES = ['advance_payment', 'performance', 'retention'];
+    public const TYPES = ['advance_payment', 'performance', 'retention', 'eshs'];
 
     public function typeLabel(): string
     {
         return match ($this->bond_type) {
             'advance_payment' => 'Avance de démarrage',
             'retention' => 'Retenue de garantie',
+            'eshs' => 'Performance ESHS',
             default => 'Bonne exécution',
         };
     }

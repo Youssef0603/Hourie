@@ -64,7 +64,7 @@ it('sends an AT reminder 30 days before the latest AT expiry only to settings re
         'temporary_admission_id' => $admission->id,
         'expiry_date' => '2023-10-12',
         'reminder_date' => '2023-09-12',
-        'reminder_type' => '30_days',
+        'reminder_type' => 'one_month',
     ]);
 });
 
@@ -85,7 +85,7 @@ it('does not remind for an AT that has been returned', function () {
     Mail::assertNothingSent();
 });
 
-it('repeats weekly before and after expiry until a newer AT changes the expiry', function () {
+it('repeats weekly through expiry and stops after expiry', function () {
     Mail::fake();
     ApplicationSetting::query()->create(['key' => 'reminder_recipients', 'value' => ['finance@example.test']]);
     $admission = TemporaryAdmission::query()->create([
@@ -98,7 +98,8 @@ it('repeats weekly before and after expiry until a newer AT changes the expiry',
     expect($action->sendForAdmission($admission, CarbonImmutable::parse('2026-10-06')))->toBeTrue()
         ->and($action->sendForAdmission($admission, CarbonImmutable::parse('2026-10-12')))->toBeFalse()
         ->and($action->sendForAdmission($admission, CarbonImmutable::parse('2026-10-13')))->toBeTrue()
-        ->and($action->sendForAdmission($admission, CarbonImmutable::parse('2026-11-06')))->toBeTrue();
+        ->and($action->sendForAdmission($admission, CarbonImmutable::parse('2026-11-05')))->toBeTrue()
+        ->and($action->sendForAdmission($admission, CarbonImmutable::parse('2026-11-06')))->toBeFalse();
 
     $this->assertDatabaseHas('temporary_admission_reminders', [
         'temporary_admission_id' => $admission->id,
@@ -109,8 +110,8 @@ it('repeats weekly before and after expiry until a newer AT changes the expiry',
     $this->assertDatabaseHas('temporary_admission_reminders', [
         'temporary_admission_id' => $admission->id,
         'expiry_date' => '2026-11-05',
-        'reminder_date' => '2026-11-06',
-        'reminder_type' => 'overdue_weekly',
+        'reminder_date' => '2026-11-05',
+        'reminder_type' => 'expiry',
     ]);
 
     $admission->documents()->create([

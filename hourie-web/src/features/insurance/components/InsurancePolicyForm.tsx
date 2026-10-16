@@ -27,7 +27,11 @@ export function InsuranceAddPanel({
 }: {
   defaultType: Kind;
   policy?: Policy;
-  sites: Array<{ id: number; name: string }>;
+  sites: Array<{
+    id: number;
+    name: string;
+    locations: Array<{ id: number; project_id: number; parent_id: number | null; name: string }>;
+  }>;
   equipmentOptions: InsuranceEquipmentOption[];
   employeeOptions: Array<{
     id: number;
@@ -47,6 +51,12 @@ export function InsuranceAddPanel({
   );
   const [employeeIds, setEmployeeIds] = useState<number[]>(
     policy?.employees?.map((employee) => employee.id) ?? [],
+  );
+  const [projectId, setProjectId] = useState(
+    policy?.project?.id ? String(policy.project.id) : "",
+  );
+  const [locationId, setLocationId] = useState(
+    policy?.location?.id ? String(policy.location.id) : "",
   );
   const [amounts, setAmounts] = useState({
     net: policy?.net_premium ?? "0",
@@ -85,8 +95,8 @@ export function InsuranceAddPanel({
               type === "equipment" || type === "group_health"
                 ? null
                 : form.get("insured_situation") || null,
-            project_id:
-              type === "trc_rc" ? form.get("project_id") || null : null,
+            project_id: type === "trc_rc" ? projectId || null : null,
+            location_id: type === "trc_rc" ? locationId || null : null,
             equipment_ids: type === "equipment" ? equipmentIds : undefined,
             employee_ids: type === "group_health" ? employeeIds : undefined,
             net_premium: Number(amounts.net) || 0,
@@ -202,9 +212,13 @@ export function InsuranceAddPanel({
               {type === "trc_rc" && (
                 <InsuranceProjectSelect
                   sites={sites}
-                  initialValue={
-                    policy?.project?.id ? String(policy.project.id) : ""
-                  }
+                  projectId={projectId}
+                  locationId={locationId}
+                  onProjectChange={(value) => {
+                    setProjectId(value);
+                    setLocationId("");
+                  }}
+                  onLocationChange={setLocationId}
                 />
               )}
               {type !== "equipment" && type !== "group_health" && (
@@ -340,27 +354,54 @@ export function InsuranceAddPanel({
 
 function InsuranceProjectSelect({
   sites,
-  initialValue,
+  projectId,
+  locationId,
+  onProjectChange,
+  onLocationChange,
 }: {
-  sites: Array<{ id: number; name: string }>;
-  initialValue: string;
+  sites: Array<{
+    id: number;
+    name: string;
+    locations: Array<{ id: number; project_id: number; parent_id: number | null; name: string }>;
+  }>;
+  projectId: string;
+  locationId: string;
+  onProjectChange: (value: string) => void;
+  onLocationChange: (value: string) => void;
 }) {
-  const [value, setValue] = useState(initialValue);
+  const locations = sites
+    .find((site) => String(site.id) === projectId)
+    ?.locations.filter((location) => location.parent_id !== null) ?? [];
 
   return (
-    <label>
-      {operationPhrase("Site / projet")}
-      <SearchableSelect
-        ariaLabel={operationPhrase("Site ou projet")}
-        value={value}
-        onChange={setValue}
-        placeholder={operationPhrase("À compléter")}
-        options={sites.map((site) => ({
-          value: String(site.id),
-          label: site.name,
-        }))}
-      />
-      <input type="hidden" name="project_id" value={value} />
-    </label>
+    <>
+      <label>
+        {operationPhrase("Site / projet")}
+        <SearchableSelect
+          ariaLabel={operationPhrase("Site ou projet")}
+          value={projectId}
+          onChange={onProjectChange}
+          placeholder={operationPhrase("À compléter")}
+          options={sites.map((site) => ({
+            value: String(site.id),
+            label: site.name,
+          }))}
+        />
+      </label>
+      <label>
+        {operationPhrase("Localisation physique")}
+        <SearchableSelect
+          ariaLabel={operationPhrase("Localisation physique")}
+          value={locationId}
+          onChange={onLocationChange}
+          placeholder={operationPhrase("À compléter")}
+          disabled={!projectId}
+          options={locations.map((location) => ({
+            value: String(location.id),
+            label: location.name,
+          }))}
+        />
+      </label>
+    </>
   );
 }

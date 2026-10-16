@@ -37,6 +37,18 @@ export async function getEquipment(
   return apiRequest<EquipmentListResponse>(`/api/v1/equipment?${params}`)
 }
 
+export async function getAllEquipment(filters: EquipmentFilters): Promise<EquipmentListResponse['data']> {
+  const firstPage = await getEquipment({ ...filters, page: 1, per_page: 100 })
+  const equipment = [...firstPage.data]
+
+  for (let page = 2; page <= firstPage.meta.last_page; page += 1) {
+    const response = await getEquipment({ ...filters, page, per_page: 100 })
+    equipment.push(...response.data)
+  }
+
+  return equipment
+}
+
 export async function getCatalogOptions(): Promise<CatalogOption[]> {
   return (await apiRequest<{ data: CatalogOption[] }>('/api/v1/catalog-options')).data
 }

@@ -31,6 +31,7 @@ export type EquipmentSummary = {
   brand: string | null;
   model: string | null;
   serial_number: string | null;
+  registration_number: string | null;
   manufacture_year: number | null;
   purchase_date: string | null;
   asset_details: Record<string, string | number | null> | null;
@@ -224,7 +225,7 @@ export type EquipmentFilters = {
   brand: string;
   model: string;
   serial_number: string;
-  chassis_number: string;
+  registration_number: string;
   manufacture_year_from: string;
   manufacture_year_to: string;
   apparent_power_kva_min: string;

@@ -147,6 +147,29 @@ it('filters equipment by search, category, condition, situation, project, and lo
         ->assertJsonPath('data.0.current_project_assignment.project.name', 'VRIDI');
 });
 
+it('matches search words across separate equipment fields', function () {
+    $user = User::factory()->create();
+    $category = EquipmentCategory::factory()->create(['code' => 'equipment']);
+    $matching = Equipment::factory()->for($category, 'category')->create([
+        'brand' => 'Caterpillar',
+        'model' => 'D8K',
+    ]);
+    Equipment::factory()->for($category, 'category')->create([
+        'brand' => 'Caterpillar',
+        'model' => '950F',
+    ]);
+    Equipment::factory()->for($category, 'category')->create([
+        'brand' => 'Volvo',
+        'model' => 'D8K',
+    ]);
+
+    $this->actingAs($user, 'web')
+        ->getJson('/api/v1/equipment?q=Caterpillar%20D')
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $matching->id);
+});
+
 it('finds a car by its assigned driver name', function () {
     $user = User::factory()->create();
     $driver = Employee::factory()->create(['name' => 'Aminata Traoré']);

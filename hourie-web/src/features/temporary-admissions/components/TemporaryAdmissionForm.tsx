@@ -31,6 +31,7 @@ export function TemporaryAdmissionForm({
   const [error, setError] = useState<string | null>(null);
   const [initialDocuments, setInitialDocuments] = useState<File[]>([]);
   const [invoiceDocuments, setInvoiceDocuments] = useState<File[]>([]);
+  const [entryDate, setEntryDate] = useState(item?.entered_on ?? "");
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -48,7 +49,7 @@ export function TemporaryAdmissionForm({
           body: JSON.stringify({
             customs_reference: form.get("customs_reference"),
             supplier_name: form.get("supplier_name") || null,
-            entered_on: form.get("entered_on"),
+            entered_on: entryDate || null,
             notes: form.get("notes") || null,
             equipment_ids: ids,
           }),
@@ -112,7 +113,7 @@ export function TemporaryAdmissionForm({
               disabled={
                 saving ||
                 !ids.length ||
-                (!item && !initialDocuments.length)
+                (initialDocuments.length > 0 && !entryDate)
               }
             >
               {operationPhrase(saving ? "Enregistrement…" : "Enregistrer")}
@@ -150,10 +151,10 @@ export function TemporaryAdmissionForm({
               <label>
                 {operationPhrase("Date d’entrée")}
                 <input
-                  required
                   type="date"
                   name="entered_on"
-                  defaultValue={item?.entered_on}
+                  value={entryDate}
+                  onChange={(event) => setEntryDate(event.target.value)}
                 />
               </label>
               <label>

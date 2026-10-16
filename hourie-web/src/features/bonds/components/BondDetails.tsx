@@ -104,7 +104,7 @@ export function BondDetails({
   return (
     <div className="detail-backdrop" onMouseDown={onClose}>
       <aside
-        className="detail-panel insurance-side-panel"
+        className="detail-panel insurance-side-panel bond-detail-panel"
         role="dialog"
         aria-modal="true"
         aria-label={operationPhrase("Détail de la caution")}
@@ -121,7 +121,7 @@ export function BondDetails({
           </button>
         </header>
         <div className="detail-content insurance-side-content">
-          <div className="detail-primary-actions">
+          <div className="detail-primary-actions bond-detail-actions">
             <button
               className="equipment-edit-button detail-toolbar-button"
               type="button"
@@ -322,15 +322,17 @@ function BondDocuments({
           documents={bond.documents}
           emptyMessage={operationPhrase("Aucun document ajouté.")}
           renderDocument={(document) => (
-            <article key={document.id}>
+            <article className="bond-document-row" key={document.id}>
               <button
-                className="invoice-preview-button"
+                className="invoice-preview-button bond-document-preview"
                 type="button"
                 onClick={() => void preview(document)}
               >
                 <span className="invoice-pdf-badge">PDF</span>
                 <span>
-                  <strong>{document.original_name}</strong>
+                  <strong className="bond-document-name" title={document.original_name}>
+                    {document.original_name}
+                  </strong>
                   <small>
                     {Math.max(1, Math.round(document.size_bytes / 1024))} Ko
                   </small>

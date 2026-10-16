@@ -53,10 +53,12 @@ class SendTemporaryAdmissionExpiryReminders
             ->max('reminder_date');
 
         if (! $force) {
-            if ($today->isBefore($expiresOn->subDays(30))) {
+            if ($today->isAfter($expiresOn) || $today->isBefore($expiresOn->subMonthNoOverflow())) {
                 return false;
             }
-            if ($lastReminderDate !== null && $today->isBefore(CarbonImmutable::parse($lastReminderDate)->addWeek())) {
+            if ($days !== 0
+                && $lastReminderDate !== null
+                && $today->isBefore(CarbonImmutable::parse($lastReminderDate)->addWeek())) {
                 return false;
             }
         }
@@ -90,13 +92,10 @@ class SendTemporaryAdmissionExpiryReminders
         if ($force) {
             return 'manual_test';
         }
-        if ($days < 0) {
-            return 'overdue_weekly';
-        }
         if ($days === 0) {
             return 'expiry';
         }
 
-        return $hasPreviousReminder ? 'weekly' : '30_days';
+        return $hasPreviousReminder ? 'weekly' : 'one_month';
     }
 }

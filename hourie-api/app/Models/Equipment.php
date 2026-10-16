@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'brand',
     'model',
     'serial_number',
+    'registration_number',
     'manufacture_year',
     'purchase_date',
     'condition',

@@ -28,13 +28,12 @@ class TemporaryAdmissionController extends Controller
             ->orderBy('brand')
             ->orderBy('model')
             ->orderBy('asset_code')
-            ->get(['id', 'asset_code', 'brand', 'model', 'serial_number', 'asset_details'])
+            ->get(['id', 'asset_code', 'brand', 'model', 'serial_number'])
             ->map(fn (Equipment $item) => [
                 'id' => $item->id,
                 'asset_code' => $item->asset_code,
                 'name' => trim(implode(' ', array_filter([$item->brand, $item->model]))) ?: $item->asset_code,
                 'serial_number' => $item->serial_number,
-                'chassis_number' => $item->asset_details['chassis_number'] ?? null,
             ]);
 
         return response()->json(['data' => $equipment]);
@@ -111,7 +110,11 @@ class TemporaryAdmissionController extends Controller
     public function return(Request $request, TemporaryAdmission $temporaryAdmission)
     {
         abort_unless($request->user()?->role->canManageEquipment(), 403);
-        $request->validate(['returned_on' => ['required', 'date', 'after_or_equal:'.$temporaryAdmission->entered_on->format('Y-m-d')], 'closure_reason' => ['nullable', 'string', 'max:500']]);
+        $returnedOnRules = ['required', 'date'];
+        if ($temporaryAdmission->entered_on !== null) {
+            $returnedOnRules[] = 'after_or_equal:'.$temporaryAdmission->entered_on->format('Y-m-d');
+        }
+        $request->validate(['returned_on' => $returnedOnRules, 'closure_reason' => ['nullable', 'string', 'max:500']]);
         $temporaryAdmission->update(['status' => 'returned', 'returned_on' => $request->input('returned_on'), 'closure_reason' => $request->input('closure_reason')]);
         $temporaryAdmission->changes()->create(['actor_user_id' => $request->user()->id, 'action' => 'returned', 'new_values' => ['returned_on' => $request->input('returned_on'), 'closure_reason' => $request->input('closure_reason')], 'occurred_at' => now()]);
 
@@ -124,8 +127,12 @@ class TemporaryAdmissionController extends Controller
         if (in_array($temporaryAdmission->status, ['returned', 'cleared'], true)) {
             throw ValidationException::withMessages(['cleared_on' => ['Cette admission est déjà clôturée.']]);
         }
+        $clearedOnRules = ['required', 'date'];
+        if ($temporaryAdmission->entered_on !== null) {
+            $clearedOnRules[] = 'after_or_equal:'.$temporaryAdmission->entered_on->format('Y-m-d');
+        }
         $request->validate([
-            'cleared_on' => ['required', 'date', 'after_or_equal:'.$temporaryAdmission->entered_on->format('Y-m-d')],
+            'cleared_on' => $clearedOnRules,
             'clearance_reference' => ['nullable', 'string', 'max:255'],
             'customs_duty_amount' => ['required', 'numeric', 'min:0'],
         ]);
@@ -147,7 +154,7 @@ class TemporaryAdmissionController extends Controller
         if ($validated['document_type'] === 'admission' && in_array($temporaryAdmission->status, ['returned', 'cleared'], true)) {
             throw ValidationException::withMessages(['document' => ['Une admission clôturée ne peut plus recevoir de nouvel AT.']]);
         }
-        if (($validated['document_type'] ?? null) === 'admission' && CarbonImmutable::parse($validated['document_date'])->isBefore($temporaryAdmission->entered_on)) {
+        if (($validated['document_type'] ?? null) === 'admission' && $temporaryAdmission->entered_on !== null && CarbonImmutable::parse($validated['document_date'])->isBefore($temporaryAdmission->entered_on)) {
             throw ValidationException::withMessages(['document_date' => ['La date de l’AT doit être postérieure ou égale à la date d’entrée.']]);
         }
         $file = $request->file('document');

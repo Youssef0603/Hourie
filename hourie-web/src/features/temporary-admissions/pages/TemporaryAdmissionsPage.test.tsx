@@ -32,7 +32,6 @@ const admission = {
       brand: "Perkins",
       model: "250 KVA",
       serial_number: "SER-008",
-      chassis_number: "CH-008",
     },
     {
       id: 9,
@@ -41,7 +40,6 @@ const admission = {
       brand: "SinoTruck",
       model: "Howo 17m3 HOWO 336",
       serial_number: "SER-009",
-      chassis_number: null,
     },
   ],
   documents: [
@@ -93,6 +91,94 @@ describe("TemporaryAdmissionsPage", () => {
     expect(screen.getByText("N° de série : SER-008")).toBeVisible();
     expect(screen.getByText("AT-S1445.pdf")).toBeVisible();
     await waitFor(() => expect(apiRequest).toHaveBeenCalledTimes(3));
+  });
+
+  it("shows a compact empty state when no equipment is linked", async () => {
+    const user = userEvent.setup();
+    apiRequest.mockImplementation((path: string) => {
+      if (path.startsWith("/api/v1/temporary-admissions?")) {
+        return Promise.resolve({
+          data: [{ ...admission, equipment: [], documents: [], documents_count: 1 }],
+          meta: { current_page: 1, from: 1, last_page: 1, per_page: 10, to: 1, total: 1 },
+        });
+      }
+      if (path === "/api/v1/temporary-admissions/1") {
+        return Promise.resolve({ data: { ...admission, equipment: [] } });
+      }
+      if (path === "/api/v1/temporary-admission-equipment-options") {
+        return Promise.resolve({ data: admission.equipment });
+      }
+      return Promise.reject(new Error(`Unexpected request: ${path}`));
+    });
+
+    render(<TemporaryAdmissionsPage canManage />);
+    await user.click(await screen.findByText("S1445"));
+
+    expect(await screen.findByText("Aucun équipement couvert")).toBeVisible();
+    expect(
+      screen.getByText(
+        "Aucun équipement de l’inventaire n’est associé à cette admission temporaire.",
+      ),
+    ).toBeVisible();
+  });
+
+  it("refreshes the admissions table on demand", async () => {
+    const user = userEvent.setup();
+    render(<TemporaryAdmissionsPage canManage />);
+
+    await screen.findByText("S1445");
+    const listCallsBeforeRefresh = apiRequest.mock.calls.filter(([path]) =>
+      String(path).startsWith("/api/v1/temporary-admissions?"),
+    ).length;
+
+    await user.click(screen.getByRole("button", { name: "Actualiser" }));
+
+    await waitFor(() => {
+      const listCallsAfterRefresh = apiRequest.mock.calls.filter(([path]) =>
+        String(path).startsWith("/api/v1/temporary-admissions?"),
+      ).length;
+      expect(listCallsAfterRefresh).toBe(listCallsBeforeRefresh + 1);
+    });
+  });
+
+  it("shows an AT-only dossier without inventing an entry or expiry date", async () => {
+    const atOnlyAdmission = {
+      ...admission,
+      customs_reference: "MATFORCE",
+      entered_on: null,
+      expires_on: null,
+      documents: [{
+        ...admission.documents[0],
+        document_type: "admission",
+        document_date: "2024-05-23",
+        validity_months: 12,
+        original_name: "AT MATFORCE.pdf",
+      }],
+    };
+    apiRequest.mockImplementation((path: string) => {
+      if (path.startsWith("/api/v1/temporary-admissions?")) {
+        return Promise.resolve({
+          data: [{ ...atOnlyAdmission, equipment: [], documents: [], documents_count: 1 }],
+          meta: { current_page: 1, from: 1, last_page: 1, per_page: 10, to: 1, total: 1 },
+        });
+      }
+      if (path === "/api/v1/temporary-admissions/1") {
+        return Promise.resolve({ data: atOnlyAdmission });
+      }
+      if (path === "/api/v1/temporary-admission-equipment-options") {
+        return Promise.resolve({ data: admission.equipment });
+      }
+      return Promise.reject(new Error(`Unexpected request: ${path}`));
+    });
+
+    const user = userEvent.setup();
+    render(<TemporaryAdmissionsPage canManage />);
+
+    expect(await screen.findAllByText("À compléter")).toHaveLength(2);
+    await user.click(screen.getByText("MATFORCE"));
+    expect(await screen.findByText("Aucune déclaration enregistrée.")).toBeVisible();
+    expect(screen.getByText("AT MATFORCE.pdf")).toBeVisible();
+    expect(screen.getByText("Renseignez d’abord la date d’entrée")).toBeVisible();
   });
 
   it("shows equipment names and serial numbers in the add dropdown", async () => {

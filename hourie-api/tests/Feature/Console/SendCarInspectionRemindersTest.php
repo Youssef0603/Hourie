@@ -88,3 +88,23 @@ it('emails equipment managers one month before a car inspection and then weekly'
         'reminder_type' => 'one_month',
     ]);
 });
+
+it('sends a final car inspection reminder on the visit date and stops afterwards', function () {
+    Mail::fake();
+    $manager = User::factory()->create(['role' => UserRole::Manager, 'email' => 'fleet@example.test']);
+    config()->set('mail.inspection_reminder_recipients', [$manager->email]);
+    $carCategory = EquipmentCategory::factory()->create(['code' => 'car']);
+    $car = Equipment::factory()->for($carCategory, 'category')->create([
+        'asset_details' => ['inspection_date' => '2026-10-25'],
+    ]);
+    $action = app(SendCarInspectionReminder::class);
+
+    expect($action->handle($car, CarbonImmutable::parse('2026-10-25')))->toBeTrue()
+        ->and($action->handle($car, CarbonImmutable::parse('2026-10-26')))->toBeFalse();
+
+    $this->assertDatabaseHas('equipment_inspection_reminders', [
+        'equipment_id' => $car->id,
+        'reminder_date' => '2026-10-25',
+        'reminder_type' => 'expiry',
+    ]);
+});

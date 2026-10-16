@@ -15,7 +15,7 @@ export type InsuranceEquipmentOption = {
   asset_code: string
   name: string
   category_name: string | null
-  chassis_number: string | null
+  serial_number: string | null
 }
 
 export type InsurancePolicy = {
@@ -33,6 +33,7 @@ export type InsurancePolicy = {
   source: string | null
   notes: string | null
   project?: { id: number; name: string } | null
+  location?: { id: number; project_id: number; name: string } | null
   covered_count?: number
   documents?: InsurancePolicyDocument[]
   changes?: RecordHistoryEntry[]

@@ -45,9 +45,15 @@ export function EquipmentIdentificationDetails({
   return (
     <dl>
       <div>
-        <dt>{categoryCode === "car" ? fr.equipment.registrationNumber : fr.equipment.serialNumber}</dt>
+        <dt>{fr.equipment.serialNumber}</dt>
         <dd>{displayedValue(equipment.serial_number)}</dd>
       </div>
+      {categoryCode === "car" && (
+        <div>
+          <dt>{fr.equipment.registrationNumber}</dt>
+          <dd>{displayedValue(equipment.registration_number)}</dd>
+        </div>
+      )}
       <div><dt>{fr.equipment.model}</dt><dd>{displayedValue(equipment.model)}</dd></div>
       <div><dt>{fr.equipment.manufactureYear}</dt><dd>{displayedValue(equipment.manufacture_year)}</dd></div>
       <div><dt>{fr.equipment.purchaseDate}</dt><dd>{displayedValue(equipment.purchase_date)}</dd></div>

@@ -9,7 +9,7 @@ import { TemporaryAdmissionForm } from "../components/TemporaryAdmissionForm";
 import { RelatedEquipmentDetailPanel } from "../../equipment/components/RelatedEquipmentDetailPanel";
 import type { AuthenticatedUser } from "../../auth/types";
 import type { Language } from "../../../i18n/fr";
-import { operationsLocale, operationsText } from "../../../i18n/operations";
+import { operationPhrase, operationsLocale, operationsText } from "../../../i18n/operations";
 import type { EquipmentFilterOptions } from "../../equipment/types";
 import type { AdmissionEquipment, TemporaryAdmission } from "../types";
 import type { PaginatedResponse, PaginationMeta } from "../../../shared/api/pagination";
@@ -46,6 +46,7 @@ export function TemporaryAdmissionsPage({
 
   const loadItems = useCallback(async () => {
     setLoading(true);
+    setError(null);
     const params = new URLSearchParams({ page: String(page) });
     if (search.trim()) params.set("search", search.trim());
     try {
@@ -133,16 +134,29 @@ export function TemporaryAdmissionsPage({
               placeholder={text.searchPlaceholder}
             />
           </label>
-          {canManage && (
+          <div className="filter-toolbar-actions">
+            {canManage && (
+              <button
+                className="table-refresh-button table-add-button"
+                type="button"
+                aria-label={text.add}
+                title={text.add}
+                onClick={() => setFormItem(null)}
+              >
+                <ActionIcon name="add" />
+              </button>
+            )}
             <button
-              className="table-refresh-button table-add-button"
+              className="table-refresh-button filter-refresh-button"
               type="button"
-              aria-label={text.add}
-              onClick={() => setFormItem(null)}
+              aria-label={text.refresh}
+              title={text.refresh}
+              disabled={loading}
+              onClick={() => void loadItems()}
             >
-              <ActionIcon name="add" />
+              <ActionIcon name="refresh" />
             </button>
-          )}
+          </div>
         </div>
         {loading ? (
           <div className="table-state">
@@ -255,6 +269,7 @@ export function TemporaryAdmissionsPage({
   );
 }
 
-function formatDate(value: string) {
+function formatDate(value: string | null) {
+  if (!value) return operationPhrase("À compléter");
   return new Intl.DateTimeFormat(operationsLocale()).format(new Date(`${value}T00:00:00`));
 }

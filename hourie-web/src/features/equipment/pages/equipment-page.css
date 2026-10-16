@@ -713,6 +713,74 @@ html[dir="rtl"] .search-clear-button {
   stroke-width: 1.8;
 }
 
+.asset-export-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.asset-export-form > p {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.asset-export-selection-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.asset-export-selection-actions button {
+  border: 0;
+  padding: 0;
+  color: var(--color-primary);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.asset-export-selection-actions button + button::before {
+  content: '·';
+  margin-inline-end: 0.5rem;
+  color: var(--color-text-muted);
+}
+
+.asset-export-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+  max-height: 22rem;
+  overflow-y: auto;
+}
+
+.asset-export-fields label {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.55rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.45rem;
+  padding: 0.65rem 0.7rem;
+  color: var(--color-text-strong);
+  cursor: pointer;
+  font-size: 0.78rem;
+}
+
+.asset-export-fields label:has(input:checked) {
+  border-color: var(--color-primary);
+  background: #fff5f7;
+}
+
+.asset-export-fields input {
+  flex: 0 0 auto;
+  accent-color: var(--color-primary);
+}
+
+.asset-export-required {
+  color: var(--color-danger) !important;
+  font-size: 0.75rem;
+}
+
 .filter-refresh-button,
 .table-add-button {
   min-width: 2.35rem;
@@ -6681,6 +6749,67 @@ html[dir="rtl"] .maintenance-form-grid select {
 
 .insurance-side-panel {
   width: min(100%, 30rem);
+}
+
+/* Bond titles can be much longer than the drawer. Keep them from widening the
+   entire panel (and consequently pushing toolbar actions off screen). */
+.bond-detail-panel {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.bond-detail-panel .detail-content,
+.bond-detail-panel .detail-content > section,
+.bond-detail-panel .paginated-document-list,
+.bond-detail-panel .invoice-list,
+.bond-detail-panel .bond-document-row,
+.bond-detail-panel .bond-document-preview,
+.bond-detail-panel .bond-document-preview > span:last-child {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.bond-detail-panel .bond-document-row {
+  width: 100%;
+}
+
+.bond-detail-panel .bond-document-preview {
+  overflow: hidden;
+}
+
+.bond-detail-panel .bond-document-name {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bond-detail-actions {
+  width: auto;
+  min-width: 0;
+}
+
+.bond-detail-actions .equipment-edit-button,
+.bond-detail-actions .equipment-history-button {
+  flex: 0 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+@media (max-width: 420px) {
+  .bond-detail-actions .equipment-history-button {
+    width: 2rem !important;
+    min-width: 2rem;
+    padding: 0 !important;
+    font-size: 0;
+  }
+
+  .bond-detail-actions .equipment-history-button svg {
+    width: 0.95rem;
+    height: 0.95rem;
+    flex: 0 0 0.95rem;
+  }
 }
 
 .insurance-filter-drawer {

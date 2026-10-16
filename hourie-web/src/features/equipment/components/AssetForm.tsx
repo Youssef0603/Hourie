@@ -42,6 +42,7 @@ export function AssetForm({ categoryCode, language, options, equipment, onSaved,
     brand: equipment?.brand ?? '',
     model: equipment?.model ?? '',
     serial_number: equipment?.serial_number ?? '',
+    registration_number: equipment?.registration_number ?? '',
     manufacture_year: equipment?.manufacture_year?.toString() ?? '',
     purchase_date: equipment?.purchase_date ?? '',
     condition: equipment?.condition ?? '',
@@ -90,6 +91,7 @@ export function AssetForm({ categoryCode, language, options, equipment, onSaved,
     }
     const payload = {
       brand: textOrNull(form.brand), model: textOrNull(form.model), serial_number: textOrNull(form.serial_number),
+      ...(isCar ? { registration_number: textOrNull(form.registration_number) } : {}),
       manufacture_year: numberOrNull(form.manufacture_year), purchase_date: textOrNull(form.purchase_date), condition: textOrNull(form.condition),
       operational_situation: textOrNull(form.operational_situation),
       project_id: numberOrNull(form.project_id), current_location_id: numberOrNull(form.current_location_id),
@@ -121,7 +123,8 @@ export function AssetForm({ categoryCode, language, options, equipment, onSaved,
       <InventoryFormSection title={fr.equipment.identification} icon="identification"><div className="maintenance-form-grid asset-form-grid-3">
         <label><span>{fr.equipment.brand}</span><input required value={form.brand} onChange={(event) => update('brand', event.target.value)} /></label>
         <label><span>{fr.equipment.model}</span><input required value={form.model} onChange={(event) => update('model', event.target.value)} /></label>
-        <label><span>{isCar ? fr.equipment.registrationNumber : fr.equipment.serialNumber}</span><input value={form.serial_number} onChange={(event) => update('serial_number', event.target.value)} /></label>
+        <label><span>{fr.equipment.serialNumber}</span><input value={form.serial_number} onChange={(event) => update('serial_number', event.target.value)} /></label>
+        {isCar && <label><span>{fr.equipment.registrationNumber}</span><input value={form.registration_number} onChange={(event) => update('registration_number', event.target.value)} /></label>}
         <label><span>{fr.equipment.manufactureYear}</span><input type="number" min="1900" max="2100" value={form.manufacture_year} onChange={(event) => update('manufacture_year', event.target.value)} /></label>
         <label><span>{fr.equipment.purchaseDate}</span><input type="date" value={form.purchase_date} onChange={(event) => update('purchase_date', event.target.value)} /></label>
         <label><span>{fr.equipment.condition}</span><SearchableSelect ariaLabel={fr.equipment.condition} value={form.condition} onChange={(value) => update('condition', value)} placeholder={fr.common.toComplete} options={catalogOptions(options.catalogs, 'equipment_condition').map((option) => ({ value: option.code, label: catalogLabel(options.catalogs, 'equipment_condition', option.code) }))} /></label>

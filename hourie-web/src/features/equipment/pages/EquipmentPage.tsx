@@ -14,6 +14,12 @@ import { EquipmentDetailPanel } from "../components/EquipmentDetailPanel";
 import { EquipmentInventoryTable } from "../components/EquipmentInventoryTable";
 import { EquipmentFilterDrawer } from "../components/EquipmentFilterDrawer";
 import { AssetInventoryView } from "../components/AssetInventoryView";
+import { AssetExportDialog } from "../components/AssetExportDialog";
+import {
+  assetExportFields,
+  defaultAssetExportFields,
+  downloadAssetInventoryCsv,
+} from "../assetExport";
 import {
   assetCategoryLabel,
   isAssetCategoryCode,
@@ -34,6 +40,7 @@ import { LoadingSpinner } from "../../../shared/components/LoadingSpinner";
 import { EmptyState } from "../../../shared/components/EmptyState";
 import {
   deleteEquipment,
+  getAllEquipment,
   getEquipment,
   getEquipmentFilterOptions,
   getEquipmentItem,
@@ -178,6 +185,9 @@ export function EquipmentPage({
   const [error, setError] = useState<string | null>(null);
   const [showAddGenerator, setShowAddGenerator] = useState(false);
   const [showImportGenerator, setShowImportGenerator] = useState(false);
+  const [showGeneratorExport, setShowGeneratorExport] = useState(false);
+  const [isExportingGenerators, setIsExportingGenerators] = useState(false);
+  const [generatorExportError, setGeneratorExportError] = useState<string | null>(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [showFilterDrawer, setShowFilterDrawer] = useState(false);
   const [showHistory, setShowHistory] = useState<"equipment" | "site" | null>(
@@ -225,6 +235,7 @@ export function EquipmentPage({
       setShowFilterDrawer(false);
       setShowAddGenerator(false);
       setShowImportGenerator(false);
+      setShowGeneratorExport(false);
       setIsEditingEquipment(false);
       setSelected(null);
       setIsLoadingDetail(currentRoute.equipmentId !== null);
@@ -394,6 +405,28 @@ export function EquipmentPage({
     getEquipmentFilterOptions()
       .then(setOptions)
       .catch(() => setError(fr.equipment.loadError));
+  }
+
+  async function exportGenerators(selectedFields: string[]) {
+    setIsExportingGenerators(true);
+    setGeneratorExportError(null);
+    try {
+      const exportFields = assetExportFields("generator");
+      const generators = await getAllEquipment({ ...filters, category: "generator" });
+      downloadAssetInventoryCsv(
+        generators,
+        exportFields,
+        selectedFields,
+        language,
+        "inventaire-generator",
+        options?.catalogs,
+      );
+      setShowGeneratorExport(false);
+    } catch {
+      setGeneratorExportError(fr.assets.exportError);
+    } finally {
+      setIsExportingGenerators(false);
+    }
   }
 
   function updateFilter(name: keyof EquipmentFilters, value: string) {
@@ -757,6 +790,17 @@ export function EquipmentPage({
                     <span>{fr.equipment.filters}</span>
                     {hasFilters && <strong>{advancedFilterCount || 1}</strong>}
                   </button>
+                  <button
+                    className="table-refresh-button import-excel-action"
+                    type="button"
+                    onClick={() => {
+                      setGeneratorExportError(null);
+                      setShowGeneratorExport(true);
+                    }}
+                  >
+                    <ActionIcon name="download" />
+                    <span>{fr.assets.exportExcel}</span>
+                  </button>
                   {user.permissions.manage_equipment && (
                     <button
                       className="table-refresh-button table-add-button"
@@ -808,6 +852,20 @@ export function EquipmentPage({
                 onChangePage={changePage}
               />
             </section>
+            {showGeneratorExport && (
+              <AssetExportDialog
+                title={fr.navigation.generators}
+                language={language}
+                fields={assetExportFields("generator")}
+                defaultFields={defaultAssetExportFields("generator")}
+                isExporting={isExportingGenerators}
+                error={generatorExportError}
+                onClose={() => {
+                  if (!isExportingGenerators) setShowGeneratorExport(false);
+                }}
+                onExport={(selectedFields) => void exportGenerators(selectedFields)}
+              />
+            )}
             {showFilterDrawer && (
               <EquipmentFilterDrawer
                 filters={filters}

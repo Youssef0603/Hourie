@@ -47,7 +47,8 @@ class AssetInventoryRowMapper
             'brand' => $this->text($row['F'] ?? null),
             'model' => $this->text($row['H'] ?? null),
             // Formwork rows use column J for a quantity (for example, "671 m2"), not a serial number.
-            'serial_number' => $categoryCode === 'formwork_scaffolding' ? null : $this->text($row['J'] ?? null),
+            'serial_number' => in_array($categoryCode, ['formwork_scaffolding', 'car'], true) ? null : $this->text($row['J'] ?? null),
+            'registration_number' => $categoryCode === 'car' ? $this->text($row['J'] ?? null) : null,
             'manufacture_year' => $this->year($row['I'] ?? null),
             'purchase_date' => $this->date($row['Q'] ?? null),
             'condition' => $this->condition($row['O'] ?? null),

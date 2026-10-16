@@ -39,7 +39,6 @@ class TemporaryAdmissionResource extends JsonResource
                 'brand' => $item->brand,
                 'model' => $item->model,
                 'serial_number' => $item->serial_number,
-                'chassis_number' => $item->asset_details['chassis_number'] ?? null,
             ])),
             'documents' => $this->whenLoaded('documents', fn () => $this->documents->map(fn ($document) => ['id' => $document->id, 'document_type' => $document->document_type, 'document_date' => $document->document_date?->format('Y-m-d'), 'validity_months' => $document->validity_months, 'original_name' => $document->original_name, 'size_bytes' => $document->size_bytes, 'url' => "/api/v1/temporary-admissions/{$this->id}/documents/{$document->id}/file"])),
             'changes' => $this->whenLoaded('changes', fn () => $this->changes->map(fn ($change) => [

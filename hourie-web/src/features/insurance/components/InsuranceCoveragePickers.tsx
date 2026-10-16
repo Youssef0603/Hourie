@@ -42,7 +42,7 @@ export function EquipmentCoveragePicker({
         {operationPhrase("Équipements couverts")}
       </h3>
       <p>
-        {operationPhrase("Sélectionnez uniquement les véhicules, camions et engins dont le numéro de châssis est renseigné.")}
+        {operationPhrase("Sélectionnez uniquement les véhicules, camions et engins dont le numéro de série est renseigné.")}
       </p>
       <label>
         {operationPhrase("Ajouter un équipement")}
@@ -55,7 +55,7 @@ export function EquipmentCoveragePicker({
           placeholder={
             options.length
               ? operationPhrase("Sélectionner un équipement")
-              : operationPhrase("Aucun châssis renseigné")
+              : operationPhrase("Aucun numéro de série renseigné")
           }
           options={available.map((option) => ({
             value: String(option.id),
@@ -76,7 +76,7 @@ export function EquipmentCoveragePicker({
                   <strong>{option.name}</strong>
                   <small>
                     {option.category_name ?? operationPhrase("Actif")} · {option.asset_code} ·
-                    {operationPhrase("Châssis")} {option.chassis_number}
+                    {operationPhrase("N° de série")} {option.serial_number}
                   </small>
                 </span>
                 <button
@@ -249,5 +249,5 @@ function employeeLabel(employee: { name: string; birth_date: string | null }) {
 }
 
 function equipmentOptionLabel(option: InsuranceEquipmentOption) {
-  return `${option.name} — ${operationPhrase("Châssis")} ${option.chassis_number || operationPhrase("À compléter")}`;
+  return `${option.name} — ${operationPhrase("N° de série")} ${option.serial_number || operationPhrase("À compléter")}`;
 }

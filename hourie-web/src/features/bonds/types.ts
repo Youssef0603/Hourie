@@ -1,5 +1,5 @@
 export type BondStatus = 'active' | 'soon' | 'expired'
-export type BondType = 'advance_payment' | 'performance' | 'retention'
+export type BondType = 'advance_payment' | 'performance' | 'retention' | 'eshs'
 
 export type BondDocument = {
   id: number

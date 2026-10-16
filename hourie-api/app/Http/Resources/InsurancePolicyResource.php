@@ -21,6 +21,7 @@ class InsurancePolicyResource extends JsonResource
                 fn () => $this->insurance_type === 'equipment' ? (int) ($this->equipment_count ?? 0) : (int) ($this->employees_count ?? 0),
             ),
             'project' => $this->whenLoaded('project', fn () => $this->project === null ? null : ['id' => $this->project->id, 'name' => $this->project->name]),
+            'location' => $this->whenLoaded('location', fn () => $this->location === null ? null : ['id' => $this->location->id, 'project_id' => $this->location->project_id, 'name' => $this->location->name]),
             'notes' => $this->notes,
             'employees' => $this->whenLoaded('employees', fn () => $this->employees->map(fn ($employee) => ['id' => $employee->id, 'name' => $employee->name, 'birth_date' => $employee->birth_date?->format('Y-m-d')])),
             'equipment' => $this->whenLoaded('equipment', fn () => $this->equipment->map(fn ($equipment) => ['id' => $equipment->id, 'asset_code' => $equipment->asset_code, 'brand' => $equipment->brand, 'model' => $equipment->model])),

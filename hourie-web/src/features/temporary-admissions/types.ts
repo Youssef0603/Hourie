@@ -21,15 +21,14 @@ export type AdmissionEquipment = {
   brand: string | null;
   model: string | null;
   serial_number?: string | null;
-  chassis_number: string | null;
 };
 export type TemporaryAdmission = {
   id: number;
   customs_reference: string;
   supplier_name: string | null;
-  entered_on: string;
+  entered_on: string | null;
   validity_months: number;
-  expires_on: string;
+  expires_on: string | null;
   status: "active" | "returned" | "cleared" | "expired";
   returned_on: string | null;
   closure_reason: string | null;

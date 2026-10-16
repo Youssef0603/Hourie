@@ -9,7 +9,7 @@ use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 
 #[Signature('bonds:send-expiry-reminders {--date=}')]
-#[Description('Send reminders 30, 14, 7, 1 and 0 days before bond expiry')]
+#[Description('Send bond reminders one month before expiry, then weekly through the expiry date')]
 class SendBondExpiryReminders extends Command
 {
     /**

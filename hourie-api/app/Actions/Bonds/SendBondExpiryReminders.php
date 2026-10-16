@@ -11,8 +11,6 @@ use Illuminate\Support\Facades\DB;
 
 class SendBondExpiryReminders
 {
-    private const REMINDER_DAYS = [30, 14, 7, 1, 0];
-
     public function handle(?CarbonImmutable $today = null): int
     {
         $today ??= CarbonImmutable::today();
@@ -38,7 +36,24 @@ class SendBondExpiryReminders
         }
 
         $days = (int) $today->diffInDays($bond->expires_on, false);
-        if ($withinThirtyDays ? ($days < 0 || $days > 30) : ! in_array($days, self::REMINDER_DAYS, true)) {
+        if ($withinThirtyDays) {
+            if ($days < 0 || $days > 30) {
+                return false;
+            }
+        } elseif ($today->isAfter($bond->expires_on)
+            || $today->isBefore(CarbonImmutable::parse($bond->expires_on)->subMonthNoOverflow())) {
+            return false;
+        }
+
+        $lastReminderDate = BondReminder::query()
+            ->where('bond_id', $bond->id)
+            ->whereDate('expiry_date', $bond->expires_on)
+            ->max('reminder_date');
+
+        if (! $withinThirtyDays
+            && $days !== 0
+            && $lastReminderDate !== null
+            && $today->isBefore(CarbonImmutable::parse($lastReminderDate)->addWeek())) {
             return false;
         }
 
@@ -46,13 +61,15 @@ class SendBondExpiryReminders
             return false;
         }
 
-        $reminder = DB::transaction(function () use ($bond, $days, $today): BondReminder {
+        $reminder = DB::transaction(function () use ($bond, $days, $lastReminderDate, $today): BondReminder {
             $reminder = BondReminder::query()->firstOrCreate([
                 'bond_id' => $bond->id,
                 'expiry_date' => $bond->expires_on->toDateString(),
                 'reminder_date' => $today->toDateString(),
             ], [
-                'reminder_type' => $days === 0 ? 'expiry' : "{$days}_days",
+                'reminder_type' => $days === 0
+                    ? 'expiry'
+                    : ($lastReminderDate === null ? 'one_month' : 'weekly'),
                 'queued_at' => now(),
             ]);
 

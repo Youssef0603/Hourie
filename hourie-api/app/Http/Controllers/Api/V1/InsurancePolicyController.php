@@ -57,7 +57,7 @@ class InsurancePolicyController extends Controller
         }
 
         $query
-            ->with('project:id,name')
+            ->with(['project:id,name', 'location:id,project_id,name'])
             ->withCount(['employees', 'equipment'])
             ->latest('ends_on')
             ->latest('id');
@@ -75,16 +75,16 @@ class InsurancePolicyController extends Controller
         $equipment = Equipment::query()
             ->where('is_active', true)
             ->with('category:id,code,name')
-            ->get(['id', 'equipment_category_id', 'asset_code', 'brand', 'model', 'asset_details'])
+            ->get(['id', 'equipment_category_id', 'asset_code', 'brand', 'model', 'serial_number'])
             ->filter(fn (Equipment $item) => in_array($item->category?->code, ['car', 'truck_dumper', 'equipment'], true))
             ->map(fn (Equipment $item) => [
                 'id' => $item->id,
                 'asset_code' => $item->asset_code,
                 'name' => trim(implode(' ', array_filter([$item->brand, $item->model]))) ?: $item->asset_code,
                 'category_name' => $item->category?->name,
-                'chassis_number' => $item->asset_details['chassis_number'] ?? null,
+                'serial_number' => $item->serial_number,
             ])
-            ->filter(fn (array $item) => filled($item['chassis_number']))
+            ->filter(fn (array $item) => filled($item['serial_number']))
             ->sortBy(['category_name', 'name', 'asset_code'])
             ->values();
 
@@ -100,7 +100,7 @@ class InsurancePolicyController extends Controller
 
     public function show(InsurancePolicy $insurancePolicy): InsurancePolicyResource
     {
-        return new InsurancePolicyResource($insurancePolicy->load(['project:id,name', 'employees:id,name,birth_date', 'equipment:id,asset_code,brand,model', 'documents', 'changes.actor:id,name']));
+        return new InsurancePolicyResource($insurancePolicy->load(['project:id,name', 'location:id,project_id,name', 'employees:id,name,birth_date', 'equipment:id,asset_code,brand,model', 'documents', 'changes.actor:id,name']));
     }
 
     public function update(UpdateInsurancePolicyRequest $request, InsurancePolicy $insurancePolicy): InsurancePolicyResource
@@ -124,7 +124,21 @@ class InsurancePolicyController extends Controller
     public function destroy(Request $request, InsurancePolicy $insurancePolicy): Response
     {
         abort_unless($request->user()->role->canManageSites(), 403);
-        $insurancePolicy->delete();
+
+        $documents = $insurancePolicy->documents()
+            ->get(['disk', 'path']);
+
+        DB::transaction(function () use ($insurancePolicy): void {
+            // Reminder history uses a restrictive foreign key so that it cannot
+            // become orphaned accidentally. An explicit policy deletion owns and
+            // removes those reminders before deleting the policy itself.
+            $insurancePolicy->reminders()->delete();
+            $insurancePolicy->delete();
+        });
+
+        $documents
+            ->groupBy('disk')
+            ->each(fn ($items, $disk) => Storage::disk($disk)->delete($items->pluck('path')->all()));
 
         return response()->noContent();
     }
@@ -194,11 +208,11 @@ class InsurancePolicyController extends Controller
             $previousValues = $isCreating ? null : $this->auditValues($policy);
             $employeeIds = $data['employee_ids'] ?? null;
             $equipmentIds = $data['equipment_ids'] ?? null;
-            $chassisNumbers = $data['chassis_numbers'] ?? null;
-            unset($data['employee_ids'], $data['equipment_ids'], $data['chassis_numbers']);
+            unset($data['employee_ids'], $data['equipment_ids']);
 
             if (($data['insurance_type'] ?? $policy->insurance_type) !== 'trc_rc') {
                 $data['project_id'] = null;
+                $data['location_id'] = null;
             }
 
             // A policy total is never typed manually: it is the sum shown on the insurer document.
@@ -220,12 +234,6 @@ class InsurancePolicyController extends Controller
             if ($employeeIds !== null) {
                 $policy->employees()->sync($employeeIds);
             }
-            if ($chassisNumbers !== null) {
-                $equipmentIds = array_values(array_unique([
-                    ...($equipmentIds ?? []),
-                    ...$this->equipmentIdsForChassisNumbers($chassisNumbers),
-                ]));
-            }
             if ($equipmentIds !== null) {
                 $policy->equipment()->sync($equipmentIds);
             }
@@ -238,38 +246,13 @@ class InsurancePolicyController extends Controller
                 'occurred_at' => now(),
             ]);
 
-            return $policy->fresh()->load(['project:id,name', 'employees:id,name,birth_date', 'equipment:id,asset_code,brand,model', 'documents', 'changes.actor:id,name']);
+            return $policy->fresh()->load(['project:id,name', 'location:id,project_id,name', 'employees:id,name,birth_date', 'equipment:id,asset_code,brand,model', 'documents', 'changes.actor:id,name']);
         });
     }
 
     private function documentData(InsurancePolicy $policy, InsurancePolicyDocument $document): array
     {
         return ['id' => $document->id, 'original_name' => $document->original_name, 'mime_type' => $document->mime_type, 'size_bytes' => $document->size_bytes, 'url' => "/api/v1/insurance-policies/{$policy->id}/documents/{$document->id}/file"];
-    }
-
-    /** @param array<int, string> $chassisNumbers @return array<int, int> */
-    private function equipmentIdsForChassisNumbers(array $chassisNumbers): array
-    {
-        $wanted = collect($chassisNumbers)
-            ->map(fn (string $number) => $this->normalizeChassisNumber($number))
-            ->filter()
-            ->unique();
-
-        if ($wanted->isEmpty()) {
-            return [];
-        }
-
-        return Equipment::query()
-            ->whereHas('category', fn ($query) => $query->whereIn('code', ['car', 'truck_dumper']))
-            ->get(['id', 'asset_details'])
-            ->filter(fn (Equipment $equipment) => $wanted->contains($this->normalizeChassisNumber((string) ($equipment->asset_details['chassis_number'] ?? ''))))
-            ->pluck('id')
-            ->all();
-    }
-
-    private function normalizeChassisNumber(string $value): string
-    {
-        return strtoupper((string) preg_replace('/[^A-Z0-9]/i', '', $value));
     }
 
     /** @return array<string, mixed> */
@@ -279,7 +262,7 @@ class InsurancePolicyController extends Controller
             ...$policy->only([
                 'insurance_type', 'policy_number', 'starts_on', 'ends_on', 'net_premium',
                 'accessories_amount', 'tax_amount', 'total_amount', 'insured_situation',
-                'project_id', 'source', 'notes',
+                'project_id', 'location_id', 'source', 'notes',
             ]),
             'employee_ids' => $policy->employees()->orderBy('employees.id')->pluck('employees.id')->all(),
             'equipment_ids' => $policy->equipment()->orderBy('equipment.id')->pluck('equipment.id')->all(),

@@ -70,6 +70,7 @@ class BuildExecutiveDashboard
 
         $admissions = TemporaryAdmission::query()
             ->whereNotIn('status', ['returned', 'cleared'])
+            ->whereNotNull('entered_on')
             ->with('documents:id,temporary_admission_id,document_type,document_date,validity_months')
             ->get(['id', 'customs_reference', 'entered_on', 'validity_months', 'status'])
             ->map(fn (TemporaryAdmission $admission) => $this->deadline('temporary_admission', $admission->id, 'AT '.$admission->customs_reference, $admission->expiresOn(), "/temporary-admissions/{$admission->id}", $today))

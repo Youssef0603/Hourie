@@ -41,13 +41,15 @@ it('imports the Excel model without storing its source code', function () {
             'E' => 'Car',
             'F' => 'Toyota',
             'H' => 'Hilux',
-            'J' => 'VIN-123',
+            'J' => 'AA-406-CG',
         ],
     ], $actor);
 
     $equipment = Equipment::query()->sole();
 
     expect($equipment->model)->toBe('Hilux');
+    expect($equipment->serial_number)->toBeNull();
+    expect($equipment->registration_number)->toBe('AA-406-CG');
     expect($equipment->asset_details)->not->toHaveKey('source_code');
     expect($equipment->observations)->toBeNull();
     expect(EquipmentImportRow::query()->sole()->raw_data)->not->toHaveKey('D');

@@ -78,7 +78,7 @@ class SendCarInspectionReminder
 
     private function reminderType(Equipment $car, CarbonImmutable $inspectionDate, CarbonImmutable $today): ?string
     {
-        if ($today->greaterThanOrEqualTo($inspectionDate) || $today->lessThan($inspectionDate->subMonthNoOverflow())) {
+        if ($today->greaterThan($inspectionDate) || $today->lessThan($inspectionDate->subMonthNoOverflow())) {
             return null;
         }
 
@@ -86,6 +86,10 @@ class SendCarInspectionReminder
             ->where('equipment_id', $car->id)
             ->whereDate('inspection_date', $inspectionDate)
             ->max('reminder_date');
+
+        if ($today->isSameDay($inspectionDate)) {
+            return 'expiry';
+        }
 
         if ($lastReminderDate === null) {
             return 'one_month';

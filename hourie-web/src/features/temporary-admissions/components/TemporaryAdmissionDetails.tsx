@@ -5,6 +5,7 @@ import {
 } from "../../../shared/api/http";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { DocumentUploadDropzone } from "../../../shared/components/DocumentUploadDropzone";
+import { EmptyState } from "../../../shared/components/EmptyState";
 import { LoadingSpinner } from "../../../shared/components/LoadingSpinner";
 import { PaginatedDocumentList } from "../../../shared/components/PaginatedDocumentList";
 import { RecordHistory } from "../../../shared/components/RecordHistory";
@@ -208,9 +209,12 @@ export function TemporaryAdmissionDetails({
   const initialDocuments = item.documents.filter(
     (document) => document.document_type === "initial",
   );
-  const atDocuments = item.documents.filter(
-    (document) => document.document_type === "admission",
-  );
+  const atDocuments = item.documents
+    .filter((document) => document.document_type === "admission")
+    .sort((left, right) =>
+      String(left.document_date).localeCompare(String(right.document_date)) ||
+      left.id - right.id,
+    );
   const latestAtDocument = [...atDocuments]
     .filter((document) => document.document_date)
     .sort((left, right) =>
@@ -478,6 +482,16 @@ export function TemporaryAdmissionDetails({
               {operationPhrase("Équipements couverts")}
             </h3>
             <div className="insurance-covered-equipment">
+              {item.equipment.length === 0 && (
+                <EmptyState
+                  compact
+                  icon="specifications"
+                  title={operationPhrase("Aucun équipement couvert")}
+                  description={operationPhrase(
+                    "Aucun équipement de l’inventaire n’est associé à cette admission temporaire.",
+                  )}
+                />
+              )}
               {item.equipment.length > 0 && (
                 <label className="document-list-search">
                   <ActionIcon name="search" />
@@ -557,11 +571,11 @@ export function TemporaryAdmissionDetails({
               {canManage && (
                 <DocumentUploadDropzone
                   compact
-                  disabled={busy}
+                  disabled={busy || !item.entered_on}
                   title={
-                    operationPhrase(busy ? "Ajout en cours…" : "Ajouter la déclaration")
+                    operationPhrase(!item.entered_on ? "Renseignez d’abord la date d’entrée" : busy ? "Ajout en cours…" : "Ajouter la déclaration")
                   }
-                  description={operationPhrase("Un ou plusieurs documents de déclaration · PDF · 10 Mo maximum par fichier")}
+                  description={operationPhrase(item.entered_on ? "Un ou plusieurs documents de déclaration · PDF · 10 Mo maximum par fichier" : "Modifiez la fiche pour renseigner la date figurant sur la déclaration.")}
                   onFiles={(files) => void addInitialDocuments(files)}
                 />
               )}
@@ -793,7 +807,8 @@ export function TemporaryAdmissionDetails({
   );
 }
 
-function formatDate(value: string) {
+function formatDate(value: string | null) {
+  if (!value) return operationPhrase("À compléter");
   return new Intl.DateTimeFormat(operationsLocale()).format(new Date(`${value}T00:00:00`));
 }
 
