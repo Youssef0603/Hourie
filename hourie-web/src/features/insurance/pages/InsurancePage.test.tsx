@@ -81,6 +81,19 @@ describe('InsurancePage', () => {
     expect(await screen.findByText('Aucune police trouvée')).toBeVisible()
   })
 
+  it('shows the physical location in the TRC / RC table', async () => {
+    const user = userEvent.setup()
+    render(<InsurancePage />)
+
+    await user.click(await screen.findByRole('button', { name: /TRC \/ RC1/ }))
+
+    await waitFor(() => {
+      expect(screen.getByRole('columnheader', { name: 'Localisation physique' })).toBeVisible()
+      expect(screen.getByText('Lot 1')).toBeVisible()
+      expect(screen.queryByText('EQ-2027')).not.toBeInTheDocument()
+    })
+  })
+
   it('returns to policy details when editing is cancelled', async () => {
     const user = userEvent.setup()
     render(<InsurancePage />)

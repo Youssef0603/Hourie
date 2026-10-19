@@ -132,6 +132,8 @@ export function InsurancePage({
   }, [selectedId]);
 
   const filteredPolicies = policies;
+  const showPhysicalLocation = activeType === "trc_rc";
+  const tableColumnCount = showPhysicalLocation ? 8 : 7;
   const filteredSiteName = sites.find(
     (site) => String(site.id) === projectId,
   )?.name;
@@ -234,6 +236,9 @@ export function InsurancePage({
                 <th>{text.columns.policyNumber}</th>
                 <th>{text.columns.insurer}</th>
                 <th>{text.columns.type}</th>
+                {showPhysicalLocation && (
+                  <th>{text.columns.physicalLocation}</th>
+                )}
                 <th>{text.columns.covered}</th>
                 <th>{text.columns.period}</th>
                 <th>{text.columns.total}</th>
@@ -243,13 +248,13 @@ export function InsurancePage({
             <tbody>
               {loading ? (
                 <tr className="insurance-empty-row">
-                  <td colSpan={7} className="insurance-table-empty">
+                  <td colSpan={tableColumnCount} className="insurance-table-empty">
                     <LoadingSpinner label={text.loading} />
                   </td>
                 </tr>
               ) : filteredPolicies.length === 0 ? (
                 <tr className="insurance-empty-row">
-                  <td colSpan={7} className="insurance-table-empty">
+                  <td colSpan={tableColumnCount} className="insurance-table-empty">
                     <EmptyState
                       title={text.empty}
                       description={text.emptyDescription}
@@ -270,8 +275,11 @@ export function InsurancePage({
                       </td>
                       <td>{policy.source || text.toComplete}</td>
                       <td>{insuranceTypeLabel(policy.insurance_type)}</td>
+                      {showPhysicalLocation && (
+                        <td>{policy.location?.name || text.toComplete}</td>
+                      )}
                       <td>{coveredInsuranceLabel(policy)}</td>
-                      <td>
+                      <td className="insurance-period-cell">
                         <span>{formatInsuranceDate(policy.starts_on)}</span>
                         <span>{formatInsuranceDate(policy.ends_on)}</span>
                       </td>

@@ -6477,7 +6477,7 @@ html[dir="rtl"] .maintenance-form-grid select {
   box-shadow: inset 2px 0 0 var(--color-primary);
 }
 
-.insurance-table td:nth-child(5) span {
+.insurance-table .insurance-period-cell span {
   display: block;
   white-space: nowrap;
 }
