@@ -19,7 +19,7 @@ vi.mock('../api', () => ({
 const people = Array.from({ length: 12 }, (_, index) => ({
   id: index + 1,
   name: index === 0 ? 'Youssef Yassine' : `Employé ${index + 1}`,
-  job_title: index === 0 ? 'software_engineer' : 'site_engineer',
+  job_title: index === 0 ? 'software_engineer' : 'civil_engineer',
   email: index === 0 ? 'youssef@hourie.ci' : null,
   phone_number: index === 0 ? '+225 07 00 00 00 00' : null,
   passport_number: null,
@@ -36,7 +36,7 @@ const people = Array.from({ length: 12 }, (_, index) => ({
 
 const catalogs = [
   { id: 1, group: 'employee_job_title' as const, code: 'software_engineer', label_fr: 'Ingénieur logiciel', label_ar: null, color: null, sort_order: 1, is_active: true },
-  { id: 2, group: 'employee_job_title' as const, code: 'site_engineer', label_fr: 'Ingénieur de chantier', label_ar: null, color: null, sort_order: 2, is_active: true },
+  { id: 2, group: 'employee_job_title' as const, code: 'civil_engineer', label_fr: 'Ingénieur civil', label_ar: null, color: null, sort_order: 2, is_active: true },
 ]
 
 describe('PeoplePage', () => {

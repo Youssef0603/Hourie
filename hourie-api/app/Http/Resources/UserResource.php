@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources;
 
-use App\Enums\UserRole;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -30,7 +29,7 @@ class UserResource extends JsonResource
                 'manage_equipment' => $this->role->canManageEquipment(),
                 'manage_maintenance' => $this->role->canManageEquipment(),
                 'delete_maintenance' => $this->role->canDeleteMaintenance(),
-                'delete_equipment' => $this->role === UserRole::Manager,
+                'delete_equipment' => $this->role->canDeleteEquipment(),
                 'manage_sites' => $this->role->canManageSites(),
                 'manage_users' => $this->role->canManageUsers(),
                 'manage_manager_accounts' => $this->role->canManageManagerAccounts(),

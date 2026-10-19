@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Http\Resources\Equipment\EquipmentSummaryResource;
+use App\Support\PhoneNumber;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -15,7 +16,7 @@ class EmployeeResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'job_title' => $this->job_title,
-            'phone_number' => $this->phone_number,
+            'phone_number' => PhoneNumber::format($this->phone_number),
             'email' => $this->email,
             'passport_number' => $this->passport_number,
             'employment_date' => $this->employment_date?->format('Y-m-d'),

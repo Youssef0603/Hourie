@@ -419,7 +419,7 @@ export function TemporaryAdmissionDetails({
           <section>
             <h3>
               <ActionIcon name="history" />
-              {operationPhrase("Période et statut")}
+              {operationPhrase("Période et état")}
             </h3>
             <dl>
               <div>
@@ -435,7 +435,7 @@ export function TemporaryAdmissionDetails({
                 <dd>{formatDate(item.expires_on)}</dd>
               </div>
               <div>
-                <dt>{operationPhrase("Statut")}</dt>
+                <dt>{operationPhrase("État")}</dt>
                 <dd>
                   <em
                     className={`insurance-status ${item.status}`}

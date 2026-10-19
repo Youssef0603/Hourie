@@ -67,7 +67,7 @@ it('allows CMS managers to add a site without physical locations', function () {
     expect($site->locations()->whereNotNull('parent_id')->count())->toBe(0);
 });
 
-it('allows CMS managers to create personnel and non-manager accounts', function () {
+it('gives system managers the same account-management permissions as managers', function () {
     $cmsManager = User::factory()->create(['role' => UserRole::CmsManager]);
 
     $this->actingAs($cmsManager, 'web')->postJson('/api/v1/employees', [
@@ -89,7 +89,9 @@ it('allows CMS managers to create personnel and non-manager accounts', function 
     $this->actingAs($cmsManager, 'web')->getJson('/api/v1/auth/user')
         ->assertOk()
         ->assertJsonPath('data.permissions.manage_users', true)
-        ->assertJsonPath('data.permissions.manage_manager_accounts', false);
+        ->assertJsonPath('data.permissions.manage_manager_accounts', true)
+        ->assertJsonPath('data.permissions.delete_equipment', true)
+        ->assertJsonPath('data.permissions.delete_maintenance', true);
 });
 
 it('creates personnel without a system account when requested', function () {
@@ -245,19 +247,20 @@ it('allows CMS managers to edit and remove non-manager personnel accounts', func
     expect($account->fresh()->is_active)->toBeFalse();
 });
 
-it('prevents CMS managers from creating or promoting manager accounts', function () {
+it('allows system managers to create and promote manager accounts', function () {
     $cmsManager = User::factory()->create(['role' => UserRole::CmsManager]);
     $viewerAccount = User::factory()->create(['role' => UserRole::Viewer]);
     $viewerEmployee = Employee::factory()->for($viewerAccount)->create();
 
     $this->actingAs($cmsManager, 'web')->postJson('/api/v1/employees', [
-        'name' => 'Manager interdit',
+        'name' => 'Manager autorisé',
         'phone_number' => null,
         'email' => null,
         'role' => 'manager',
         'password' => 'Temporary-2026',
         'password_confirmation' => 'Temporary-2026',
-    ])->assertForbidden();
+    ])->assertCreated()
+        ->assertJsonPath('data.user.role', 'manager');
 
     $this->actingAs($cmsManager, 'web')->patchJson("/api/v1/employees/{$viewerEmployee->id}", [
         'name' => $viewerEmployee->name,
@@ -267,33 +270,37 @@ it('prevents CMS managers from creating or promoting manager accounts', function
         'role' => 'manager',
         'password' => null,
         'password_confirmation' => null,
-    ])->assertForbidden();
+    ])->assertOk()
+        ->assertJsonPath('data.user.role', 'manager');
 
-    expect($viewerAccount->fresh()->role)->toBe(UserRole::Viewer);
-    $this->assertDatabaseMissing('users', ['name' => 'Manager interdit']);
+    expect($viewerAccount->fresh()->role)->toBe(UserRole::Manager);
+    $this->assertDatabaseHas('users', ['name' => 'Manager autorisé', 'role' => 'manager']);
 });
 
-it('prevents CMS managers from modifying or removing an existing manager', function () {
+it('allows system managers to modify and remove an existing manager', function () {
     $cmsManager = User::factory()->create(['role' => UserRole::CmsManager]);
     $managerAccount = User::factory()->create(['role' => UserRole::Manager]);
     $managerEmployee = Employee::factory()->for($managerAccount)->create();
 
     $this->actingAs($cmsManager, 'web')->patchJson("/api/v1/employees/{$managerEmployee->id}", [
-        'name' => 'Nom interdit',
+        'name' => 'Nom modifié',
         'phone_number' => null,
         'username' => $managerAccount->username,
         'email' => $managerAccount->email,
         'role' => 'viewer',
         'password' => null,
         'password_confirmation' => null,
-    ])->assertForbidden();
+    ])->assertOk()
+        ->assertJsonPath('data.name', 'Nom modifié')
+        ->assertJsonPath('data.user.role', 'viewer');
 
     $this->actingAs($cmsManager, 'web')
         ->deleteJson("/api/v1/employees/{$managerEmployee->id}")
-        ->assertForbidden();
+        ->assertNoContent();
 
-    expect($managerEmployee->fresh()->is_active)->toBeTrue();
-    expect($managerAccount->fresh()->role)->toBe(UserRole::Manager);
+    expect($managerEmployee->fresh()->is_active)->toBeFalse();
+    expect($managerAccount->fresh()->role)->toBe(UserRole::Viewer)
+        ->and($managerAccount->fresh()->is_active)->toBeFalse();
 });
 
 it('shows a site with its locations and current equipment inventory', function () {
@@ -358,7 +365,7 @@ it('allows managers to update personnel and their login account', function () {
     $this->assertDatabaseHas('employees', [
         'id' => $employee->id,
         'name' => 'Nouveau nom',
-        'phone_number' => '+225 05 06 07 08 09',
+        'phone_number' => '+2250506070809',
     ]);
 });
 

@@ -4,6 +4,7 @@ namespace App\Http\Requests\Employees;
 
 use App\Enums\UserRole;
 use App\Models\Employee;
+use App\Support\PhoneNumber;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
@@ -40,7 +41,7 @@ class UpdateEmployeeRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'job_title' => ['sometimes', 'required', 'string', Rule::exists('catalog_options', 'code')->where(fn ($query) => $query->where('group', 'employee_job_title')->where('is_active', true))],
-            'phone_number' => ['nullable', 'string', 'max:30'],
+            'phone_number' => ['nullable', 'string', 'regex:/^\+\d{7,15}$/'],
             'passport_number' => [
                 'nullable',
                 'string',
@@ -90,6 +91,12 @@ class UpdateEmployeeRequest extends FormRequest
         if ($this->has('email')) {
             $this->merge([
                 'email' => Str::lower($this->string('email')->trim()->toString()) ?: null,
+            ]);
+        }
+
+        if ($this->has('phone_number')) {
+            $this->merge([
+                'phone_number' => PhoneNumber::normalize($this->input('phone_number')),
             ]);
         }
 

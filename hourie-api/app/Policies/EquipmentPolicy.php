@@ -2,7 +2,6 @@
 
 namespace App\Policies;
 
-use App\Enums\UserRole;
 use App\Models\Equipment;
 use App\Models\User;
 
@@ -45,7 +44,7 @@ class EquipmentPolicy
      */
     public function delete(User $user, Equipment $equipment): bool
     {
-        return $user->role === UserRole::Manager;
+        return $user->role->canDeleteEquipment();
     }
 
     /**

@@ -254,7 +254,7 @@ const french = {
     addPerson: 'Ajouter une personne',
     siteName: 'Nom du site',
     siteAddress: 'Adresse / zone',
-    siteStatus: 'Statut du site',
+    siteStatus: 'État du site',
     siteResponsible: 'Responsable du site',
     selectResponsible: 'Sélectionner un responsable',
     startDate: 'Date de début',
@@ -300,7 +300,7 @@ const french = {
     deletePersonConfirmation: 'Supprimer cette personne et désactiver son accès au système ?',
     editPerson: 'Modifier la personne',
     contactInformation: 'Coordonnées et accès',
-    accountStatus: 'Statut du compte',
+    accountStatus: 'État du compte',
     noSystemAccess: 'Aucun accès au système',
     hasSystemAccess: 'Accès au système',
     active: 'Actif',
@@ -322,8 +322,8 @@ const french = {
     custodyCount: (count: number) => `${count} équipement${count > 1 ? 's' : ''} sous responsabilité`,
   },
   catalogs: {
-    section: 'Configuration', title: 'Listes et statuts', subtitle: 'Gérez les valeurs utilisées dans les formulaires sans modifier l’application.', add: 'Ajouter une valeur', edit: 'Modifier la valeur', code: 'Code technique', labelFr: 'Libellé français', labelAr: 'Libellé arabe', color: 'Couleur', enabled: 'Valeur active', deleteConfirmation: 'Supprimer cette valeur des listes disponibles ?', loadError: 'Impossible de charger les listes et statuts.', saveError: 'Impossible d’enregistrer cette valeur.',
-    groups: { equipment_condition: 'État des actifs', maintenance_type: 'Types d’intervention', fuel_type: 'Carburants', project_status: 'Statuts des sites', employee_job_title: 'Postes du personnel' },
+    section: 'Configuration', title: 'Listes et états', subtitle: 'Gérez les valeurs utilisées dans les formulaires sans modifier l’application.', add: 'Ajouter une valeur', edit: 'Modifier la valeur', code: 'Code technique', labelFr: 'Libellé français', labelAr: 'Libellé arabe', color: 'Couleur', enabled: 'Valeur active', deleteConfirmation: 'Supprimer cette valeur des listes disponibles ?', loadError: 'Impossible de charger les listes et états.', saveError: 'Impossible d’enregistrer cette valeur.',
+    groups: { equipment_condition: 'État des actifs', maintenance_type: 'Types d’intervention', fuel_type: 'Carburants', project_status: 'États des sites', employee_job_title: 'Postes du personnel' },
   },
   maintenance: {
     title: 'Historique de maintenance',
@@ -469,7 +469,7 @@ const french = {
   },
   roles: {
     manager: 'Manager',
-    cms_manager: 'Responsable CMS',
+    cms_manager: 'Responsable système',
     generator_manager: 'Responsable des groupes',
     viewer: 'Lecture seule',
   },
@@ -981,7 +981,7 @@ const arabic = {
   },
   roles: {
     manager: 'مدير',
-    cms_manager: 'مسؤول إدارة المحتوى',
+    cms_manager: 'مسؤول النظام',
     generator_manager: 'مسؤول المولدات',
     viewer: 'قراءة فقط',
   },

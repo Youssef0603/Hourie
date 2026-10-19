@@ -137,7 +137,7 @@ export function PersonDetail({
         {policy ? (
           <dl>
             <div>
-              <dt>Statut</dt>
+              <dt>État</dt>
               <dd>
                 <span
                   className={`insurance-status ${activePolicy ? "active" : "expired"}`}

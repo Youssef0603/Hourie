@@ -153,7 +153,7 @@ export function BondsPage() {
                 <th>{operationPhrase("Montant")}</th>
                 <th>{operationPhrase("Date de début")}</th>
                 <th>{operationPhrase("Date de fin")}</th>
-                <th>{operationPhrase("Statut")}</th>
+                <th>{operationPhrase("État")}</th>
               </tr>
             </thead>
             <tbody>

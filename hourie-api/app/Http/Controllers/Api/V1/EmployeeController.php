@@ -13,6 +13,7 @@ use App\Models\Equipment;
 use App\Models\Project;
 use App\Models\ProjectChange;
 use App\Models\User;
+use App\Support\PhoneNumber;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -32,7 +33,9 @@ class EmployeeController extends Controller
                 fn ($query) => $query->where('is_active', true),
             )
             ->when($request->filled('search'), function ($query) use ($request): void {
-                $term = '%'.$request->string('search')->toString().'%';
+                $search = $request->string('search')->toString();
+                $term = '%'.$search.'%';
+                $phoneDigits = PhoneNumber::digits($search);
                 $query->where(fn ($builder) => $builder->where('name', 'like', $term)
                     ->orWhere('job_title', 'like', $term)
                     ->orWhereIn('job_title', CatalogOption::query()
@@ -41,6 +44,7 @@ class EmployeeController extends Controller
                         ->where(fn ($catalog) => $catalog->where('label_fr', 'like', $term)->orWhere('label_ar', 'like', $term)))
                     ->orWhere('email', 'like', $term)
                     ->orWhere('phone_number', 'like', $term)
+                    ->when(strlen($phoneDigits) >= 3, fn ($phone) => $phone->orWhere('phone_number', 'like', '%'.$phoneDigits.'%'))
                     ->orWhere('passport_number', 'like', $term)
                     ->orWhereHas('user', fn ($user) => $user->where('username', 'like', $term)->orWhere('email', 'like', $term)));
             })

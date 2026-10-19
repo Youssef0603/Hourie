@@ -187,7 +187,7 @@ export function BondDetails({
           <section>
             <h3>
               <ActionIcon name="history" />
-              {operationPhrase("Période et statut")}
+              {operationPhrase("Période et état")}
             </h3>
             <dl>
               <div>
@@ -199,7 +199,7 @@ export function BondDetails({
                 <dd>{formatBondDate(bond.expires_on)}</dd>
               </div>
               <div>
-                <dt>{operationPhrase("Statut")}</dt>
+                <dt>{operationPhrase("État")}</dt>
                 <dd>
                   <em className={`insurance-status ${state}`}>
                     {bondStatusLabel(state)}

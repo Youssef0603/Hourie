@@ -19,13 +19,16 @@ test('viewers can view equipment but cannot modify it', function () {
     expect(Gate::forUser($user)->allows('delete', $equipment))->toBeFalse();
 });
 
-test('generator managers can update equipment while managers have full control', function () {
+test('system managers and managers have full equipment control', function () {
     $generatorManager = User::factory()->create(['role' => UserRole::GeneratorManager]);
+    $systemManager = User::factory()->create(['role' => UserRole::CmsManager]);
     $manager = User::factory()->create(['role' => UserRole::Manager]);
     $equipment = Equipment::factory()->create();
 
     expect(Gate::forUser($generatorManager)->allows('update', $equipment))->toBeTrue();
     expect(Gate::forUser($generatorManager)->allows('delete', $equipment))->toBeFalse();
+    expect(Gate::forUser($systemManager)->allows('create', Equipment::class))->toBeTrue();
+    expect(Gate::forUser($systemManager)->allows('delete', $equipment))->toBeTrue();
     expect(Gate::forUser($manager)->allows('create', Equipment::class))->toBeTrue();
     expect(Gate::forUser($manager)->allows('delete', $equipment))->toBeTrue();
 });

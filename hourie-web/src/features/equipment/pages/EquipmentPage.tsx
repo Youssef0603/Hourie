@@ -1020,7 +1020,7 @@ export function EquipmentPage({
           <Suspense fallback={<FeaturePageLoading />}>
             <PeoplePage
               canAdd={user.permissions.manage_users}
-              canManageManagerAccounts={user.role === "manager"}
+              canManageManagerAccounts={user.permissions.manage_manager_accounts}
               catalogs={options?.catalogs}
               projects={options?.projects}
             />

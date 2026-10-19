@@ -45,15 +45,15 @@ export function BondFilters({
         </header>
         <div className="insurance-filter-content">
           <label>
-            {operationPhrase("Statut")}
+            {operationPhrase("État")}
             <SearchableSelect
-              ariaLabel={operationPhrase("Statut")}
+              ariaLabel={operationPhrase("État")}
               value={status}
               onChange={(value) => onStatus(value as BondStatus | "all")}
-              placeholder={operationPhrase("Tous les statuts")}
+              placeholder={operationPhrase("Tous les états")}
               includeEmpty={false}
               options={[
-                { value: "all", label: operationPhrase("Tous les statuts") },
+                { value: "all", label: operationPhrase("Tous les états") },
                 { value: "active", label: operationPhrase("Active") },
                 { value: "soon", label: operationPhrase("Expire bientôt") },
                 { value: "expired", label: operationPhrase("Expirée") },

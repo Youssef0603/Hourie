@@ -96,9 +96,9 @@ export function PeopleFilterDrawer({
                 />
               </label>
               <label>
-                <span>Statut</span>
+                <span>État</span>
                 <SearchableSelect
-                  ariaLabel="Statut"
+                  ariaLabel="État"
                   value={activityFilter}
                   onChange={(value) =>
                     onActivityChange(value as ActivityFilter)
