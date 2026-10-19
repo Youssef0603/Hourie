@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { AuthenticatedUser } from "../../auth/types";
 import type { Language } from "../../../i18n/fr";
 import { getEquipmentItem } from "../api";
@@ -47,10 +48,17 @@ export function RelatedEquipmentDetailPanel({
   }, [load]);
 
   if (status !== "success" || !equipment) {
-    return <RelatedDetailRequestState status={status === "error" ? "error" : "loading"} onClose={onClose} onRetry={load} />;
+    return createPortal(
+      <RelatedDetailRequestState
+        status={status === "error" ? "error" : "loading"}
+        onClose={onClose}
+        onRetry={load}
+      />,
+      document.body,
+    );
   }
 
-  return (
+  return createPortal(
     <EquipmentDetailPanel
       user={user}
       language={language}
@@ -70,6 +78,7 @@ export function RelatedEquipmentDetailPanel({
       onMaintenanceChanged={async () => {
         await load();
       }}
-    />
+    />,
+    document.body,
   );
 }

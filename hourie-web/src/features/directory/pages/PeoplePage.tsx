@@ -21,6 +21,10 @@ import {
 import { PersonDetail } from "../components/PersonDetail";
 import { DirectoryDetailPanel } from "../components/DirectoryDetailPanel";
 import type { PaginationMeta } from "../../../shared/api/pagination";
+import type { AuthenticatedUser } from "../../auth/types";
+import type { Language } from "../../../i18n/fr";
+import type { EquipmentFilterOptions } from "../../equipment/types";
+import { RelatedEquipmentDetailPanel } from "../../equipment/components/RelatedEquipmentDetailPanel";
 
 type PeoplePageProps = {
   canAdd: boolean;
@@ -28,6 +32,11 @@ type PeoplePageProps = {
   catalogs?: CatalogOption[];
   projects?: NamedReference[];
   companyLocations?: NamedReference[];
+  relatedEquipmentContext?: {
+    user: AuthenticatedUser;
+    language: Language;
+    options: EquipmentFilterOptions | null;
+  };
 };
 
 function normalizeSearch(value: string) {
@@ -43,6 +52,7 @@ export function PeoplePage({
   catalogs,
   projects,
   companyLocations,
+  relatedEquipmentContext,
 }: PeoplePageProps) {
   const [people, setPeople] = useState<Employee[]>([]);
   const [search, setSearch] = useState("");
@@ -61,6 +71,7 @@ export function PeoplePage({
   );
   const [isLoadingPerson, setIsLoadingPerson] = useState(false);
   const [isEditingPerson, setIsEditingPerson] = useState(false);
+  const [relatedEquipmentId, setRelatedEquipmentId] = useState<number | null>(null);
   const personRequest = useRef(0);
   const searchTerm = normalizeSearch(search.trim());
   const searchedPeople = searchTerm
@@ -135,6 +146,7 @@ export function PeoplePage({
     setIsLoadingPerson(true);
     setSelectedPerson(null);
     setIsEditingPerson(false);
+    setRelatedEquipmentId(null);
     setError(null);
 
     try {
@@ -152,6 +164,7 @@ export function PeoplePage({
     setIsLoadingPerson(false);
     setSelectedPerson(null);
     setIsEditingPerson(false);
+    setRelatedEquipmentId(null);
   }
 
   async function removePerson() {
@@ -412,6 +425,7 @@ export function PeoplePage({
                 }
                 onEdit={() => setIsEditingPerson(true)}
                 onDelete={removePerson}
+                onOpenEquipment={setRelatedEquipmentId}
               />
             )
           )}
@@ -449,6 +463,14 @@ export function PeoplePage({
             }}
           />
         </DirectoryDetailPanel>
+      )}
+      {relatedEquipmentId && relatedEquipmentContext && (
+        <RelatedEquipmentDetailPanel
+          key={relatedEquipmentId}
+          equipmentId={relatedEquipmentId}
+          {...relatedEquipmentContext}
+          onClose={() => setRelatedEquipmentId(null)}
+        />
       )}
     </main>
   );

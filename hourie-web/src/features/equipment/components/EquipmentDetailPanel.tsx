@@ -190,7 +190,13 @@ export function EquipmentDetailPanel({
                 </EquipmentDetailSection>
 
                 <EquipmentDetailSection title={fr.assets.invoices} icon="invoice">
-                  <EquipmentInvoices equipment={selected} canManage={canManageEquipment} hideHeading onChanged={onRefreshSelected} />
+                  <EquipmentInvoices
+                    equipment={selected}
+                    canManage={canManageEquipment}
+                    hideHeading
+                    showDownload={isOtherAsset}
+                    onChanged={onRefreshSelected}
+                  />
                 </EquipmentDetailSection>
 
                 {!isOtherAsset && (

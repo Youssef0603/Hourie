@@ -140,4 +140,46 @@ describe('PeoplePage', () => {
 
     expect(await screen.findByRole('dialog', { name: 'Fiche personne' })).toBeVisible()
   })
+
+  it('shows assigned equipment as compact clickable rows instead of a nested table', async () => {
+    getEmployee.mockResolvedValueOnce({
+      ...people[0],
+      equipment_in_custody: [{
+        id: 74,
+        display_id: '074',
+        asset_code: 'A.H-VOI-074',
+        category: { id: 1, code: 'car', name: 'Voiture' },
+        brand: 'Toyota',
+        model: 'Land cruiser',
+        serial_number: null,
+        registration_number: '4846 GF 01',
+        manufacture_year: 2007,
+        purchase_date: null,
+        asset_details: null,
+        condition: 'very_good',
+        current_location: null,
+        current_project_assignment: null,
+        custodian: { id: 1, name: 'Youssef Yassine' },
+        responsible: { id: 1, name: 'Youssef Yassine' },
+        responsible_source: 'asset',
+        power: null,
+        fuel_type: null,
+      }],
+      assigned_sites: [],
+      project_assignments: [],
+      health_insurance_policies: [],
+    })
+
+    const user = userEvent.setup()
+    render(<PeoplePage canAdd catalogs={catalogs} />)
+    await user.click(await screen.findByText('Youssef Yassine'))
+
+    const detailPanel = await screen.findByRole('dialog', { name: 'Fiche personne' })
+    expect(within(detailPanel).getByText('Toyota Land cruiser')).toBeVisible()
+    expect(within(detailPanel).getByText('A.H-VOI-074')).toBeVisible()
+    expect(within(detailPanel).getByRole('button', { name: 'Toyota Land cruiser — A.H-VOI-074' })).toBeVisible()
+    expect(within(detailPanel).queryByText('Projet affecté')).not.toBeInTheDocument()
+    expect(within(detailPanel).queryByText('Loc.')).not.toBeInTheDocument()
+    expect(within(detailPanel).queryByRole('table')).not.toBeInTheDocument()
+  })
 })

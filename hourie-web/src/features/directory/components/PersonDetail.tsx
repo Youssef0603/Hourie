@@ -1,7 +1,7 @@
 import { fr } from "../../../i18n/fr";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { EmptyState } from "../../../shared/components/EmptyState";
-import { catalogBadgeStyle, catalogLabel } from "../../equipment/catalogs";
+import { catalogLabel } from "../../equipment/catalogs";
 import type { CatalogOption } from "../../equipment/types";
 import type { EmployeeDetails } from "../types";
 
@@ -25,12 +25,14 @@ export function PersonDetail({
   canEdit,
   onEdit,
   onDelete,
+  onOpenEquipment,
 }: {
   person: EmployeeDetails;
   catalogs?: CatalogOption[];
   canEdit: boolean;
   onEdit: () => void;
   onDelete: () => void;
+  onOpenEquipment: (equipmentId: number) => void;
 }) {
   const activePolicy = person.health_insurance_policies.find(
     (policy) =>
@@ -107,55 +109,30 @@ export function PersonDetail({
       <section className="person-assigned-assets-section">
         <h3><ActionIcon name="specifications" />{fr.directory.assignedEquipment}</h3>
         {person.equipment_in_custody.length > 0 ? (
-          <div className="site-inventory-wrap">
-            <table className="equipment-table person-inventory-table">
-              <thead>
-                <tr>
-                  <th>{fr.equipment.number}</th>
-                  <th>{fr.equipment.identification}</th>
-                  <th>{fr.equipment.condition}</th>
-                  <th>{fr.equipment.project}</th>
-                  <th>{fr.equipment.locationShort}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {person.equipment_in_custody.map((equipment) => (
-                  <tr key={equipment.id}>
-                    <td>
-                      <strong>{equipment.display_id}</strong>
-                      <span className="secondary-cell">{equipment.asset_code}</span>
-                    </td>
-                    <td>
-                      {[equipment.brand, equipment.model].filter(Boolean).join(" ") ||
-                        fr.common.notProvided}
-                    </td>
-                    <td>
-                      <span
-                        className={`status-badge status-${equipment.condition ?? "unknown"}`}
-                        style={catalogBadgeStyle(
-                          catalogs,
-                          "equipment_condition",
-                          equipment.condition,
-                        )}
-                      >
-                        {equipment.condition
-                          ? catalogLabel(
-                              catalogs,
-                              "equipment_condition",
-                              equipment.condition,
-                            )
-                          : fr.common.notProvided}
-                      </span>
-                    </td>
-                    <td>
-                      {equipment.current_project_assignment?.project.name ??
-                        fr.common.notProvided}
-                    </td>
-                    <td>{equipment.current_location?.name ?? fr.common.notProvided}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="person-assigned-assets-list">
+            {person.equipment_in_custody.map((equipment) => {
+              const identification = [equipment.brand, equipment.model]
+                .filter(Boolean)
+                .join(" ");
+
+              return (
+                <button
+                  className="person-assigned-asset-link"
+                  key={equipment.id}
+                  type="button"
+                  onClick={() => onOpenEquipment(equipment.id)}
+                  aria-label={`${identification || fr.common.notProvided} — ${equipment.asset_code}`}
+                >
+                  <div className="person-assigned-asset-copy">
+                    <div>
+                      <strong>{identification || fr.common.notProvided}</strong>
+                      <span>{equipment.asset_code}</span>
+                    </div>
+                  </div>
+                  <ActionIcon name="expand" />
+                </button>
+              );
+            })}
           </div>
         ) : (
           <EmptyState

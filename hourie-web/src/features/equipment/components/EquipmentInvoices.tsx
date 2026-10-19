@@ -15,6 +15,7 @@ type EquipmentInvoicesProps = {
   onChanged: () => Promise<void>
   title?: string
   hideHeading?: boolean
+  showDownload?: boolean
 }
 
 function formatSize(bytes: number) {
@@ -27,7 +28,7 @@ function formatDate(value: string) {
   return new Intl.DateTimeFormat(activeLanguage === 'ar' ? 'ar' : 'fr-FR', { dateStyle: 'medium' }).format(new Date(value))
 }
 
-export function EquipmentInvoices({ equipment, canManage, onChanged, title = fr.invoices.title, hideHeading = false }: EquipmentInvoicesProps) {
+export function EquipmentInvoices({ equipment, canManage, onChanged, title = fr.invoices.title, hideHeading = false, showDownload = true }: EquipmentInvoicesProps) {
   const [isUploading, setIsUploading] = useState(false)
   const [deletingId, setDeletingId] = useState<number | null>(null)
   const [downloadingId, setDownloadingId] = useState<number | null>(null)
@@ -87,7 +88,7 @@ export function EquipmentInvoices({ equipment, canManage, onChanged, title = fr.
       </div>}
       {canManage && <DocumentUploadDropzone compact title={isUploading ? fr.invoices.uploading : fr.invoices.add} description={fr.invoices.formats} disabled={isUploading} onFiles={(files) => void uploadFiles(files)} />}
       {error && <div className="form-alert" role="alert">{error}</div>}
-      {equipment.invoices.length > 0 ? <PaginatedDocumentList documents={equipment.invoices} emptyMessage={fr.invoices.empty} renderDocument={(invoice) => <article key={invoice.id}><button className="invoice-preview-button" type="button" onClick={() => openPreview(invoice)}><span className="invoice-pdf-badge">PDF</span><span><strong>{invoice.original_name}</strong><small>{formatSize(invoice.size_bytes)} · {formatDate(invoice.created_at)}{invoice.uploaded_by ? ` · ${fr.invoices.uploadedBy(invoice.uploaded_by.name)}` : ''}</small></span></button><button className="invoice-download-button" type="button" disabled={downloadingId === invoice.id} onClick={() => download(invoice)}>{downloadingId === invoice.id ? <LoadingSpinner compact label={fr.common.loading} /> : <><ActionIcon name="expand" />{fr.invoices.download}</>}</button>{canManage && <button className="invoice-delete-button" type="button" disabled={deletingId === invoice.id} onClick={() => remove(invoice)} aria-label={fr.common.delete}>{deletingId === invoice.id ? <LoadingSpinner compact label={fr.common.loading} /> : <ActionIcon name="delete" />}</button>}</article>} /> : <EmptyState compact icon="invoice" title={fr.invoices.empty} description="Les factures ajoutées à cet actif apparaîtront ici." />}
+      {equipment.invoices.length > 0 ? <PaginatedDocumentList documents={equipment.invoices} emptyMessage={fr.invoices.empty} renderDocument={(invoice) => <article key={invoice.id}><button className="invoice-preview-button" type="button" onClick={() => openPreview(invoice)}><span className="invoice-pdf-badge">PDF</span><span><strong>{invoice.original_name}</strong><small>{formatSize(invoice.size_bytes)} · {formatDate(invoice.created_at)}{invoice.uploaded_by ? ` · ${fr.invoices.uploadedBy(invoice.uploaded_by.name)}` : ''}</small></span></button>{showDownload && <button className="invoice-download-button" type="button" disabled={downloadingId === invoice.id} onClick={() => download(invoice)}>{downloadingId === invoice.id ? <LoadingSpinner compact label={fr.common.loading} /> : <><ActionIcon name="expand" />{fr.invoices.download}</>}</button>}{canManage && <button className="invoice-delete-button" type="button" disabled={deletingId === invoice.id} onClick={() => remove(invoice)} aria-label={fr.common.delete}>{deletingId === invoice.id ? <LoadingSpinner compact label={fr.common.loading} /> : <ActionIcon name="delete" />}</button>}</article>} /> : <EmptyState compact icon="invoice" title={fr.invoices.empty} description="Les factures ajoutées à cet actif apparaîtront ici." />}
     </section>
   )
 }

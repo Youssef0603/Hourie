@@ -3084,12 +3084,65 @@ html[dir="rtl"] .directory-form select {
   background: #fff1d8;
 }
 
-.person-inventory-table {
-  min-width: 42rem;
+.person-assigned-assets-list {
+  display: grid;
+  gap: 0.55rem;
 }
 
-.person-inventory-table tbody tr {
-  cursor: default;
+.person-assigned-asset-link {
+  display: flex;
+  width: 100%;
+  min-height: 3.15rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.38rem;
+  padding: 0.62rem 0.72rem;
+  color: inherit;
+  background: white;
+  cursor: pointer;
+  font: inherit;
+  text-align: start;
+  transition: border-color 150ms ease, background 150ms ease;
+}
+
+.person-assigned-asset-link:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 42%, var(--color-border));
+  background: color-mix(in srgb, var(--color-primary) 3%, white);
+}
+
+.person-assigned-asset-link:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-primary) 35%, white);
+  outline-offset: 2px;
+}
+
+.person-assigned-asset-copy,
+.person-assigned-asset-copy > div {
+  display: grid;
+  min-width: 0;
+  gap: 0.15rem;
+}
+
+.person-assigned-asset-copy strong {
+  color: var(--color-text-strong);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.person-assigned-asset-copy span {
+  color: var(--color-text-muted);
+  font-size: 0.67rem;
+}
+
+.person-assigned-asset-link > svg {
+  width: 0.9rem;
+  height: 0.9rem;
+  flex: 0 0 auto;
+  color: var(--color-text-muted);
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 1.8;
 }
 
 .site-overview .site-location-list {
@@ -3474,6 +3527,7 @@ html[dir="rtl"] .filter-bar select {
    The underlying drawer is already behind an overlay, so a solid tint gives the
    same separation without forcing two backdrop layers to be recomposited. */
 .nested-detail-backdrop {
+  z-index: 40;
   background: rgb(10 12 16 / 52%);
   backdrop-filter: none;
 }

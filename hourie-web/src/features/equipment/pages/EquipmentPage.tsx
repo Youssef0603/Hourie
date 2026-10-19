@@ -1040,6 +1040,7 @@ export function EquipmentPage({
                   location.project_id === null &&
                   location.location_type === "company_location",
               )}
+              relatedEquipmentContext={{ user, language, options }}
             />
           </Suspense>
         )}
