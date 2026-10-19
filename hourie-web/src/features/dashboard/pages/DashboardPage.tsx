@@ -26,6 +26,7 @@ export function DashboardPage({ onNavigate }: { onNavigate: (path: string) => vo
   const [error, setError] = useState("");
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
   const [highlightUrgentActions, setHighlightUrgentActions] = useState(false);
+  const [showAllUrgentActions, setShowAllUrgentActions] = useState(false);
 
   function load() {
     setLoading(true);
@@ -66,6 +67,7 @@ export function DashboardPage({ onNavigate }: { onNavigate: (path: string) => vo
     ? Math.round(data.summary.assigned_equipment / data.summary.active_equipment * 100)
     : 0;
   const attentionCount = data.urgent_actions.length;
+  const visibleUrgentActions = data.urgent_actions.slice(0, 4);
   const summaryCards = [
     { label: text.activeEquipment, value: data.summary.active_equipment, meta: text.assignedEquipment(data.summary.assigned_equipment), path: "/assets/all", icon: "specifications", tone: "blue" },
     { label: text.activeSites, value: data.summary.active_sites, meta: text.trackedSites, path: "/sites", icon: "location", tone: "indigo" },
@@ -109,14 +111,15 @@ export function DashboardPage({ onNavigate }: { onNavigate: (path: string) => vo
 
       <div className="dashboard-grid dashboard-grid-primary">
         <section id="urgent-actions" className={`dashboard-card dashboard-urgent${highlightUrgentActions ? " is-focused" : ""}`}>
-          <CardHeading title={text.priorityActions} subtitle={text.prioritySubtitle} />
-          {data.urgent_actions.length ? <div className="dashboard-action-list">
-            {data.urgent_actions.map((item) => <button key={item.key} type="button" onClick={() => navigate(item.path, onNavigate)}>
-              <span className={`dashboard-action-icon ${item.severity}`}><ActionIcon name={item.key === "maintenance" ? "maintenance" : "note"} /></span>
-              <span><strong>{translateDashboardApiText(item.title)}</strong><small>{translateDashboardApiText(item.description)}</small></span>
-              <ActionIcon name="expand" />
-            </button>)}
-          </div> : <EmptyState compact icon="inbox" title={text.noUrgentAction} description={text.noUrgentActionDescription} />}
+          <CardHeading
+            title={text.priorityActions}
+            subtitle={text.prioritySubtitle}
+            action={data.urgent_actions.length > visibleUrgentActions.length ? text.viewAllActions : undefined}
+            onAction={() => setShowAllUrgentActions(true)}
+          />
+          {data.urgent_actions.length
+            ? <DashboardActionList items={visibleUrgentActions} onNavigate={onNavigate} />
+            : <EmptyState compact icon="inbox" title={text.noUrgentAction} description={text.noUrgentActionDescription} />}
         </section>
 
         <section className="dashboard-card">
@@ -197,7 +200,44 @@ export function DashboardPage({ onNavigate }: { onNavigate: (path: string) => vo
         </div>
       </Modal>}
 
+      {showAllUrgentActions && (
+        <Modal title={text.allPriorityActions} onClose={() => setShowAllUrgentActions(false)}>
+          <DashboardActionList
+            items={data.urgent_actions}
+            onNavigate={(path) => {
+              setShowAllUrgentActions(false);
+              onNavigate(path);
+            }}
+          />
+        </Modal>
+      )}
+
     </main>
+  );
+}
+
+function DashboardActionList({
+  items,
+  onNavigate,
+}: {
+  items: DashboardData["urgent_actions"];
+  onNavigate: (path: string) => void;
+}) {
+  return (
+    <div className="dashboard-action-list">
+      {items.map((item) => (
+        <button key={item.key} type="button" onClick={() => navigate(item.path, onNavigate)}>
+          <span className={`dashboard-action-icon ${item.severity}`}>
+            <ActionIcon name={item.key === "maintenance" ? "maintenance" : "note"} />
+          </span>
+          <span>
+            <strong>{translateDashboardApiText(item.title)}</strong>
+            <small>{translateDashboardApiText(item.description)}</small>
+          </span>
+          <ActionIcon name="expand" />
+        </button>
+      ))}
+    </div>
   );
 }
 

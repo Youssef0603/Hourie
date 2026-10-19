@@ -27,6 +27,8 @@ const people = Array.from({ length: 12 }, (_, index) => ({
   birth_date: null,
   is_active: index !== 2,
   equipment_in_custody_count: 0,
+  current_project: index === 0 ? { id: 1, name: 'Abidjan Tower' } : null,
+  current_company_location: null,
   user: index === 0
     ? { id: 1, username: 'youssef', email: 'youssef@hourie.ci', role: 'manager' as const }
     : index === 1
@@ -77,7 +79,11 @@ describe('PeoplePage', () => {
     render(<PeoplePage canAdd catalogs={catalogs} />)
 
     expect(await screen.findByText('Youssef Yassine')).toBeVisible()
-    expect(screen.getByRole('columnheader', { name: 'E-mail' })).toBeVisible()
+    expect(screen.getByText('12 personnes enregistrées')).toBeVisible()
+    expect(screen.getByRole('columnheader', { name: 'Affectation' })).toBeVisible()
+    expect(screen.queryByRole('columnheader', { name: 'E-mail' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('columnheader', { name: 'Accès' })).not.toBeInTheDocument()
+    expect(screen.getByText('Abidjan Tower')).toBeVisible()
     expect(screen.getByText('Ingénieur logiciel')).toBeVisible()
     expect(screen.queryByText('Employé 12')).not.toBeInTheDocument()
 
@@ -106,7 +112,12 @@ describe('PeoplePage', () => {
     })
 
     await user.click(screen.getByText('Youssef Yassine'))
-    expect(await screen.findByText('Fiche personne')).toBeVisible()
+    const detailPanel = await screen.findByRole('dialog', { name: 'Fiche personne' })
+    expect(detailPanel).toBeVisible()
+    expect(detailPanel).toHaveClass('directory-person-detail-panel')
+    expect(within(detailPanel).getByText('Équipements attribués')).toBeVisible()
+    expect(within(detailPanel).getByText('Aucun équipement attribué.')).toBeVisible()
+    expect(within(detailPanel).queryByText('Voir les actifs assignés')).not.toBeInTheDocument()
     expect(getEmployee).toHaveBeenCalledWith(1)
   })
 

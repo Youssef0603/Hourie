@@ -36,6 +36,7 @@ class StoreEmployeeRequest extends FormRequest
             'employment_date' => ['nullable', 'date_format:Y-m-d', 'before_or_equal:today'],
             'birth_date' => ['nullable', 'date_format:Y-m-d', 'before_or_equal:today'],
             'project_id' => ['nullable', 'integer', Rule::exists('projects', 'id')->where('is_active', true)],
+            'company_location_id' => ['nullable', 'integer', Rule::prohibitedIf(fn () => $this->filled('project_id')), Rule::exists('locations', 'id')->where(fn ($query) => $query->whereNull('project_id')->where('location_type', 'company_location')->where('is_active', true))],
             'project_role' => ['nullable', 'required_with:project_id', 'string', 'max:255'],
             'assignment_started_on' => ['nullable', 'date_format:Y-m-d'],
             'assignment_ended_on' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:assignment_started_on'],

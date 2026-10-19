@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DashboardPage } from "./DashboardPage";
@@ -50,7 +50,6 @@ describe("DashboardPage", () => {
     expect(screen.getByRole("button", { name: /28.*Personnel actif/ })).toBeVisible();
     expect(screen.getAllByText("Assurance POL-1")).toHaveLength(2);
     expect(screen.getByText("Bassam")).toBeVisible();
-
     await user.click(screen.getByRole("button", { name: /Sites actifs/ }));
     expect(onNavigate).toHaveBeenCalledWith("/sites");
 
@@ -60,5 +59,27 @@ describe("DashboardPage", () => {
     await user.click(screen.getByRole("button", { name: /Bassam.*1 alerte/ }));
     expect(screen.getByRole("dialog", { name: "Alertes · Bassam" })).toBeVisible();
     expect(screen.getByText("Responsable non attribué")).toBeVisible();
+  });
+
+  it("keeps the dashboard compact and opens all priority actions on demand", async () => {
+    const user = userEvent.setup();
+    const urgentActions = Array.from({ length: 6 }, (_, index) => ({
+      key: `insurance-${index + 1}`,
+      title: `Assurance POL-${index + 1}`,
+      description: `Échéance dans ${index + 1} jours`,
+      severity: "warning",
+      path: `/insurance/${index + 1}`,
+    }));
+    apiRequest.mockResolvedValueOnce({ data: { ...dashboard, urgent_actions: urgentActions } });
+
+    render(<DashboardPage onNavigate={vi.fn()} />);
+
+    expect(await screen.findByText("Assurance POL-4")).toBeVisible();
+    expect(screen.queryByText("Assurance POL-5")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Voir toutes les actions" }));
+
+    const dialog = screen.getByRole("dialog", { name: "Toutes les actions prioritaires" });
+    expect(within(dialog).getByText("Assurance POL-5")).toBeVisible();
+    expect(within(dialog).getByText("Assurance POL-6")).toBeVisible();
   });
 });

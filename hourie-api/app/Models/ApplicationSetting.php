@@ -45,20 +45,64 @@ class ApplicationSetting extends Model
     }
 
     /** @return array<int, string> */
-    public static function reminderRecipients(): array
+    public static function reminderRecipients(bool $includeEscalationRecipient = false): array
     {
         if (static::query()->where('key', 'reminder_recipient_employee_ids')->exists()) {
-            return static::reminderRecipientEmployees()
+            $recipients = static::reminderRecipientEmployees()
                 ->pluck('email')
+                ->filter(fn ($email) => is_string($email) && filter_var($email, FILTER_VALIDATE_EMAIL))
+                ->unique()
+                ->values()
+                ->all();
+        } else {
+            $stored = static::query()->where('key', 'reminder_recipients')->value('value');
+            $fallback = config('mail.inspection_reminder_recipients', []);
+
+            $recipients = collect(is_array($stored) ? $stored : $fallback)
                 ->filter(fn ($email) => is_string($email) && filter_var($email, FILTER_VALIDATE_EMAIL))
                 ->unique()
                 ->values()
                 ->all();
         }
 
-        $stored = static::query()->where('key', 'reminder_recipients')->value('value');
-        $fallback = config('mail.inspection_reminder_recipients', []);
+        if (! $includeEscalationRecipient) {
+            return $recipients;
+        }
 
-        return collect(is_array($stored) ? $stored : $fallback)->filter(fn ($email) => is_string($email) && filter_var($email, FILTER_VALIDATE_EMAIL))->unique()->values()->all();
+        $escalationEmail = static::reminderEscalationEmployee()?->email;
+
+        return collect([...$recipients, $escalationEmail])
+            ->filter(fn ($email) => is_string($email) && filter_var($email, FILTER_VALIDATE_EMAIL))
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    public static function reminderEscalationEmployee(): ?Employee
+    {
+        $value = static::query()->where('key', 'reminder_escalation_employee_id')->value('value');
+        $employeeId = collect(is_array($value) ? $value : [])->first();
+
+        if (! is_int($employeeId) && ! ctype_digit((string) $employeeId)) {
+            return null;
+        }
+
+        return Employee::query()
+            ->whereKey((int) $employeeId)
+            ->where('is_active', true)
+            ->whereNotNull('email')
+            ->first(['id', 'name', 'email']);
+    }
+
+    /** @return array<int, string> */
+    public static function reminderRecipientsFor(Model $reminder, string $ownerColumn, string $deadlineColumn): array
+    {
+        $previouslySent = $reminder->newQuery()
+            ->where($ownerColumn, $reminder->getAttribute($ownerColumn))
+            ->whereDate($deadlineColumn, $reminder->getAttribute($deadlineColumn))
+            ->whereNotNull('sent_at')
+            ->count();
+
+        return static::reminderRecipients(includeEscalationRecipient: $previouslySent >= 3);
     }
 }

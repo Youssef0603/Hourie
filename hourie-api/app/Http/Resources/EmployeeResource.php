@@ -32,6 +32,14 @@ class EmployeeResource extends JsonResource
                 'email' => $this->user->email,
                 'role' => $this->user->role->value,
             ]),
+            'current_project' => $this->whenLoaded('currentProjectAssignment', fn () => $this->currentProjectAssignment === null ? null : [
+                'id' => $this->currentProjectAssignment->project->id,
+                'name' => $this->currentProjectAssignment->project->name,
+            ]),
+            'current_company_location' => $this->whenLoaded('companyLocation', fn () => $this->companyLocation === null ? null : [
+                'id' => $this->companyLocation->id,
+                'name' => $this->companyLocation->name,
+            ]),
             'equipment_in_custody' => EquipmentSummaryResource::collection(
                 $this->whenLoaded('equipmentInCustody'),
             ),

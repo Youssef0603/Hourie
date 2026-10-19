@@ -10,6 +10,7 @@ type AddPersonFormProps = {
   canManageManagerAccounts: boolean;
   catalogs?: CatalogOption[];
   projects?: NamedReference[];
+  companyLocations?: NamedReference[];
   onSaved: () => Promise<void> | void;
 };
 
@@ -27,6 +28,7 @@ export function AddPersonForm({
   canManageManagerAccounts,
   catalogs,
   projects = [],
+  companyLocations = [],
   onSaved,
 }: AddPersonFormProps) {
   const [name, setName] = useState("");
@@ -36,6 +38,7 @@ export function AddPersonForm({
   const [employmentDate, setEmploymentDate] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [projectId, setProjectId] = useState("");
+  const [companyLocationId, setCompanyLocationId] = useState("");
   const [projectRole, setProjectRole] = useState("");
   const [assignmentStartedOn, setAssignmentStartedOn] = useState("");
   const [assignmentEndedOn, setAssignmentEndedOn] = useState("");
@@ -70,6 +73,7 @@ export function AddPersonForm({
         employment_date: employmentDate || null,
         birth_date: birthDate || null,
         project_id: projectId ? Number(projectId) : null,
+        company_location_id: companyLocationId ? Number(companyLocationId) : null,
         project_role: projectId ? projectRole.trim() : null,
         assignment_started_on: projectId && assignmentStartedOn ? assignmentStartedOn : null,
         assignment_ended_on: projectId && assignmentEndedOn ? assignmentEndedOn : null,
@@ -174,16 +178,32 @@ export function AddPersonForm({
         </div>
       </section>
       <section className="people-form-section">
-        <h3>Affectation chantier <small>(facultatif)</small></h3>
+        <h3>Affectation actuelle <small>(facultatif)</small></h3>
         <div className="people-form-fields">
           <label>
             <span>Chantier</span>
             <SearchableSelect
               ariaLabel="Chantier"
               value={projectId}
-              onChange={setProjectId}
+              onChange={(value) => {
+                setProjectId(value);
+                if (value) setCompanyLocationId("");
+              }}
               placeholder="Aucun chantier"
               options={projects.map((project) => ({ value: String(project.id), label: project.name }))}
+            />
+          </label>
+          <label>
+            <span>Localisation interne</span>
+            <SearchableSelect
+              ariaLabel="Localisation interne"
+              value={companyLocationId}
+              onChange={(value) => {
+                setCompanyLocationId(value);
+                if (value) setProjectId("");
+              }}
+              placeholder="Aucune localisation"
+              options={companyLocations.map((location) => ({ value: String(location.id), label: location.name }))}
             />
           </label>
           {projectId && <>

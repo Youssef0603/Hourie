@@ -37,7 +37,11 @@ class SendInsuranceExpiryReminderJob implements ShouldBeUnique, ShouldQueue
             return;
         }
 
-        $recipients = ApplicationSetting::reminderRecipients();
+        $recipients = ApplicationSetting::reminderRecipientsFor(
+            $reminder,
+            'insurance_policy_id',
+            'expiry_date',
+        );
         if ($recipients === []) {
             throw new \RuntimeException('No reminder recipients are configured.');
         }

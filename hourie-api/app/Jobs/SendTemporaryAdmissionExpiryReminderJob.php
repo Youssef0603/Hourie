@@ -37,7 +37,11 @@ class SendTemporaryAdmissionExpiryReminderJob implements ShouldBeUnique, ShouldQ
             return;
         }
 
-        $recipients = ApplicationSetting::reminderRecipients();
+        $recipients = ApplicationSetting::reminderRecipientsFor(
+            $reminder,
+            'temporary_admission_id',
+            'expiry_date',
+        );
         if ($recipients === []) {
             throw new \RuntimeException('No reminder recipients are configured.');
         }

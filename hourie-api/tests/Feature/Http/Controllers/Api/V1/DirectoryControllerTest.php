@@ -14,8 +14,12 @@ uses(LazilyRefreshDatabase::class);
 
 it('lists sites and personnel for authenticated users', function () {
     $viewer = User::factory()->create(['role' => UserRole::Viewer]);
-    Project::factory()->create(['name' => 'BASSAM']);
-    Employee::factory()->for($viewer)->create(['name' => 'Jean Responsable']);
+    $project = Project::factory()->create(['name' => 'BASSAM']);
+    $employee = Employee::factory()->for($viewer)->create(['name' => 'Jean Responsable']);
+    $employee->projectAssignments()->create([
+        'project_id' => $project->id,
+        'project_role' => 'Chef de chantier',
+    ]);
 
     $this->actingAs($viewer, 'web')->getJson('/api/v1/sites')
         ->assertOk()
@@ -28,6 +32,7 @@ it('lists sites and personnel for authenticated users', function () {
         ->assertJsonPath('data.0.name', 'Jean Responsable')
         ->assertJsonPath('data.0.user.username', $viewer->username)
         ->assertJsonPath('data.0.user.email', $viewer->email)
+        ->assertJsonPath('data.0.current_project.name', 'BASSAM')
         ->assertJsonPath('meta.total', 1)
         ->assertJsonMissingPath('data.0.equipment_in_custody')
         ->assertJsonMissingPath('data.0.assigned_sites')
@@ -202,6 +207,36 @@ it('optionally assigns new personnel to a chantier with a project function', fun
         'employee_id' => $response->json('data.id'),
         'project_id' => $project->id,
         'ended_on' => '2026-11-01 00:00:00',
+    ]);
+});
+
+it('assigns personnel to an internal company location without creating a site assignment', function () {
+    $manager = User::factory()->create(['role' => UserRole::Manager]);
+    $garage = Location::factory()->create([
+        'project_id' => null,
+        'parent_id' => null,
+        'name' => 'GARAGE',
+        'location_type' => 'company_location',
+        'is_active' => true,
+    ]);
+
+    $response = $this->actingAs($manager, 'web')->postJson('/api/v1/employees', [
+        'name' => 'Responsable Garage',
+        'job_title' => 'garage',
+        'company_location_id' => $garage->id,
+        'create_account' => false,
+    ])->assertCreated()
+        ->assertJsonPath('data.current_project', null)
+        ->assertJsonPath('data.current_company_location.id', $garage->id)
+        ->assertJsonPath('data.current_company_location.name', 'GARAGE');
+
+    $employeeId = $response->json('data.id');
+    $this->assertDatabaseHas('employees', [
+        'id' => $employeeId,
+        'company_location_id' => $garage->id,
+    ]);
+    $this->assertDatabaseMissing('employee_project_assignments', [
+        'employee_id' => $employeeId,
     ]);
 });
 

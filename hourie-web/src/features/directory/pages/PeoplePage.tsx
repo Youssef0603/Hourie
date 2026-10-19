@@ -19,6 +19,7 @@ import {
   type RoleFilter,
 } from "../components/PeopleFilterDrawer";
 import { PersonDetail } from "../components/PersonDetail";
+import { DirectoryDetailPanel } from "../components/DirectoryDetailPanel";
 import type { PaginationMeta } from "../../../shared/api/pagination";
 
 type PeoplePageProps = {
@@ -26,6 +27,7 @@ type PeoplePageProps = {
   canManageManagerAccounts?: boolean;
   catalogs?: CatalogOption[];
   projects?: NamedReference[];
+  companyLocations?: NamedReference[];
 };
 
 function normalizeSearch(value: string) {
@@ -40,6 +42,7 @@ export function PeoplePage({
   canManageManagerAccounts = false,
   catalogs,
   projects,
+  companyLocations,
 }: PeoplePageProps) {
   const [people, setPeople] = useState<Employee[]>([]);
   const [search, setSearch] = useState("");
@@ -93,6 +96,9 @@ export function PeoplePage({
   ).length;
   const page = pagination?.current_page ?? currentPage;
   const totalPages = pagination?.last_page ?? 1;
+  const personEditFormId = selectedPerson
+    ? `person-edit-form-${selectedPerson.id}`
+    : "person-edit-form";
 
   const loadPeople = useCallback(async (pageToLoad: number) => {
     setError(null);
@@ -173,7 +179,7 @@ export function PeoplePage({
       <section className="people-page-heading">
         <div>
           <h1>{fr.directory.people}</h1>
-          <p>{fr.directory.peopleRegistered(people.length)}</p>
+          <p>{fr.directory.peopleRegistered(pagination?.total ?? people.length)}</p>
         </div>
       </section>
       {error && (
@@ -190,6 +196,7 @@ export function PeoplePage({
             canManageManagerAccounts={canManageManagerAccounts}
             catalogs={catalogs}
             projects={projects}
+            companyLocations={companyLocations}
             onSaved={async () => {
               await refreshPeople();
               setShowForm(false);
@@ -296,10 +303,9 @@ export function PeoplePage({
                 <tr>
                   <th>{fr.directory.fullName}</th>
                   <th>{fr.directory.jobTitle}</th>
-                  <th>{fr.directory.email}</th>
+                  <th>{fr.directory.workplace}</th>
                   <th>{fr.directory.phoneNumber}</th>
                   <th>{fr.directory.employmentDate}</th>
-                  <th>Accès</th>
                 </tr>
               </thead>
               <tbody>
@@ -325,7 +331,7 @@ export function PeoplePage({
                       </span>
                     </td>
                     <td>{catalogLabel(catalogs, "employee_job_title", person.job_title)}</td>
-                    <td>{person.email ?? fr.common.notAssigned}</td>
+                    <td>{person.current_project?.name ?? person.current_company_location?.name ?? fr.common.notAssigned}</td>
                     <td>{person.phone_number ?? fr.common.notAssigned}</td>
                     <td>
                       {person.employment_date
@@ -333,15 +339,6 @@ export function PeoplePage({
                             new Date(`${person.employment_date}T00:00:00`),
                           )
                         : fr.common.notAssigned}
-                    </td>
-                    <td>
-                      <span
-                        className={`person-system-access${person.user ? " has-access" : ""}`}
-                      >
-                        {person.user
-                          ? fr.roles[person.user.role]
-                          : fr.directory.noSystemAccess}
-                      </span>
                     </td>
                   </tr>
                 ))}
@@ -390,17 +387,13 @@ export function PeoplePage({
           </div>
         )}
       </section>
-      {(isLoadingPerson || selectedPerson) && (
-        <Modal
-          title={
-            isEditingPerson ? fr.directory.editPerson : fr.directory.personSheet
-          }
-          size={isEditingPerson ? "wide" : "person"}
-          onClose={
-            isEditingPerson
-              ? () => setIsEditingPerson(false)
-              : closePerson
-          }
+      {(isLoadingPerson || selectedPerson) && !isEditingPerson && (
+        <DirectoryDetailPanel
+          title={fr.directory.personSheet}
+          sectionLabel={fr.directory.people}
+          subtitle={selectedPerson?.name}
+          className="directory-person-detail-panel"
+          onClose={closePerson}
         >
           {isLoadingPerson ? (
             <LoadingSpinner
@@ -408,20 +401,7 @@ export function PeoplePage({
               label={fr.common.loading}
             />
           ) : (
-            selectedPerson &&
-            (isEditingPerson ? (
-              <EditPersonForm
-                person={selectedPerson}
-                catalogs={catalogs}
-                projects={projects}
-                canManageManagerAccounts={canManageManagerAccounts}
-                onSaved={(updated) => {
-                  setSelectedPerson(updated);
-                  setIsEditingPerson(false);
-                  refreshPeople();
-                }}
-              />
-            ) : (
+            selectedPerson && (
               <PersonDetail
                 person={selectedPerson}
                 catalogs={catalogs}
@@ -433,9 +413,42 @@ export function PeoplePage({
                 onEdit={() => setIsEditingPerson(true)}
                 onDelete={removePerson}
               />
-            ))
+            )
           )}
-        </Modal>
+        </DirectoryDetailPanel>
+      )}
+      {selectedPerson && isEditingPerson && (
+        <DirectoryDetailPanel
+          title={fr.directory.editPerson}
+          sectionLabel={fr.directory.people}
+          subtitle={selectedPerson.name}
+          className="directory-person-edit-panel directory-edit-panel"
+          onClose={() => setIsEditingPerson(false)}
+          headerActions={
+            <button
+              className="primary-button directory-panel-save"
+              type="submit"
+              form={personEditFormId}
+            >
+              {fr.common.save}
+            </button>
+          }
+        >
+          <EditPersonForm
+            person={selectedPerson}
+            catalogs={catalogs}
+            projects={projects}
+            companyLocations={companyLocations}
+            canManageManagerAccounts={canManageManagerAccounts}
+            formId={personEditFormId}
+            hideSubmit
+            onSaved={(updated) => {
+              setSelectedPerson(updated);
+              setIsEditingPerson(false);
+              refreshPeople();
+            }}
+          />
+        </DirectoryDetailPanel>
       )}
     </main>
   );

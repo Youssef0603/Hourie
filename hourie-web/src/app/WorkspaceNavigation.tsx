@@ -20,6 +20,55 @@ function userInitials(name: string) {
   return `${parts[0]?.[0] ?? ""}${parts.length > 1 ? (parts.at(-1)?.[0] ?? "") : ""}`.toUpperCase();
 }
 
+export const workspaceModules = () => [
+  { section: "dashboard", label: fr.navigation.dashboard, path: "/dashboard", icon: "dashboard" },
+  { section: "assets", label: fr.navigation.assets, path: "/assets/all", icon: "generators" },
+  { section: "sites", label: fr.navigation.sites, path: "/sites", icon: "sites" },
+  { section: "people", label: fr.navigation.people, path: "/people", icon: "people" },
+  { section: "insurance", label: fr.navigation.insurance, path: "/insurance", icon: "insurance" },
+  { section: "bonds", label: fr.navigation.bonds, path: "/bonds", icon: "bonds" },
+  { section: "temporary-admissions", label: fr.navigation.temporaryAdmissions, path: "/temporary-admissions", icon: "insurance" },
+] as const;
+
+export function WorkspaceNavigationCards({
+  activeSection,
+  onNavigate,
+}: {
+  activeSection: WorkspaceRoute["section"];
+  onNavigate: (path: string) => void;
+}) {
+  return (
+    <section
+      className="workspace-navigation-cards"
+      aria-label={fr.navigation.quickAccess}
+    >
+      <header>
+        <h2>{fr.navigation.title}</h2>
+      </header>
+      <div>
+        {workspaceModules().map((module) => {
+          const isActive =
+            module.section === activeSection ||
+            (module.section === "assets" && activeSection === "generators");
+
+          return (
+            <button
+              key={module.path}
+              type="button"
+              className={isActive ? "active" : undefined}
+              aria-current={isActive ? "page" : undefined}
+              onClick={() => onNavigate(module.path)}
+            >
+              <span><NavigationIcon name={module.icon} /></span>
+              <strong>{module.label}</strong>
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 export function WorkspaceHeader({
   user,
   language,

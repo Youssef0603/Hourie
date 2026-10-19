@@ -15,6 +15,7 @@ import { SiteEditForm } from '../components/SiteEditForm'
 import { EmptyState } from '../../../shared/components/EmptyState'
 import { DataTable } from '../../../shared/components/DataTable'
 import type { PaginationMeta } from '../../../shared/api/pagination'
+import { DirectoryDetailPanel } from '../components/DirectoryDetailPanel'
 
 type SitesPageProps = {
   canAdd: boolean
@@ -108,6 +109,7 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, catalogs, emplo
 
   async function openSiteDetails(site: Site) {
     setSelectedSite({ ...site, equipment: [] })
+    setIsEditingSite(false)
     setDetailsError(null)
     setIsLoadingDetails(true)
 
@@ -136,6 +138,7 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, catalogs, emplo
     : sites
   const page = pagination?.current_page ?? currentPage
   const totalPages = pagination?.last_page ?? 1
+  const siteEditFormId = selectedSite ? `site-edit-form-${selectedSite.id}` : 'site-edit-form'
 
   return (
     <main className="directory-page">
@@ -165,46 +168,68 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, catalogs, emplo
         </Modal>
       )}
       {selectedSite && !isEditingSite && (
-        <Modal title={fr.directory.siteDetails} size="site" onClose={() => setSelectedSite(null)}>
+        <DirectoryDetailPanel
+          title={fr.directory.siteDetails}
+          sectionLabel={fr.directory.sites}
+          subtitle={selectedSite.name}
+          className="directory-site-detail-panel"
+          onClose={() => {
+            setSelectedSite(null)
+            setDetailsError(null)
+          }}
+        >
           <div className="site-details-modal">
             {isLoadingDetails && <div className="site-details-loading"><LoadingSpinner label={fr.common.loading} /></div>}
             {detailsError && <div className="form-alert" role="alert">{detailsError}</div>}
-            <div className="site-details-heading">
-              <div>
-                <span className={`project-status project-status-${selectedSite.status}`} style={catalogBadgeStyle(catalogs, 'project_status', selectedSite.status)}>{catalogLabel(catalogs, 'project_status', selectedSite.status)}</span>
-                <h3>{selectedSite.name}</h3>
-                {selectedSite.address && <p><ActionIcon name="location" />{selectedSite.address}</p>}
-              </div>
+            <div className="detail-primary-actions site-detail-toolbar">
+              {canAdd && <button className="equipment-edit-button detail-toolbar-button" type="button" onClick={() => setIsEditingSite(true)}><ActionIcon name="edit" />{fr.directory.editThisSite}</button>}
+              <button className="equipment-transfer-button detail-toolbar-button" type="button" onClick={() => onOpenSite?.(selectedSite)}><NavigationIcon name="generators" />{fr.directory.viewAssets}</button>
+              <button className="equipment-history-button detail-toolbar-button" type="button" onClick={() => onOpenInsurance?.(selectedSite)}><ActionIcon name="invoice" />{fr.directory.viewInsurance}</button>
             </div>
-            <dl className="site-details-facts">
-              <div><dt>{fr.directory.siteResponsible}</dt><dd>{selectedSite.responsible?.name ?? fr.common.notAssigned}</dd></div>
-              <div><dt>{fr.directory.assignedAssets}</dt><dd className="site-details-count">{selectedSite.active_equipment_count}</dd></div>
-              <div><dt>{fr.directory.startDate}</dt><dd>{formatSiteDate(selectedSite.start_date)}</dd></div>
-              <div><dt>{fr.directory.expectedEndDate}</dt><dd>{formatSiteDate(selectedSite.expected_end_date)}</dd></div>
-            </dl>
-            <section className="site-details-locations">
-              <h4>{fr.directory.locations} ({selectedSite.locations.filter((location) => location.parent_id !== null).length})</h4>
+            <section className="site-detail-section">
+              <h3><ActionIcon name="identification" />Informations principales</h3>
+              <dl className="site-details-facts">
+                <div><dt>État</dt><dd><span className={`project-status project-status-${selectedSite.status}`} style={catalogBadgeStyle(catalogs, 'project_status', selectedSite.status)}>{catalogLabel(catalogs, 'project_status', selectedSite.status)}</span></dd></div>
+                <div><dt>{fr.directory.siteResponsible}</dt><dd>{selectedSite.responsible?.name ?? fr.common.notAssigned}</dd></div>
+                <div><dt>{fr.directory.siteAddress}</dt><dd>{selectedSite.address ?? fr.common.notProvided}</dd></div>
+                <div><dt>{fr.directory.assignedAssets}</dt><dd className="site-details-count">{selectedSite.active_equipment_count}</dd></div>
+              </dl>
+            </section>
+            <section className="site-detail-section">
+              <h3><ActionIcon name="history" />Planification</h3>
+              <dl className="site-details-facts">
+                <div><dt>{fr.directory.startDate}</dt><dd>{formatSiteDate(selectedSite.start_date)}</dd></div>
+                <div><dt>{fr.directory.expectedEndDate}</dt><dd>{formatSiteDate(selectedSite.expected_end_date)}</dd></div>
+              </dl>
+            </section>
+            <section className="site-detail-section site-details-locations">
+              <h3><ActionIcon name="location" />{fr.directory.locations}<span className="site-detail-section-count">{selectedSite.locations.filter((location) => location.parent_id !== null).length}</span></h3>
               <div className="site-details-location-list">{selectedSite.locations.filter((location) => location.parent_id !== null).map((location) => <span key={location.id}><ActionIcon name="location" />{location.name}</span>)}</div>
               {selectedSite.locations.every((location) => location.parent_id === null) && <EmptyState compact icon="location" title={fr.directory.noLocations} />}
             </section>
-            {selectedSite.notes && <section className="site-details-notes"><h4>{fr.directory.siteNotes}</h4><p>{selectedSite.notes}</p></section>}
-            <div className="site-details-actions">
-              {canAdd && <button className="site-detail-action primary" type="button" onClick={() => setIsEditingSite(true)}><ActionIcon name="edit" />{fr.directory.editThisSite}</button>}
-              <button className="site-detail-action" type="button" onClick={() => onOpenSite?.(selectedSite)}><NavigationIcon name="generators" />{fr.directory.viewAssets}</button>
-              <button className="site-detail-action" type="button" onClick={() => onOpenInsurance?.(selectedSite)}><ActionIcon name="invoice" />{fr.directory.viewInsurance}</button>
-            </div>
+            <section className="site-detail-section site-details-notes">
+              <h3><ActionIcon name="note" />{fr.directory.siteNotes}</h3>
+              <p className={selectedSite.notes ? '' : 'site-details-notes-empty'}>{selectedSite.notes || 'Aucune observation.'}</p>
+            </section>
           </div>
-        </Modal>
+        </DirectoryDetailPanel>
       )}
       {selectedSite && isEditingSite && (
-        <Modal title={fr.directory.editSite} size="wide" onClose={() => setIsEditingSite(false)}>
-          <SiteEditForm site={selectedSite} catalogs={catalogs} employees={employees} onSaved={(site) => {
+        <DirectoryDetailPanel
+          title={fr.directory.editSite}
+          sectionLabel={fr.directory.sites}
+          subtitle={selectedSite.name}
+          className="directory-site-edit-panel directory-edit-panel"
+          onClose={() => setIsEditingSite(false)}
+          headerActions={<button className="primary-button directory-panel-save" type="submit" form={siteEditFormId}>{fr.common.save}</button>}
+        >
+          <SiteEditForm site={selectedSite} catalogs={catalogs} employees={employees} formId={siteEditFormId} hideSubmit onSaved={(site) => {
             const updated = { ...selectedSite, ...site }
             setSelectedSite(updated)
             setSites((current) => current.map((item) => item.id === site.id ? site : item).sort((a, b) => a.name.localeCompare(b.name)))
             setIsEditingSite(false)
           }} />
-        </Modal>
+        </DirectoryDetailPanel>
       )}
       <section className="inventory-panel">
         <div className="filter-bar">

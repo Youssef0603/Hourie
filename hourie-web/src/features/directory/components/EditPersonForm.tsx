@@ -12,7 +12,10 @@ type EditPersonFormProps = {
   person: EmployeeDetails;
   catalogs?: CatalogOption[];
   projects?: NamedReference[];
+  companyLocations?: NamedReference[];
   canManageManagerAccounts: boolean;
+  formId?: string;
+  hideSubmit?: boolean;
   onSaved: (person: EmployeeDetails) => void;
 };
 
@@ -20,7 +23,10 @@ export function EditPersonForm({
   person,
   catalogs,
   projects = [],
+  companyLocations = [],
   canManageManagerAccounts,
+  formId,
+  hideSubmit = false,
   onSaved,
 }: EditPersonFormProps) {
   const [name, setName] = useState(person.name);
@@ -35,6 +41,7 @@ export function EditPersonForm({
   const [birthDate, setBirthDate] = useState(person.birth_date ?? "");
   const currentAssignment = person.project_assignments.find((assignment) => assignment.ended_on === null);
   const [projectId, setProjectId] = useState(currentAssignment ? String(currentAssignment.project.id) : "");
+  const [companyLocationId, setCompanyLocationId] = useState(person.current_company_location ? String(person.current_company_location.id) : "");
   const [projectRole, setProjectRole] = useState(currentAssignment?.project_role ?? "");
   const [assignmentStartedOn, setAssignmentStartedOn] = useState(currentAssignment?.started_on ?? "");
   const [assignmentEndedOn, setAssignmentEndedOn] = useState(currentAssignment?.ended_on ?? "");
@@ -71,6 +78,7 @@ export function EditPersonForm({
           employment_date: employmentDate || null,
           birth_date: birthDate || null,
           project_id: projectId ? Number(projectId) : null,
+          company_location_id: companyLocationId ? Number(companyLocationId) : null,
           project_role: projectId ? projectRole.trim() : null,
           assignment_started_on: projectId && assignmentStartedOn ? assignmentStartedOn : null,
           assignment_ended_on: projectId && assignmentEndedOn ? assignmentEndedOn : null,
@@ -94,6 +102,7 @@ export function EditPersonForm({
 
   return (
     <form
+      id={formId}
       className="directory-form people-form modal-directory-form person-edit-form"
       onSubmit={submit}
     >
@@ -180,14 +189,17 @@ export function EditPersonForm({
         </div>
       </section>
       <section className="people-form-section">
-        <h3>Affectation chantier <small>(facultatif)</small></h3>
+        <h3>Affectation actuelle <small>(facultatif)</small></h3>
         <div className="people-form-fields">
           <label>
             <span>Chantier actuel</span>
             <SearchableSelect
               ariaLabel="Chantier actuel"
               value={projectId}
-              onChange={setProjectId}
+              onChange={(value) => {
+                setProjectId(value);
+                if (value) setCompanyLocationId("");
+              }}
               placeholder="Aucun chantier"
               options={[
                 ...(currentAssignment && !projects.some((project) => project.id === currentAssignment.project.id)
@@ -195,6 +207,19 @@ export function EditPersonForm({
                   : []),
                 ...projects.map((project) => ({ value: String(project.id), label: project.name })),
               ]}
+            />
+          </label>
+          <label>
+            <span>Localisation interne</span>
+            <SearchableSelect
+              ariaLabel="Localisation interne"
+              value={companyLocationId}
+              onChange={(value) => {
+                setCompanyLocationId(value);
+                if (value) setProjectId("");
+              }}
+              placeholder="Aucune localisation"
+              options={companyLocations.map((location) => ({ value: String(location.id), label: location.name }))}
             />
           </label>
           {projectId && <>
@@ -264,19 +289,21 @@ export function EditPersonForm({
           </label>
         </div>
       </section>
-      <div className="maintenance-form-actions">
-        <button
-          className="primary-button save-button"
-          type="submit"
-          disabled={isSaving}
-        >
-          {isSaving ? (
-            <LoadingSpinner compact label={fr.common.saving} />
-          ) : (
-            fr.common.save
-          )}
-        </button>
-      </div>
+      {!hideSubmit && (
+        <div className="maintenance-form-actions">
+          <button
+            className="primary-button save-button"
+            type="submit"
+            disabled={isSaving}
+          >
+            {isSaving ? (
+              <LoadingSpinner compact label={fr.common.saving} />
+            ) : (
+              fr.common.save
+            )}
+          </button>
+        </div>
+      )}
     </form>
   );
 }

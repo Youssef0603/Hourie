@@ -11,10 +11,12 @@ import type { Site } from '../types'
 
 type EditableLocation = { id: number | null; name: string }
 
-export function SiteEditForm({ site, catalogs, employees, onSaved }: {
+export function SiteEditForm({ site, catalogs, employees, formId, hideSubmit = false, onSaved }: {
   site: Site
   catalogs: CatalogOption[] | undefined
   employees: NamedReference[]
+  formId?: string
+  hideSubmit?: boolean
   onSaved: (site: Site) => void
 }) {
   const [name, setName] = useState(site.name)
@@ -56,7 +58,7 @@ export function SiteEditForm({ site, catalogs, employees, onSaved }: {
   }
 
   return (
-    <form className="site-form" onSubmit={submit}>
+    <form id={formId} className="site-form" onSubmit={submit}>
       {error && <div className="form-alert" role="alert">{error}</div>}
       <div className="maintenance-form-grid site-form-grid">
         <label><span>{fr.directory.siteName}</span><input required disabled={isSaving} value={name} onChange={(event) => setName(event.target.value)} /></label>
@@ -68,7 +70,7 @@ export function SiteEditForm({ site, catalogs, employees, onSaved }: {
         <div className="site-location-fields field-wide"><div className="site-location-fields-heading"><span>{fr.directory.initialLocations}</span><button disabled={isSaving} type="button" onClick={() => setLocations((current) => [...current, { id: null, name: '' }])}><ActionIcon name="add" />{fr.directory.addLocation}</button></div><div className="site-location-list">{locations.map((location, index) => <div className="site-location-input" key={location.id ?? `new-${index}`}><input required disabled={isSaving} aria-label={`${fr.directory.locationName} ${index + 1}`} value={location.name} onChange={(event) => setLocations((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, name: event.target.value } : item))} /><button disabled={isSaving} type="button" onClick={() => setLocations((current) => current.filter((_, itemIndex) => itemIndex !== index))} aria-label={fr.common.delete}><ActionIcon name="close" /></button></div>)}</div></div>
         <label className="field-wide"><span>{fr.directory.siteNotes}</span><textarea disabled={isSaving} rows={3} value={notes} onChange={(event) => setNotes(event.target.value)} /></label>
       </div>
-      <div className="maintenance-form-actions"><button className="primary-button save-button" type="submit" disabled={isSaving}>{isSaving ? <LoadingSpinner compact label={fr.common.saving} /> : fr.common.save}</button></div>
+      {!hideSubmit && <div className="maintenance-form-actions"><button className="primary-button save-button" type="submit" disabled={isSaving}>{isSaving ? <LoadingSpinner compact label={fr.common.saving} /> : fr.common.save}</button></div>}
     </form>
   )
 }

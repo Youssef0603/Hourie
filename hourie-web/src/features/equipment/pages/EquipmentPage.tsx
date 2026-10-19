@@ -23,7 +23,6 @@ import {
 import {
   assetCategoryLabel,
   isAssetCategoryCode,
-  type AssetView,
 } from "../assetCategories";
 import { advancedFilterKeys, initialFilters } from "../filters";
 import { SiteEditForm } from "../../directory/components/SiteEditForm";
@@ -32,7 +31,7 @@ import type { Site } from "../../directory/types";
 import { fr, type Language } from "../../../i18n/fr";
 import {
   WorkspaceHeader,
-  WorkspaceSidebar,
+  WorkspaceNavigationCards,
 } from "../../../app/WorkspaceNavigation";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { Modal } from "../../../shared/components/Modal";
@@ -188,7 +187,6 @@ export function EquipmentPage({
   const [showGeneratorExport, setShowGeneratorExport] = useState(false);
   const [isExportingGenerators, setIsExportingGenerators] = useState(false);
   const [generatorExportError, setGeneratorExportError] = useState<string | null>(null);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [showFilterDrawer, setShowFilterDrawer] = useState(false);
   const [showHistory, setShowHistory] = useState<"equipment" | "site" | null>(
     null,
@@ -205,8 +203,19 @@ export function EquipmentPage({
     const canonicalPath = workspacePath(
       parseWorkspaceRoute(window.location.pathname),
     );
-    if (window.location.pathname !== canonicalPath)
-      window.history.replaceState(null, "", canonicalPath);
+    const historyState = window.history.state as {
+      hourieWorkspace?: boolean;
+      hourieHasPrevious?: boolean;
+    } | null;
+    window.history.replaceState(
+      {
+        ...historyState,
+        hourieWorkspace: true,
+        hourieHasPrevious: historyState?.hourieHasPrevious ?? false,
+      },
+      "",
+      canonicalPath,
+    );
     const onPopState = () => setPathname(window.location.pathname);
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
@@ -301,8 +310,15 @@ export function EquipmentPage({
 
   function navigate(path: string, replace = false) {
     if (window.location.pathname === path) return;
-    if (replace) window.history.replaceState(null, "", path);
-    else window.history.pushState(null, "", path);
+    if (replace) {
+      window.history.replaceState(window.history.state, "", path);
+    } else {
+      window.history.pushState(
+        { hourieWorkspace: true, hourieHasPrevious: true },
+        "",
+        path,
+      );
+    }
     setPathname(path);
   }
 
@@ -318,17 +334,26 @@ export function EquipmentPage({
     );
   }
 
-  function navigateAsset(category: AssetView) {
-    navigate(`/assets/${category}`);
-  }
-
   function closeEquipment() {
+    const historyState = window.history.state as {
+      hourieHasPrevious?: boolean;
+    } | null;
+
+    // Opening a detail pushes its URL after the inventory URL. Going back
+    // removes that detail step instead of adding a second inventory entry,
+    // which would make the breadcrumb Back button reopen the detail panel.
+    if (historyState?.hourieHasPrevious) {
+      window.history.back();
+      return;
+    }
+
     navigate(
       route.siteId
         ? `/sites/${route.siteId}`
         : route.section === "assets"
           ? `/assets/${route.assetCategory}`
           : "/assets/generator",
+      true,
     );
   }
 
@@ -566,25 +591,12 @@ export function EquipmentPage({
         isLoggingOut={isLoggingOut}
       />
 
-      <div
-        className={`workspace-layout${isSidebarCollapsed ? " sidebar-collapsed" : ""}`}
-      >
-        <WorkspaceSidebar
-          language={language}
-          activeSection={activeSection}
-          activeAssetCategory={
-            activeSection === "assets"
-              ? route.assetCategory
-              : activeSection === "generators"
-                ? "generator"
-                : "all"
-          }
-          isSidebarCollapsed={isSidebarCollapsed}
-          onToggleSidebar={() => setIsSidebarCollapsed((value) => !value)}
-          onNavigate={navigateSection}
-          onNavigateAsset={navigateAsset}
-        />
+      <WorkspaceNavigationCards
+        activeSection={activeSection}
+        onNavigate={(path) => navigate(path)}
+      />
 
+      <div className="workspace-layout">
         {activeSection === "dashboard" ? (
           <Suspense fallback={<FeaturePageLoading />}>
             <DashboardPage onNavigate={(path) => navigate(path)} />
@@ -1023,6 +1035,11 @@ export function EquipmentPage({
               canManageManagerAccounts={user.permissions.manage_manager_accounts}
               catalogs={options?.catalogs}
               projects={options?.projects}
+              companyLocations={options?.locations.filter(
+                (location) =>
+                  location.project_id === null &&
+                  location.location_type === "company_location",
+              )}
             />
           </Suspense>
         )}

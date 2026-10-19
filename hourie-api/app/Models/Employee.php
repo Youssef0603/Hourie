@@ -9,8 +9,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[Fillable(['user_id', 'name', 'job_title', 'phone_number', 'email', 'passport_number', 'employment_date', 'birth_date', 'is_active'])]
+#[Fillable(['user_id', 'name', 'job_title', 'phone_number', 'email', 'passport_number', 'employment_date', 'birth_date', 'company_location_id', 'is_active'])]
 class Employee extends Model
 {
     /** @use HasFactory<EmployeeFactory> */
@@ -34,6 +35,18 @@ class Employee extends Model
     public function projectAssignments(): HasMany
     {
         return $this->hasMany(EmployeeProjectAssignment::class)->latest('started_on')->latest('id');
+    }
+
+    public function currentProjectAssignment(): HasOne
+    {
+        return $this->hasOne(EmployeeProjectAssignment::class)
+            ->whereNull('ended_on')
+            ->latestOfMany('id');
+    }
+
+    public function companyLocation(): BelongsTo
+    {
+        return $this->belongsTo(Location::class, 'company_location_id');
     }
 
     public function insurancePolicies(): BelongsToMany

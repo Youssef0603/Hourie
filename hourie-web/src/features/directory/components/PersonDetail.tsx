@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { fr } from "../../../i18n/fr";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { EmptyState } from "../../../shared/components/EmptyState";
@@ -33,7 +32,6 @@ export function PersonDetail({
   onEdit: () => void;
   onDelete: () => void;
 }) {
-  const [showAssets, setShowAssets] = useState(false);
   const activePolicy = person.health_insurance_policies.find(
     (policy) =>
       policy.ends_on !== null &&
@@ -43,6 +41,27 @@ export function PersonDetail({
   const assignments = person.project_assignments ?? [];
   return (
     <div className="person-detail">
+      {canEdit && (
+        <div className="detail-primary-actions person-detail-toolbar">
+          <button
+            className="equipment-edit-button detail-toolbar-button"
+            type="button"
+            onClick={onEdit}
+          >
+            <ActionIcon name="edit" />
+            {fr.common.edit}
+          </button>
+          <button
+            className="danger-button detail-delete-button"
+            type="button"
+            onClick={onDelete}
+            aria-label={fr.directory.deletePerson}
+            title={fr.directory.deletePerson}
+          >
+            <ActionIcon name="delete" />
+          </button>
+        </div>
+      )}
       <section className="person-profile-summary">
         <div className="person-profile-identity">
           <span className="person-profile-avatar">{initials(person.name)}</span>
@@ -51,17 +70,6 @@ export function PersonDetail({
             <p>{catalogLabel(catalogs, "employee_job_title", person.job_title)}</p>
             <small>{person.user ? `@${person.user.username} · ${fr.roles[person.user.role]}` : fr.directory.noSystemAccess}</small>
           </div>
-          {canEdit && (
-            <button
-              className="person-delete-action"
-              type="button"
-              onClick={onDelete}
-              aria-label={fr.directory.deletePerson}
-              title={fr.directory.deletePerson}
-            >
-              <ActionIcon name="delete" />
-            </button>
-          )}
         </div>
         <dl className="person-profile-facts">
           <div>
@@ -90,29 +98,72 @@ export function PersonDetail({
             <dt>{fr.directory.email}</dt>
             <dd>{person.email ?? fr.common.notAssigned}</dd>
           </div>
+          <div>
+            <dt>{fr.directory.workplace}</dt>
+            <dd>{person.current_project?.name ?? person.current_company_location?.name ?? fr.common.notAssigned}</dd>
+          </div>
         </dl>
-        <div className="person-profile-actions">
-          {canEdit && (
-            <button
-              className="person-detail-action primary"
-              type="button"
-              onClick={onEdit}
-            >
-              <ActionIcon name="edit" />
-              {fr.common.edit}
-            </button>
-          )}
-          <button
-            className="person-detail-action"
-            type="button"
-            disabled={person.equipment_in_custody.length === 0}
-            onClick={() => setShowAssets((visible) => !visible)}
-          >
-            {showAssets
-              ? fr.directory.hideAssignedAssets
-              : fr.directory.viewAssignedAssets}
-          </button>
-        </div>
+      </section>
+      <section className="person-assigned-assets-section">
+        <h3><ActionIcon name="specifications" />{fr.directory.assignedEquipment}</h3>
+        {person.equipment_in_custody.length > 0 ? (
+          <div className="site-inventory-wrap">
+            <table className="equipment-table person-inventory-table">
+              <thead>
+                <tr>
+                  <th>{fr.equipment.number}</th>
+                  <th>{fr.equipment.identification}</th>
+                  <th>{fr.equipment.condition}</th>
+                  <th>{fr.equipment.project}</th>
+                  <th>{fr.equipment.locationShort}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {person.equipment_in_custody.map((equipment) => (
+                  <tr key={equipment.id}>
+                    <td>
+                      <strong>{equipment.display_id}</strong>
+                      <span className="secondary-cell">{equipment.asset_code}</span>
+                    </td>
+                    <td>
+                      {[equipment.brand, equipment.model].filter(Boolean).join(" ") ||
+                        fr.common.notProvided}
+                    </td>
+                    <td>
+                      <span
+                        className={`status-badge status-${equipment.condition ?? "unknown"}`}
+                        style={catalogBadgeStyle(
+                          catalogs,
+                          "equipment_condition",
+                          equipment.condition,
+                        )}
+                      >
+                        {equipment.condition
+                          ? catalogLabel(
+                              catalogs,
+                              "equipment_condition",
+                              equipment.condition,
+                            )
+                          : fr.common.notProvided}
+                      </span>
+                    </td>
+                    <td>
+                      {equipment.current_project_assignment?.project.name ??
+                        fr.common.notProvided}
+                    </td>
+                    <td>{equipment.current_location?.name ?? fr.common.notProvided}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <EmptyState
+            compact
+            icon="specifications"
+            title={fr.directory.noAssignedEquipment}
+          />
+        )}
       </section>
       <section className="person-project-assignments">
         <h3><ActionIcon name="location" />Affectations chantier</h3>
@@ -168,67 +219,6 @@ export function PersonDetail({
           />
         )}
       </section>
-      {showAssets && person.equipment_in_custody.length > 0 && (
-        <section className="person-assigned-assets-section">
-          <h3>{fr.directory.assignedEquipment}</h3>
-          <div className="site-inventory-wrap">
-            <table className="equipment-table person-inventory-table">
-              <thead>
-                <tr>
-                  <th>{fr.equipment.number}</th>
-                  <th>{fr.equipment.identification}</th>
-                  <th>{fr.equipment.condition}</th>
-                  <th>{fr.equipment.project}</th>
-                  <th>{fr.equipment.locationShort}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {person.equipment_in_custody.map((equipment) => (
-                  <tr key={equipment.id}>
-                    <td>
-                      <strong>{equipment.display_id}</strong>
-                      <span className="secondary-cell">
-                        {equipment.asset_code}
-                      </span>
-                    </td>
-                    <td>
-                      {[equipment.brand, equipment.model]
-                        .filter(Boolean)
-                        .join(" ") || fr.common.notProvided}
-                    </td>
-                    <td>
-                      <span
-                        className={`status-badge status-${equipment.condition ?? "unknown"}`}
-                        style={catalogBadgeStyle(
-                          catalogs,
-                          "equipment_condition",
-                          equipment.condition,
-                        )}
-                      >
-                        {equipment.condition
-                          ? catalogLabel(
-                              catalogs,
-                              "equipment_condition",
-                              equipment.condition,
-                            )
-                          : fr.common.notProvided}
-                      </span>
-                    </td>
-                    <td>
-                      {equipment.current_project_assignment?.project.name ??
-                        fr.common.notProvided}
-                    </td>
-                    <td>
-                      {equipment.current_location?.name ??
-                        fr.common.notProvided}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      )}
     </div>
   );
 }

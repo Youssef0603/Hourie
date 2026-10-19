@@ -59,6 +59,8 @@ export type Employee = {
   job_title: string
   is_active: boolean
   equipment_in_custody_count: number
+  current_project: { id: number; name: string } | null
+  current_company_location: { id: number; name: string } | null
   user: { id: number; username: string; email: string | null; role: 'manager' | 'cms_manager' | 'generator_manager' | 'viewer' } | null
 }
 
@@ -89,6 +91,7 @@ export type CreateEmployeePayload = {
   employment_date: string | null
   birth_date: string | null
   project_id: number | null
+  company_location_id: number | null
   project_role: string | null
   assignment_started_on: string | null
   assignment_ended_on: string | null
@@ -107,6 +110,7 @@ export type UpdateEmployeePayload = {
   employment_date: string | null
   birth_date: string | null
   project_id: number | null
+  company_location_id: number | null
   project_role: string | null
   assignment_started_on: string | null
   assignment_ended_on: string | null

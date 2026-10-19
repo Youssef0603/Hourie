@@ -52,9 +52,13 @@ class EmployeeController extends Controller
             ->when($request->string('access')->toString() === 'without_access', fn ($query) => $query->whereNull('user_id'))
             ->when($request->filled('role'), fn ($query) => $query->whereHas('user', fn ($user) => $user->where('role', $request->string('role')->toString())))
             ->when($request->filled('job_title'), fn ($query) => $query->where('job_title', $request->string('job_title')->toString()))
-            ->with('user:id,username,email,role')
+            ->with([
+                'user:id,username,email,role',
+                'currentProjectAssignment.project:id,name',
+                'companyLocation:id,name',
+            ])
             ->orderBy('name')
-            ->paginate($perPage, ['id', 'user_id', 'name', 'job_title', 'phone_number', 'email', 'passport_number', 'employment_date', 'birth_date', 'is_active']);
+            ->paginate($perPage, ['id', 'user_id', 'name', 'job_title', 'phone_number', 'email', 'passport_number', 'employment_date', 'birth_date', 'company_location_id', 'is_active']);
 
         $employeeIds = $employees->getCollection()->modelKeys();
 
@@ -113,6 +117,7 @@ class EmployeeController extends Controller
                 'passport_number' => $data['passport_number'] ?? null,
                 'employment_date' => $data['employment_date'] ?? null,
                 'birth_date' => $data['birth_date'] ?? null,
+                'company_location_id' => $data['company_location_id'] ?? null,
                 'is_active' => true,
             ]);
 
@@ -128,7 +133,12 @@ class EmployeeController extends Controller
             return $employee;
         });
 
-        $employee->load(['user:id,username,email,role', 'projectAssignments.project:id,name,is_active'])->loadCount('equipmentInCustody');
+        $employee->load([
+            'user:id,username,email,role',
+            'currentProjectAssignment.project:id,name',
+            'companyLocation:id,name',
+            'projectAssignments.project:id,name,is_active',
+        ])->loadCount('equipmentInCustody');
 
         return (new EmployeeResource($employee))->response()->setStatusCode(201);
     }
@@ -137,6 +147,8 @@ class EmployeeController extends Controller
     {
         $employee->load([
             'user:id,username,email,role',
+            'currentProjectAssignment.project:id,name',
+            'companyLocation:id,name',
             'responsibleProjects:id,name,responsible_employee_id,is_active',
             'projectAssignments.project:id,name,is_active',
             'insurancePolicies' => fn ($query) => $query
@@ -166,7 +178,7 @@ class EmployeeController extends Controller
         $data = $request->validated();
 
         DB::transaction(function () use ($data, $employee): void {
-            $employee->update([
+            $employeeData = [
                 'name' => $data['name'],
                 'job_title' => $data['job_title'] ?? $employee->job_title,
                 'phone_number' => $data['phone_number'] ?? null,
@@ -174,7 +186,17 @@ class EmployeeController extends Controller
                 'passport_number' => $data['passport_number'] ?? null,
                 'employment_date' => $data['employment_date'] ?? null,
                 'birth_date' => $data['birth_date'] ?? null,
-            ]);
+            ];
+
+            if (array_key_exists('company_location_id', $data)) {
+                $employeeData['company_location_id'] = $data['company_location_id'];
+            }
+
+            if (filled($data['project_id'] ?? null)) {
+                $employeeData['company_location_id'] = null;
+            }
+
+            $employee->update($employeeData);
 
             $accountData = [
                 'name' => $data['name'],
