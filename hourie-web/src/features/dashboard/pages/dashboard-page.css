@@ -1,11 +1,11 @@
 .dashboard-page {
   display: grid;
-  width: 100%;
+  width: min(calc(100% - var(--workspace-page-inline-space)), 92rem);
   max-width: 92rem;
   gap: 0.9rem;
   min-width: 0;
   margin-inline: auto;
-  padding: 1.25rem 1.5rem 1.5rem;
+  padding: 1.25rem 0 1.5rem;
   color: var(--color-text-strong);
   background: #f8f8f7;
 }
@@ -214,7 +214,7 @@ button.dashboard-alert-detail:hover { border-color: #e2aab7; background: #fffafb
 }
 
 @media (max-width: 760px) {
-  .dashboard-page { gap: .8rem; padding: 1rem; }
+  .dashboard-page { gap: .8rem; padding: 1rem 0 1.5rem; }
   .dashboard-heading { align-items: flex-start; flex-direction: column; }
   .dashboard-heading-actions { width: 100%; justify-content: space-between; }
   .dashboard-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; }

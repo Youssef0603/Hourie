@@ -4,6 +4,7 @@
 }
 
 .workspace-layout {
+  --workspace-page-inline-space: clamp(1.5rem, 4vw, 3rem);
   display: block;
   min-height: calc(100svh - 4.25rem);
 }
@@ -578,7 +579,7 @@ html[dir="rtl"] .sidebar-toggle svg {
 }
 
 .equipment-page {
-  width: min(100% - 3rem, 92rem);
+  width: min(calc(100% - var(--workspace-page-inline-space)), 92rem);
   margin: 0 auto;
   padding: 1.5rem 0 2.5rem;
 }
@@ -1709,7 +1710,7 @@ html[dir="rtl"] .advanced-filter-grid select {
 }
 
 .directory-page {
-  width: min(100% - 3rem, 92rem);
+  width: min(calc(100% - var(--workspace-page-inline-space)), 92rem);
   margin: 0 auto;
   padding: 1.5rem 0 2.5rem;
 }
@@ -4644,7 +4645,7 @@ html[dir="rtl"] .filter-bar select {
 }
 
 .catalog-page {
-  width: min(100% - 3rem, 76rem);
+  width: min(calc(100% - var(--workspace-page-inline-space)), 92rem);
   padding-top: 1rem;
 }
 
@@ -4820,10 +4821,6 @@ html[dir="rtl"] .catalog-copy small {
 }
 
 @media (max-width: 640px) {
-  .catalog-page {
-    width: min(100% - 1.5rem, 76rem);
-  }
-
   .catalog-page .directory-heading {
     align-items: flex-start;
   }
@@ -6591,7 +6588,7 @@ html[dir="rtl"] .maintenance-form-grid select {
 }
 
 .insurance-page {
-  width: min(100% - 2.5rem, 92rem);
+  width: min(calc(100% - var(--workspace-page-inline-space)), 92rem);
   margin: 0 auto;
   padding: 2rem 0 3rem;
 }
@@ -8365,7 +8362,6 @@ html[dir="rtl"] .insurance-filter-content .searchable-select-input {
 
 @media (max-width: 560px) {
   .insurance-page {
-    width: min(100% - 1.25rem, 92rem);
     padding-top: 1rem;
   }
 
