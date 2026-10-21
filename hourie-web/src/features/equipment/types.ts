@@ -31,6 +31,8 @@ export type EquipmentSummary = {
   registration_number: string | null;
   manufacture_year: number | null;
   purchase_date: string | null;
+  supplier: string | null;
+  origin: string | null;
   asset_details: Record<string, string | number | null> | null;
   condition: EquipmentCondition | null;
   current_location:
@@ -249,6 +251,7 @@ export type EquipmentFilters = {
   air_conditioning: string;
   with_toilet: string;
   with_shower: string;
+  without_invoice: string;
   supplier: string;
   length_m_min: string;
   length_m_max: string;

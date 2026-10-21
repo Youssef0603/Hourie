@@ -57,6 +57,8 @@ export function EquipmentIdentificationDetails({
       <div><dt>{fr.equipment.model}</dt><dd>{displayedValue(equipment.model)}</dd></div>
       <div><dt>{fr.equipment.manufactureYear}</dt><dd>{displayedValue(equipment.manufacture_year)}</dd></div>
       <div><dt>{fr.equipment.purchaseDate}</dt><dd>{displayedValue(equipment.purchase_date)}</dd></div>
+      <div><dt>{fr.assets.supplier}</dt><dd>{displayedValue(equipment.supplier)}</dd></div>
+      <div><dt>{fr.equipment.origin}</dt><dd>{displayedValue(equipment.origin)}</dd></div>
       <div>
         <dt>{fr.equipment.condition}</dt>
         <dd>

@@ -52,6 +52,7 @@ export function AssetInventoryView({ category, language, options, filters, searc
   const [isExporting, setIsExporting] = useState(false)
   const [exportError, setExportError] = useState<string | null>(null)
   const [showAssetExport, setShowAssetExport] = useState(false)
+  const [exportWithoutInvoices, setExportWithoutInvoices] = useState(false)
   const definition = category === 'all' ? null : assetCategory(category)
   const filterDefinition = definition ?? (isAssetCategoryCode(filters.category) ? assetCategory(filters.category) : undefined)
   const selectedCategory = category === 'all' ? filters.category : category
@@ -81,8 +82,19 @@ export function AssetInventoryView({ category, language, options, filters, searc
     setIsExporting(true)
     setExportError(null)
     try {
-      const assets = await getAllEquipment({ ...filters, category: exportView === 'all' ? '' : exportView })
-      downloadAssetInventoryCsv(assets, exportFields, selectedFields, language, `inventaire-${exportView}`, options?.catalogs)
+      const assets = await getAllEquipment({
+        ...filters,
+        category: exportView === 'all' ? '' : exportView,
+        without_invoice: isGeneratorSelected && exportWithoutInvoices ? '1' : '',
+      })
+      downloadAssetInventoryCsv(
+        assets,
+        exportFields,
+        selectedFields,
+        language,
+        isGeneratorSelected && exportWithoutInvoices ? 'generateurs-sans-facture' : `inventaire-${exportView}`,
+        options?.catalogs,
+      )
       setShowAssetExport(false)
     } catch {
       setExportError(fr.assets.exportError)
@@ -111,7 +123,7 @@ export function AssetInventoryView({ category, language, options, filters, searc
         </div>
         <div className="filter-toolbar-actions">
           <button className={`advanced-filter-toggle${showFilters ? ' active' : ''}`} type="button" onClick={() => setShowFilters((value) => !value)} aria-expanded={showFilters}><ActionIcon name="filter" /><span>{fr.equipment.filters}</span>{activeFilterCount > 0 && <strong>{activeFilterCount}</strong>}</button>
-          <button className="table-refresh-button import-excel-action" type="button" onClick={() => { setExportError(null); setShowAssetExport(true) }}><ActionIcon name="download" /><span>{fr.assets.exportExcel}</span></button>
+          <button className="table-refresh-button import-excel-action" type="button" onClick={() => { setExportError(null); setExportWithoutInvoices(false); setShowAssetExport(true) }}><ActionIcon name="download" /><span>{fr.assets.exportExcel}</span></button>
           {canManage && category === 'all' && !isGeneratorSelected && <button className="table-refresh-button import-excel-action" type="button" onClick={() => setShowAssetImport(true)}><ActionIcon name="upload" /><span>{fr.assets.importExcel}</span></button>}
           {canManage && isGeneratorSelected && <button className="table-refresh-button import-excel-action" type="button" onClick={() => setShowImportGenerator(true)}><ActionIcon name="upload" /><span>{fr.equipment.importExcel}</span></button>}
           {canManage && selectedCategory && options && <button className="table-refresh-button table-add-button" type="button" onClick={() => isGeneratorSelected ? setShowAddGenerator(true) : setShowAdd(true)} aria-label={isGeneratorSelected ? fr.equipment.addGenerator : fr.assets.add} title={isGeneratorSelected ? fr.equipment.addGenerator : fr.assets.add}><ActionIcon name="add" /></button>}
@@ -164,6 +176,20 @@ export function AssetInventoryView({ category, language, options, filters, searc
     {showAddGenerator && options && <EquipmentCreationPanel eyebrow={fr.equipment.section} title={fr.equipment.addGenerator} action={<button className="primary-button" type="submit" form="create-generator-form">{fr.common.save}</button>} onClose={() => setShowAddGenerator(false)}><AddGeneratorForm formId="create-generator-form" options={options} onCreated={(equipment) => { setShowAddGenerator(false); onCreated(equipment) }} /></EquipmentCreationPanel>}
     {showImportGenerator && <Modal title={fr.equipment.importTitle} onClose={() => setShowImportGenerator(false)}><ImportGeneratorForm onClose={() => setShowImportGenerator(false)} onImported={() => onRefresh()} /></Modal>}
     {showAssetImport && <Modal title={fr.assets.importTitle} onClose={() => setShowAssetImport(false)}><ImportAssetInventoryForm onClose={() => setShowAssetImport(false)} onImported={() => onRefresh()} /></Modal>}
-    {showAssetExport && <AssetExportDialog title={exportTitle} language={language} fields={exportFields} defaultFields={exportDefaultFields} isExporting={isExporting} error={exportError} onClose={() => { if (!isExporting) setShowAssetExport(false) }} onExport={(selectedFields) => void exportAssets(selectedFields)} />}
+    {showAssetExport && <AssetExportDialog
+      title={exportWithoutInvoices ? fr.equipment.withoutInvoices : exportTitle}
+      language={language}
+      fields={exportFields}
+      defaultFields={exportDefaultFields}
+      isExporting={isExporting}
+      error={exportError}
+      scopeOption={isGeneratorSelected ? {
+        label: fr.equipment.onlyWithoutInvoices,
+        checked: exportWithoutInvoices,
+        onChange: setExportWithoutInvoices,
+      } : undefined}
+      onClose={() => { if (!isExporting) setShowAssetExport(false) }}
+      onExport={(selectedFields) => void exportAssets(selectedFields)}
+    />}
   </main>
 }

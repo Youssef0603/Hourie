@@ -6,6 +6,7 @@ use App\Models\CatalogOption;
 use App\Models\Employee;
 use App\Models\Equipment;
 use App\Models\EquipmentCategory;
+use App\Models\EquipmentInvoice;
 use App\Models\EquipmentProjectAssignment;
 use App\Models\GeneratorDetail;
 use App\Models\Location;
@@ -246,6 +247,7 @@ it('combines advanced technical, identity, responsibility, and date filters', fu
         'model' => 'KD110',
         'serial_number' => 'SERIAL-ADVANCED',
         'manufacture_year' => 2024,
+        'supplier' => 'Bernabé Côte d’Ivoire',
     ]);
     GeneratorDetail::factory()->for($matching)->create([
         'apparent_power_kva' => 150,
@@ -266,6 +268,7 @@ it('combines advanced technical, identity, responsibility, and date filters', fu
         'brand' => 'kohl',
         'model' => 'KD',
         'serial_number' => 'ADVANCED',
+        'supplier' => 'bernabé',
         'manufacture_year_from' => 2020,
         'manufacture_year_to' => 2025,
         'apparent_power_kva_min' => 100,
@@ -289,6 +292,33 @@ it('combines advanced technical, identity, responsibility, and date filters', fu
         ->assertOk()
         ->assertJsonCount(1, 'data')
         ->assertJsonPath('data.0.id', $matching->id);
+});
+
+it('allows a maximum generator power filter without a minimum', function () {
+    $user = User::factory()->create();
+    $matching = Equipment::factory()->create();
+    GeneratorDetail::factory()->for($matching)->create(['apparent_power_kva' => 5]);
+    $aboveMaximum = Equipment::factory()->create();
+    GeneratorDetail::factory()->for($aboveMaximum)->create(['apparent_power_kva' => 20]);
+
+    $this->actingAs($user, 'web')
+        ->getJson('/api/v1/equipment?apparent_power_kva_max=5')
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $matching->id);
+});
+
+it('filters equipment without invoices for inventory exports', function () {
+    $user = User::factory()->create();
+    $withoutInvoice = Equipment::factory()->create();
+    $withInvoice = Equipment::factory()->create();
+    EquipmentInvoice::factory()->for($withInvoice)->create();
+
+    $this->actingAs($user, 'web')
+        ->getJson('/api/v1/equipment?without_invoice=1')
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $withoutInvoice->id);
 });
 
 it('returns 422 for an invalid equipment filter', function () {
@@ -404,6 +434,8 @@ it('allows a generator manager to fill every inventory field without changing th
         'serial_number' => '34LNGLH0009',
         'manufacture_year' => 2023,
         'purchase_date' => '2024-05-20',
+        'supplier' => 'Bernabé Côte d’Ivoire',
+        'origin' => 'France',
         'condition' => 'sold',
         'custodian_employee_id' => $custodian->id,
         'observations' => 'Essai en charge validé.',
@@ -429,6 +461,8 @@ it('allows a generator manager to fill every inventory field without changing th
         ->assertJsonPath('data.asset_code', 'A.H-001')
         ->assertJsonPath('data.brand', 'KOHLER')
         ->assertJsonPath('data.purchase_date', '2024-05-20')
+        ->assertJsonPath('data.supplier', 'Bernabé Côte d’Ivoire')
+        ->assertJsonPath('data.origin', 'France')
         ->assertJsonPath('data.custodian.name', 'Jean Responsable')
         ->assertJsonPath('data.generator_details.current_rating', '216')
         ->assertJsonPath('data.generator_details.purchase_price_fcfa', '18500000.00')
@@ -438,6 +472,8 @@ it('allows a generator manager to fill every inventory field without changing th
         'id' => $equipment->id,
         'asset_code' => 'A.H-001',
         'purchase_date' => '2024-05-20',
+        'supplier' => 'Bernabé Côte d’Ivoire',
+        'origin' => 'France',
         'custodian_employee_id' => $custodian->id,
     ]);
     $this->assertDatabaseHas('equipment_changes', [
@@ -540,6 +576,8 @@ it('allows a generator manager to add a generator with an automatic code and com
         'model' => 'KD110',
         'serial_number' => 'SERIAL-NEW',
         'manufacture_year' => 2026,
+        'supplier' => 'DMD Côte d’Ivoire',
+        'origin' => 'Espagne',
         'condition' => 'good',
         'custodian_employee_id' => null,
         'observations' => 'Nouveau groupe.',
@@ -563,6 +601,8 @@ it('allows a generator manager to add a generator with an automatic code and com
         ->postJson('/api/v1/equipment', $payload)
         ->assertCreated()
         ->assertJsonPath('data.brand', 'KOHLER')
+        ->assertJsonPath('data.supplier', 'DMD Côte d’Ivoire')
+        ->assertJsonPath('data.origin', 'Espagne')
         ->assertJsonPath('data.current_location.id', $location->id)
         ->assertJsonPath('data.current_project_assignment.project.id', $project->id);
 

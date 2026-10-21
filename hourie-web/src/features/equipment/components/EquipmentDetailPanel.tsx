@@ -194,7 +194,7 @@ export function EquipmentDetailPanel({
                     equipment={selected}
                     canManage={canManageEquipment}
                     hideHeading
-                    showDownload={isOtherAsset}
+                    showDownload={false}
                     onChanged={onRefreshSelected}
                   />
                 </EquipmentDetailSection>

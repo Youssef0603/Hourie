@@ -36,6 +36,8 @@ class UpdateEquipmentRequest extends FormRequest
                 : ['prohibited'],
             'manufacture_year' => ['present', 'nullable', 'integer', 'min:1900', 'max:'.((int) date('Y') + 1)],
             'purchase_date' => ['sometimes', 'nullable', 'date_format:Y-m-d'],
+            'supplier' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'origin' => ['sometimes', 'nullable', 'string', 'max:255'],
             'condition' => ['present', 'nullable', $this->activeCatalogOption('equipment_condition')],
             'project_id' => ['sometimes', 'nullable', 'integer', Rule::exists('projects', 'id')->where('is_active', true)],
             'current_location_id' => ['sometimes', 'nullable', 'integer', Rule::exists('locations', 'id')->where('is_active', true)],

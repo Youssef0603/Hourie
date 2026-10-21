@@ -99,6 +99,18 @@ export function WorkspaceHeader({
       </div>
       <div className="user-menu">
         <LanguageSwitch language={language} onToggle={onToggleLanguage} />
+        {user.permissions.manage_sites && (
+          <button
+            className={`workspace-settings-button${activeSection === "catalogs" ? " active" : ""}`}
+            type="button"
+            onClick={onNavigateSettings}
+            aria-current={activeSection === "catalogs" ? "page" : undefined}
+            title={fr.navigation.settings}
+          >
+            <NavigationIcon name="settings" />
+            <span>{fr.navigation.settings}</span>
+          </button>
+        )}
         <Menu>
           <div className="account-menu">
             <MenuButton
@@ -115,19 +127,6 @@ export function WorkspaceHeader({
                 <strong>{user.name}</strong>
                 <span>{fr.roles[user.role]}</span>
               </div>
-              {user.permissions.manage_sites && (
-                <MenuItem>
-                  <button
-                    className={`account-menu-action${activeSection === "catalogs" ? " active" : ""}`}
-                    type="button"
-                    onClick={onNavigateSettings}
-                    aria-current={activeSection === "catalogs" ? "page" : undefined}
-                  >
-                    <NavigationIcon name="settings" />
-                    {fr.navigation.settings}
-                  </button>
-                </MenuItem>
-              )}
               <MenuItem disabled={isLoggingOut}>
                 <button
                   className="account-menu-action account-logout"

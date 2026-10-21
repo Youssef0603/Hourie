@@ -28,3 +28,28 @@ it('lets the user choose the fields included in an asset export', async () => {
 
   expect(onExport).toHaveBeenCalledWith(['brand'])
 })
+
+it('offers an optional export scope inside the dialog', async () => {
+  const user = userEvent.setup()
+  const onScopeChange = vi.fn()
+
+  render(<AssetExportDialog
+    title="Générateurs"
+    language="fr"
+    fields={assetExportFields('generator')}
+    defaultFields={defaultAssetExportFields('generator')}
+    isExporting={false}
+    error={null}
+    scopeOption={{
+      label: 'Uniquement les générateurs sans facture',
+      checked: false,
+      onChange: onScopeChange,
+    }}
+    onClose={vi.fn()}
+    onExport={vi.fn()}
+  />)
+
+  await user.click(screen.getByRole('checkbox', { name: 'Uniquement les générateurs sans facture' }))
+
+  expect(onScopeChange).toHaveBeenCalledWith(true)
+})

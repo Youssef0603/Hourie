@@ -42,6 +42,7 @@ export function AssetFilterDrawer({ categoryCode, fields, filters, language, opt
         </div></fieldset>
         <div className="advanced-filter-panel">
           <fieldset><legend>{fr.equipment.assignmentAndDateFilters}</legend><div className="advanced-filter-grid">
+            <label><span>{fr.assets.supplier}</span><input {...field('supplier')} /></label>
             <label><span>{fr.equipment.yearFrom}</span><input type="number" min="1900" max="2100" {...field('manufacture_year_from')} /></label>
             <label><span>{fr.equipment.yearTo}</span><input type="number" min="1900" max="2100" {...field('manufacture_year_to')} /></label>
           </div></fieldset>
@@ -84,7 +85,6 @@ function CategorySpecificAssetFilters({ categoryCode, filters, options, onChange
     {select(fr.assets.bungalowType, 'bungalow_type', 'bungalow_type')}
     <label><span>{fr.assets.bungalowUse}</span><SearchableSelect ariaLabel={fr.assets.bungalowUse} value={filters.bungalow_group} onChange={(value) => onChange('bungalow_group', value)} placeholder={fr.common.all} options={[{ value: 'office', label: fr.assets.bungalowOffice }, { value: 'sanitary', label: fr.assets.bungalowSanitary }, { value: 'guard', label: fr.assets.bungalowGuard }]} /></label>
     {select(fr.assets.airConditioning, 'air_conditioning', 'air_conditioning')}
-    {select(fr.assets.supplier, 'supplier', 'supplier')}
     {booleanSelect(fr.assets.withToilet, 'with_toilet', fr.common.yes)}
     {booleanSelect(fr.assets.withShower, 'with_shower', fr.common.yes)}
     {range(fr.assets.length, 'length_m_min', 'length_m_max', 'm')}

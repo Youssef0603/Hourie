@@ -14,6 +14,8 @@ describe("EquipmentIdentificationDetails", () => {
             model: "Duster",
             manufacture_year: 2023,
             purchase_date: null,
+            supplier: "SOCIDA",
+            origin: "Roumanie",
             condition: null,
             generator_details: null,
           } as Equipment
@@ -28,5 +30,9 @@ describe("EquipmentIdentificationDetails", () => {
     expect(screen.getByText("VF1HJD202PA301098")).toBeVisible();
     expect(screen.getByText("Immatriculation")).toBeVisible();
     expect(screen.getByText("AA-406-CG")).toBeVisible();
+    expect(screen.getByText("Fournisseur")).toBeVisible();
+    expect(screen.getByText("SOCIDA")).toBeVisible();
+    expect(screen.getByText("Origine")).toBeVisible();
+    expect(screen.getByText("Roumanie")).toBeVisible();
   });
 });

@@ -13,6 +13,8 @@ const car = {
   registration_number: 'AB 123 CD',
   manufacture_year: 2023,
   purchase_date: null,
+  supplier: 'SOCIDA',
+  origin: 'Roumanie',
   asset_details: { fuel_type: 'Diesel', odometer_km: 12000 },
   condition: null,
   current_location: null,
@@ -47,5 +49,17 @@ describe('asset inventory export', () => {
   it('offers generator power fields', () => {
     const fields = assetExportFields('generator')
     expect(fields.map((field) => field.key)).toEqual(expect.arrayContaining(['apparent_power_kva', 'active_power_kw', 'fuel_type']))
+  })
+
+  it('offers the shared supplier field for every asset category', () => {
+    expect(assetExportFields('generator').map((field) => field.key)).toContain('supplier')
+    expect(assetExportFields('car').map((field) => field.key)).toContain('supplier')
+    expect(assetExportFields('equipment').map((field) => field.key)).toContain('supplier')
+  })
+
+  it('offers the shared origin field for every asset category', () => {
+    expect(assetExportFields('generator').map((field) => field.key)).toContain('origin')
+    expect(assetExportFields('car').map((field) => field.key)).toContain('origin')
+    expect(assetExportFields('equipment').map((field) => field.key)).toContain('origin')
   })
 })

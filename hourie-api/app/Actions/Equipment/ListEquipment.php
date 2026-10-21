@@ -80,7 +80,7 @@ class ListEquipment
 
                     $query
                         ->whereRaw(
-                            "CONCAT_WS(' ', asset_code, brand, model, serial_number, registration_number) like ?",
+                            "CONCAT_WS(' ', asset_code, brand, model, serial_number, registration_number, supplier, origin) like ?",
                             [$pattern],
                         )
                         ->orWhere('asset_details', 'like', $pattern)
@@ -113,7 +113,7 @@ class ListEquipment
             ->when($filters['asset_fuel_type'] ?? null, fn (Builder $query, string $value) => $this->whereAssetText($query, 'fuel_type', $value))
             ->when($filters['bungalow_type'] ?? null, fn (Builder $query, string $value) => $this->whereAssetText($query, 'bungalow_type', $value))
             ->when($filters['air_conditioning'] ?? null, fn (Builder $query, string $value) => $this->whereAssetText($query, 'air_conditioning', $value))
-            ->when($filters['supplier'] ?? null, fn (Builder $query, string $value) => $this->whereAssetText($query, 'supplier', $value))
+            ->when($filters['supplier'] ?? null, fn (Builder $query, string $value) => $query->where('supplier', 'like', '%'.trim($value).'%'))
             ->when($filters['unassigned'] ?? false, fn (Builder $query) => $query->whereDoesntHave('currentProjectAssignment'))
             ->when($filters['inspection_status'] ?? null, function (Builder $query, string $status): void {
                 $today = now()->toDateString();
@@ -128,6 +128,7 @@ class ListEquipment
             })
             ->when($filters['with_toilet'] ?? false, fn (Builder $query) => $this->whereAssetNumber($query, 'toilet_count', '>', 0))
             ->when($filters['with_shower'] ?? false, fn (Builder $query) => $this->whereAssetNumber($query, 'shower_count', '>', 0))
+            ->when($filters['without_invoice'] ?? false, fn (Builder $query) => $query->whereDoesntHave('invoices'))
             ->when($filters['bungalow_group'] ?? null, function (Builder $query, string $group): void {
                 $patterns = match ($group) {
                     'office' => ['%bureau%', '%flatpack%'],

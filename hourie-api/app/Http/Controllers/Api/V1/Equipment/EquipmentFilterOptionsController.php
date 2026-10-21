@@ -22,7 +22,7 @@ class EquipmentFilterOptionsController extends Controller
             'equipment' => ['equipment_type', 'sub_category', 'brand'],
             'car' => ['fuel_type'],
             'truck_dumper' => ['vehicle_type', 'fuel_type'],
-            'portacabin' => ['bungalow_type', 'air_conditioning', 'supplier'],
+            'portacabin' => ['bungalow_type', 'air_conditioning'],
         ];
         $assetFilterValues = [];
 

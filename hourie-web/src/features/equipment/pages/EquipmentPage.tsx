@@ -185,6 +185,7 @@ export function EquipmentPage({
   const [showAddGenerator, setShowAddGenerator] = useState(false);
   const [showImportGenerator, setShowImportGenerator] = useState(false);
   const [showGeneratorExport, setShowGeneratorExport] = useState(false);
+  const [generatorExportWithoutInvoices, setGeneratorExportWithoutInvoices] = useState(false);
   const [isExportingGenerators, setIsExportingGenerators] = useState(false);
   const [generatorExportError, setGeneratorExportError] = useState<string | null>(null);
   const [showFilterDrawer, setShowFilterDrawer] = useState(false);
@@ -245,6 +246,7 @@ export function EquipmentPage({
       setShowAddGenerator(false);
       setShowImportGenerator(false);
       setShowGeneratorExport(false);
+      setGeneratorExportWithoutInvoices(false);
       setIsEditingEquipment(false);
       setSelected(null);
       setIsLoadingDetail(currentRoute.equipmentId !== null);
@@ -437,13 +439,19 @@ export function EquipmentPage({
     setGeneratorExportError(null);
     try {
       const exportFields = assetExportFields("generator");
-      const generators = await getAllEquipment({ ...filters, category: "generator" });
+      const generators = await getAllEquipment({
+        ...filters,
+        category: "generator",
+        without_invoice: generatorExportWithoutInvoices ? "1" : "",
+      });
       downloadAssetInventoryCsv(
         generators,
         exportFields,
         selectedFields,
         language,
-        "inventaire-generator",
+        generatorExportWithoutInvoices
+          ? "generateurs-sans-facture"
+          : "inventaire-generator",
         options?.catalogs,
       );
       setShowGeneratorExport(false);
@@ -807,12 +815,27 @@ export function EquipmentPage({
                     type="button"
                     onClick={() => {
                       setGeneratorExportError(null);
+                      setGeneratorExportWithoutInvoices(false);
                       setShowGeneratorExport(true);
                     }}
                   >
                     <ActionIcon name="download" />
                     <span>{fr.assets.exportExcel}</span>
                   </button>
+                  {!isSiteView && (
+                    <button
+                      className="table-refresh-button import-excel-action"
+                      type="button"
+                      onClick={() => {
+                        setGeneratorExportError(null);
+                        setGeneratorExportWithoutInvoices(true);
+                        setShowGeneratorExport(true);
+                      }}
+                    >
+                      <ActionIcon name="invoice" />
+                      <span>{fr.equipment.exportWithoutInvoices}</span>
+                    </button>
+                  )}
                   {user.permissions.manage_equipment && (
                     <button
                       className="table-refresh-button table-add-button"
@@ -866,12 +889,19 @@ export function EquipmentPage({
             </section>
             {showGeneratorExport && (
               <AssetExportDialog
-                title={fr.navigation.generators}
+                title={generatorExportWithoutInvoices
+                  ? fr.equipment.withoutInvoices
+                  : fr.navigation.generators}
                 language={language}
                 fields={assetExportFields("generator")}
                 defaultFields={defaultAssetExportFields("generator")}
                 isExporting={isExportingGenerators}
                 error={generatorExportError}
+                scopeOption={{
+                  label: fr.equipment.onlyWithoutInvoices,
+                  checked: generatorExportWithoutInvoices,
+                  onChange: setGeneratorExportWithoutInvoices,
+                }}
                 onClose={() => {
                   if (!isExportingGenerators) setShowGeneratorExport(false);
                 }}

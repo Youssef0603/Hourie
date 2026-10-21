@@ -45,6 +45,8 @@ export function AssetForm({ categoryCode, language, options, equipment, onSaved,
     registration_number: equipment?.registration_number ?? '',
     manufacture_year: equipment?.manufacture_year?.toString() ?? '',
     purchase_date: equipment?.purchase_date ?? '',
+    supplier: equipment?.supplier ?? '',
+    origin: equipment?.origin ?? '',
     condition: equipment?.condition ?? '',
     project_id: equipment?.current_project_assignment?.project.id.toString() ?? '',
     current_location_id: equipment?.current_location?.id.toString() ?? '',
@@ -91,7 +93,7 @@ export function AssetForm({ categoryCode, language, options, equipment, onSaved,
     const payload = {
       brand: textOrNull(form.brand), model: textOrNull(form.model), serial_number: textOrNull(form.serial_number),
       ...(isCar ? { registration_number: textOrNull(form.registration_number) } : {}),
-      manufacture_year: numberOrNull(form.manufacture_year), purchase_date: textOrNull(form.purchase_date), condition: textOrNull(form.condition),
+      manufacture_year: numberOrNull(form.manufacture_year), purchase_date: textOrNull(form.purchase_date), supplier: textOrNull(form.supplier), origin: textOrNull(form.origin), condition: textOrNull(form.condition),
       project_id: numberOrNull(form.project_id), current_location_id: numberOrNull(form.current_location_id),
       custodian_employee_id: numberOrNull(form.custodian_employee_id), observations: textOrNull(form.observations),
       asset_details: { ...assetDetails, purchase_price_currency: priceCurrencies.purchase_price, shipping_cost_currency: priceCurrencies.shipping_cost },
@@ -125,6 +127,8 @@ export function AssetForm({ categoryCode, language, options, equipment, onSaved,
         {isCar && <label><span>{fr.equipment.registrationNumber}</span><input value={form.registration_number} onChange={(event) => update('registration_number', event.target.value)} /></label>}
         <label><span>{fr.equipment.manufactureYear}</span><input type="number" min="1900" max="2100" value={form.manufacture_year} onChange={(event) => update('manufacture_year', event.target.value)} /></label>
         <label><span>{fr.equipment.purchaseDate}</span><input type="date" value={form.purchase_date} onChange={(event) => update('purchase_date', event.target.value)} /></label>
+        <label><span>{fr.assets.supplier}</span><input value={form.supplier} onChange={(event) => update('supplier', event.target.value)} /></label>
+        <label><span>{fr.equipment.origin}</span><input value={form.origin} onChange={(event) => update('origin', event.target.value)} /></label>
         <label><span>{fr.equipment.condition}</span><SearchableSelect ariaLabel={fr.equipment.condition} value={form.condition} onChange={(value) => update('condition', value)} placeholder={fr.common.toComplete} options={catalogOptions(options.catalogs, 'equipment_condition').map((option) => ({ value: option.code, label: catalogLabel(options.catalogs, 'equipment_condition', option.code) }))} /></label>
       </div></InventoryFormSection>
       {category.fields.length > 0 && <InventoryFormSection title={fr.assets.specifications} icon="specifications"><div className="maintenance-form-grid asset-form-grid-3">

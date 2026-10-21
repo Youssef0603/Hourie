@@ -23,6 +23,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'registration_number',
     'manufacture_year',
     'purchase_date',
+    'supplier',
+    'origin',
     'condition',
     'observations',
     'asset_details',

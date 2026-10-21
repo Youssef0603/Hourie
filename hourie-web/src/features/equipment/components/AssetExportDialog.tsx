@@ -10,6 +10,7 @@ export function AssetExportDialog({
   defaultFields,
   isExporting,
   error,
+  scopeOption,
   onClose,
   onExport,
 }: {
@@ -19,6 +20,11 @@ export function AssetExportDialog({
   defaultFields: string[]
   isExporting: boolean
   error: string | null
+  scopeOption?: {
+    label: string
+    checked: boolean
+    onChange: (checked: boolean) => void
+  }
   onClose: () => void
   onExport: (fields: string[]) => void
 }) {
@@ -39,6 +45,14 @@ export function AssetExportDialog({
     <form className="asset-export-form" onSubmit={submit}>
       <p>{fr.assets.exportDescription}</p>
       {error && <p className="form-alert" role="alert">{error}</p>}
+      {scopeOption && <label className="asset-export-scope-option">
+        <input
+          type="checkbox"
+          checked={scopeOption.checked}
+          onChange={(event) => scopeOption.onChange(event.target.checked)}
+        />
+        <span>{scopeOption.label}</span>
+      </label>}
       <div className="asset-export-selection-actions">
         <button type="button" onClick={() => setSelectedFields(fields.map((field) => field.key))}>{fr.assets.exportSelectAll}</button>
         <button type="button" onClick={() => setSelectedFields([])}>{fr.assets.exportClear}</button>
