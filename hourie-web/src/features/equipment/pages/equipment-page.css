@@ -793,6 +793,19 @@ html[dir="rtl"] .filter-bar .search-field input {
   position: relative;
 }
 
+.search-field.has-custom-clear input[type="search"]::-webkit-search-cancel-button {
+  display: none;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.search-field.has-custom-clear input[type="search"]::-ms-clear,
+.search-field.has-custom-clear input[type="search"]::-ms-reveal {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
 .search-clear-button {
   position: absolute;
   top: 50%;
@@ -817,6 +830,11 @@ html[dir="rtl"] .filter-bar .search-field input {
 .search-clear-button svg {
   width: 0.9rem;
   height: 0.9rem;
+  fill: none;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
 }
 
 html[dir="rtl"] .search-clear-button {
@@ -6200,6 +6218,38 @@ html[dir="rtl"] .maintenance-form-grid select {
     background: white;
   }
 
+  .user-menu .workspace-settings-button {
+    width: 2.15rem;
+    min-width: 2.15rem;
+    height: 2.15rem;
+    min-height: 2.15rem;
+    justify-content: center;
+    border-color: rgb(255 255 255 / 42%);
+    border-radius: 50%;
+    padding: 0;
+    color: white;
+    background: rgb(255 255 255 / 14%);
+  }
+
+  .user-menu .workspace-settings-button > span {
+    display: none;
+  }
+
+  .user-menu .workspace-settings-button:hover,
+  .user-menu .workspace-settings-button:focus-visible {
+    border-color: white;
+    color: white;
+    background: rgb(255 255 255 / 24%);
+  }
+
+  .user-menu .workspace-settings-button.active,
+  .user-menu .workspace-settings-button.active:hover,
+  .user-menu .workspace-settings-button.active:focus-visible {
+    border-color: white;
+    color: var(--color-primary);
+    background: white;
+  }
+
   .user-menu .language-switch-track,
   .user-menu .language-switch[aria-checked="true"] .language-switch-track {
     background: rgb(255 255 255 / 30%);
@@ -8442,12 +8492,6 @@ html[dir="rtl"] .insurance-filter-content .searchable-select-input {
 
   .user-menu .workspace-settings-button {
     width: 2.15rem;
-    justify-content: center;
-    padding: 0;
-  }
-
-  .workspace-settings-button > span {
-    display: none;
   }
 
   .asset-category-card {

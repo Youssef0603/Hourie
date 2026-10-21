@@ -74,6 +74,7 @@ class UpdateEquipmentRequest extends FormRequest
             $rules['generator_details.tank_capacity_litres'] = ['present', 'nullable', 'numeric', 'min:0'];
             $rules['generator_details.current_engine_hours'] = ['present', 'nullable', 'numeric', 'min:0'];
             $rules['generator_details.purchase_price_fcfa'] = ['sometimes', 'nullable', 'numeric', 'min:0', 'max:9999999999999.99'];
+            $rules['generator_details.purchase_price_currency'] = ['sometimes', 'string', Rule::in(['XOF', 'EUR', 'USD'])];
             $rules['generator_details.sold_to'] = ['sometimes', 'nullable', 'string', 'max:255'];
         }
 

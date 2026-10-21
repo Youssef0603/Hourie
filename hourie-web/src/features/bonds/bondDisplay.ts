@@ -1,4 +1,5 @@
 import type { Bond, BondStatus, BondType } from './types'
+import { formatMoney } from '../../shared/formatMoney'
 import { operationPhrase, operationsLocale } from '../../i18n/operations'
 
 export const bondTypeOptions: { value: BondType }[] = [
@@ -22,7 +23,7 @@ export function formatBondDate(value: string | null) {
 }
 
 export function formatBondAmount(value: string | number | null, currency = 'XOF') {
-  return `${Number(value ?? 0).toLocaleString('en-US')} ${currency === 'XOF' ? 'FCFA' : currency}`
+  return formatMoney(value ?? 0, currency)
 }
 
 export function getBondStatus(bond: Bond): BondStatus {

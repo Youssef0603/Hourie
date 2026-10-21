@@ -25,6 +25,7 @@ class UpdateSiteRequest extends FormRequest
 
         return [
             'name' => ['required', 'string', 'max:255', Rule::unique('projects', 'name')->where('is_active', true)->ignore($site)],
+            'code' => ['nullable', 'string', 'max:50', 'regex:/^\d+$/', Rule::unique('projects', 'code')->ignore($site)],
             'status' => ['required', $this->projectStatusRule()],
             'responsible_employee_id' => ['nullable', 'integer', Rule::exists('employees', 'id')->where('is_active', true)],
             'address' => ['nullable', 'string', 'max:255'],

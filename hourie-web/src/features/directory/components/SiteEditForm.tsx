@@ -20,6 +20,7 @@ export function SiteEditForm({ site, catalogs, employees, formId, hideSubmit = f
   onSaved: (site: Site) => void
 }) {
   const [name, setName] = useState(site.name)
+  const [code, setCode] = useState(site.code ?? '')
   const [status, setStatus] = useState(site.status)
   const [address, setAddress] = useState(site.address ?? '')
   const [startDate, setStartDate] = useState(site.start_date ?? '')
@@ -42,6 +43,7 @@ export function SiteEditForm({ site, catalogs, employees, formId, hideSubmit = f
     try {
       onSaved(await updateSite(site.id, {
         name: name.trim(),
+        code: code.trim() || null,
         status,
         address: address.trim() || null,
         start_date: startDate || null,
@@ -62,6 +64,7 @@ export function SiteEditForm({ site, catalogs, employees, formId, hideSubmit = f
       {error && <div className="form-alert" role="alert">{error}</div>}
       <div className="maintenance-form-grid site-form-grid">
         <label><span>{fr.directory.siteName}</span><input required disabled={isSaving} value={name} onChange={(event) => setName(event.target.value)} /></label>
+        <label><span>{fr.directory.costCode}</span><input inputMode="numeric" pattern="[0-9]+" disabled={isSaving} value={code} onChange={(event) => setCode(event.target.value)} /></label>
         <label><span>{fr.directory.siteStatus}</span><SearchableSelect ariaLabel={fr.directory.siteStatus} disabled={isSaving} value={status} onChange={setStatus} placeholder={fr.common.toComplete} includeEmpty={false} options={[...(currentStatusIsUnavailable ? [{ value: status, label: catalogLabel(catalogs, 'project_status', status) }] : []), ...availableStatuses.map((option) => ({ value: option.code, label: catalogLabel(catalogs, 'project_status', option.code) }))]} /></label>
         <label><span>{fr.directory.siteResponsible}</span><SearchableSelect ariaLabel={fr.directory.siteResponsible} disabled={isSaving} value={responsibleEmployeeId} onChange={setResponsibleEmployeeId} placeholder={fr.directory.selectResponsible} options={employees.map((employee) => ({ value: String(employee.id), label: employee.name }))} /></label>
         <label><span>{fr.directory.siteAddress}</span><input disabled={isSaving} value={address} onChange={(event) => setAddress(event.target.value)} /></label>

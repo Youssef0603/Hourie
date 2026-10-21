@@ -24,14 +24,14 @@ export function EquipmentCoverageDetails({
   return (
     <>
       {showInsurance && (
-        <EquipmentDetailSection title="Assurance" icon="invoice" defaultOpen>
+        <EquipmentDetailSection title="Assurance" icon="invoice" defaultOpen={equipment.insurance_policies.length > 0}>
           <EquipmentInsuranceCoverage
             policies={equipment.insurance_policies}
             onOpenPolicy={readOnly ? undefined : (id) => onOpenRecord({ type: "insurance", id })}
           />
         </EquipmentDetailSection>
       )}
-      <EquipmentDetailSection title="Admission temporaire" icon="identification" defaultOpen>
+      <EquipmentDetailSection title="Admission temporaire" icon="identification" defaultOpen={equipment.temporary_admissions.length > 0}>
         <EquipmentTemporaryAdmissions
           admissions={equipment.temporary_admissions}
           onOpenAdmission={readOnly ? undefined : (id) => onOpenRecord({ type: "temporary-admission", id })}

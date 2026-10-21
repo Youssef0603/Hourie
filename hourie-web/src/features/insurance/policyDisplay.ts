@@ -1,4 +1,5 @@
 import type { InsuranceKind, InsurancePolicy } from './types'
+import { formatAmount } from '../../shared/formatMoney'
 import { operationsLocale, operationsText } from '../../i18n/operations'
 
 export const insuranceTypes: Array<{ code: InsuranceKind }> = [
@@ -13,7 +14,7 @@ export function insuranceTypeLabel(type: InsuranceKind) {
 }
 
 export function formatInsuranceAmount(amount: string | number | null) {
-  return `${Number(amount ?? 0).toLocaleString('en-US')}`
+  return formatAmount(amount ?? 0)
 }
 
 export function formatInsuranceMoney(amount: string | null) {

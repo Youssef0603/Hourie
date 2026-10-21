@@ -5,6 +5,7 @@ export type ProjectStatus = string
 export type Site = {
   id: number
   name: string
+  code: string | null
   status: ProjectStatus
   address: string | null
   start_date: string | null
@@ -31,6 +32,7 @@ export type SiteChange = {
 
 export type CreateSitePayload = {
   name: string
+  code: string | null
   status: ProjectStatus
   address: string | null
   start_date: string | null

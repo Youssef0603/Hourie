@@ -4,7 +4,7 @@ import { ActionIcon } from '../../../shared/components/ActionIcon'
 import { SearchableSelect } from '../../../shared/components/SearchableSelect'
 import { catalogLabel, catalogOptions } from '../catalogs'
 import { assetFieldLabel, type AssetCategoryCode, type AssetField } from '../assetCategories'
-import { locationOptionLabel } from '../locationLabel'
+import { filterableLocationOptions, locationOptionLabel } from '../locationLabel'
 import type { EquipmentFilterOptions, EquipmentFilters } from '../types'
 
 type AssetFilterDrawerProps = {
@@ -19,11 +19,7 @@ type AssetFilterDrawerProps = {
 }
 
 export function AssetFilterDrawer({ categoryCode, fields, filters, language, options, onChange, onClose, fixedProject = false }: AssetFilterDrawerProps) {
-  const physicalLocations = (options?.locations ?? []).filter((location) => (
-    filters.project_id === ''
-      ? location.parent_id !== null || location.location_type === 'company_location'
-      : location.parent_id !== null && String(location.project_id) === filters.project_id
-  ))
+  const physicalLocations = filterableLocationOptions(options?.locations ?? [], filters.project_id)
   const field = (name: keyof EquipmentFilters) => ({
     value: String(filters[name]),
     onChange: (event: ChangeEvent<HTMLInputElement>) => onChange(name, event.target.value),

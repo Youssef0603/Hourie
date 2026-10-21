@@ -66,6 +66,7 @@ export type GeneratorDetails = {
   tank_capacity_litres: string | null;
   current_engine_hours: string | null;
   purchase_price_fcfa: string | null;
+  purchase_price_currency?: "XOF" | "EUR" | "USD" | null;
   sold_to: string | null;
 };
 

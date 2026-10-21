@@ -132,7 +132,7 @@ export function GeneratorTechnicalDetails({
       </div>
       <div><dt>{fr.equipment.tank}</dt><dd>{displayedValue(details.tank_capacity_litres)}</dd></div>
       <div><dt>{fr.equipment.engineHours}</dt><dd>{displayedValue(details.current_engine_hours)}</dd></div>
-      <div><dt>{fr.equipment.purchasePrice}</dt><dd>{details.purchase_price_fcfa === null ? fr.common.notProvided : formatMoney(details.purchase_price_fcfa)}</dd></div>
+      <div><dt>{fr.equipment.purchasePrice}</dt><dd>{details.purchase_price_fcfa === null ? fr.common.notProvided : formatMoney(details.purchase_price_fcfa, details.purchase_price_currency ?? "XOF")}</dd></div>
     </dl>
   );
 }

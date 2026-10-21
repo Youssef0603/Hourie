@@ -30,7 +30,7 @@ export function AddGeneratorForm({ options, initialProjectId, onCreated, formId 
     project_id: initialProjectId?.toString() ?? '', current_location_id: '', custodian_employee_id: '',
     apparent_power_kva: '', active_power_kw: '', phases: '', voltage_rating: '', frequency_hz: '',
     current_rating: '', fuel_type: '', tank_capacity_litres: '', current_engine_hours: '', observations: '',
-    purchase_price_fcfa: '', sold_to: '',
+    purchase_price_fcfa: '', purchase_price_currency: 'XOF', sold_to: '',
   })
   const [, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -76,7 +76,8 @@ export function AddGeneratorForm({ options, initialProjectId, onCreated, formId 
           phases: text(form.phases), voltage_rating: text(form.voltage_rating), frequency_hz: number(form.frequency_hz),
           current_rating: text(form.current_rating), fuel_type: text(form.fuel_type),
           tank_capacity_litres: number(form.tank_capacity_litres), current_engine_hours: number(form.current_engine_hours),
-          purchase_price_fcfa: number(form.purchase_price_fcfa), sold_to: formConditionIsSold(options.catalogs, form.condition) ? text(form.sold_to) : null,
+          purchase_price_fcfa: number(form.purchase_price_fcfa), purchase_price_currency: form.purchase_price_currency,
+          sold_to: formConditionIsSold(options.catalogs, form.condition) ? text(form.sold_to) : null,
         },
       })
       savedEquipment = equipment
@@ -128,7 +129,7 @@ export function AddGeneratorForm({ options, initialProjectId, onCreated, formId 
         <label><span>{fr.equipment.current}</span><input value={form.current_rating} onChange={(event) => update('current_rating', event.target.value)} /></label>
         <label><span>{fr.equipment.fuel}</span><SearchableSelect ariaLabel={fr.equipment.fuel} value={form.fuel_type} onChange={(value) => update('fuel_type', value)} placeholder={fr.common.toComplete} options={catalogOptions(options.catalogs, 'fuel_type').map((option) => ({ value: option.code, label: catalogLabel(options.catalogs, 'fuel_type', option.code) }))} /></label>
         <label><span>{fr.equipment.tank}</span><input type="number" min="0" step="0.01" value={form.tank_capacity_litres} onChange={(event) => update('tank_capacity_litres', event.target.value)} /></label>
-        <label><span>{fr.equipment.purchasePrice}</span><input type="number" min="0" step="1" value={form.purchase_price_fcfa} onChange={(event) => update('purchase_price_fcfa', event.target.value)} /></label>
+        <label><span>{fr.equipment.purchasePrice}</span><span className="price-input"><input type="number" min="0" step="0.01" value={form.purchase_price_fcfa} onChange={(event) => update('purchase_price_fcfa', event.target.value)} /><SearchableSelect ariaLabel={`${fr.equipment.purchasePrice} currency`} value={form.purchase_price_currency} onChange={(value) => update('purchase_price_currency', value)} placeholder="FCFA" includeEmpty={false} options={[{ value: 'XOF', label: 'FCFA' }, { value: 'EUR', label: 'EUR' }, { value: 'USD', label: 'USD' }]} /></span></label>
         <label><span>{fr.equipment.engineHours}</span><input type="number" min="0" step="0.01" value={form.current_engine_hours} onChange={(event) => update('current_engine_hours', event.target.value)} /></label>
       </div></InventoryFormSection>
       <InventoryFormSection title={fr.equipment.observations} icon="note"><div className="maintenance-form-grid"><label className="field-wide"><span>{fr.equipment.observations}</span><textarea rows={3} value={form.observations} onChange={(event) => update('observations', event.target.value)} /></label></div></InventoryFormSection>

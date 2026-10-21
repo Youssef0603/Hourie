@@ -63,6 +63,8 @@ export function PeoplePage({
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("");
   const [activityFilter, setActivityFilter] = useState<ActivityFilter>("");
   const [jobTitleFilter, setJobTitleFilter] = useState("");
+  const [projectFilter, setProjectFilter] = useState("");
+  const [companyLocationFilter, setCompanyLocationFilter] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -99,10 +101,12 @@ export function PeoplePage({
           : person.user === null)) &&
       (roleFilter === "" || person.user?.role === roleFilter) &&
       (jobTitleFilter === "" || person.job_title === jobTitleFilter) &&
+      (projectFilter === "" || String(person.current_project?.id) === projectFilter) &&
+      (companyLocationFilter === "" || String(person.current_company_location?.id) === companyLocationFilter) &&
       (activityFilter === "" ||
         (activityFilter === "active" ? person.is_active : !person.is_active)),
   );
-  const activeFilterCount = [accessFilter, roleFilter, jobTitleFilter, activityFilter].filter(
+  const activeFilterCount = [accessFilter, roleFilter, jobTitleFilter, activityFilter, projectFilter, companyLocationFilter].filter(
     Boolean,
   ).length;
   const page = pagination?.current_page ?? currentPage;
@@ -121,6 +125,8 @@ export function PeoplePage({
         ...(roleFilter ? { role: roleFilter } : {}),
         ...(jobTitleFilter ? { job_title: jobTitleFilter } : {}),
         ...(activityFilter ? { activity: activityFilter } : {}),
+        ...(projectFilter ? { project_id: projectFilter } : {}),
+        ...(companyLocationFilter ? { company_location_id: companyLocationFilter } : {}),
       });
       setPeople(response.data ?? []);
       setPagination(response.meta ?? null);
@@ -130,7 +136,7 @@ export function PeoplePage({
     } finally {
       setIsRefreshing(false);
     }
-  }, [accessFilter, activityFilter, jobTitleFilter, roleFilter, search]);
+  }, [accessFilter, activityFilter, companyLocationFilter, jobTitleFilter, projectFilter, roleFilter, search]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => void loadPeople(1), 200);
@@ -272,6 +278,8 @@ export function PeoplePage({
                   setRoleFilter("");
                   setJobTitleFilter("");
                   setActivityFilter("");
+                  setProjectFilter("");
+                  setCompanyLocationFilter("");
                   setCurrentPage(1);
                 }}
               >
@@ -286,7 +294,11 @@ export function PeoplePage({
             roleFilter={roleFilter}
             jobTitleFilter={jobTitleFilter}
             activityFilter={activityFilter}
+            projectFilter={projectFilter}
+            companyLocationFilter={companyLocationFilter}
             catalogs={catalogs}
+            projects={projects}
+            companyLocations={companyLocations}
             onAccessChange={(value) => {
               setAccessFilter(value);
               setCurrentPage(1);
@@ -301,6 +313,16 @@ export function PeoplePage({
             }}
             onActivityChange={(value) => {
               setActivityFilter(value);
+              setCurrentPage(1);
+            }}
+            onProjectChange={(value) => {
+              setProjectFilter(value);
+              if (value !== "") setCompanyLocationFilter("");
+              setCurrentPage(1);
+            }}
+            onCompanyLocationChange={(value) => {
+              setCompanyLocationFilter(value);
+              if (value !== "") setProjectFilter("");
               setCurrentPage(1);
             }}
             onClose={() => setShowFilters(false)}

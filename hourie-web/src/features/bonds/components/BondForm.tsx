@@ -199,7 +199,7 @@ export function BondForm({
                 {operationPhrase("Montant")}
                 <input
                   inputMode="numeric"
-                  value={Number(amount || 0).toLocaleString("en-US")}
+                  value={Number(amount || 0).toLocaleString("fr-FR")}
                   onChange={(event) =>
                     setAmount(event.target.value.replace(/[^\d]/g, ""))
                   }

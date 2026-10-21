@@ -33,6 +33,7 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, catalogs, emplo
   const [isRefreshing, setIsRefreshing] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [name, setName] = useState('')
+  const [code, setCode] = useState('')
   const [address, setAddress] = useState('')
   const [status, setStatus] = useState<ProjectStatus>('')
   const [startDate, setStartDate] = useState('')
@@ -76,6 +77,7 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, catalogs, emplo
     try {
       const site = await createSite({
         name: name.trim(),
+        code: code.trim() || null,
         address: address.trim() || null,
         status: status || projectStatusOptions[0]?.code || '',
         start_date: startDate || null,
@@ -86,6 +88,7 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, catalogs, emplo
       })
       setSites((current) => [...current, site].sort((a, b) => a.name.localeCompare(b.name)))
       setName('')
+      setCode('')
       setAddress('')
       setStatus('')
       setStartDate('')
@@ -134,7 +137,7 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, catalogs, emplo
   const selectedProjectStatus = status || projectStatusOptions[0]?.code || ''
   const searchTerm = search.trim().toLocaleLowerCase('fr-FR')
   const visibleSites = searchTerm
-    ? sites.filter((site) => [site.name, site.address, site.responsible?.name].filter(Boolean).join(' ').toLocaleLowerCase('fr-FR').includes(searchTerm))
+    ? sites.filter((site) => [site.name, site.code, site.address, site.responsible?.name].filter(Boolean).join(' ').toLocaleLowerCase('fr-FR').includes(searchTerm))
     : sites
   const page = pagination?.current_page ?? currentPage
   const totalPages = pagination?.last_page ?? 1
@@ -151,6 +154,7 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, catalogs, emplo
             <div className="asset-form-layout">
             <section className="asset-form-section"><div className="asset-form-section-heading"><div><strong>{fr.directory.siteInformation}</strong></div></div><div className="maintenance-form-grid site-form-grid asset-form-grid-3">
               <label><span>{fr.directory.siteName}</span><input required value={name} onChange={(event) => setName(event.target.value)} /></label>
+              <label><span>{fr.directory.costCode}</span><input inputMode="numeric" pattern="[0-9]+" value={code} onChange={(event) => setCode(event.target.value)} /></label>
               <label><span>{fr.directory.siteStatus}</span><SearchableSelect ariaLabel={fr.directory.siteStatus} value={selectedProjectStatus} onChange={(value) => setStatus(value as ProjectStatus)} placeholder={fr.common.toComplete} includeEmpty={false} options={projectStatusOptions.map((option) => ({ value: option.code, label: catalogLabel(catalogs, 'project_status', option.code) }))} /></label>
               <label><span>{fr.directory.siteResponsible}</span><SearchableSelect ariaLabel={fr.directory.siteResponsible} value={responsibleEmployeeId} onChange={setResponsibleEmployeeId} placeholder={fr.directory.selectResponsible} options={employees.map((employee) => ({ value: String(employee.id), label: employee.name }))} /></label>
               <label><span>{fr.directory.siteAddress}</span><input value={address} onChange={(event) => setAddress(event.target.value)} /></label>
@@ -190,6 +194,7 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, catalogs, emplo
               <h3><ActionIcon name="identification" />Informations principales</h3>
               <dl className="site-details-facts">
                 <div><dt>État</dt><dd><span className={`project-status project-status-${selectedSite.status}`} style={catalogBadgeStyle(catalogs, 'project_status', selectedSite.status)}>{catalogLabel(catalogs, 'project_status', selectedSite.status)}</span></dd></div>
+                <div><dt>{fr.directory.costCode}</dt><dd>{selectedSite.code ?? fr.common.notProvided}</dd></div>
                 <div><dt>{fr.directory.siteResponsible}</dt><dd>{selectedSite.responsible?.name ?? fr.common.notAssigned}</dd></div>
                 <div><dt>{fr.directory.siteAddress}</dt><dd>{selectedSite.address ?? fr.common.notProvided}</dd></div>
                 <div><dt>{fr.directory.assignedAssets}</dt><dd className="site-details-count">{selectedSite.active_equipment_count}</dd></div>
@@ -235,7 +240,7 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, catalogs, emplo
         <div className="filter-bar">
           <label className="search-field">
             <span>{fr.equipment.search}</span>
-            <input type="search" value={search} onChange={(event) => { setSearch(event.target.value); setCurrentPage(1) }} placeholder="Rechercher un site, une adresse ou un responsable" />
+            <input type="search" value={search} onChange={(event) => { setSearch(event.target.value); setCurrentPage(1) }} placeholder="Rechercher un site, un code, une adresse ou un responsable" />
           </label>
           <div className="filter-toolbar-actions">
             {canAdd && <button className="table-refresh-button table-add-button" type="button" onClick={() => setShowForm(true)} aria-label={fr.directory.addSite} title={fr.directory.addSite}><ActionIcon name="add" /></button>}
@@ -244,9 +249,10 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, catalogs, emplo
         </div>
         {!isRefreshing && visibleSites.length > 0 && <>
           <DataTable className="asset-inventory-table" ariaLabel={fr.directory.sites}>
-              <thead><tr><th>Site / projet</th><th>{fr.directory.siteResponsible}</th><th>{fr.directory.siteAddress}</th><th>{fr.directory.assignedAssets}</th><th>{fr.directory.startDate}</th><th>{fr.directory.expectedEndDate}</th><th>État</th></tr></thead>
+              <thead><tr><th>Site / projet</th><th>{fr.directory.costCode}</th><th>{fr.directory.siteResponsible}</th><th>{fr.directory.siteAddress}</th><th>{fr.directory.assignedAssets}</th><th>{fr.directory.startDate}</th><th>{fr.directory.expectedEndDate}</th><th>État</th></tr></thead>
               <tbody>{visibleSites.map((site) => <tr key={site.id} tabIndex={0} onClick={() => openSiteDetails(site)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openSiteDetails(site) } }}>
                 <td><strong>{site.name}</strong></td>
+                <td>{site.code ?? fr.common.notProvided}</td>
                 <td>{site.responsible?.name ?? fr.common.notAssigned}</td>
                 <td>{site.address ?? fr.common.notProvided}</td>
                 <td>{site.active_equipment_count}</td>

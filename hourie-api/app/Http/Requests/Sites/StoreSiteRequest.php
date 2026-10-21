@@ -18,6 +18,7 @@ class StoreSiteRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255', Rule::unique('projects', 'name')->where('is_active', true)],
+            'code' => ['nullable', 'string', 'max:50', 'regex:/^\d+$/', Rule::unique('projects', 'code')],
             'status' => ['required', Rule::exists('catalog_options', 'code')->where(fn ($query) => $query->where('group', 'project_status')->where('is_active', true))],
             'responsible_employee_id' => ['nullable', 'integer', Rule::exists('employees', 'id')->where('is_active', true)],
             'address' => ['nullable', 'string', 'max:255'],

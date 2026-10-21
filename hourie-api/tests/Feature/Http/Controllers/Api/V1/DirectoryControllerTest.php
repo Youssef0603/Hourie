@@ -39,6 +39,39 @@ it('lists sites and personnel for authenticated users', function () {
         ->assertJsonMissingPath('data.0.health_insurance_policies');
 });
 
+it('filters personnel by current site or company location', function () {
+    $viewer = User::factory()->create(['role' => UserRole::Viewer]);
+    $project = Project::factory()->create(['name' => 'BASSAM']);
+    $bureau = Location::factory()->create([
+        'project_id' => null,
+        'parent_id' => null,
+        'name' => 'BUREAU',
+        'location_type' => 'company_location',
+        'is_active' => true,
+    ]);
+    $siteEmployee = Employee::factory()->create(['name' => 'Employé Bassam']);
+    $siteEmployee->projectAssignments()->create([
+        'project_id' => $project->id,
+        'project_role' => 'Chef de chantier',
+    ]);
+    Employee::factory()->create([
+        'name' => 'Employé Bureau',
+        'company_location_id' => $bureau->id,
+    ]);
+
+    $this->actingAs($viewer, 'web')
+        ->getJson('/api/v1/employees?project_id='.$project->id)
+        ->assertOk()
+        ->assertJsonPath('meta.total', 1)
+        ->assertJsonPath('data.0.name', 'Employé Bassam');
+
+    $this->actingAs($viewer, 'web')
+        ->getJson('/api/v1/employees?company_location_id='.$bureau->id)
+        ->assertOk()
+        ->assertJsonPath('meta.total', 1)
+        ->assertJsonPath('data.0.name', 'Employé Bureau');
+});
+
 it('prevents viewers from adding sites', function () {
     $viewer = User::factory()->create(['role' => UserRole::Viewer]);
 
@@ -52,10 +85,33 @@ it('allows CMS managers to add sites', function () {
 
     $this->actingAs($cmsManager, 'web')->postJson('/api/v1/sites', [
         'name' => 'ABIDJAN NORD',
+        'code' => '821',
         'status' => 'active',
         'responsible_employee_id' => $responsible->id,
         'locations' => ['BASE'],
-    ])->assertCreated();
+    ])->assertCreated()
+        ->assertJsonPath('data.code', '821');
+
+    $this->assertDatabaseHas('projects', ['name' => 'ABIDJAN NORD', 'code' => '821']);
+});
+
+it('requires unique numeric site cost codes', function () {
+    $cmsManager = User::factory()->create(['role' => UserRole::CmsManager]);
+    Project::factory()->create(['code' => '815']);
+
+    $payload = [
+        'name' => 'NOUVEAU SITE',
+        'status' => 'active',
+        'locations' => [],
+    ];
+
+    $this->actingAs($cmsManager, 'web')->postJson('/api/v1/sites', [...$payload, 'code' => '815'])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['code']);
+
+    $this->actingAs($cmsManager, 'web')->postJson('/api/v1/sites', [...$payload, 'code' => 'BASSAM'])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['code']);
 });
 
 it('allows CMS managers to add a site without physical locations', function () {

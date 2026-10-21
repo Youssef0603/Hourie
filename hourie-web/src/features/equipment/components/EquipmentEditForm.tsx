@@ -44,6 +44,7 @@ type FormState = {
   tank_capacity_litres: string
   current_engine_hours: string
   purchase_price_fcfa: string
+  purchase_price_currency: string
   sold_to: string
 }
 
@@ -73,6 +74,7 @@ function initialForm(equipment: Equipment): FormState {
     tank_capacity_litres: details?.tank_capacity_litres ?? '',
     current_engine_hours: details?.current_engine_hours ?? '',
     purchase_price_fcfa: details?.purchase_price_fcfa ?? '',
+    purchase_price_currency: details?.purchase_price_currency ?? 'XOF',
     sold_to: details?.sold_to ?? '',
   }
 }
@@ -150,6 +152,7 @@ export function EquipmentEditForm({ equipment, employees, projects, locations, c
           tank_capacity_litres: number(form.tank_capacity_litres),
           current_engine_hours: number(form.current_engine_hours),
           purchase_price_fcfa: number(form.purchase_price_fcfa),
+          purchase_price_currency: form.purchase_price_currency,
           sold_to: conditionIsSold(catalogs, form.condition) ? text(form.sold_to) : null,
         },
       })
@@ -196,7 +199,7 @@ export function EquipmentEditForm({ equipment, employees, projects, locations, c
         <label><span>{fr.equipment.fuel}</span><SearchableSelect ariaLabel={fr.equipment.fuel} value={form.fuel_type} onChange={(value) => update('fuel_type', value)} placeholder={fr.common.notProvided} options={[...(currentFuelIsUnavailable ? [{ value: form.fuel_type, label: form.fuel_type }] : []), ...availableFuelTypes.map((option) => ({ value: option.code, label: catalogLabel(catalogs, 'fuel_type', option.code) }))]} /></label>
         <label><span>{fr.equipment.tank}</span><input min="0" step="0.01" type="number" value={form.tank_capacity_litres} onChange={(event) => update('tank_capacity_litres', event.target.value)} /></label>
         <label className="field-wide"><span>{fr.equipment.engineHours}</span><input min="0" step="0.01" type="number" value={form.current_engine_hours} onChange={(event) => update('current_engine_hours', event.target.value)} /></label>
-        <label><span>{fr.equipment.purchasePrice}</span><input min="0" step="1" type="number" value={form.purchase_price_fcfa} onChange={(event) => update('purchase_price_fcfa', event.target.value)} /></label>
+        <label><span>{fr.equipment.purchasePrice}</span><span className="price-input"><input min="0" step="0.01" type="number" value={form.purchase_price_fcfa} onChange={(event) => update('purchase_price_fcfa', event.target.value)} /><SearchableSelect ariaLabel={`${fr.equipment.purchasePrice} currency`} value={form.purchase_price_currency} onChange={(value) => update('purchase_price_currency', value)} placeholder="FCFA" includeEmpty={false} options={[{ value: 'XOF', label: 'FCFA' }, { value: 'EUR', label: 'EUR' }, { value: 'USD', label: 'USD' }]} /></span></label>
         <label className="field-wide"><span>{fr.equipment.observations}</span><textarea rows={4} value={form.observations} onChange={(event) => update('observations', event.target.value)} /></label>
       </div>
       {!forceOpen && <div className="maintenance-form-actions"><button className="primary-button save-button" type="submit" disabled={isSaving}>{isSaving ? <LoadingSpinner compact label={fr.common.saving} /> : fr.common.save}</button></div>}

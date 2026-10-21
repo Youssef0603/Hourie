@@ -30,6 +30,7 @@ class GeneratorDetailFactory extends Factory
             'tank_capacity_litres' => null,
             'current_engine_hours' => null,
             'purchase_price_fcfa' => null,
+            'purchase_price_currency' => 'XOF',
         ];
     }
 }

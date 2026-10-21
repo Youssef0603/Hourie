@@ -52,6 +52,14 @@ class EmployeeController extends Controller
             ->when($request->string('access')->toString() === 'without_access', fn ($query) => $query->whereNull('user_id'))
             ->when($request->filled('role'), fn ($query) => $query->whereHas('user', fn ($user) => $user->where('role', $request->string('role')->toString())))
             ->when($request->filled('job_title'), fn ($query) => $query->where('job_title', $request->string('job_title')->toString()))
+            ->when($request->filled('project_id'), fn ($query) => $query->whereHas(
+                'currentProjectAssignment',
+                fn ($assignment) => $assignment->where('project_id', $request->integer('project_id')),
+            ))
+            ->when($request->filled('company_location_id'), fn ($query) => $query->where(
+                'company_location_id',
+                $request->integer('company_location_id'),
+            ))
             ->with([
                 'user:id,username,email,role',
                 'currentProjectAssignment.project:id,name',

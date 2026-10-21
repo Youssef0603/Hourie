@@ -25,6 +25,7 @@ import {
   isAssetCategoryCode,
 } from "../assetCategories";
 import { advancedFilterKeys, initialFilters } from "../filters";
+import { filterableLocationOptions } from "../locationLabel";
 import { SiteEditForm } from "../../directory/components/SiteEditForm";
 import { deleteSite, getSite } from "../../directory/api";
 import type { Site } from "../../directory/types";
@@ -510,11 +511,9 @@ export function EquipmentPage({
   const advancedFilterCount =
     advancedFilterKeys.filter((key) => filters[key] !== "").length +
     (isSiteView && filters.category !== "" ? 1 : 0);
-  const physicalLocationOptions = (options?.locations ?? []).filter(
-    (location) =>
-      location.parent_id !== null &&
-      (filters.project_id === "" ||
-        String(location.project_id) === filters.project_id),
+  const physicalLocationOptions = filterableLocationOptions(
+    options?.locations ?? [],
+    filters.project_id,
   );
   function openSiteInventory(site: Site) {
     setSiteContext(site);
@@ -777,7 +776,7 @@ export function EquipmentPage({
               aria-label={fr.equipment.title}
             >
               <div className="filter-bar">
-                <div className="search-field">
+                <div className="search-field has-custom-clear">
                   <label htmlFor="equipment-search">
                     {fr.equipment.search}
                   </label>

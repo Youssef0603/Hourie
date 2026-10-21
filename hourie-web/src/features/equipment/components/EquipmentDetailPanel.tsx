@@ -82,6 +82,27 @@ export function EquipmentDetailPanel({
   const canDeleteEquipment = !readOnly && user.permissions.delete_equipment;
   const canManageMaintenance = !readOnly && user.permissions.manage_maintenance;
   const canDeleteMaintenance = !readOnly && user.permissions.delete_maintenance;
+  const transferChanges = selected?.changes.filter((change) => change.source === "transfer") ?? [];
+  const hasAssignment = selected !== null && Boolean(
+    selected.current_project_assignment || selected.current_location || selected.responsible,
+  );
+  const hasIdentification = selected !== null && [
+    selected.serial_number,
+    selected.registration_number,
+    selected.model,
+    selected.manufacture_year,
+    selected.purchase_date,
+    selected.supplier,
+    selected.origin,
+    selected.condition,
+    selected.generator_details?.sold_to,
+  ].some(hasDetailValue);
+  const hasSpecifications = selected !== null && (assetDefinition?.fields.some(
+    (field) => hasDetailValue(selected.asset_details?.[field.key]),
+  ) ?? false);
+  const hasTechnicalDetails = selected?.generator_details
+    ? Object.values(selected.generator_details).some(hasDetailValue)
+    : false;
 
   if (isEditingEquipment && selected && options) {
     return (
@@ -123,7 +144,7 @@ export function EquipmentDetailPanel({
           ) : selected && (
             <>
               <DetailHeader equipment={selected} onClose={onClose} />
-              <div className="detail-content">
+              <div className="detail-content" key={selected.id}>
                 <DetailActions
                   isOtherAsset={isOtherAsset}
                   canManage={canManageEquipment && options !== null}
@@ -134,13 +155,13 @@ export function EquipmentDetailPanel({
                   onHistory={openHistory}
                 />
 
-                <EquipmentDetailSection title={fr.equipment.assignment} icon="location" defaultOpen className="detail-assignment">
+                <EquipmentDetailSection title={fr.equipment.assignment} icon="location" defaultOpen={hasAssignment} className="detail-assignment">
                   <EquipmentAssignmentDetails equipment={selected} categoryCode={categoryCode} />
                 </EquipmentDetailSection>
 
-                <EquipmentDetailSection title={fr.equipment.transferHistory} icon="transfer" defaultOpen className="detail-transfer-history">
+                <EquipmentDetailSection title={fr.equipment.transferHistory} icon="transfer" defaultOpen={transferChanges.length > 0} className="detail-transfer-history">
                   <GeneratorTransferHistory
-                    changes={selected.changes.filter((change) => change.source === "transfer")}
+                    changes={transferChanges}
                     canManage={canManageEquipment}
                     onRemove={async (changeId) => {
                       onChanged(await removeEquipmentTransfer(selected.id, changeId));
@@ -148,7 +169,7 @@ export function EquipmentDetailPanel({
                   />
                 </EquipmentDetailSection>
 
-                <EquipmentDetailSection title={fr.equipment.identification} icon="identification" defaultOpen className="detail-identification">
+                <EquipmentDetailSection title={fr.equipment.identification} icon="identification" defaultOpen={hasIdentification} className="detail-identification">
                   <EquipmentIdentificationDetails equipment={selected} categoryCode={categoryCode} catalogs={options?.catalogs} isSold={isSold} />
                 </EquipmentDetailSection>
 
@@ -160,7 +181,7 @@ export function EquipmentDetailPanel({
                 />
 
                 {categoryCode === "car" && (
-                  <EquipmentDetailSection title={fr.vehicleDocuments.title} icon="invoice" defaultOpen>
+                  <EquipmentDetailSection title={fr.vehicleDocuments.title} icon="invoice" defaultOpen={selected.vehicle_documents.length > 0}>
                     <EquipmentVehicleDocuments
                       equipment={selected}
                       canManage={canManageEquipment}
@@ -170,26 +191,26 @@ export function EquipmentDetailPanel({
                 )}
 
                 {assetDefinition && (
-                  <EquipmentDetailSection title={fr.assets.specifications} icon="specifications" defaultOpen className="detail-characteristics">
+                  <EquipmentDetailSection title={fr.assets.specifications} icon="specifications" defaultOpen={hasSpecifications} className="detail-characteristics">
                     <AssetSpecificationDetails equipment={selected} definition={assetDefinition} language={language} />
                   </EquipmentDetailSection>
                 )}
 
                 {!isOtherAsset && selected.generator_details && (
-                  <EquipmentDetailSection title={fr.equipment.technicalDetails} icon="specifications" defaultOpen className="detail-characteristics">
+                  <EquipmentDetailSection title={fr.equipment.technicalDetails} icon="specifications" defaultOpen={hasTechnicalDetails} className="detail-characteristics">
                     <GeneratorTechnicalDetails equipment={selected} catalogs={options?.catalogs} />
                   </EquipmentDetailSection>
                 )}
 
-                <EquipmentDetailSection title={fr.equipment.observations} icon="note">
+                <EquipmentDetailSection title={fr.equipment.observations} icon="note" defaultOpen={hasDetailValue(selected.observations)}>
                   <p className="observations">{displayedValue(selected.observations)}</p>
                 </EquipmentDetailSection>
 
-                <EquipmentDetailSection title={fr.assets.photos} icon="photo">
+                <EquipmentDetailSection title={fr.assets.photos} icon="photo" defaultOpen={selected.images.length > 0}>
                   <EquipmentImages equipment={selected} canManage={canManageEquipment} hideHeading onChanged={onRefreshSelected} />
                 </EquipmentDetailSection>
 
-                <EquipmentDetailSection title={fr.assets.invoices} icon="invoice">
+                <EquipmentDetailSection title={fr.assets.invoices} icon="invoice" defaultOpen={selected.invoices.length > 0}>
                   <EquipmentInvoices
                     equipment={selected}
                     canManage={canManageEquipment}
@@ -200,7 +221,7 @@ export function EquipmentDetailPanel({
                 </EquipmentDetailSection>
 
                 {!isOtherAsset && (
-                  <EquipmentDetailSection title={fr.maintenance.count(selected.maintenances.length)} icon="maintenance">
+                  <EquipmentDetailSection title={fr.maintenance.count(selected.maintenances.length)} icon="maintenance" defaultOpen={selected.maintenances.length > 0}>
                     <MaintenanceSection
                       equipment={selected}
                       employees={options?.employees ?? []}
@@ -213,7 +234,7 @@ export function EquipmentDetailPanel({
                   </EquipmentDetailSection>
                 )}
 
-                <EquipmentDetailSection id={`equipment-history-${selected.id}`} title={fr.audit.button} icon="history">
+                <EquipmentDetailSection id={`equipment-history-${selected.id}`} title={fr.audit.button} icon="history" defaultOpen={selected.changes.length > 0}>
                   <EquipmentAuditHistory equipment={selected} language={language} />
                 </EquipmentDetailSection>
               </div>
@@ -245,6 +266,11 @@ export function EquipmentDetailPanel({
       )}
     </>
   );
+}
+
+function hasDetailValue(value: unknown): boolean {
+  if (typeof value === "string") return value.trim().length > 0;
+  return value !== null && value !== undefined;
 }
 
 function DetailHeader({ equipment, onClose }: { equipment: Equipment; onClose: () => void }) {

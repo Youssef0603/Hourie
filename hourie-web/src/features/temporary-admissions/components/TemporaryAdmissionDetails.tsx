@@ -10,6 +10,7 @@ import { LoadingSpinner } from "../../../shared/components/LoadingSpinner";
 import { PaginatedDocumentList } from "../../../shared/components/PaginatedDocumentList";
 import { RecordHistory } from "../../../shared/components/RecordHistory";
 import { activeLanguage } from "../../../i18n/fr";
+import { formatMoney } from "../../../shared/formatMoney";
 import { operationPhrase, operationsLocale, operationsText } from "../../../i18n/operations";
 import {
   admissionError,
@@ -810,12 +811,6 @@ export function TemporaryAdmissionDetails({
 function formatDate(value: string | null) {
   if (!value) return operationPhrase("À compléter");
   return new Intl.DateTimeFormat(operationsLocale()).format(new Date(`${value}T00:00:00`));
-}
-
-function formatMoney(value: string) {
-  return `${new Intl.NumberFormat(operationsLocale(), {
-    maximumFractionDigits: 0,
-  }).format(Number(value))} FCFA`;
 }
 
 function selectedAtDocumentsTitle(files: File[]) {

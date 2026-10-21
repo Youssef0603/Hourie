@@ -450,6 +450,7 @@ it('allows a generator manager to fill every inventory field without changing th
             'tank_capacity_litres' => 470,
             'current_engine_hours' => 1250.5,
             'purchase_price_fcfa' => 18500000,
+            'purchase_price_currency' => 'EUR',
             'sold_to' => 'Entreprise Koffi',
         ],
     ];
@@ -466,6 +467,7 @@ it('allows a generator manager to fill every inventory field without changing th
         ->assertJsonPath('data.custodian.name', 'Jean Responsable')
         ->assertJsonPath('data.generator_details.current_rating', '216')
         ->assertJsonPath('data.generator_details.purchase_price_fcfa', '18500000.00')
+        ->assertJsonPath('data.generator_details.purchase_price_currency', 'EUR')
         ->assertJsonPath('data.generator_details.sold_to', 'Entreprise Koffi');
 
     $this->assertDatabaseHas('equipment', [
@@ -482,6 +484,7 @@ it('allows a generator manager to fill every inventory field without changing th
     ]);
     $this->assertDatabaseHas('generator_details', [
         'equipment_id' => $equipment->id,
+        'purchase_price_currency' => 'EUR',
         'sold_to' => 'Entreprise Koffi',
     ]);
 });

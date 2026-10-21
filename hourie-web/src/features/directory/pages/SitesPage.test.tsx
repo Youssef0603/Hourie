@@ -16,6 +16,7 @@ vi.mock('../api', () => ({
 const sites = Array.from({ length: 11 }, (_, index) => ({
   id: index + 1,
   name: index === 0 ? 'Bassam' : `Site ${index + 1}`,
+  code: index === 0 ? '815' : null,
   status: 'active',
   address: index === 0 ? 'Bassam, Lot 1' : null,
   start_date: '2026-01-01',
@@ -57,6 +58,8 @@ describe('SitesPage', () => {
 
     expect(await screen.findByText('Bassam')).toBeVisible()
     expect(screen.getByRole('columnheader', { name: 'Site / projet' })).toBeVisible()
+    expect(screen.getByRole('columnheader', { name: 'Code analytique' })).toBeVisible()
+    expect(screen.getByText('815')).toBeVisible()
     expect(screen.queryByText('Site 11')).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Suivant' }))

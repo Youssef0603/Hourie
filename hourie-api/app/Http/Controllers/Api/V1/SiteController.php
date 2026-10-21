@@ -25,6 +25,7 @@ class SiteController extends Controller
             ->when($request->filled('search'), function ($query) use ($request): void {
                 $term = '%'.$request->string('search')->toString().'%';
                 $query->where(fn ($builder) => $builder->where('name', 'like', $term)
+                    ->orWhere('code', 'like', $term)
                     ->orWhere('address', 'like', $term)
                     ->orWhereHas('responsible', fn ($responsible) => $responsible->where('name', 'like', $term)));
             })
@@ -53,7 +54,7 @@ class SiteController extends Controller
             $data = $request->validated();
             $project = Project::query()->create([
                 'name' => $data['name'],
-                'code' => null,
+                'code' => $data['code'] ?? null,
                 'status' => $data['status'],
                 'responsible_employee_id' => $data['responsible_employee_id'] ?? null,
                 'address' => $data['address'] ?? null,
@@ -122,6 +123,7 @@ class SiteController extends Controller
         return response()->json(['data' => [
             'id' => $site->id,
             'name' => $site->name,
+            'code' => $site->code,
             'is_active' => $site->is_active,
             'status' => $site->status,
             'address' => $site->address,
@@ -149,6 +151,7 @@ class SiteController extends Controller
 
             $site->update([
                 'name' => $data['name'],
+                'code' => $data['code'] ?? null,
                 'status' => $data['status'],
                 'responsible_employee_id' => $data['responsible_employee_id'] ?? null,
                 'address' => $data['address'] ?? null,
@@ -235,7 +238,7 @@ class SiteController extends Controller
     private function auditValues(Project $site): array
     {
         return [
-            'project' => $site->only(['name', 'status', 'responsible_employee_id', 'address', 'start_date', 'expected_end_date', 'notes', 'is_active']),
+            'project' => $site->only(['name', 'code', 'status', 'responsible_employee_id', 'address', 'start_date', 'expected_end_date', 'notes', 'is_active']),
             'locations' => $site->locations
                 ->whereNotNull('parent_id')
                 ->where('is_active', true)

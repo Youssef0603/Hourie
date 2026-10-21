@@ -28,7 +28,7 @@ const people = Array.from({ length: 12 }, (_, index) => ({
   is_active: index !== 2,
   equipment_in_custody_count: 0,
   current_project: index === 0 ? { id: 1, name: 'Abidjan Tower' } : null,
-  current_company_location: null,
+  current_company_location: index === 1 ? { id: 16, name: 'BUREAU' } : null,
   user: index === 0
     ? { id: 1, username: 'youssef', email: 'youssef@hourie.ci', role: 'manager' as const }
     : index === 1
@@ -51,6 +51,8 @@ describe('PeoplePage', () => {
       }
       if (filters.access === 'with_access') filtered = filtered.filter((person) => person.user !== null)
       if (filters.access === 'without_access') filtered = filtered.filter((person) => person.user === null)
+      if (filters.project_id) filtered = filtered.filter((person) => String(person.current_project?.id) === filters.project_id)
+      if (filters.company_location_id) filtered = filtered.filter((person) => String(person.current_company_location?.id) === filters.company_location_id)
       const perPage = 10
       const data = filtered.slice((page - 1) * perPage, page * perPage)
       return Promise.resolve({
@@ -119,6 +121,30 @@ describe('PeoplePage', () => {
     expect(within(detailPanel).getByText('Aucun équipement attribué.')).toBeVisible()
     expect(within(detailPanel).queryByText('Voir les actifs assignés')).not.toBeInTheDocument()
     expect(getEmployee).toHaveBeenCalledWith(1)
+  })
+
+  it('filters people by site and company location', async () => {
+    const user = userEvent.setup()
+    render(
+      <PeoplePage
+        canAdd
+        catalogs={catalogs}
+        projects={[{ id: 1, name: 'Abidjan Tower' }]}
+        companyLocations={[{ id: 16, name: 'BUREAU' }]}
+      />,
+    )
+
+    await screen.findByText('Youssef Yassine')
+    await user.click(screen.getByRole('button', { name: 'Filtres' }))
+    await user.click(screen.getByLabelText('Site / projet'))
+    await user.click(screen.getByRole('option', { name: 'Abidjan Tower' }))
+
+    await waitFor(() => expect(getEmployees).toHaveBeenLastCalledWith(1, { project_id: '1' }))
+
+    await user.click(screen.getByLabelText('Localisation physique'))
+    await user.click(screen.getByRole('option', { name: 'BUREAU' }))
+
+    await waitFor(() => expect(getEmployees).toHaveBeenLastCalledWith(1, { company_location_id: '16' }))
   })
 
   it('returns to person details when editing is cancelled', async () => {

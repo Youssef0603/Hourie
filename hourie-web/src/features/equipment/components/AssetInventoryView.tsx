@@ -5,6 +5,7 @@ import { Modal } from '../../../shared/components/Modal'
 import { assetCategory, assetCategoryLabel, assetFieldLabel, isAssetCategoryCode, type AssetView } from '../assetCategories'
 import { catalogBadgeStyle, catalogLabel } from '../catalogs'
 import { locationName } from '../equipmentDisplay'
+import { filterableLocationOptions } from '../locationLabel'
 import type { Equipment, EquipmentFilterOptions, EquipmentFilters, EquipmentListResponse } from '../types'
 import { AssetCategoryCards } from './AssetCategoryCards'
 import { AssetForm } from './AssetForm'
@@ -63,9 +64,7 @@ export function AssetInventoryView({ category, language, options, filters, searc
   const hasModelColumn = tableDefinition !== null && !isGeneratorSelected
   const isCarTable = tableDefinition?.code === 'car'
   const activeFilterCount = Object.entries(filters).filter(([key, value]) => !['page', 'per_page', 'sort', 'q', 'category', 'asset_field', ...(fixedProject ? ['project_id'] : [])].includes(key) && value !== '').length + (filters.asset_field !== '' && filters.asset_value !== '' ? 1 : 0)
-  const generatorPhysicalLocations = (options?.locations ?? []).filter((location) => (
-    location.parent_id !== null && (filters.project_id === '' || String(location.project_id) === filters.project_id)
-  ))
+  const generatorPhysicalLocations = filterableLocationOptions(options?.locations ?? [], filters.project_id)
   const title = category === 'all' ? fr.assets.all : assetCategoryLabel(category, language)
   const fields = tableDefinition?.fields.filter((field) => tableDefinition.columns.includes(field.key)) ?? []
   const displayedCategoryCounts = categoryCounts ?? Object.fromEntries((options?.categories ?? []).map((item) => [item.code, item.equipment_count]))
@@ -116,7 +115,7 @@ export function AssetInventoryView({ category, language, options, filters, searc
 
     <section className="inventory-panel" aria-label={title}>
       <div className="filter-bar">
-        <div className="search-field">
+        <div className="search-field has-custom-clear">
           <label htmlFor="asset-inventory-search">{fr.equipment.search}</label>
           <input id="asset-inventory-search" type="search" value={search} onChange={(event) => onSearchChange(event.target.value)} placeholder={fr.assets.searchPlaceholder} />
           {search !== '' && <button className="search-clear-button" type="button" onClick={() => onSearchChange('')} aria-label={fr.common.clearSearch}><ActionIcon name="close" /></button>}

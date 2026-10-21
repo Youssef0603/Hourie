@@ -66,4 +66,28 @@ describe("WorkspaceHeader", () => {
     expect(within(profileMenu).queryByText("Paramètres")).not.toBeInTheDocument();
     expect(within(profileMenu).getByText("Se déconnecter")).toBeVisible();
   });
+
+  it("keeps the settings control available on the settings page", async () => {
+    const onNavigateSettings = vi.fn();
+    const interaction = userEvent.setup();
+
+    render(
+      <WorkspaceHeader
+        user={user}
+        language="fr"
+        activeSection="catalogs"
+        onToggleLanguage={vi.fn()}
+        onNavigateSettings={onNavigateSettings}
+        onLogout={vi.fn()}
+        isLoggingOut={false}
+      />,
+    );
+
+    const settingsButton = screen.getByRole("button", { name: "Paramètres" });
+    expect(settingsButton).toHaveAttribute("aria-current", "page");
+    expect(settingsButton).toHaveClass("active");
+
+    await interaction.click(settingsButton);
+    expect(onNavigateSettings).toHaveBeenCalledOnce();
+  });
 });
