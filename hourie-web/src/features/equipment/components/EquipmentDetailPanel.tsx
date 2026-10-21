@@ -24,7 +24,10 @@ import {
 } from "./EquipmentOverviewDetails";
 import { GeneratorTransferForm } from "./GeneratorTransferForm";
 import { MaintenanceSection } from "./MaintenanceSection";
-import { RelatedRecordDetailPanel } from "./RelatedRecordDetailPanel";
+import {
+  RelatedRecordDetailPanel,
+  type RelatedRecordReference,
+} from "./RelatedRecordDetailPanel";
 
 type EquipmentDetailPanelProps = {
   user: AuthenticatedUser;
@@ -41,11 +44,6 @@ type EquipmentDetailPanelProps = {
   onMaintenanceChanged: () => Promise<void>;
   readOnly?: boolean;
   nested?: boolean;
-};
-
-type RelatedRecord = {
-  type: "insurance" | "temporary-admission";
-  id: number;
 };
 
 export function EquipmentDetailPanel({
@@ -65,7 +63,7 @@ export function EquipmentDetailPanel({
   nested = false,
 }: EquipmentDetailPanelProps) {
   const [showTransfer, setShowTransfer] = useState(false);
-  const [relatedRecord, setRelatedRecord] = useState<RelatedRecord | null>(null);
+  const [relatedRecord, setRelatedRecord] = useState<RelatedRecordReference | null>(null);
 
   if (!selected && !isLoadingDetail) return null;
 

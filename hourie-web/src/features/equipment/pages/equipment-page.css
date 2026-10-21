@@ -339,11 +339,15 @@ html[dir="rtl"] .sidebar-toggle svg {
 }
 
 .workspace-navigation-cards {
+  position: sticky;
+  z-index: 9;
+  top: 4.25rem;
   display: grid;
   gap: 0.4rem;
   border-bottom: 1px solid #e8e6e2;
   padding: 0.65rem clamp(1rem, 3vw, 2.25rem) 0.75rem;
   background: #fff;
+  box-shadow: 0 0.3rem 0.8rem rgb(35 38 45 / 5%);
 }
 
 .workspace-navigation-cards > header,
@@ -729,20 +733,21 @@ html[dir="rtl"] .sidebar-toggle svg {
   line-height: 1.6;
 }
 
-.inventory-count {
+.total-count {
   display: flex;
   min-width: 8rem;
   flex-direction: column;
-  border-left: 3px solid var(--color-primary);
-  padding-left: 1rem;
+  border-inline-start: 3px solid var(--color-primary);
+  padding-inline-start: 1rem;
 }
 
-.inventory-count strong {
+.total-count strong {
   color: var(--color-text-strong);
   font-size: 1.45rem;
 }
 
-.inventory-count span {
+.total-count span {
+  color: var(--color-text-muted);
   font-size: 0.78rem;
 }
 
@@ -2883,22 +2888,28 @@ html[dir="rtl"] .directory-form select {
   min-width: 0;
 }
 
-.person-profile-identity h3 {
+.person-detail .person-profile-identity h3 {
   margin: 0;
   font-size: 1rem;
   font-weight: 600;
+  line-height: 1.15;
 }
 
 .person-profile-identity p,
 .person-profile-identity small {
   display: block;
-  margin: 0.12rem 0 0;
+  margin: 0.03rem 0 0;
   color: var(--color-text-muted);
   font-size: 0.72rem;
+  line-height: 1.2;
 }
 
 .person-profile-identity small {
   font-family: monospace;
+}
+
+.person-profile-identity p {
+  font-weight: 650;
 }
 
 .person-delete-action {
@@ -2999,95 +3010,14 @@ html[dir="rtl"] .directory-form select {
   margin-inline-start: auto;
 }
 
-.person-health-insurance dl {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem 1rem;
-  margin: 0;
-}
-
-.person-health-insurance h3 {
-  display: flex;
-  align-items: center;
-  gap: 0.42rem;
-}
-
-.person-health-insurance h3 svg {
-  width: 1rem;
-  height: 1rem;
-  flex: 0 0 auto;
-  fill: none;
-  stroke: var(--color-primary);
-  stroke-width: 1.8;
-}
-
-.person-health-insurance dt {
-  margin-bottom: 0.18rem;
-  color: var(--color-text-muted);
-  font-size: 0.66rem;
-}
-
-.person-health-insurance dd {
-  margin: 0;
-  color: var(--color-text-strong);
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.person-health-insurance p {
-  margin: 0;
-  color: var(--color-text-muted);
-  font-size: 0.73rem;
-}
-
-.person-project-assignments h3 {
-  display: flex;
-  align-items: center;
-  gap: 0.42rem;
-}
-
-.person-project-assignments h3 svg {
-  width: 1rem;
-  height: 1rem;
-  fill: none;
-  stroke: var(--color-primary);
-  stroke-width: 1.8;
-}
-
-.person-project-assignment-list {
-  display: grid;
-  gap: 0.5rem;
-}
-
-.person-project-assignment-list article {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  border: 1px solid var(--color-border);
-  border-radius: 0.35rem;
-  padding: 0.7rem;
-}
-
-.person-project-assignment-list article > div {
-  display: grid;
-  gap: 0.2rem;
-}
-
-.person-project-assignment-list article > div:last-child {
-  justify-items: end;
-  text-align: end;
-}
-
-.person-project-assignment-list strong { font-size: 0.75rem; }
-.person-project-assignment-list span,
-.person-project-assignment-list small { color: var(--color-text-muted); font-size: 0.65rem; }
-.person-assignment-status { border-radius: 99px; padding: 0.18rem 0.4rem; color: #237a4b !important; background: #e8f5ed; font-weight: 700; }
-.person-assignment-status.ended { color: var(--color-text-muted) !important; background: #f0f1f3; }
 
 .person-detail section + section {
   border-top: 1px solid var(--color-border);
   padding-top: 1.1rem;
+}
+
+.person-detail > .detail-section {
+  border-top: 1px solid var(--color-border);
 }
 
 .person-detail h3 {
@@ -3617,7 +3547,10 @@ html[dir="rtl"] .filter-bar select {
   width: min(100%, 34rem);
 }
 
-.directory-person-detail-panel,
+.directory-person-detail-panel {
+  width: min(100%, 30rem);
+}
+
 .directory-person-edit-panel {
   width: min(100%, 38rem);
 }
@@ -6831,6 +6764,10 @@ html[dir="rtl"] .maintenance-form-grid select {
 }
 
 .insurance-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
   margin-bottom: 1.2rem;
 }
 
@@ -6845,6 +6782,19 @@ html[dir="rtl"] .maintenance-form-grid select {
   margin: 0.55rem 0 0;
   color: var(--color-text-muted);
   font-size: 0.86rem;
+}
+
+@media (max-width: 620px) {
+  .insurance-heading,
+  .people-page-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .total-count {
+    width: fit-content;
+  }
+
 }
 
 .insurance-layout {
@@ -7186,7 +7136,6 @@ html[dir="rtl"] .maintenance-form-grid select {
   background: white;
 }
 
-.person-health-insurance .empty-state-copy p,
 .insurance-side-content .empty-state-copy p {
   margin: 0;
   color: var(--color-text-muted);

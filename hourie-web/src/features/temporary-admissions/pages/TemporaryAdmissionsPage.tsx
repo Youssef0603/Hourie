@@ -13,6 +13,7 @@ import { operationPhrase, operationsLocale, operationsText } from "../../../i18n
 import type { EquipmentFilterOptions } from "../../equipment/types";
 import type { AdmissionEquipment, TemporaryAdmission } from "../types";
 import type { PaginatedResponse, PaginationMeta } from "../../../shared/api/pagination";
+import { TotalCount } from "../../../shared/components/TotalCount";
 
 export function TemporaryAdmissionsPage({
   canManage,
@@ -115,6 +116,11 @@ export function TemporaryAdmissionsPage({
           <h1>{text.title}</h1>
           <p>{text.subtitle}</p>
         </div>
+        <TotalCount
+          value={pagination?.total ?? visible.length}
+          label={text.title}
+          loading={loading}
+        />
       </section>
       {error && (
         <div className="form-alert" role="alert">

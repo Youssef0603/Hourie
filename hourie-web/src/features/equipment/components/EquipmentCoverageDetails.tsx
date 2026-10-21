@@ -4,10 +4,14 @@ import { EmptyState } from "../../../shared/components/EmptyState";
 import { formatMoney } from "../../../shared/formatMoney";
 import type { Equipment } from "../types";
 import { EquipmentDetailSection } from "./EquipmentDetailSection";
+import type { RelatedRecordReference } from "./RelatedRecordDetailPanel";
 
-type RelatedRecord = {
-  type: "insurance" | "temporary-admission";
+type InsuranceCoveragePolicy = {
   id: number;
+  policy_number?: string | null;
+  source?: string | null;
+  ends_on?: string | null;
+  total_amount?: string | number | null;
 };
 
 export function EquipmentCoverageDetails({
@@ -19,7 +23,7 @@ export function EquipmentCoverageDetails({
   equipment: Equipment;
   showInsurance: boolean;
   readOnly: boolean;
-  onOpenRecord: (record: RelatedRecord) => void;
+  onOpenRecord: (record: RelatedRecordReference) => void;
 }) {
   return (
     <>
@@ -44,9 +48,13 @@ export function EquipmentCoverageDetails({
 export function EquipmentInsuranceCoverage({
   policies,
   onOpenPolicy,
+  emptyTitle = "Aucune assurance liée",
+  emptyDescription = "La police apparaîtra ici dès que ce véhicule sera ajouté à une assurance équipement.",
 }: {
-  policies: Equipment["insurance_policies"];
+  policies: InsuranceCoveragePolicy[];
   onOpenPolicy?: (policyId: number) => void;
+  emptyTitle?: string;
+  emptyDescription?: string;
 }) {
   const activePolicy = policies.find(policyIsActive);
   const policy = activePolicy ?? policies[0];
@@ -56,8 +64,8 @@ export function EquipmentInsuranceCoverage({
       <EmptyState
         compact
         icon="invoice"
-        title="Aucune assurance liée"
-        description="La police apparaîtra ici dès que ce véhicule sera ajouté à une assurance équipement."
+        title={emptyTitle}
+        description={emptyDescription}
       />
     );
   }
@@ -71,13 +79,18 @@ export function EquipmentInsuranceCoverage({
         {policies.length > 1 && <small>{policies.length} polices liées</small>}
       </div>
       <dl>
-        <div><dt>N° de police</dt><dd>{policy.policy_number}</dd></div>
-        <div><dt>Assureur</dt><dd>{policy.source || fr.common.notProvided}</dd></div>
-        <div><dt>Expiration</dt><dd>{formatCoverageDate(policy.ends_on)}</dd></div>
-        <div>
-          <dt>Prime TTC</dt>
-          <dd>{policy.total_amount === null ? fr.common.notProvided : formatMoney(policy.total_amount)}</dd>
-        </div>
+        {hasDisplayValue(policy.policy_number) && (
+          <div><dt>N° de police</dt><dd>{policy.policy_number}</dd></div>
+        )}
+        {hasDisplayValue(policy.source) && (
+          <div><dt>Assureur</dt><dd>{policy.source}</dd></div>
+        )}
+        {hasDisplayValue(policy.ends_on) && (
+          <div><dt>Expiration</dt><dd>{formatCoverageDate(policy.ends_on)}</dd></div>
+        )}
+        {hasDisplayValue(policy.total_amount) && (
+          <div><dt>Prime TTC</dt><dd>{formatMoney(policy.total_amount)}</dd></div>
+        )}
       </dl>
       {onOpenPolicy && (
         <button type="button" className="insurance-policy-document" onClick={() => onOpenPolicy(policy.id)}>
@@ -148,8 +161,12 @@ function temporaryAdmissionStatusLabel(status: Equipment["temporary_admissions"]
   }[status];
 }
 
-function policyIsActive(policy: Equipment["insurance_policies"][number]) {
-  return policy.ends_on !== null && policy.ends_on >= new Date().toISOString().slice(0, 10);
+function policyIsActive(policy: Pick<InsuranceCoveragePolicy, "ends_on">) {
+  return Boolean(policy.ends_on && policy.ends_on >= new Date().toISOString().slice(0, 10));
+}
+
+function hasDisplayValue<T>(value: T): value is Exclude<T, null | undefined | ""> {
+  return value !== null && value !== undefined && String(value).trim() !== "";
 }
 
 function formatCoverageDate(value: string | null) {

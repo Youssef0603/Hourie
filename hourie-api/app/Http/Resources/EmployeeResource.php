@@ -63,6 +63,7 @@ class EmployeeResource extends JsonResource
                 'source' => $policy->source,
                 'starts_on' => $policy->starts_on?->format('Y-m-d'),
                 'ends_on' => $policy->ends_on?->format('Y-m-d'),
+                'total_amount' => $policy->total_amount,
             ])),
         ];
     }

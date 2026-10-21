@@ -3,6 +3,8 @@ import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { EmptyState } from "../../../shared/components/EmptyState";
 import { catalogLabel } from "../../equipment/catalogs";
 import type { CatalogOption } from "../../equipment/types";
+import { EquipmentInsuranceCoverage } from "../../equipment/components/EquipmentCoverageDetails";
+import { EquipmentDetailSection } from "../../equipment/components/EquipmentDetailSection";
 import type { EmployeeDetails } from "../types";
 
 function initials(name: string) {
@@ -26,6 +28,7 @@ export function PersonDetail({
   onEdit,
   onDelete,
   onOpenEquipment,
+  onOpenInsurance,
 }: {
   person: EmployeeDetails;
   catalogs?: CatalogOption[];
@@ -33,14 +36,15 @@ export function PersonDetail({
   onEdit: () => void;
   onDelete: () => void;
   onOpenEquipment: (equipmentId: number) => void;
+  onOpenInsurance?: (policyId: number) => void;
 }) {
-  const activePolicy = person.health_insurance_policies.find(
-    (policy) =>
-      policy.ends_on !== null &&
-      policy.ends_on >= new Date().toISOString().slice(0, 10),
-  );
-  const policy = activePolicy ?? person.health_insurance_policies[0];
   const assignments = person.project_assignments ?? [];
+  const currentAssignment = assignments.find(
+    (assignment) =>
+      assignment.ended_on === null &&
+      assignment.project.id === person.current_project?.id,
+  ) ?? assignments.find((assignment) => assignment.ended_on === null);
+
   return (
     <div className="person-detail">
       {canEdit && (
@@ -104,6 +108,12 @@ export function PersonDetail({
             <dt>{fr.directory.workplace}</dt>
             <dd>{person.current_project?.name ?? person.current_company_location?.name ?? fr.common.notAssigned}</dd>
           </div>
+          {currentAssignment?.started_on && (
+            <div>
+              <dt>Affecté depuis</dt>
+              <dd>{date(currentAssignment.started_on)}</dd>
+            </div>
+          )}
         </dl>
       </section>
       <section className="person-assigned-assets-section">
@@ -142,60 +152,18 @@ export function PersonDetail({
           />
         )}
       </section>
-      <section className="person-project-assignments">
-        <h3><ActionIcon name="location" />Affectations chantier</h3>
-        {assignments.length ? <div className="person-project-assignment-list">
-          {assignments.map((assignment) => <article key={assignment.id}>
-            <div>
-              <strong>{assignment.project.name}</strong>
-              <span>{assignment.project_role}</span>
-            </div>
-            <div>
-              <span className={`person-assignment-status${assignment.ended_on ? " ended" : ""}`}>{assignment.ended_on ? "Terminée" : "En cours"}</span>
-              <small>{date(assignment.started_on)}{assignment.ended_on ? ` — ${date(assignment.ended_on)}` : ""}</small>
-            </div>
-          </article>)}
-        </div> : <EmptyState compact icon="location" title="Aucune affectation chantier" description="Cette personne n’est actuellement affectée à aucun chantier." />}
-      </section>
-      <section className="person-health-insurance">
-        <h3>
-          <ActionIcon name="invoice" />
-          Assurance santé
-        </h3>
-        {policy ? (
-          <dl>
-            <div>
-              <dt>État</dt>
-              <dd>
-                <span
-                  className={`insurance-status ${activePolicy ? "active" : "expired"}`}
-                >
-                  {activePolicy ? "Assurance active" : "Assurance expirée"}
-                </span>
-              </dd>
-            </div>
-            <div>
-              <dt>N° de police</dt>
-              <dd>{policy.policy_number}</dd>
-            </div>
-            <div>
-              <dt>Assureur</dt>
-              <dd>{policy.source ?? fr.common.notAssigned}</dd>
-            </div>
-            <div>
-              <dt>Expiration</dt>
-              <dd>{date(policy.ends_on)}</dd>
-            </div>
-          </dl>
-        ) : (
-          <EmptyState
-            compact
-            icon="invoice"
-            title="Aucune assurance santé liée"
-            description="La police apparaîtra ici lorsque cette personne sera ajoutée à une assurance santé groupe."
-          />
-        )}
-      </section>
+      <EquipmentDetailSection
+        title="Assurance"
+        icon="invoice"
+        defaultOpen={person.health_insurance_policies.length > 0}
+      >
+        <EquipmentInsuranceCoverage
+          policies={person.health_insurance_policies}
+          onOpenPolicy={onOpenInsurance}
+          emptyTitle="Aucune assurance santé liée"
+          emptyDescription="La police apparaîtra ici lorsque cette personne sera ajoutée à une assurance santé groupe."
+        />
+      </EquipmentDetailSection>
     </div>
   );
 }

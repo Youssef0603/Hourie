@@ -37,6 +37,7 @@ import {
 import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { Modal } from "../../../shared/components/Modal";
 import { LoadingSpinner } from "../../../shared/components/LoadingSpinner";
+import { TotalCount } from "../../../shared/components/TotalCount";
 import { EmptyState } from "../../../shared/components/EmptyState";
 import {
   deleteEquipment,
@@ -696,10 +697,11 @@ export function EquipmentPage({
                     <span>{fr.equipment.importExcel}</span>
                   </button>
                 )}
-                <div className="inventory-count" aria-live="polite">
-                  <strong>{result?.meta.total ?? "—"}</strong>
-                  <span>{fr.equipment.items}</span>
-                </div>
+                <TotalCount
+                  value={result?.meta.total}
+                  label={fr.equipment.items}
+                  loading={isLoading}
+                />
               </div>
             </section>
 

@@ -13,6 +13,7 @@ import { AddGeneratorForm } from './AddGeneratorForm'
 import { ImportGeneratorForm } from './ImportGeneratorForm'
 import { ImportAssetInventoryForm } from './ImportAssetInventoryForm'
 import { LoadingSpinner } from '../../../shared/components/LoadingSpinner'
+import { TotalCount } from '../../../shared/components/TotalCount'
 import { AssetFilterDrawer } from './AssetFilterDrawer'
 import { EquipmentFilterDrawer } from './EquipmentFilterDrawer'
 import { EquipmentInventoryTable } from './EquipmentInventoryTable'
@@ -106,7 +107,7 @@ export function AssetInventoryView({ category, language, options, filters, searc
     <section className="page-heading">
       <div><p className="section-label">{fr.assets.title}</p><h1>{title}</h1><p>{fr.assets.subtitle}</p></div>
       <div className="heading-actions">
-        <div className="inventory-count" aria-live="polite"><strong>{result?.meta.total ?? '—'}</strong><span>{fr.assets.title}</span></div>
+        <TotalCount value={result?.meta.total} label={fr.assets.title} loading={isLoading} />
       </div>
     </section>
 

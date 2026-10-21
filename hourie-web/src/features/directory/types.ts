@@ -82,6 +82,7 @@ export type EmployeeDetails = Employee & {
     source: string | null
     starts_on: string | null
     ends_on: string | null
+    total_amount: string | null
   }>
 }
 

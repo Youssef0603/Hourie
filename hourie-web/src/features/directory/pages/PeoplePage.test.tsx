@@ -16,6 +16,14 @@ vi.mock('../api', () => ({
   deleteEmployee: vi.fn(),
 }))
 
+vi.mock('../../equipment/components/RelatedRecordDetailPanel', () => ({
+  RelatedRecordDetailPanel: ({ record }: { record: { type: string; id: number } }) => (
+    <div role="dialog" aria-label="Détail assurance liée">
+      {record.type}:{record.id}
+    </div>
+  ),
+}))
+
 const people = Array.from({ length: 12 }, (_, index) => ({
   id: index + 1,
   name: index === 0 ? 'Youssef Yassine' : `Employé ${index + 1}`,
@@ -81,7 +89,10 @@ describe('PeoplePage', () => {
     render(<PeoplePage canAdd catalogs={catalogs} />)
 
     expect(await screen.findByText('Youssef Yassine')).toBeVisible()
-    expect(screen.getByText('12 personnes enregistrées')).toBeVisible()
+    const total = document.querySelector('.total-count')
+    expect(total).not.toBeNull()
+    expect(within(total as HTMLElement).getByText('12')).toBeVisible()
+    expect(within(total as HTMLElement).getByText('Personnel')).toBeVisible()
     expect(screen.getByRole('columnheader', { name: 'Affectation' })).toBeVisible()
     expect(screen.queryByRole('columnheader', { name: 'E-mail' })).not.toBeInTheDocument()
     expect(screen.queryByRole('columnheader', { name: 'Accès' })).not.toBeInTheDocument()
@@ -165,6 +176,60 @@ describe('PeoplePage', () => {
     await user.click(within(editor).getByRole('button', { name: 'Fermer' }))
 
     expect(await screen.findByRole('dialog', { name: 'Fiche personne' })).toBeVisible()
+  })
+
+  it('shows the current site assignment inside the profile facts', async () => {
+    getEmployee.mockResolvedValueOnce({
+      ...people[0],
+      current_project: { id: 5, name: 'Bassam' },
+      equipment_in_custody: [],
+      assigned_sites: [{ id: 5, name: 'Bassam' }],
+      project_assignments: [{
+        id: 7,
+        project: { id: 5, name: 'Bassam' },
+        project_role: 'Foreman',
+        started_on: '2026-10-01',
+        ended_on: null,
+      }],
+      health_insurance_policies: [],
+    })
+
+    const user = userEvent.setup()
+    render(<PeoplePage canAdd catalogs={catalogs} />)
+    await user.click(await screen.findByText('Youssef Yassine'))
+
+    const detailPanel = await screen.findByRole('dialog', { name: 'Fiche personne' })
+    expect(within(detailPanel).getByText('Bassam')).toBeVisible()
+    expect(within(detailPanel).queryByText('Rôle sur chantier')).not.toBeInTheDocument()
+    expect(within(detailPanel).queryByText('Foreman')).not.toBeInTheDocument()
+    expect(within(detailPanel).getByText('Affecté depuis')).toBeVisible()
+    expect(within(detailPanel).queryByText('Affectations chantier')).not.toBeInTheDocument()
+  })
+
+  it('opens the health-insurance policy from the person details', async () => {
+    getEmployee.mockResolvedValueOnce({
+      ...people[0],
+      equipment_in_custody: [],
+      assigned_sites: [],
+      project_assignments: [],
+      health_insurance_policies: [{
+        id: 42,
+        policy_number: '3189-10100001',
+        source: 'GNA-CI',
+        starts_on: '2026-01-01',
+        ends_on: '2027-10-31',
+        total_amount: '6088159',
+      }],
+    })
+
+    const user = userEvent.setup()
+    render(<PeoplePage canAdd catalogs={catalogs} />)
+    await user.click(await screen.findByText('Youssef Yassine'))
+    await user.click(await screen.findByRole('button', { name: 'Voir l’assurance' }))
+
+    const relatedPanel = await screen.findByRole('dialog', { name: 'Détail assurance liée' })
+    expect(relatedPanel).toHaveTextContent('insurance:42')
+    expect(screen.getByRole('dialog', { name: 'Fiche personne' })).toBeVisible()
   })
 
   it('shows assigned equipment as compact clickable rows instead of a nested table', async () => {

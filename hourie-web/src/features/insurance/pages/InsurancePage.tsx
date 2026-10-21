@@ -26,6 +26,7 @@ import type { Language } from "../../../i18n/fr";
 import type { EquipmentFilterOptions } from "../../equipment/types";
 import type { PaginatedResponse, PaginationMeta } from "../../../shared/api/pagination";
 import { operationsText } from "../../../i18n/operations";
+import { TotalCount } from "../../../shared/components/TotalCount";
 
 export function InsurancePage({
   initialSiteId = null,
@@ -150,6 +151,11 @@ export function InsurancePage({
               : text.subtitle}
           </p>
         </div>
+        <TotalCount
+          value={pagination?.total ?? filteredPolicies.length}
+          label={text.title}
+          loading={loading}
+        />
       </section>
       <section className="asset-category-section insurance-category-section">
         <h2>{text.categories}</h2>

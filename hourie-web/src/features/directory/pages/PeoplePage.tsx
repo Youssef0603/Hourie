@@ -25,6 +25,11 @@ import type { AuthenticatedUser } from "../../auth/types";
 import type { Language } from "../../../i18n/fr";
 import type { EquipmentFilterOptions } from "../../equipment/types";
 import { RelatedEquipmentDetailPanel } from "../../equipment/components/RelatedEquipmentDetailPanel";
+import {
+  RelatedRecordDetailPanel,
+  type RelatedRecordReference,
+} from "../../equipment/components/RelatedRecordDetailPanel";
+import { TotalCount } from "../../../shared/components/TotalCount";
 
 type PeoplePageProps = {
   canAdd: boolean;
@@ -74,6 +79,7 @@ export function PeoplePage({
   const [isLoadingPerson, setIsLoadingPerson] = useState(false);
   const [isEditingPerson, setIsEditingPerson] = useState(false);
   const [relatedEquipmentId, setRelatedEquipmentId] = useState<number | null>(null);
+  const [relatedRecord, setRelatedRecord] = useState<RelatedRecordReference | null>(null);
   const personRequest = useRef(0);
   const searchTerm = normalizeSearch(search.trim());
   const searchedPeople = searchTerm
@@ -153,6 +159,7 @@ export function PeoplePage({
     setSelectedPerson(null);
     setIsEditingPerson(false);
     setRelatedEquipmentId(null);
+    setRelatedRecord(null);
     setError(null);
 
     try {
@@ -171,6 +178,7 @@ export function PeoplePage({
     setSelectedPerson(null);
     setIsEditingPerson(false);
     setRelatedEquipmentId(null);
+    setRelatedRecord(null);
   }
 
   async function removePerson() {
@@ -198,8 +206,12 @@ export function PeoplePage({
       <section className="people-page-heading">
         <div>
           <h1>{fr.directory.people}</h1>
-          <p>{fr.directory.peopleRegistered(pagination?.total ?? people.length)}</p>
         </div>
+        <TotalCount
+          value={pagination?.total ?? people.length}
+          label={fr.directory.people}
+          loading={isRefreshing}
+        />
       </section>
       {error && (
         <div className="form-alert" role="alert">
@@ -448,6 +460,7 @@ export function PeoplePage({
                 onEdit={() => setIsEditingPerson(true)}
                 onDelete={removePerson}
                 onOpenEquipment={setRelatedEquipmentId}
+                onOpenInsurance={(policyId) => setRelatedRecord({ type: "insurance", id: policyId })}
               />
             )
           )}
@@ -492,6 +505,13 @@ export function PeoplePage({
           equipmentId={relatedEquipmentId}
           {...relatedEquipmentContext}
           onClose={() => setRelatedEquipmentId(null)}
+        />
+      )}
+      {relatedRecord && (
+        <RelatedRecordDetailPanel
+          key={`${relatedRecord.type}-${relatedRecord.id}`}
+          record={relatedRecord}
+          onClose={() => setRelatedRecord(null)}
         />
       )}
     </main>

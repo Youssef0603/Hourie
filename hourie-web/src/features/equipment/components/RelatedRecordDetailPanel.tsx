@@ -7,11 +7,16 @@ import { TemporaryAdmissionDetails } from "../../temporary-admissions/components
 import type { TemporaryAdmission } from "../../temporary-admissions/types";
 import { RelatedDetailRequestState } from "./RelatedDetailRequestState";
 
+export type RelatedRecordReference = {
+  type: "insurance" | "temporary-admission";
+  id: number;
+};
+
 export function RelatedRecordDetailPanel({
   record,
   onClose,
 }: {
-  record: { type: "insurance" | "temporary-admission"; id: number };
+  record: RelatedRecordReference;
   onClose: () => void;
 }) {
   const [item, setItem] = useState<InsurancePolicy | TemporaryAdmission | null>(null);

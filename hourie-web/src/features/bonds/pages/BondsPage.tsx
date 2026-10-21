@@ -17,6 +17,7 @@ import { BondForm } from "../components/BondForm";
 import type { PaginatedResponse, PaginationMeta } from "../../../shared/api/pagination";
 import { activeLanguage } from "../../../i18n/fr";
 import { operationPhrase } from "../../../i18n/operations";
+import { TotalCount } from "../../../shared/components/TotalCount";
 
 export function BondsPage() {
   const [bonds, setBonds] = useState<Bond[]>([]);
@@ -90,6 +91,11 @@ export function BondsPage() {
           <h1>{operationPhrase("Cautions")}</h1>
           <p>{operationPhrase("Suivez les garanties financières liées aux sites, leurs montants et leurs échéances.")}</p>
         </div>
+        <TotalCount
+          value={pagination?.total ?? visible.length}
+          label={operationPhrase("Cautions")}
+          loading={loading}
+        />
       </section>
       <section className="insurance-list-area inventory-panel">
         <div className="filter-bar">
