@@ -5,7 +5,7 @@
   gap: 0.9rem;
   min-width: 0;
   margin-inline: auto;
-  padding: 1.25rem 0 1.5rem;
+  padding: 1.1rem 0 1.5rem;
   color: var(--color-text-strong);
   background: #f8f8f7;
 }
@@ -18,9 +18,9 @@
 }
 
 .dashboard-heading .section-label {
-  margin: 0 0 .4rem;
+  margin: 0 0 .3rem;
   color: var(--color-primary);
-  font-size: .6rem;
+  font-size: .58rem;
   font-weight: 800;
   letter-spacing: .14em;
   text-transform: uppercase;
@@ -29,15 +29,15 @@
 .dashboard-heading h1 {
   margin: 0;
   color: var(--color-text-strong);
-  font-size: clamp(1.55rem, 2vw, 2rem);
+  font-size: clamp(1.25rem, 1.4vw, 1.5rem);
   letter-spacing: -.045em;
   line-height: 1;
 }
 
 .dashboard-heading > div > p:last-child {
-  margin: .4rem 0 0;
+  margin: .3rem 0 0;
   color: var(--color-text-muted);
-  font-size: .76rem;
+  font-size: .72rem;
 }
 
 .dashboard-heading-actions,
@@ -48,16 +48,16 @@
 }
 
 .dashboard-heading-actions {
-  gap: .8rem;
+  gap: .6rem;
   color: var(--color-text-muted);
-  font-size: .72rem;
+  font-size: .68rem;
 }
 
 .dashboard-heading-actions > span { gap: .35rem; white-space: nowrap; }
 .dashboard-heading-actions i { display: grid; width: 1rem; height: 1rem; place-items: center; border: 1px solid #2f8e9d; border-radius: 50%; color: #2f8e9d; font-size: .58rem; font-style: normal; font-weight: 800; }
-.dashboard-refresh-button { gap: .35rem; border: 1px solid #dfdfdc; border-radius: .45rem; padding: .48rem .7rem; color: var(--color-text-strong); font: inherit; font-weight: 700; background: #fff; cursor: pointer; }
+.dashboard-refresh-button { gap: .3rem; border: 1px solid #dfdfdc; border-radius: .4rem; padding: .38rem .55rem; color: var(--color-text-strong); font: inherit; font-weight: 700; background: #fff; cursor: pointer; }
 .dashboard-refresh-button:hover { border-color: #d8a0ae; color: var(--color-primary); }
-.dashboard-refresh-button svg { width: .85rem; height: .85rem; fill: none; stroke: currentColor; stroke-width: 1.8; }
+.dashboard-refresh-button svg { width: .75rem; height: .75rem; fill: none; stroke: currentColor; stroke-width: 1.8; }
 
 .dashboard-kpis {
   display: grid;

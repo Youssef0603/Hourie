@@ -612,7 +612,7 @@ html[dir="rtl"] .sidebar-toggle svg {
 .equipment-page {
   width: min(calc(100% - var(--workspace-page-inline-space)), 92rem);
   margin: 0 auto;
-  padding: 1.5rem 0 2.5rem;
+  padding: 1.1rem 0 2.5rem;
 }
 
 .breadcrumbs {
@@ -653,7 +653,7 @@ html[dir="rtl"] .sidebar-toggle svg {
   align-items: flex-end;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 1.2rem;
+  margin-bottom: 0.75rem;
 }
 
 .heading-actions {
@@ -661,11 +661,12 @@ html[dir="rtl"] .sidebar-toggle svg {
   align-items: center;
   gap: 0.5rem;
   flex-wrap: wrap;
+  font-size: 0.72rem;
 }
 
 .heading-actions > button {
-  min-height: 2.1rem;
-  padding-inline: 0.4rem;
+  min-height: 1.9rem;
+  padding-inline: 0.55rem;
 }
 
 .page-action {
@@ -707,9 +708,9 @@ html[dir="rtl"] .sidebar-toggle svg {
 .page-heading h1 {
   margin: 0;
   color: var(--color-text-strong);
-  font-size: clamp(1.7rem, 2vw, 2.15rem);
+  font-size: clamp(1.25rem, 1.35vw, 1.5rem);
   letter-spacing: -0.04em;
-  line-height: 1;
+  line-height: 1.08;
 }
 
 .site-page-title-row {
@@ -719,7 +720,7 @@ html[dir="rtl"] .sidebar-toggle svg {
 }
 
 .site-page-title-row h1 {
-  font-size: clamp(1.55rem, 1.8vw, 1.85rem);
+  font-size: clamp(1.25rem, 1.35vw, 1.45rem);
   letter-spacing: -0.03em;
 }
 
@@ -729,26 +730,36 @@ html[dir="rtl"] .sidebar-toggle svg {
 
 .page-heading > div:first-child > p:last-child {
   max-width: 44rem;
-  margin: 0.8rem 0 0;
-  line-height: 1.6;
+  margin: 0.5rem 0 0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.page-heading .section-label,
+.insurance-heading .section-label,
+.catalog-page .directory-heading .section-label {
+  margin: 0 0 0.3rem;
+  font-size: 0.58rem;
+  letter-spacing: 0.13em;
 }
 
 .total-count {
   display: flex;
-  min-width: 8rem;
+  min-width: 5.75rem;
   flex-direction: column;
-  border-inline-start: 3px solid var(--color-primary);
-  padding-inline-start: 1rem;
+  border-inline-start: 2px solid var(--color-primary);
+  padding-inline-start: 0.65rem;
 }
 
 .total-count strong {
   color: var(--color-text-strong);
-  font-size: 1.45rem;
+  font-size: 1.05rem;
+  line-height: 1.15;
 }
 
 .total-count span {
   color: var(--color-text-muted);
-  font-size: 0.78rem;
+  font-size: 0.68rem;
 }
 
 .inventory-panel {
@@ -1781,7 +1792,7 @@ html[dir="rtl"] .advanced-filter-grid select {
 .directory-page {
   width: min(calc(100% - var(--workspace-page-inline-space)), 92rem);
   margin: 0 auto;
-  padding: 1.5rem 0 2.5rem;
+  padding: 1.1rem 0 2.5rem;
 }
 
 .directory-form {
@@ -2304,19 +2315,20 @@ html[dir="rtl"] .directory-form select {
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .people-page-heading h1 {
   margin: 0;
   color: var(--color-text-strong);
-  font-size: 1.45rem;
+  font-size: 1.3rem;
+  line-height: 1.1;
 }
 
 .people-page-heading p {
   margin: 0.3rem 0 0;
   color: var(--color-text-muted);
-  font-size: 0.82rem;
+  font-size: 0.76rem;
 }
 
 .people-add-button {
@@ -4651,33 +4663,28 @@ html[dir="rtl"] .filter-bar select {
   align-items: flex-end;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .catalog-page .directory-heading h1 {
   margin: 0.25rem 0 0;
   color: var(--color-text-strong);
-  font-size: clamp(1.45rem, 2.5vw, 1.9rem);
+  font-size: clamp(1.25rem, 1.4vw, 1.5rem);
   letter-spacing: -0.035em;
 }
 
 .catalog-page .directory-heading p:last-child {
   margin: 0.35rem 0 0;
   color: var(--color-text-muted);
-  font-size: 0.78rem;
-}
-
-.catalog-page .directory-heading .section-label {
-  margin: 0;
-  font-size: 0.65rem;
+  font-size: 0.74rem;
 }
 
 .catalog-page .directory-heading .compact-action {
-  min-height: 2.25rem;
+  min-height: 1.9rem;
   flex: 0 0 auto;
   border-radius: 0.3rem;
-  padding: 0.45rem 0.7rem;
-  font-size: 0.72rem;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.68rem;
 }
 
 .catalog-page .directory-heading .compact-action svg {
@@ -6768,20 +6775,20 @@ html[dir="rtl"] .maintenance-form-grid select {
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 1.2rem;
+  margin-bottom: 0.75rem;
 }
 
 .insurance-heading h1 {
   margin: 0;
   color: var(--color-text-strong);
-  font-size: 1.95rem;
+  font-size: clamp(1.25rem, 1.4vw, 1.5rem);
   letter-spacing: -0.04em;
 }
 
 .insurance-heading > div > p:last-child {
-  margin: 0.55rem 0 0;
+  margin: 0.35rem 0 0;
   color: var(--color-text-muted);
-  font-size: 0.86rem;
+  font-size: 0.76rem;
 }
 
 @media (max-width: 620px) {

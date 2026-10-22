@@ -36,7 +36,6 @@ class EquipmentCategory extends Model
             'electrical_installation' => 'text',
             'air_conditioning' => 'text',
             'purpose' => 'text',
-            'invoice_number' => 'text',
             'purchase_price' => 'text',
             'shipping_cost' => 'text',
             'official_document_type' => 'text',

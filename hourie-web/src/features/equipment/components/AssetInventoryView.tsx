@@ -64,6 +64,7 @@ export function AssetInventoryView({ category, language, options, filters, searc
   const isAllAssetsTable = category === 'all' && selectedCategory === ''
   const hasModelColumn = tableDefinition !== null && !isGeneratorSelected
   const isCarTable = tableDefinition?.code === 'car'
+  const isContainerTable = tableDefinition?.code === 'portacabin'
   const activeFilterCount = Object.entries(filters).filter(([key, value]) => !['page', 'per_page', 'sort', 'q', 'category', 'asset_field', ...(fixedProject ? ['project_id'] : [])].includes(key) && value !== '').length + (filters.asset_field !== '' && filters.asset_value !== '' ? 1 : 0)
   const generatorPhysicalLocations = filterableLocationOptions(options?.locations ?? [], filters.project_id)
   const title = category === 'all' ? fr.assets.all : assetCategoryLabel(category, language)
@@ -150,7 +151,7 @@ export function AssetInventoryView({ category, language, options, filters, searc
           <thead><tr>
             <th>{fr.equipment.number}</th>
             {isAllAssetsTable && <th>{fr.equipment.category}</th>}
-            {hasModelColumn ? <><th>{fr.equipment.brand}</th><th>{fr.equipment.model}</th><th>{fr.equipment.serialNumber}</th>{isCarTable && <th>{fr.equipment.registrationNumber}</th>}</> : <th>{fr.equipment.identification}</th>}
+            {hasModelColumn ? <><th>{fr.equipment.brand}</th><th>{fr.equipment.model}</th><th>{isContainerTable ? fr.assets.supplier : fr.equipment.serialNumber}</th>{isCarTable && <th>{fr.equipment.registrationNumber}</th>}</> : <th>{fr.equipment.identification}</th>}
             {fields.map((field) => <th key={field.key}>{assetFieldLabel(field, language)}</th>)}
             <th>{fr.equipment.condition}</th><th>{fr.equipment.project}</th><th>{isCarTable ? fr.equipment.driver : fr.equipment.locationShort}</th>
           </tr></thead>
@@ -158,7 +159,7 @@ export function AssetInventoryView({ category, language, options, filters, searc
             <td><strong>{item.display_id}</strong><span className="secondary-cell">{item.asset_code}</span></td>
             {isAllAssetsTable && <td>{item.category.code === 'generator' ? fr.navigation.generators : isAssetCategoryCode(item.category.code) ? assetCategoryLabel(item.category.code, language) : item.category.name}</td>}
             {hasModelColumn
-              ? <><td>{item.brand ?? fr.common.notProvided}</td><td>{item.model ?? fr.common.notProvided}</td><td>{item.serial_number ?? fr.common.toComplete}</td>{isCarTable && <td>{item.registration_number ?? fr.common.toComplete}</td>}</>
+              ? <><td>{item.brand ?? fr.common.notProvided}</td><td>{item.model ?? fr.common.notProvided}</td><td>{isContainerTable ? item.supplier ?? fr.common.toComplete : item.serial_number ?? fr.common.toComplete}</td>{isCarTable && <td>{item.registration_number ?? fr.common.toComplete}</td>}</>
               : <td><span className="primary-cell">{[item.brand, item.model].filter(Boolean).join(' ') || fr.common.notProvided}</span><span className="secondary-cell">{item.serial_number ?? fr.common.notProvided}</span></td>}
             {fields.map((field) => <td key={field.key}>{item.asset_details?.[field.key] == null ? fr.common.notProvided : `${item.asset_details[field.key]}${field.unit ? ` ${field.unit}` : ''}`}</td>)}
             <td>{item.condition ? <span className="status-badge" style={catalogBadgeStyle(options?.catalogs, 'equipment_condition', item.condition)}>{catalogLabel(options?.catalogs, 'equipment_condition', item.condition)}</span> : fr.common.notProvided}</td>
