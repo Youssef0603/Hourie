@@ -24,3 +24,8 @@ Schedule::command('temporary-admissions:send-expiry-reminders')
     ->dailyAt('08:15')
     ->withoutOverlapping(30)
     ->onOneServer();
+
+Schedule::command('hourie:backup')
+    ->cron('30 12,17 * * *')
+    ->withoutOverlapping(180)
+    ->onOneServer();
