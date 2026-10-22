@@ -303,7 +303,7 @@ function translateDashboardApiText(value: string) {
     .replace(/Échéance aujourd’hui\./g, "الموعد النهائي اليوم.")
     .replace(/(\d+) maintenance\(s\) à traiter/g, "$1 أعمال صيانة تتطلب المعالجة")
     .replace(/(\d+) en retard, (\d+) prochainement/g, "$1 متأخرة، و$2 قريباً")
-    .replace(/(\d+) équipement\(s\) sans site/g, "$1 معدات من دون موقع")
+    .replace(/(\d+) équipement\(s\) sans chantier/g, "$1 معدات من دون موقع")
     .replace(/Affectation nécessaire pour fiabiliser le suivi\./g, "يجب تعيينها لضمان دقة المتابعة.");
 }
 

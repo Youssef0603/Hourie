@@ -147,7 +147,7 @@ describe('PeoplePage', () => {
 
     await screen.findByText('Youssef Yassine')
     await user.click(screen.getByRole('button', { name: 'Filtres' }))
-    await user.click(screen.getByLabelText('Site / projet'))
+    await user.click(screen.getByLabelText('Chantier'))
     await user.click(screen.getByRole('option', { name: 'Abidjan Tower' }))
 
     await waitFor(() => expect(getEmployees).toHaveBeenLastCalledWith(1, { project_id: '1' }))

@@ -137,15 +137,15 @@ export function BondForm({
             </h3>
             <div className="insurance-form-grid">
               <label>
-                {operationPhrase("Site / projet")}
+                {operationPhrase("Chantier")}
                 <SearchableSelect
-                  ariaLabel={operationPhrase("Site lié")}
+                  ariaLabel={operationPhrase("Chantier lié")}
                   value={siteId}
                   onChange={(value) => {
                     setSiteId(value);
                     setLocationId("");
                   }}
-                  placeholder={operationPhrase("Sélectionner un site")}
+                  placeholder={operationPhrase("Sélectionner un chantier")}
                   includeEmpty={false}
                   options={sites.map((site) => ({
                     value: String(site.id),
@@ -162,7 +162,7 @@ export function BondForm({
                   placeholder={
                     siteId
                       ? operationPhrase("Sélectionner une localisation")
-                      : operationPhrase("Sélectionnez d’abord un site")
+                      : operationPhrase("Sélectionnez d’abord un chantier")
                   }
                   includeEmpty={false}
                   disabled={!siteId}

@@ -17,7 +17,7 @@ return [
     'location_project_mismatch' => 'La localisation parente doit appartenir au même projet.',
     'equipment_location_project_mismatch' => 'La localisation sélectionnée doit appartenir au projet sélectionné.',
     'transfer_source_changed' => 'L’affectation actuelle a changé. Rechargez la fiche avant de transférer cet équipement.',
-    'transfer_destination_same' => 'Le site de destination doit être différent du site actuel.',
+    'transfer_destination_same' => 'Le chantier de destination doit être différent du chantier actuel.',
     'only_latest_transfer_removable' => 'Seul le transfert le plus récent peut être supprimé.',
     'transfer_assignment_changed' => 'L’affectation actuelle ne correspond plus à ce transfert. Rechargez la fiche avant de réessayer.',
     'max' => [
@@ -56,7 +56,7 @@ return [
         'password_confirmation' => 'confirmation du mot de passe',
         'per_page' => 'nombre de résultats par page',
         'project_id' => 'projet',
-        'responsible_employee_id' => 'responsable du site',
+        'responsible_employee_id' => 'responsable du chantier',
         'q' => 'recherche',
         'remember' => 'rester connecté',
     ],

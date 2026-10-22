@@ -1158,7 +1158,7 @@ export function EquipmentPage({
               compact
               icon="history"
               title={fr.audit.empty}
-              description="Les modifications de ce site apparaîtront ici."
+              description="Les modifications de ce chantier apparaîtront ici."
             />
           )}
         </Modal>

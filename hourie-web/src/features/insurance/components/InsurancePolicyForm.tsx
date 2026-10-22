@@ -376,9 +376,9 @@ function InsuranceProjectSelect({
   return (
     <>
       <label>
-        {operationPhrase("Site / projet")}
+        {operationPhrase("Chantier")}
         <SearchableSelect
-          ariaLabel={operationPhrase("Site ou projet")}
+          ariaLabel={operationPhrase("Chantier")}
           value={projectId}
           onChange={onProjectChange}
           placeholder={operationPhrase("À compléter")}

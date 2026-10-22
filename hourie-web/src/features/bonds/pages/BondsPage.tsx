@@ -89,7 +89,7 @@ export function BondsPage() {
         <div>
           <p className="section-label">{operationPhrase("Gestion")}</p>
           <h1>{operationPhrase("Cautions")}</h1>
-          <p>{operationPhrase("Suivez les garanties financières liées aux sites, leurs montants et leurs échéances.")}</p>
+          <p>{operationPhrase("Suivez les garanties financières liées aux chantiers, leurs montants et leurs échéances.")}</p>
         </div>
         <TotalCount
           value={pagination?.total ?? visible.length}
@@ -109,7 +109,7 @@ export function BondsPage() {
                 setSearch(event.target.value);
                 setPage(1);
               }}
-              placeholder={operationPhrase("Type, banque, localisation ou site")}
+              placeholder={operationPhrase("Type, banque, localisation ou chantier")}
             />
           </div>
           <div className="filter-toolbar-actions">
@@ -152,7 +152,7 @@ export function BondsPage() {
           <table className="equipment-table insurance-table bonds-table">
             <thead>
               <tr>
-                <th>{operationPhrase("Site / projet")}</th>
+                <th>{operationPhrase("Chantier")}</th>
                 <th>{operationPhrase("Localisation physique")}</th>
                 <th>{operationPhrase("Type de caution")}</th>
                 <th>{operationPhrase("Émetteur")}</th>

@@ -240,7 +240,7 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, catalogs, emplo
         <div className="filter-bar">
           <label className="search-field">
             <span>{fr.equipment.search}</span>
-            <input type="search" value={search} onChange={(event) => { setSearch(event.target.value); setCurrentPage(1) }} placeholder="Rechercher un site, un code, une adresse ou un responsable" />
+            <input type="search" value={search} onChange={(event) => { setSearch(event.target.value); setCurrentPage(1) }} placeholder="Rechercher un chantier, un code, une adresse ou un responsable" />
           </label>
           <div className="filter-toolbar-actions">
             {canAdd && <button className="table-refresh-button table-add-button" type="button" onClick={() => setShowForm(true)} aria-label={fr.directory.addSite} title={fr.directory.addSite}><ActionIcon name="add" /></button>}
@@ -249,7 +249,7 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, catalogs, emplo
         </div>
         {!isRefreshing && visibleSites.length > 0 && <>
           <DataTable className="asset-inventory-table" ariaLabel={fr.directory.sites}>
-              <thead><tr><th>Site / projet</th><th>{fr.directory.costCode}</th><th>{fr.directory.siteResponsible}</th><th>{fr.directory.siteAddress}</th><th>{fr.directory.assignedAssets}</th><th>{fr.directory.startDate}</th><th>{fr.directory.expectedEndDate}</th><th>État</th></tr></thead>
+              <thead><tr><th>Chantier</th><th>{fr.directory.costCode}</th><th>{fr.directory.siteResponsible}</th><th>{fr.directory.siteAddress}</th><th>{fr.directory.assignedAssets}</th><th>{fr.directory.startDate}</th><th>{fr.directory.expectedEndDate}</th><th>État</th></tr></thead>
               <tbody>{visibleSites.map((site) => <tr key={site.id} tabIndex={0} onClick={() => openSiteDetails(site)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openSiteDetails(site) } }}>
                 <td><strong>{site.name}</strong></td>
                 <td>{site.code ?? fr.common.notProvided}</td>
@@ -263,7 +263,7 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, catalogs, emplo
           </DataTable>
           {pagination && <nav className="pagination" aria-label={fr.equipment.pagination}><span>{fr.equipment.results(pagination.from, pagination.to, pagination.total)}</span><div><button type="button" disabled={page === 1 || isRefreshing} onClick={() => void refreshSites(page - 1)}>{fr.common.previous}</button><span>{fr.equipment.page(page, totalPages)}</span><button type="button" disabled={page === totalPages || isRefreshing} onClick={() => void refreshSites(page + 1)}>{fr.common.next}</button></div></nav>}
         </>}
-        {!isRefreshing && visibleSites.length === 0 && <EmptyState icon="location" title={searchTerm ? 'Aucun site trouvé' : 'Aucun site enregistré'} description={searchTerm ? 'Modifiez votre recherche pour afficher d’autres sites.' : 'Les sites et projets ajoutés apparaîtront ici.'} />}
+        {!isRefreshing && visibleSites.length === 0 && <EmptyState icon="location" title={searchTerm ? 'Aucun chantier trouvé' : 'Aucun chantier enregistré'} description={searchTerm ? 'Modifiez votre recherche pour afficher d’autres chantiers.' : 'Les chantiers ajoutés apparaîtront ici.'} />}
         {isRefreshing && <div className="table-state"><LoadingSpinner label={fr.common.loading} /></div>}
       </section>
     </main>

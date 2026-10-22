@@ -50,7 +50,7 @@ describe("DashboardPage", () => {
     expect(screen.getByRole("button", { name: /28.*Personnel actif/ })).toBeVisible();
     expect(screen.getAllByText("Assurance POL-1")).toHaveLength(2);
     expect(screen.getByText("Bassam")).toBeVisible();
-    await user.click(screen.getByRole("button", { name: /Sites actifs/ }));
+    await user.click(screen.getByRole("button", { name: /Chantiers actifs/ }));
     expect(onNavigate).toHaveBeenCalledWith("/sites");
 
     await user.click(screen.getAllByRole("button", { name: /Assurance POL-1.*Échéance dans 10 jours/ })[0]);

@@ -57,7 +57,7 @@ describe('SitesPage', () => {
     render(<SitesPage canAdd />)
 
     expect(await screen.findByText('Bassam')).toBeVisible()
-    expect(screen.getByRole('columnheader', { name: 'Site / projet' })).toBeVisible()
+    expect(screen.getByRole('columnheader', { name: 'Chantier' })).toBeVisible()
     expect(screen.getByRole('columnheader', { name: 'Code analytique' })).toBeVisible()
     expect(screen.getByText('815')).toBeVisible()
     expect(screen.queryByText('Site 11')).not.toBeInTheDocument()
@@ -77,7 +77,7 @@ describe('SitesPage', () => {
     render(<SitesPage canAdd />)
     await screen.findByText('Bassam')
 
-    expect(screen.getByRole('button', { name: 'Ajouter un site' })).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Ajouter un chantier' })).toBeVisible()
   })
 
   it('opens site details in a side panel and returns there after closing the editor', async () => {
@@ -85,13 +85,13 @@ describe('SitesPage', () => {
     render(<SitesPage canAdd />)
 
     await user.click(await screen.findByText('Bassam'))
-    const detailPanel = await screen.findByRole('dialog', { name: 'Détail du site' })
+    const detailPanel = await screen.findByRole('dialog', { name: 'Détail du chantier' })
     expect(detailPanel).toHaveClass('directory-site-detail-panel')
 
     await user.click(within(detailPanel).getByRole('button', { name: 'Modifier' }))
-    const editor = screen.getByRole('dialog', { name: 'Modifier le site' })
+    const editor = screen.getByRole('dialog', { name: 'Modifier le chantier' })
     await user.click(within(editor).getByRole('button', { name: 'Fermer' }))
 
-    expect(await screen.findByRole('dialog', { name: 'Détail du site' })).toBeVisible()
+    expect(await screen.findByRole('dialog', { name: 'Détail du chantier' })).toBeVisible()
   })
 })

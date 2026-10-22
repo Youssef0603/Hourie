@@ -123,7 +123,7 @@ class BuildExecutiveDashboard
         if ($dataQuality['missing_project'] > 0) {
             $actions->push([
                 'key' => 'unassigned-equipment',
-                'title' => $dataQuality['missing_project'].' équipement(s) sans site',
+                'title' => $dataQuality['missing_project'].' équipement(s) sans chantier',
                 'description' => 'Affectation nécessaire pour fiabiliser le suivi.',
                 'severity' => 'info',
                 'path' => '/assets/all',

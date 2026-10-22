@@ -75,12 +75,12 @@ export function BondFilters({
             />
           </label>
           <label>
-            {operationPhrase("Site / projet")}
+            {operationPhrase("Chantier")}
             <SearchableSelect
-              ariaLabel={operationPhrase("Site")}
+              ariaLabel={operationPhrase("Chantier")}
               value={siteId}
               onChange={onSite}
-              placeholder={operationPhrase("Tous les sites")}
+              placeholder={operationPhrase("Tous les chantiers")}
               options={sites.map((site) => ({
                 value: String(site.id),
                 label: site.name,

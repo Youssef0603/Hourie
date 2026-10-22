@@ -689,5 +689,5 @@ it('requires an active employee as the site responsible', function () {
         'locations' => ['BASE'],
     ])->assertUnprocessable()
         ->assertJsonValidationErrors(['responsible_employee_id'])
-        ->assertJsonPath('errors.responsible_employee_id.0', 'La valeur sélectionnée pour responsable du site est invalide.');
+        ->assertJsonPath('errors.responsible_employee_id.0', 'La valeur sélectionnée pour responsable du chantier est invalide.');
 });
