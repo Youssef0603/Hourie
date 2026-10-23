@@ -534,6 +534,16 @@ export function EquipmentPage({
     navigate(`/sites/${site.id}/insurance`);
   }
 
+  function openSiteBonds(site: Site) {
+    setSiteContext(null);
+    navigate(`/bonds/sites/${site.id}`);
+  }
+
+  function openSitePeople(site: Site) {
+    setSiteContext(null);
+    navigate(`/people/sites/${site.id}`);
+  }
+
   function closeSiteInventory() {
     setShowHistory(null);
     setShowEditSite(false);
@@ -1035,7 +1045,7 @@ export function EquipmentPage({
           </Suspense>
         ) : activeSection === "bonds" ? (
           <Suspense fallback={<FeaturePageLoading />}>
-            <BondsPage />
+            <BondsPage initialSiteId={route.section === "bonds" ? route.bondProjectId : null} />
           </Suspense>
         ) : activeSection === "temporary-admissions" ? (
           <Suspense fallback={<FeaturePageLoading />}>
@@ -1053,6 +1063,8 @@ export function EquipmentPage({
               employees={options?.employees}
               onOpenSite={openSiteInventory}
               onOpenInsurance={openSiteInsurance}
+              onOpenBonds={openSiteBonds}
+              onOpenPeople={openSitePeople}
             />
           </Suspense>
         ) : activeSection === "catalogs" ? (
@@ -1063,6 +1075,7 @@ export function EquipmentPage({
           <Suspense fallback={<FeaturePageLoading />}>
             <PeoplePage
               canAdd={user.permissions.manage_users}
+              initialProjectId={route.section === "people" ? route.peopleProjectId : null}
               canManageManagerAccounts={user.permissions.manage_manager_accounts}
               catalogs={options?.catalogs}
               projects={options?.projects}

@@ -21,11 +21,13 @@ type SitesPageProps = {
   canAdd: boolean
   onOpenSite?: (site: Site) => void
   onOpenInsurance?: (site: Site) => void
+  onOpenBonds?: (site: Site) => void
+  onOpenPeople?: (site: Site) => void
   catalogs?: CatalogOption[]
   employees?: NamedReference[]
 }
 
-export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, catalogs, employees = [] }: SitesPageProps) {
+export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, onOpenBonds, onOpenPeople, catalogs, employees = [] }: SitesPageProps) {
   const [sites, setSites] = useState<Site[]>([])
   const [search, setSearch] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
@@ -185,11 +187,9 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, catalogs, emplo
           <div className="site-details-modal">
             {isLoadingDetails && <div className="site-details-loading"><LoadingSpinner label={fr.common.loading} /></div>}
             {detailsError && <div className="form-alert" role="alert">{detailsError}</div>}
-            <div className="detail-primary-actions site-detail-toolbar">
-              {canAdd && <button className="equipment-edit-button detail-toolbar-button" type="button" onClick={() => setIsEditingSite(true)}><ActionIcon name="edit" />{fr.directory.editThisSite}</button>}
-              <button className="equipment-transfer-button detail-toolbar-button" type="button" onClick={() => onOpenSite?.(selectedSite)}><NavigationIcon name="generators" />{fr.directory.viewAssets}</button>
-              <button className="equipment-history-button detail-toolbar-button" type="button" onClick={() => onOpenInsurance?.(selectedSite)}><ActionIcon name="invoice" />{fr.directory.viewInsurance}</button>
-            </div>
+            {canAdd && <div className="detail-primary-actions site-detail-toolbar">
+              <button className="equipment-edit-button detail-toolbar-button" type="button" onClick={() => setIsEditingSite(true)}><ActionIcon name="edit" />{fr.directory.editThisSite}</button>
+            </div>}
             <section className="site-detail-section">
               <h3><ActionIcon name="identification" />Informations principales</h3>
               <dl className="site-details-facts">
@@ -199,6 +199,31 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, catalogs, emplo
                 <div><dt>{fr.directory.siteAddress}</dt><dd>{selectedSite.address ?? fr.common.notProvided}</dd></div>
                 <div><dt>{fr.directory.assignedAssets}</dt><dd className="site-details-count">{selectedSite.active_equipment_count}</dd></div>
               </dl>
+            </section>
+            <section className="site-detail-section site-related-section">
+              <h3><ActionIcon name="transfer" />{fr.directory.relatedItems}</h3>
+              <div className="site-related-links">
+                <article>
+                  <NavigationIcon name="generators" />
+                  <div><strong>{fr.directory.viewAssets}</strong><span>{fr.directory.assetCount(selectedSite.active_equipment_count)}</span></div>
+                  <button type="button" onClick={() => onOpenSite?.(selectedSite)}>{fr.common.view}<ActionIcon name="expand" /></button>
+                </article>
+                <article>
+                  <ActionIcon name="people" />
+                  <div><strong>{fr.navigation.people}</strong><span>{fr.directory.sitePeopleDescription}</span></div>
+                  <button type="button" onClick={() => onOpenPeople?.(selectedSite)}>{fr.common.view}<ActionIcon name="expand" /></button>
+                </article>
+                <article>
+                  <ActionIcon name="invoice" />
+                  <div><strong>{fr.directory.viewInsurance}</strong><span>{fr.directory.siteInsuranceDescription}</span></div>
+                  <button type="button" onClick={() => onOpenInsurance?.(selectedSite)}>{fr.common.view}<ActionIcon name="expand" /></button>
+                </article>
+                <article>
+                  <NavigationIcon name="bonds" />
+                  <div><strong>{fr.navigation.bonds}</strong><span>{fr.directory.siteBondsDescription}</span></div>
+                  <button type="button" onClick={() => onOpenBonds?.(selectedSite)}>{fr.common.view}<ActionIcon name="expand" /></button>
+                </article>
+              </div>
             </section>
             <section className="site-detail-section">
               <h3><ActionIcon name="history" />Planification</h3>

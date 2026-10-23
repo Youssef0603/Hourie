@@ -1975,6 +1975,85 @@ html[dir="rtl"] .directory-form select {
   font-size: 0.95rem;
 }
 
+.site-related-links {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.site-related-links article {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+  padding: 0.65rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.55rem;
+  background: var(--color-surface);
+}
+
+.site-related-links article > svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  color: var(--color-primary);
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+.site-related-links article > div {
+  display: grid;
+  min-width: 0;
+  gap: 0.12rem;
+}
+
+.site-related-links strong {
+  color: var(--color-text-strong);
+  font-size: 0.72rem;
+}
+
+.site-related-links span {
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: 0.62rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.site-related-links button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  min-height: 2rem;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.45rem;
+  color: var(--color-primary);
+  background: var(--color-surface);
+  font: inherit;
+  font-size: 0.65rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.site-related-links button:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+
+.site-related-links button svg {
+  width: 0.75rem;
+  height: 0.75rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
 .site-details-location-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -6049,6 +6128,10 @@ html[dir="rtl"] .maintenance-form-grid select {
   .site-details-facts,
   .site-details-locations > div,
   .site-details-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .site-related-links {
     grid-template-columns: 1fr;
   }
 

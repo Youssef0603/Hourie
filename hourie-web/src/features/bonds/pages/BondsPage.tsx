@@ -19,14 +19,18 @@ import { activeLanguage } from "../../../i18n/fr";
 import { operationPhrase } from "../../../i18n/operations";
 import { TotalCount } from "../../../shared/components/TotalCount";
 
-export function BondsPage() {
+type BondsPageProps = {
+  initialSiteId?: number | null;
+};
+
+export function BondsPage({ initialSiteId = null }: BondsPageProps) {
   const [bonds, setBonds] = useState<Bond[]>([]);
   const [pagination, setPagination] = useState<PaginationMeta | null>(null);
   const [sites, setSites] = useState<Site[]>([]);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<BondStatus | "all">("all");
   const [type, setType] = useState<BondType | "all">("all");
-  const [siteId, setSiteId] = useState("");
+  const [siteId, setSiteId] = useState(initialSiteId ? String(initialSiteId) : "");
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
@@ -34,6 +38,11 @@ export function BondsPage() {
   const [editing, setEditing] = useState<Bond | null>(null);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [selected, setSelected] = useState<Bond | null>(null);
+
+  useEffect(() => {
+    setSiteId(initialSiteId ? String(initialSiteId) : "");
+    setPage(1);
+  }, [initialSiteId]);
 
   const refresh = useCallback(async () => {
     setLoading(true);

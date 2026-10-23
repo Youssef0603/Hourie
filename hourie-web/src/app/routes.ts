@@ -32,7 +32,19 @@ export type WorkspaceRoute =
       siteId: null;
     }
   | {
-      section: "people" | "catalogs" | "bonds";
+      section: "people";
+      peopleProjectId: number | null;
+      equipmentId: null;
+      siteId: null;
+    }
+  | {
+      section: "bonds";
+      bondProjectId: number | null;
+      equipmentId: null;
+      siteId: null;
+    }
+  | {
+      section: "catalogs";
       equipmentId: null;
       siteId: null;
     };
@@ -110,8 +122,25 @@ export function parseWorkspaceRoute(pathname: string): WorkspaceRoute {
       equipmentId: id(parts[2]),
     };
   }
+  if (
+    parts[0] === "people" &&
+    parts[1] === "sites" &&
+    id(parts[2]) &&
+    parts.length === 3
+  )
+    return {
+      section: "people",
+      peopleProjectId: id(parts[2]),
+      siteId: null,
+      equipmentId: null,
+    };
   if (parts[0] === "people" && parts.length === 1)
-    return { section: "people", siteId: null, equipmentId: null };
+    return {
+      section: "people",
+      peopleProjectId: null,
+      siteId: null,
+      equipmentId: null,
+    };
   if (
     parts[0] === "insurance" &&
     parts[1] === "sites" &&
@@ -140,8 +169,25 @@ export function parseWorkspaceRoute(pathname: string): WorkspaceRoute {
       siteId: null,
       equipmentId: null,
     };
+  if (
+    parts[0] === "bonds" &&
+    parts[1] === "sites" &&
+    id(parts[2]) &&
+    parts.length === 3
+  )
+    return {
+      section: "bonds",
+      bondProjectId: id(parts[2]),
+      siteId: null,
+      equipmentId: null,
+    };
   if (parts[0] === "bonds" && parts.length === 1)
-    return { section: "bonds", siteId: null, equipmentId: null };
+    return {
+      section: "bonds",
+      bondProjectId: null,
+      siteId: null,
+      equipmentId: null,
+    };
   if (
     parts[0] === "temporary-admissions" &&
     (parts.length === 1 || (id(parts[1]) && parts.length === 2))
@@ -173,8 +219,15 @@ export function workspacePath(route: WorkspaceRoute): string {
       : route.insuranceProjectId
       ? `/insurance/sites/${route.insuranceProjectId}`
       : "/insurance";
-  if (route.section === "bonds") return "/bonds";
+  if (route.section === "bonds")
+    return route.bondProjectId
+      ? `/bonds/sites/${route.bondProjectId}`
+      : "/bonds";
   if (route.section === "temporary-admissions")
     return `/temporary-admissions${route.temporaryAdmissionId ? `/${route.temporaryAdmissionId}` : ""}`;
+  if (route.section === "people")
+    return route.peopleProjectId
+      ? `/people/sites/${route.peopleProjectId}`
+      : "/people";
   return `/${route.section}`;
 }

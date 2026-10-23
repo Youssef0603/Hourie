@@ -33,6 +33,7 @@ import { TotalCount } from "../../../shared/components/TotalCount";
 
 type PeoplePageProps = {
   canAdd: boolean;
+  initialProjectId?: number | null;
   canManageManagerAccounts?: boolean;
   catalogs?: CatalogOption[];
   projects?: NamedReference[];
@@ -53,6 +54,7 @@ function normalizeSearch(value: string) {
 
 export function PeoplePage({
   canAdd,
+  initialProjectId = null,
   canManageManagerAccounts = false,
   catalogs,
   projects,
@@ -68,7 +70,7 @@ export function PeoplePage({
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("");
   const [activityFilter, setActivityFilter] = useState<ActivityFilter>("");
   const [jobTitleFilter, setJobTitleFilter] = useState("");
-  const [projectFilter, setProjectFilter] = useState("");
+  const [projectFilter, setProjectFilter] = useState(initialProjectId ? String(initialProjectId) : "");
   const [companyLocationFilter, setCompanyLocationFilter] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -81,6 +83,12 @@ export function PeoplePage({
   const [relatedEquipmentId, setRelatedEquipmentId] = useState<number | null>(null);
   const [relatedRecord, setRelatedRecord] = useState<RelatedRecordReference | null>(null);
   const personRequest = useRef(0);
+
+  useEffect(() => {
+    setProjectFilter(initialProjectId ? String(initialProjectId) : "");
+    setCurrentPage(1);
+  }, [initialProjectId]);
+
   const searchTerm = normalizeSearch(search.trim());
   const searchedPeople = searchTerm
     ? people.filter((person) =>

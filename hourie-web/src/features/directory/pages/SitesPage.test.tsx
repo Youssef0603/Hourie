@@ -94,4 +94,39 @@ describe('SitesPage', () => {
 
     expect(await screen.findByRole('dialog', { name: 'Détail du chantier' })).toBeVisible()
   })
+
+  it('keeps related chantier navigation in one details section', async () => {
+    const user = userEvent.setup()
+    const onOpenSite = vi.fn()
+    const onOpenPeople = vi.fn()
+    const onOpenInsurance = vi.fn()
+    const onOpenBonds = vi.fn()
+    render(
+      <SitesPage
+        canAdd
+        onOpenSite={onOpenSite}
+        onOpenPeople={onOpenPeople}
+        onOpenInsurance={onOpenInsurance}
+        onOpenBonds={onOpenBonds}
+      />,
+    )
+
+    await user.click(await screen.findByText('Bassam'))
+    const detailPanel = await screen.findByRole('dialog', { name: 'Détail du chantier' })
+    expect(within(detailPanel).getByText('Éléments liés')).toBeVisible()
+    expect(within(detailPanel).queryByRole('button', { name: 'Actifs' })).not.toBeInTheDocument()
+    expect(within(detailPanel).queryByRole('button', { name: 'Assurances' })).not.toBeInTheDocument()
+
+    const navigationButtons = within(detailPanel).getAllByRole('button', { name: /Voir/ })
+    expect(navigationButtons).toHaveLength(4)
+    await user.click(navigationButtons[0])
+    await user.click(navigationButtons[1])
+    await user.click(navigationButtons[2])
+    await user.click(navigationButtons[3])
+
+    expect(onOpenSite).toHaveBeenCalledWith(expect.objectContaining({ id: 1 }))
+    expect(onOpenPeople).toHaveBeenCalledWith(expect.objectContaining({ id: 1 }))
+    expect(onOpenInsurance).toHaveBeenCalledWith(expect.objectContaining({ id: 1 }))
+    expect(onOpenBonds).toHaveBeenCalledWith(expect.objectContaining({ id: 1 }))
+  })
 })
