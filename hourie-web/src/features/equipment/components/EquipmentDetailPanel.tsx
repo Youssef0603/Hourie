@@ -82,7 +82,7 @@ export function EquipmentDetailPanel({
   const canDeleteMaintenance = !readOnly && user.permissions.delete_maintenance;
   const transferChanges = selected?.changes.filter((change) => change.source === "transfer") ?? [];
   const hasAssignment = selected !== null && Boolean(
-    selected.current_project_assignment || selected.current_location || selected.responsible,
+    selected.current_project_assignment || selected.current_location || selected.custodian,
   );
   const hasIdentification = selected !== null && [
     selected.serial_number,

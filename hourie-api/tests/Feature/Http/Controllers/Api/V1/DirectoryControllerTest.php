@@ -655,7 +655,7 @@ it('allows CMS managers to edit a site, its locations, and records the actor', f
     $this->assertDatabaseHas('locations', ['project_id' => $site->id, 'name' => 'CENTRALE', 'is_active' => true]);
 });
 
-it('includes generators inherited from a site in personnel responsibility', function () {
+it('does not count a site manager as equipment custodian', function () {
     $viewer = User::factory()->create(['role' => UserRole::Viewer]);
     $responsible = Employee::factory()->create(['name' => 'Responsable BASSAM']);
     $site = Project::factory()->create(['responsible_employee_id' => $responsible->id]);
@@ -666,14 +666,13 @@ it('includes generators inherited from a site in personnel responsibility', func
         ->assertOk()
         ->assertJsonFragment([
             'id' => $responsible->id,
-            'equipment_in_custody_count' => 1,
+            'equipment_in_custody_count' => 0,
         ]);
 
     $this->actingAs($viewer, 'web')->getJson("/api/v1/employees/{$responsible->id}")
         ->assertOk()
-        ->assertJsonPath('data.equipment_in_custody_count', 1)
-        ->assertJsonPath('data.equipment_in_custody.0.asset_code', 'GEN-SITE')
-        ->assertJsonPath('data.equipment_in_custody.0.responsible_source', 'site')
+        ->assertJsonPath('data.equipment_in_custody_count', 0)
+        ->assertJsonCount(0, 'data.equipment_in_custody')
         ->assertJsonPath('data.assigned_sites.0.id', $site->id)
         ->assertJsonPath('data.assigned_sites.0.name', $site->name);
 });

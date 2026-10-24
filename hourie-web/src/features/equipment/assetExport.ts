@@ -33,8 +33,7 @@ const commonFields: AssetExportField[] = [
   { key: 'condition', labelFr: 'État', labelAr: 'الحالة', value: (item, catalogs) => catalogLabel(catalogs, 'equipment_condition', item.condition) },
   { key: 'project', labelFr: 'Chantier', labelAr: 'الموقع / المشروع', value: (item) => item.current_project_assignment?.project.name },
   { key: 'location', labelFr: 'Localisation physique', labelAr: 'الموقع الفعلي', value: (item) => physicalLocation(item) },
-  { key: 'custodian', labelFr: 'Conducteur / gardien', labelAr: 'السائق / الحارس', value: (item) => item.custodian?.name },
-  { key: 'responsible', labelFr: 'Responsable', labelAr: 'المسؤول', value: (item) => item.responsible?.name },
+  { key: 'custodian', labelFr: 'Responsable / conducteur', labelAr: 'المسؤول / السائق', value: (item) => item.custodian?.name },
 ]
 
 const generatorFields: AssetExportField[] = [

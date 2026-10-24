@@ -71,23 +71,10 @@ class EmployeeController extends Controller
         $employeeIds = $employees->getCollection()->modelKeys();
 
         $responsibilityCounts = Equipment::query()
-            ->leftJoin('equipment_project_assignments', function ($join): void {
-                $join
-                    ->on('equipment.id', '=', 'equipment_project_assignments.equipment_id')
-                    ->whereNull('equipment_project_assignments.ended_at');
-            })
-            ->leftJoin('projects', 'projects.id', '=', 'equipment_project_assignments.project_id')
             ->where('equipment.is_active', true)
-            ->where(function ($query): void {
-                $query->whereNotNull('equipment.custodian_employee_id')
-                    ->orWhereNotNull('projects.responsible_employee_id');
-            })
-            ->where(function ($query) use ($employeeIds): void {
-                $query->whereIn('equipment.custodian_employee_id', $employeeIds)
-                    ->orWhereIn('projects.responsible_employee_id', $employeeIds);
-            })
-            ->selectRaw('COALESCE(equipment.custodian_employee_id, projects.responsible_employee_id) as responsible_employee_id, COUNT(DISTINCT equipment.id) as aggregate')
-            ->groupByRaw('COALESCE(equipment.custodian_employee_id, projects.responsible_employee_id)')
+            ->whereIn('equipment.custodian_employee_id', $employeeIds)
+            ->selectRaw('equipment.custodian_employee_id as responsible_employee_id, COUNT(equipment.id) as aggregate')
+            ->groupBy('equipment.custodian_employee_id')
             ->pluck('aggregate', 'responsible_employee_id');
 
         $employees->getCollection()->each(fn (Employee $employee) => $employee->setAttribute(
@@ -164,12 +151,13 @@ class EmployeeController extends Controller
                 ->orderByDesc('ends_on'),
         ]);
         $equipment = Equipment::query()
-            ->effectiveResponsible($employee->id)
+            ->where('custodian_employee_id', $employee->id)
+            ->where('is_active', true)
             ->with([
                 'category',
                 'currentLocation.parent',
                 'currentLocation.project',
-                'currentProjectAssignment.project.responsible:id,name',
+                'currentProjectAssignment.project:id,name',
                 'custodian',
                 'generatorDetails',
             ])

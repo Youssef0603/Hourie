@@ -103,7 +103,6 @@ export function EquipmentEditForm({ equipment, employees, projects, locations, c
   const physicalLocationOptions = locations.filter((location) => form.project_id
     ? location.parent_id !== null && String(location.project_id) === form.project_id
     : location.location_type === 'company_location' && location.project_id === null)
-  const selectedProject = projects.find((project) => String(project.id) === form.project_id)
 
   function update(name: keyof FormState, value: string) {
     setForm((current) => ({ ...current, [name]: value }))
@@ -189,7 +188,7 @@ export function EquipmentEditForm({ equipment, employees, projects, locations, c
         {conditionIsSold(catalogs, form.condition) && <label><span>Acheteur <em>*</em></span><input required value={form.sold_to} onChange={(event) => update('sold_to', event.target.value)} placeholder="Nom de l’acheteur" /></label>}
         <label><span>{fr.equipment.project}</span><SearchableSelect ariaLabel={fr.equipment.project} value={form.project_id} onChange={updateProject} placeholder={fr.common.notProvided} options={projects.map((project) => ({ value: String(project.id), label: project.name }))} /></label>
         <label><span>{fr.equipment.location}</span><SearchableSelect ariaLabel={fr.equipment.location} value={form.current_location_id} onChange={(value) => update('current_location_id', value)} placeholder={fr.common.notProvided} options={physicalLocationOptions.map((location) => ({ value: String(location.id), label: form.project_id === '' ? locationOptionLabel(location) : location.name }))} /></label>
-        <label className="field-wide"><span>{fr.equipment.custodian}</span><SearchableSelect ariaLabel={fr.equipment.custodian} value={form.custodian_employee_id} onChange={(value) => update('custodian_employee_id', value)} placeholder={selectedProject?.responsible ? fr.equipment.useSiteResponsible(selectedProject.responsible.name) : fr.equipment.noSiteResponsible} options={employees.map((employee) => ({ value: String(employee.id), label: employee.name }))} /></label>
+        <label className="field-wide"><span>{fr.equipment.custodian}</span><SearchableSelect ariaLabel={fr.equipment.custodian} value={form.custodian_employee_id} onChange={(value) => update('custodian_employee_id', value)} placeholder={fr.common.notAssigned} options={employees.map((employee) => ({ value: String(employee.id), label: employee.name }))} /></label>
         <label><span>{fr.equipment.apparentPower}</span><input min="0" step="0.01" type="number" value={form.apparent_power_kva} onChange={(event) => update('apparent_power_kva', event.target.value)} /></label>
         <label><span>{fr.equipment.activePower}</span><input min="0" step="0.01" type="number" value={form.active_power_kw} onChange={(event) => update('active_power_kw', event.target.value)} /></label>
         <label><span>{fr.equipment.phases}</span><input value={form.phases} onChange={(event) => update('phases', event.target.value)} /></label>

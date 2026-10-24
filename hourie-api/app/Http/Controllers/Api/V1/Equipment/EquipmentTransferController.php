@@ -157,7 +157,7 @@ class EquipmentTransferController extends Controller
     {
         return new EquipmentResource($equipment->fresh()->load([
             'category', 'currentLocation.parent', 'currentLocation.project',
-            'currentProjectAssignment.project.responsible:id,name', 'custodian', 'generatorDetails',
+            'currentProjectAssignment.project:id,name', 'custodian', 'generatorDetails',
             'maintenances.technician', 'maintenances.createdBy', 'images.uploader', 'invoices.uploader',
             'vehicleDocuments.uploader',
             'insurancePolicies' => fn ($query) => $query

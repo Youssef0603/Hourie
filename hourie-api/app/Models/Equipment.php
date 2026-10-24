@@ -116,22 +116,6 @@ class Equipment extends Model
         return $this->belongsToMany(TemporaryAdmission::class, 'temporary_admission_equipment');
     }
 
-    public function scopeEffectiveResponsible(Builder $query, int $employeeId): Builder
-    {
-        return $query->where(function (Builder $query) use ($employeeId): void {
-            $query
-                ->where('custodian_employee_id', $employeeId)
-                ->orWhere(function (Builder $query) use ($employeeId): void {
-                    $query
-                        ->whereNull('custodian_employee_id')
-                        ->whereHas(
-                            'currentProjectAssignment.project',
-                            fn (Builder $query) => $query->where('responsible_employee_id', $employeeId),
-                        );
-                });
-        });
-    }
-
     protected function casts(): array
     {
         return [

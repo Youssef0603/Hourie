@@ -62,7 +62,7 @@ class EquipmentController extends Controller
             'category',
             'currentLocation.parent',
             'currentLocation.project',
-            'currentProjectAssignment.project.responsible:id,name',
+            'currentProjectAssignment.project:id,name',
             'custodian',
             'generatorDetails',
             'maintenances.technician',

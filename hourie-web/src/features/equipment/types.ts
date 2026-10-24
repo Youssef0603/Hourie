@@ -43,11 +43,9 @@ export type EquipmentSummary = {
     | null;
   current_project_assignment: {
     id: number;
-    project: NamedReference & { responsible: NamedReference | null };
+    project: NamedReference;
   } | null;
   custodian: NamedReference | null;
-  responsible: NamedReference | null;
-  responsible_source: "site" | "generator" | "asset" | null;
   power: {
     apparent_kva: string | null;
     active_kw: string | null;

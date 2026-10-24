@@ -251,8 +251,6 @@ describe('PeoplePage', () => {
         current_location: null,
         current_project_assignment: null,
         custodian: { id: 1, name: 'Youssef Yassine' },
-        responsible: { id: 1, name: 'Youssef Yassine' },
-        responsible_source: 'asset',
         power: null,
         fuel_type: null,
       }],

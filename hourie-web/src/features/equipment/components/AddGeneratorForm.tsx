@@ -40,7 +40,6 @@ export function AddGeneratorForm({ options, initialProjectId, onCreated, formId 
   const physicalLocationOptions = options.locations.filter((location) => form.project_id
     ? location.parent_id !== null && String(location.project_id) === form.project_id
     : location.location_type === 'company_location' && location.project_id === null)
-  const selectedProject = options.projects.find((project) => String(project.id) === form.project_id)
 
   function update(name: keyof typeof form, value: string) {
     setForm((current) => ({ ...current, [name]: value }))
@@ -107,7 +106,7 @@ export function AddGeneratorForm({ options, initialProjectId, onCreated, formId 
       <InventoryFormSection title={fr.equipment.assignment} icon="location"><div className="maintenance-form-grid asset-form-grid-3">
         <label><span>{fr.equipment.project}</span><SearchableSelect ariaLabel={fr.equipment.project} value={form.project_id} onChange={updateProject} placeholder={fr.common.toComplete} options={options.projects.map((project) => ({ value: String(project.id), label: project.name }))} /></label>
         <label><span>{fr.equipment.location}</span><SearchableSelect ariaLabel={fr.equipment.location} value={form.current_location_id} onChange={(value) => update('current_location_id', value)} placeholder={fr.common.toComplete} options={physicalLocationOptions.map((location) => ({ value: String(location.id), label: form.project_id === '' ? locationOptionLabel(location) : location.name }))} /></label>
-        <label><span>{fr.equipment.custodian}</span><SearchableSelect ariaLabel={fr.equipment.custodian} value={form.custodian_employee_id} onChange={(value) => update('custodian_employee_id', value)} placeholder={selectedProject?.responsible ? fr.equipment.useSiteResponsible(selectedProject.responsible.name) : fr.equipment.noSiteResponsible} options={options.employees.map((employee) => ({ value: String(employee.id), label: employee.name }))} /></label>
+        <label><span>{fr.equipment.custodian}</span><SearchableSelect ariaLabel={fr.equipment.custodian} value={form.custodian_employee_id} onChange={(value) => update('custodian_employee_id', value)} placeholder={fr.common.notAssigned} options={options.employees.map((employee) => ({ value: String(employee.id), label: employee.name }))} /></label>
       </div></InventoryFormSection>
       <InventoryFormSection title={fr.equipment.identification} icon="identification"><div className="maintenance-form-grid asset-form-grid-3">
         <label><span>{fr.equipment.brand}</span><input required value={form.brand} onChange={(event) => update('brand', event.target.value)} /></label>

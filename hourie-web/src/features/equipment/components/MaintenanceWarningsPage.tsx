@@ -74,7 +74,7 @@ export function MaintenanceWarningsPanel({
                   <div><dt>{fr.maintenanceWarnings.dueDate}</dt><dd>{formatDate(warning.next_maintenance_date)}</dd></div>
                   <div><dt>{fr.maintenanceWarnings.lastMaintenance}</dt><dd>{formatDate(warning.last_maintenance_date)}</dd></div>
                   <div><dt>{fr.equipment.project}</dt><dd>{warning.equipment.current_project_assignment?.project.name ?? fr.common.notAssigned}</dd></div>
-                  <div><dt>{fr.equipment.custodian}</dt><dd>{warning.equipment.responsible?.name ?? fr.common.notAssigned}</dd></div>
+                  <div><dt>{fr.equipment.custodian}</dt><dd>{warning.equipment.custodian?.name ?? fr.common.notAssigned}</dd></div>
                 </dl>
                 <div className="maintenance-warning-action">
                   <strong>{timingLabel(warning.days_until_due)}</strong>

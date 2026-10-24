@@ -35,7 +35,7 @@ class ListMaintenanceWarnings
                 'category',
                 'currentLocation.parent',
                 'currentLocation.project',
-                'currentProjectAssignment.project.responsible:id,name',
+                'currentProjectAssignment.project:id,name',
                 'custodian',
                 'generatorDetails',
                 'latestMaintenance.technician',

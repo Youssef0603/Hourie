@@ -202,7 +202,7 @@ it('returns physical locations and Excel power values in the inventory list', fu
         ->assertJsonPath('data.0.fuel_type', 'GASOIL');
 });
 
-it('inherits the site responsible unless the generator has an override', function () {
+it('keeps the site responsible separate from the equipment custodian', function () {
     $user = User::factory()->create();
     $siteResponsible = Employee::factory()->create(['name' => 'Responsable du site']);
     $generatorResponsible = Employee::factory()->create(['name' => 'Responsable du générateur']);
@@ -215,22 +215,22 @@ it('inherits the site responsible unless the generator has an override', functio
     $this->actingAs($user, 'web')->getJson("/api/v1/equipment/{$inherited->id}")
         ->assertOk()
         ->assertJsonPath('data.custodian', null)
-        ->assertJsonPath('data.responsible.id', $siteResponsible->id)
-        ->assertJsonPath('data.responsible_source', 'site');
+        ->assertJsonMissingPath('data.responsible')
+        ->assertJsonMissingPath('data.responsible_source');
 
     $this->actingAs($user, 'web')->getJson("/api/v1/equipment/{$overridden->id}")
         ->assertOk()
-        ->assertJsonPath('data.responsible.id', $generatorResponsible->id)
-        ->assertJsonPath('data.responsible_source', 'generator');
+        ->assertJsonPath('data.custodian.id', $generatorResponsible->id)
+        ->assertJsonMissingPath('data.responsible');
 });
 
-it('filters generators by their inherited site responsible', function () {
+it('filters equipment only by its explicitly assigned custodian', function () {
     $user = User::factory()->create();
     $siteResponsible = Employee::factory()->create();
     $project = Project::factory()->create(['responsible_employee_id' => $siteResponsible->id]);
-    $matching = Equipment::factory()->create(['custodian_employee_id' => null]);
-    EquipmentProjectAssignment::factory()->for($matching)->for($project)->create(['ended_at' => null]);
-    Equipment::factory()->create();
+    $siteEquipment = Equipment::factory()->create(['custodian_employee_id' => null]);
+    EquipmentProjectAssignment::factory()->for($siteEquipment)->for($project)->create(['ended_at' => null]);
+    $matching = Equipment::factory()->create(['custodian_employee_id' => $siteResponsible->id]);
 
     $this->actingAs($user, 'web')
         ->getJson('/api/v1/equipment?custodian_employee_id='.$siteResponsible->id)

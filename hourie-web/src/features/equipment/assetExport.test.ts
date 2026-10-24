@@ -20,8 +20,6 @@ const car = {
   current_location: null,
   current_project_assignment: null,
   custodian: { id: 2, name: 'Iyad Mroueh' },
-  responsible: null,
-  responsible_source: null,
   power: null,
   fuel_type: null,
 } satisfies EquipmentSummary

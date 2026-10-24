@@ -18,14 +18,7 @@ export function EquipmentAssignmentDetails({
       <div><dt>{fr.equipment.location}</dt><dd>{locationName(equipment)}</dd></div>
       <div>
         <dt>{categoryCode === "car" ? fr.equipment.assignedTo : fr.equipment.custodian}</dt>
-        <dd>
-          {equipment.responsible ? (
-            <>
-              {equipment.responsible.name}
-              {equipment.responsible_source === "site" && <small className="responsibility-source">{fr.equipment.inheritedFromSite}</small>}
-            </>
-          ) : fr.common.notProvided}
-        </dd>
+        <dd>{equipment.custodian?.name ?? fr.common.notProvided}</dd>
       </div>
     </dl>
   );

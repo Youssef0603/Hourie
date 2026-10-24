@@ -22,7 +22,7 @@ class ListEquipment
                 'category',
                 'currentLocation.parent',
                 'currentLocation.project',
-                'currentProjectAssignment.project.responsible:id,name',
+                'currentProjectAssignment.project:id,name',
                 'custodian',
                 'generatorDetails',
             ])
@@ -101,7 +101,7 @@ class ListEquipment
                 $query->whereHas('currentProjectAssignment', fn (Builder $query) => $query->where('project_id', $projectId));
             })
             ->when($filters['location_id'] ?? null, fn (Builder $query, int $locationId) => $query->where('current_location_id', $locationId))
-            ->when($filters['custodian_employee_id'] ?? null, fn (Builder $query, int $employeeId) => $query->effectiveResponsible($employeeId))
+            ->when($filters['custodian_employee_id'] ?? null, fn (Builder $query, int $employeeId) => $query->where('custodian_employee_id', $employeeId))
             ->when($filters['brand'] ?? null, fn (Builder $query, string $value) => $query->where('brand', 'like', '%'.trim($value).'%'))
             ->when($filters['model'] ?? null, fn (Builder $query, string $value) => $query->where('model', 'like', '%'.trim($value).'%'))
             ->when($filters['serial_number'] ?? null, fn (Builder $query, string $value) => $query->where('serial_number', 'like', '%'.trim($value).'%'))

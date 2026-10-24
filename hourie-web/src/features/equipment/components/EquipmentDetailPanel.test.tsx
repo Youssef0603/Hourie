@@ -43,8 +43,6 @@ function equipment(overrides: Partial<Equipment> = {}): Equipment {
     current_location: null,
     current_project_assignment: null,
     custodian: null,
-    responsible: null,
-    responsible_source: null,
     power: null,
     fuel_type: null,
     observations: null,

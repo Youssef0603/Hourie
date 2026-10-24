@@ -109,7 +109,7 @@ class SiteController extends Controller
             'equipmentAssignments.equipment.category',
             'equipmentAssignments.equipment.currentLocation.parent',
             'equipmentAssignments.equipment.currentLocation.project',
-            'equipmentAssignments.equipment.currentProjectAssignment.project.responsible:id,name',
+            'equipmentAssignments.equipment.currentProjectAssignment.project:id,name',
             'equipmentAssignments.equipment.custodian',
             'equipmentAssignments.equipment.generatorDetails',
             'changes.actor',

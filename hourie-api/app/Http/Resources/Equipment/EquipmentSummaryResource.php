@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources\Equipment;
 
-use App\Models\EquipmentCategory;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -62,10 +61,6 @@ class EquipmentSummaryResource extends JsonResource
                     'project' => [
                         'id' => $this->currentProjectAssignment->project->id,
                         'name' => $this->currentProjectAssignment->project->name,
-                        'responsible' => $this->currentProjectAssignment->project->responsible === null ? null : [
-                            'id' => $this->currentProjectAssignment->project->responsible->id,
-                            'name' => $this->currentProjectAssignment->project->responsible->name,
-                        ],
                     ],
                 ];
             }),
@@ -73,8 +68,6 @@ class EquipmentSummaryResource extends JsonResource
                 'id' => $this->custodian->id,
                 'name' => $this->custodian->name,
             ]),
-            'responsible' => $this->effectiveResponsible(),
-            'responsible_source' => $this->effectiveResponsibleSource(),
             'power' => $this->whenLoaded('generatorDetails', fn () => $this->generatorDetails === null ? null : [
                 'apparent_kva' => $this->generatorDetails->apparent_power_kva,
                 'active_kw' => $this->generatorDetails->active_power_kw,
@@ -83,28 +76,4 @@ class EquipmentSummaryResource extends JsonResource
         ];
     }
 
-    /** @return array{id: int, name: string}|null */
-    private function effectiveResponsible(): ?array
-    {
-        $responsible = $this->custodian
-            ?? $this->currentProjectAssignment?->project?->responsible;
-
-        return $responsible === null ? null : [
-            'id' => $responsible->id,
-            'name' => $responsible->name,
-        ];
-    }
-
-    private function effectiveResponsibleSource(): ?string
-    {
-        if ($this->custodian !== null) {
-            $categoryCode = $this->category?->code;
-
-            return $categoryCode === 'generator' || ! isset(EquipmentCategory::ASSET_CATEGORIES[$categoryCode])
-                ? 'generator'
-                : 'asset';
-        }
-
-        return $this->currentProjectAssignment?->project?->responsible === null ? null : 'site';
-    }
 }
