@@ -6,6 +6,7 @@ import type {
   EquipmentImportResult,
   EquipmentImage,
   EquipmentInvoice,
+  EquipmentGeneratorDocument,
   EquipmentVehicleDocument,
   EquipmentListResponse,
   CatalogOption,
@@ -252,6 +253,37 @@ export function previewEquipmentVehicleDocument(document: EquipmentVehicleDocume
 
 export function previewEquipmentInvoice(invoice: EquipmentInvoice): boolean {
   const url = new URL(invoice.url, window.location.origin)
+  url.searchParams.set('preview', '1')
+  const previewWindow = window.open(url.toString(), '_blank')
+  if (previewWindow) previewWindow.opener = null
+  return previewWindow !== null
+}
+
+export async function uploadEquipmentGeneratorDocuments(
+  equipmentId: number,
+  documents: File[],
+): Promise<EquipmentGeneratorDocument[]> {
+  await initializeCsrfProtection()
+  const form = new FormData()
+  documents.forEach((document) => form.append('documents[]', document))
+
+  return (await apiRequest<{ data: EquipmentGeneratorDocument[] }>(`/api/v1/equipment/${equipmentId}/generator-documents`, {
+    method: 'POST',
+    body: form,
+  })).data
+}
+
+export async function deleteEquipmentGeneratorDocument(equipmentId: number, documentId: number): Promise<void> {
+  await initializeCsrfProtection()
+  await apiRequest<void>(`/api/v1/equipment/${equipmentId}/generator-documents/${documentId}`, { method: 'DELETE' })
+}
+
+export async function downloadEquipmentGeneratorDocument(document: EquipmentGeneratorDocument): Promise<void> {
+  await downloadAuthenticatedFile(document.url, document.original_name)
+}
+
+export function previewEquipmentGeneratorDocument(document: EquipmentGeneratorDocument): boolean {
+  const url = new URL(document.url, window.location.origin)
   url.searchParams.set('preview', '1')
   const previewWindow = window.open(url.toString(), '_blank')
   if (previewWindow) previewWindow.opener = null

@@ -107,7 +107,6 @@ export type MaintenancePayload = {
   technician_employee_id: number | null;
   technician_name: string | null;
   external_technician_phone: string | null;
-  next_maintenance_date: string | null;
   cost: number | null;
   cost_currency: string | null;
   observations: string | null;
@@ -121,6 +120,7 @@ export type Equipment = EquipmentSummary & {
   images: EquipmentImage[];
   invoices: EquipmentInvoice[];
   vehicle_documents: EquipmentVehicleDocument[];
+  generator_documents: EquipmentGeneratorDocument[];
   insurance_policies: EquipmentInsurancePolicy[];
   temporary_admissions: EquipmentTemporaryAdmission[];
 };
@@ -181,6 +181,16 @@ export type EquipmentVehicleDocument = {
   created_at: string;
 };
 
+export type EquipmentGeneratorDocument = {
+  id: number;
+  url: string;
+  original_name: string;
+  mime_type: string;
+  size_bytes: number;
+  uploaded_by: NamedReference | null;
+  created_at: string;
+};
+
 export type EquipmentChange = {
   id: number;
   type:
@@ -200,6 +210,8 @@ export type EquipmentChange = {
     | "invoice_deleted"
     | "vehicle_document_added"
     | "vehicle_document_deleted"
+    | "generator_document_added"
+    | "generator_document_deleted"
     | "archived";
   source: "import" | "manual" | "transfer" | "maintenance";
   actor: NamedReference | null;

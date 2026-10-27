@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\Equipment\EquipmentFilterOptionsController;
 use App\Http\Controllers\Api\V1\Equipment\EquipmentImageController;
 use App\Http\Controllers\Api\V1\Equipment\EquipmentImportController;
 use App\Http\Controllers\Api\V1\Equipment\EquipmentInvoiceController;
+use App\Http\Controllers\Api\V1\Equipment\EquipmentGeneratorDocumentController;
 use App\Http\Controllers\Api\V1\Equipment\EquipmentMaintenanceController;
 use App\Http\Controllers\Api\V1\Equipment\EquipmentTransferController;
 use App\Http\Controllers\Api\V1\Equipment\EquipmentVehicleDocumentController;
@@ -66,6 +67,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', EnsureUserIsActive::class, Ensu
     Route::post('equipment/{equipment}/vehicle-documents', [EquipmentVehicleDocumentController::class, 'store']);
     Route::get('equipment/{equipment}/vehicle-documents/{vehicleDocument}/file', [EquipmentVehicleDocumentController::class, 'show'])->name('equipment.vehicle-documents.show');
     Route::delete('equipment/{equipment}/vehicle-documents/{vehicleDocument}', [EquipmentVehicleDocumentController::class, 'destroy']);
+    Route::post('equipment/{equipment}/generator-documents', [EquipmentGeneratorDocumentController::class, 'store']);
+    Route::get('equipment/{equipment}/generator-documents/{generatorDocument}/file', [EquipmentGeneratorDocumentController::class, 'show'])->name('equipment.generator-documents.show');
+    Route::delete('equipment/{equipment}/generator-documents/{generatorDocument}', [EquipmentGeneratorDocumentController::class, 'destroy']);
     Route::post('equipment/{equipment}/maintenances', [EquipmentMaintenanceController::class, 'store']);
     Route::patch('equipment/{equipment}/maintenances/{maintenance}', [EquipmentMaintenanceController::class, 'update']);
     Route::delete('equipment/{equipment}/maintenances/{maintenance}', [EquipmentMaintenanceController::class, 'destroy']);

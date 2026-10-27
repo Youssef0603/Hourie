@@ -14,6 +14,7 @@ import { EquipmentDetailSection } from "./EquipmentDetailSection";
 import { EquipmentEditDrawer } from "./EquipmentEditDrawer";
 import { EquipmentAuditHistory, GeneratorTransferHistory } from "./EquipmentHistoryDetails";
 import { EquipmentImages } from "./EquipmentImages";
+import { EquipmentGeneratorDocuments } from "./EquipmentGeneratorDocuments";
 import { EquipmentInvoices } from "./EquipmentInvoices";
 import { EquipmentVehicleDocuments } from "./EquipmentVehicleDocuments";
 import {
@@ -197,6 +198,16 @@ export function EquipmentDetailPanel({
                 {!isOtherAsset && selected.generator_details && (
                   <EquipmentDetailSection title={fr.equipment.technicalDetails} icon="specifications" defaultOpen={hasTechnicalDetails} className="detail-characteristics">
                     <GeneratorTechnicalDetails equipment={selected} catalogs={options?.catalogs} />
+                  </EquipmentDetailSection>
+                )}
+
+                {categoryCode === "generator" && (
+                  <EquipmentDetailSection title={fr.generatorDocuments.title} icon="invoice" defaultOpen={selected.generator_documents.length > 0}>
+                    <EquipmentGeneratorDocuments
+                      equipment={selected}
+                      canManage={canManageEquipment}
+                      onChanged={onRefreshSelected}
+                    />
                   </EquipmentDetailSection>
                 )}
 

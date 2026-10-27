@@ -40,7 +40,6 @@ type FormState = {
   technician_employee_id: string
   technician_name: string
   external_technician_phone: string
-  next_maintenance_date: string
   cost: string
   observations: string
 }
@@ -59,7 +58,6 @@ const emptyForm: FormState = {
   technician_employee_id: '',
   technician_name: '',
   external_technician_phone: '',
-  next_maintenance_date: '',
   cost: '',
   observations: '',
 }
@@ -92,7 +90,6 @@ function maintenanceForm(maintenance: EquipmentMaintenance): FormState {
     technician_employee_id: maintenance.technician ? String(maintenance.technician.id) : '',
     technician_name: maintenance.technician_name ?? '',
     external_technician_phone: maintenance.external_technician_phone ?? '',
-    next_maintenance_date: maintenance.next_maintenance_date ?? '',
     cost: maintenance.cost ?? '',
     observations: maintenance.observations ?? '',
   }
@@ -190,7 +187,6 @@ export function MaintenanceSection({
       technician_employee_id: form.technician_employee_id === '' ? null : Number(form.technician_employee_id),
       technician_name: form.technician_employee_id === '' ? nullableString(form.technician_name) : null,
       external_technician_phone: form.technician_employee_id === '' ? nullableString(form.external_technician_phone) : null,
-      next_maintenance_date: nullableString(form.next_maintenance_date),
       cost: nullableNumber(form.cost),
       cost_currency: form.cost === '' ? null : 'XOF',
       observations: nullableString(form.observations),
@@ -268,7 +264,6 @@ export function MaintenanceSection({
             {technicianMode === 'internal'
               ? <label className="field-wide"><span>{fr.maintenance.linkedTechnician}</span><SearchableSelect ariaLabel={fr.maintenance.linkedTechnician} value={form.technician_employee_id} onChange={(value) => update('technician_employee_id', value)} placeholder={fr.common.notProvided} options={employees.map((employee) => ({ value: String(employee.id), label: employee.name }))} /></label>
               : <><label><span>{fr.maintenance.technicianName}</span><input value={form.technician_name} onChange={(event) => update('technician_name', event.target.value)} /></label><label><span>{fr.maintenance.technicianPhone}</span><input type="tel" value={form.external_technician_phone} onChange={(event) => update('external_technician_phone', event.target.value)} placeholder="+225 07 00 00 00 00" /></label></>}
-            <label><span>{fr.maintenance.nextDue}</span><input type="date" min={form.maintenance_date || undefined} value={form.next_maintenance_date} onChange={(event) => update('next_maintenance_date', event.target.value)} /></label>
             <label><span>{fr.maintenance.cost} (FCFA)</span><input min="0" step="0.01" type="number" value={form.cost} onChange={(event) => update('cost', event.target.value)} /></label>
             <label className="field-wide"><span>{fr.equipment.observations}</span><textarea rows={3} value={form.observations} onChange={(event) => update('observations', event.target.value)} /></label>
           </div>
@@ -315,7 +310,6 @@ export function MaintenanceSection({
                       <div><dt>{fr.maintenance.coolant}</dt><dd>{answer(maintenance.coolant_serviced)}</dd></div>
                       <div><dt>{fr.maintenance.technicianName}</dt><dd>{maintenance.technician?.name ?? value(maintenance.technician_name)}</dd></div>
                       {!maintenance.technician && <div><dt>{fr.maintenance.technicianPhone}</dt><dd>{value(maintenance.external_technician_phone)}</dd></div>}
-                      <div><dt>{fr.maintenance.nextDue}</dt><dd>{value(maintenance.next_maintenance_date)}</dd></div>
                       <div><dt>{fr.maintenance.cost}</dt><dd>{maintenance.cost === null ? fr.common.notProvided : formatMoney(maintenance.cost, maintenance.cost_currency ?? 'FCFA')}</dd></div>
                     </dl>
                     <p>{value(maintenance.observations)}</p>

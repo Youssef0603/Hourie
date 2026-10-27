@@ -52,6 +52,7 @@ function equipment(overrides: Partial<Equipment> = {}): Equipment {
     images: [],
     invoices: [],
     vehicle_documents: [],
+    generator_documents: [],
     insurance_policies: [],
     temporary_admissions: [],
     ...overrides,
@@ -105,5 +106,30 @@ describe("EquipmentDetailPanel section expansion", () => {
     expect(section(fr.assets.invoices)).not.toHaveAttribute("open");
     expect(section("Assurance")).not.toHaveAttribute("open");
     expect(section("Admission temporaire")).not.toHaveAttribute("open");
+  });
+
+  it("shows technical documents only for generators and opens the section when populated", () => {
+    renderPanel(equipment({
+      category: { id: 2, code: "generator", name: "Générateurs" },
+      asset_code: "A.H-GEN-292",
+      generator_documents: [{
+        id: 1,
+        url: "/generator-document",
+        original_name: "OFFICIEL-00-Entretien-Essentiel-X1CH128057.pdf",
+        mime_type: "application/pdf",
+        size_bytes: 539720,
+        uploaded_by: null,
+        created_at: "2026-10-26T00:00:00Z",
+      }],
+    }));
+
+    expect(section(fr.generatorDocuments.title)).toHaveAttribute("open");
+    expect(screen.getByText("OFFICIEL-00-Entretien-Essentiel-X1CH128057.pdf")).toBeInTheDocument();
+  });
+
+  it("does not show the generator documentation section for other equipment", () => {
+    renderPanel(equipment());
+
+    expect(screen.queryByText(fr.generatorDocuments.title, { selector: "h3" })).not.toBeInTheDocument();
   });
 });

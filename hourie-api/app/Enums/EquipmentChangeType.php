@@ -20,5 +20,7 @@ enum EquipmentChangeType: string
     case InvoiceDeleted = 'invoice_deleted';
     case VehicleDocumentAdded = 'vehicle_document_added';
     case VehicleDocumentDeleted = 'vehicle_document_deleted';
+    case GeneratorDocumentAdded = 'generator_document_added';
+    case GeneratorDocumentDeleted = 'generator_document_deleted';
     case Archived = 'archived';
 }

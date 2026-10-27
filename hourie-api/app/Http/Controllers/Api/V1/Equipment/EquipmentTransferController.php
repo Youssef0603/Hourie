@@ -159,7 +159,7 @@ class EquipmentTransferController extends Controller
             'category', 'currentLocation.parent', 'currentLocation.project',
             'currentProjectAssignment.project:id,name', 'custodian', 'generatorDetails',
             'maintenances.technician', 'maintenances.createdBy', 'images.uploader', 'invoices.uploader',
-            'vehicleDocuments.uploader',
+            'vehicleDocuments.uploader', 'generatorDocuments.uploader',
             'insurancePolicies' => fn ($query) => $query
                 ->where('insurance_type', 'equipment')
                 ->with('documents')

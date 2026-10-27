@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Database\Factories\EquipmentFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -99,6 +98,11 @@ class Equipment extends Model
     public function vehicleDocuments(): HasMany
     {
         return $this->hasMany(EquipmentVehicleDocument::class)->latest()->latest('id');
+    }
+
+    public function generatorDocuments(): HasMany
+    {
+        return $this->hasMany(EquipmentGeneratorDocument::class)->latest()->latest('id');
     }
 
     public function inspectionReminders(): HasMany

@@ -6,10 +6,11 @@ type DocumentUploadDropzoneProps = {
   description?: string;
   compact?: boolean;
   disabled?: boolean;
+  maxSizeMb?: number;
   onFiles: (files: File[]) => void;
 };
 
-type FileUploadDropzoneProps = DocumentUploadDropzoneProps & {
+type FileUploadDropzoneProps = Omit<DocumentUploadDropzoneProps, "maxSizeMb"> & {
   accept: string;
   maxSizeMb: number;
   validateType: (file: File) => string | null;
@@ -53,11 +54,13 @@ function FileUploadDropzone({ title, description, compact = false, disabled = fa
 }
 
 export function DocumentUploadDropzone(props: DocumentUploadDropzoneProps) {
+  const { maxSizeMb = 10, ...dropzoneProps } = props;
+
   return <FileUploadDropzone
-    {...props}
+    {...dropzoneProps}
     description={props.description ?? "PDF uniquement · 10 Mo maximum par fichier"}
     accept="application/pdf,.pdf"
-    maxSizeMb={10}
+    maxSizeMb={maxSizeMb}
     validateType={(file) => file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")
       ? null
       : `« ${file.name} » n’est pas un fichier PDF.`}
