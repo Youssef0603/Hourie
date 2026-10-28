@@ -1,7 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { assetCategory } from "../assetCategories";
 import type { Equipment } from "../types";
 import {
+  AssetSpecificationDetails,
   EquipmentIdentificationDetails,
   GeneratorTechnicalDetails,
 } from "./EquipmentOverviewDetails";
@@ -37,6 +39,34 @@ describe("EquipmentIdentificationDetails", () => {
     expect(screen.getByText("SOCIDA")).toBeVisible();
     expect(screen.getByText("Origine")).toBeVisible();
     expect(screen.getByText("Roumanie")).toBeVisible();
+  });
+});
+
+describe("AssetSpecificationDetails", () => {
+  it("shows recorded truck plate data and hides empty characteristics", () => {
+    render(
+      <AssetSpecificationDetails
+        equipment={
+          {
+            asset_details: {
+              vehicle_type: "ROAD TRACTOR",
+              manufacturer: "China National Heavy Duty Truck Group Co., Ltd",
+              engine_output_hp: 371,
+              permissible_combination_weight_kg: 55000,
+              payload_tonnes: null,
+            },
+          } as unknown as Equipment
+        }
+        definition={assetCategory("truck_dumper")!}
+        language="fr"
+      />,
+    );
+
+    expect(screen.getByText("Constructeur")).toBeVisible();
+    expect(screen.getByText("China National Heavy Duty Truck Group Co., Ltd")).toBeVisible();
+    expect(screen.getByText("371 ch")).toBeVisible();
+    expect(screen.getByText("55000 kg")).toBeVisible();
+    expect(screen.queryByText("Charge utile (t)")).not.toBeInTheDocument();
   });
 });
 

@@ -66,7 +66,7 @@ export function EquipmentInventoryTable({
                   <th>{fr.equipment.brand}</th>
                   <th>{fr.equipment.model}</th>
                   <th>{fr.equipment.apparentPowerShort}</th>
-                  <th>{fr.equipment.activePowerShort}</th>
+                  <th>{fr.equipment.serialNumber}</th>
                   <th>{fr.equipment.fuel}</th>
                   <th>{fr.equipment.condition}</th>
                   <th>{fr.equipment.project}</th>
@@ -90,7 +90,7 @@ export function EquipmentInventoryTable({
                     <td>{equipment.brand ?? fr.common.notProvided}</td>
                     <td>{equipment.model ?? fr.common.notProvided}</td>
                     <td>{measurement(equipment.power?.apparent_kva, 'kVA')}</td>
-                    <td>{measurement(equipment.power?.active_kw, 'kW')}</td>
+                    <td>{equipment.serial_number ?? fr.common.notProvided}</td>
                     <td>{equipment.fuel_type ? <span className="status-badge" style={catalogBadgeStyle(options?.catalogs, 'fuel_type', equipment.fuel_type)}>{catalogLabel(options?.catalogs, 'fuel_type', equipment.fuel_type)}</span> : fr.common.notProvided}</td>
                     <td>
                       <span className={`status-badge status-${equipment.condition ?? 'unknown'}`} style={catalogBadgeStyle(options?.catalogs, 'equipment_condition', equipment.condition)}>

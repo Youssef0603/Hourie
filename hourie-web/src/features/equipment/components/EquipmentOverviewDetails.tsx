@@ -80,7 +80,10 @@ export function AssetSpecificationDetails({
 }) {
   return (
     <dl>
-      {definition.fields.map((field) => {
+      {definition.fields.filter((field) => {
+        const value = equipment.asset_details?.[field.key];
+        return value !== null && value !== undefined && value !== "";
+      }).map((field) => {
         const value = equipment.asset_details?.[field.key];
         const isCost = field.key === "purchase_price" || field.key === "shipping_cost";
         const display = value === null || value === undefined || value === ""

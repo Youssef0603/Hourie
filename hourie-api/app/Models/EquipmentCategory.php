@@ -42,7 +42,26 @@ class EquipmentCategory extends Model
             'official_document_location' => 'text',
         ]],
         'car' => ['name' => 'Voitures', 'prefix' => 'VOI', 'fields' => ['inspection_date' => 'date', 'fuel_type' => 'text', 'odometer_km' => 'number', 'counter_at_purchase' => 'text', 'purchase_price' => 'text', 'shipping_cost' => 'text', 'official_document_type' => 'text', 'official_document_location' => 'text']],
-        'truck_dumper' => ['name' => 'Camions et bennes', 'prefix' => 'CAM', 'fields' => ['vehicle_type' => 'text', 'payload_tonnes' => 'number', 'fuel_type' => 'text', 'odometer_km' => 'number', 'counter_at_purchase' => 'text', 'purchase_price' => 'text', 'shipping_cost' => 'text', 'official_document_type' => 'text', 'official_document_location' => 'text']],
+        'truck_dumper' => ['name' => 'Camions et bennes', 'prefix' => 'CAM', 'fields' => [
+            'vehicle_type' => 'text',
+            'manufacturer' => 'text',
+            'manufacture_date' => 'text',
+            'engine_model' => 'text',
+            'engine_output_hp' => 'number',
+            'permissible_combination_weight_kg' => 'number',
+            'axle_1_weight_kg' => 'number',
+            'axle_2_weight_kg' => 'number',
+            'axle_3_weight_kg' => 'number',
+            'identification_source' => 'text',
+            'payload_tonnes' => 'number',
+            'fuel_type' => 'text',
+            'odometer_km' => 'number',
+            'counter_at_purchase' => 'text',
+            'purchase_price' => 'text',
+            'shipping_cost' => 'text',
+            'official_document_type' => 'text',
+            'official_document_location' => 'text',
+        ]],
     ];
 
     public static function assetCode(string $categoryCode, int $equipmentId): string

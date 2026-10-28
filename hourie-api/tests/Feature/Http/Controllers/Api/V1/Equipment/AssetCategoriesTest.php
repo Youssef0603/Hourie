@@ -4,6 +4,7 @@ use App\Enums\UserRole;
 use App\Models\Equipment;
 use App\Models\EquipmentCategory;
 use App\Models\Location;
+use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 
@@ -88,6 +89,47 @@ it('updates only the fields supported by the asset category', function () {
         ->assertJsonPath('data.asset_details.odometer_km', 45000);
 
     expect(Equipment::query()->findOrFail($id)->generatorDetails)->toBeNull();
+});
+
+it('updates a truck location while preserving manufacturer plate details', function () {
+    $manager = User::factory()->create(['role' => UserRole::GeneratorManager]);
+    $project = Project::factory()->create();
+    $location = Location::factory()->for($project)->create();
+    $payload = [
+        'category_code' => 'truck_dumper',
+        'brand' => 'SINOTRUK HOWO 6*4',
+        'model' => 'ZZ4257N3247B1',
+        'serial_number' => 'LZZ1CLNB6SN096200',
+        'manufacture_year' => 2025,
+        'condition' => null,
+        'custodian_employee_id' => null,
+        'observations' => null,
+        'asset_details' => [
+            'vehicle_type' => 'ROAD TRACTOR',
+            'manufacturer' => 'China National Heavy Duty Truck Group Co., Ltd',
+            'manufacture_date' => '2025-06',
+            'engine_output_hp' => 371,
+            'permissible_combination_weight_kg' => 55000,
+            'axle_1_weight_kg' => 7100,
+            'axle_2_weight_kg' => 16000,
+            'axle_3_weight_kg' => 16000,
+            'identification_source' => 'Plaque constructeur',
+        ],
+    ];
+    $id = $this->actingAs($manager, 'web')->postJson('/api/v1/equipment', $payload)
+        ->assertCreated()
+        ->json('data.id');
+
+    unset($payload['category_code']);
+    $payload['project_id'] = $project->id;
+    $payload['current_location_id'] = $location->id;
+
+    $this->actingAs($manager, 'web')->patchJson("/api/v1/equipment/{$id}", $payload)
+        ->assertOk()
+        ->assertJsonPath('data.current_location.id', $location->id)
+        ->assertJsonPath('data.current_project_assignment.project.id', $project->id)
+        ->assertJsonPath('data.asset_details.engine_output_hp', 371)
+        ->assertJsonPath('data.asset_details.permissible_combination_weight_kg', 55000);
 });
 
 it('rejects generator-only fields on a car', function () {
