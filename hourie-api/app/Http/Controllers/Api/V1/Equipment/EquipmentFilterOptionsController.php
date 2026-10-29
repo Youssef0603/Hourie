@@ -19,7 +19,7 @@ class EquipmentFilterOptionsController extends Controller
         Gate::authorize('viewAny', Equipment::class);
 
         $assetFilterFields = [
-            'equipment' => ['equipment_type', 'sub_category', 'brand'],
+            ...array_fill_keys(EquipmentCategory::GENERAL_EQUIPMENT_CATEGORY_CODES, ['equipment_type', 'sub_category', 'brand']),
             'car' => ['fuel_type'],
             'truck_dumper' => ['vehicle_type', 'fuel_type'],
             'portacabin' => ['bungalow_type', 'air_conditioning'],

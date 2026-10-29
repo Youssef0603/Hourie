@@ -14,12 +14,42 @@ class EquipmentCategory extends Model
     /** @use HasFactory<EquipmentCategoryFactory> */
     use HasFactory;
 
+    /** @var list<string> */
+    public const GENERAL_EQUIPMENT_CATEGORY_CODES = [
+        'earthmoving',
+        'compaction',
+        'road_equipment',
+        'concrete_equipment',
+        'pumps_dewatering',
+        'workshop_rebar',
+        'site_equipment',
+        'equipment',
+    ];
+
+    /** @var array<string, string> */
+    private const GENERAL_EQUIPMENT_FIELDS = [
+        'equipment_type' => 'text',
+        'sub_category' => 'text',
+        'counter_at_purchase' => 'text',
+        'purchase_price' => 'text',
+        'shipping_cost' => 'text',
+        'official_document_type' => 'text',
+        'official_document_location' => 'text',
+    ];
+
     /** @var array<string, array{name: string, prefix: string, fields: array<string, string>}> */
     public const ASSET_CATEGORIES = [
         'generator' => ['name' => 'Générateurs', 'prefix' => 'GEN', 'fields' => []],
         'tower_crane' => ['name' => 'Grues', 'prefix' => 'GR', 'fields' => ['crane_type' => 'text', 'sub_category' => 'text', 'counter_at_purchase' => 'text', 'purchase_price' => 'text', 'shipping_cost' => 'text', 'official_document_type' => 'text', 'official_document_location' => 'text']],
         'hoist' => ['name' => 'Monte-charges', 'prefix' => 'MCH', 'fields' => ['load_capacity_kg' => 'number', 'lifting_height_m' => 'number', 'platform_length_m' => 'number']],
-        'equipment' => ['name' => 'Matériel', 'prefix' => 'MAT', 'fields' => ['equipment_type' => 'text', 'sub_category' => 'text', 'counter_at_purchase' => 'text', 'purchase_price' => 'text', 'shipping_cost' => 'text', 'official_document_type' => 'text', 'official_document_location' => 'text']],
+        'earthmoving' => ['name' => 'Engins de terrassement', 'prefix' => 'TER', 'fields' => self::GENERAL_EQUIPMENT_FIELDS],
+        'compaction' => ['name' => 'Matériel de compactage', 'prefix' => 'COM', 'fields' => self::GENERAL_EQUIPMENT_FIELDS],
+        'road_equipment' => ['name' => 'Matériel routier', 'prefix' => 'ROU', 'fields' => self::GENERAL_EQUIPMENT_FIELDS],
+        'concrete_equipment' => ['name' => 'Matériel de béton', 'prefix' => 'BET', 'fields' => self::GENERAL_EQUIPMENT_FIELDS],
+        'pumps_dewatering' => ['name' => 'Pompes et assèchement', 'prefix' => 'POM', 'fields' => self::GENERAL_EQUIPMENT_FIELDS],
+        'workshop_rebar' => ['name' => 'Atelier et ferraillage', 'prefix' => 'ATE', 'fields' => self::GENERAL_EQUIPMENT_FIELDS],
+        'site_equipment' => ['name' => 'Équipements de chantier', 'prefix' => 'ECH', 'fields' => self::GENERAL_EQUIPMENT_FIELDS],
+        'equipment' => ['name' => 'Autres matériels', 'prefix' => 'MAT', 'fields' => self::GENERAL_EQUIPMENT_FIELDS],
         'formwork_scaffolding' => ['name' => 'Coffrage et échafaudage', 'prefix' => 'COF', 'fields' => ['system_type' => 'text', 'quantity' => 'number', 'unit' => 'text', 'sub_category' => 'text', 'purchase_price' => 'text', 'shipping_cost' => 'text', 'official_document_type' => 'text', 'official_document_location' => 'text']],
         'portacabin' => ['name' => 'Conteneurs', 'prefix' => 'BUN', 'fields' => [
             'bungalow_type' => 'text',

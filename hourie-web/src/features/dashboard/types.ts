@@ -1,53 +1,44 @@
 export type DashboardSeverity = "critical" | "warning" | "info";
 
+export type DashboardAssetItem = {
+  id: number;
+  asset_code: string;
+  label: string;
+  category_code: string | null;
+  category_name: string | null;
+  serial_number: string | null;
+  location_name: string | null;
+  project_name: string | null;
+  issues: string[];
+  severity: DashboardSeverity;
+  path: string;
+};
+
+export type DashboardMaintenanceItem = DashboardAssetItem & {
+  current_engine_hours: number;
+  next_maintenance_engine_hours: number;
+  hours_remaining: number;
+};
+
+export type DashboardTransferItem = DashboardAssetItem & {
+  occurred_at: string;
+  from: string | null;
+  to: string | null;
+};
+
+export type DashboardSection<T> = {
+  total: number;
+  items: T[];
+};
+
 export type DashboardData = {
   generated_at: string;
-  summary: {
-    active_sites: number;
-    active_equipment: number;
-    assigned_equipment: number;
-    unassigned_equipment: number;
-    maintenance_alerts: number;
-    critical_alerts: number;
-    upcoming_deadlines: number;
-    active_people: number;
+  sections: {
+    repair_required: DashboardSection<DashboardAssetItem>;
+    unknown_location: DashboardSection<DashboardAssetItem>;
+    missing_identity_or_documents: DashboardSection<DashboardAssetItem>;
+    maintenance_by_hours: DashboardSection<DashboardMaintenanceItem>;
+    recent_transfers: DashboardSection<DashboardTransferItem>;
+    incomplete_records: DashboardSection<DashboardAssetItem>;
   };
-  urgent_actions: Array<{
-    key: string;
-    title: string;
-    description: string;
-    severity: DashboardSeverity;
-    path: string;
-  }>;
-  deadlines: Array<{
-    id: number;
-    type: "insurance" | "bond" | "temporary_admission";
-    label: string;
-    due_on: string;
-    days_remaining: number;
-    severity: DashboardSeverity;
-    path: string;
-  }>;
-  equipment_status: Record<
-    "assigned" | "available" | "to_monitor" | "out_of_service",
-    number
-  >;
-  equipment_categories: Array<{ code: string; name: string; total: number }>;
-  project_health: Array<{
-    id: number;
-    name: string;
-    equipment_count: number;
-    alert_count: number;
-    status: "healthy" | "attention" | "critical";
-    path: string;
-    alerts: Array<{
-      key: string;
-      type: "bond" | "insurance" | "responsible";
-      title: string;
-      description: string;
-      due_on?: string;
-      severity: DashboardSeverity;
-      path: string;
-    }>;
-  }>;
 };

@@ -1,8 +1,21 @@
 import type { Language } from '../../i18n/fr'
 
-export type AssetCategoryCode = 'tower_crane' | 'hoist' | 'equipment' | 'formwork_scaffolding' | 'portacabin' | 'car' | 'truck_dumper'
+export type AssetCategoryCode = 'tower_crane' | 'hoist' | 'earthmoving' | 'compaction' | 'road_equipment' | 'concrete_equipment' | 'pumps_dewatering' | 'workshop_rebar' | 'site_equipment' | 'equipment' | 'formwork_scaffolding' | 'portacabin' | 'car' | 'truck_dumper'
 export type AssetView = 'all' | 'generator' | AssetCategoryCode
 export type AssetField = { key: string; labelFr: string; labelAr: string; type: 'text' | 'number' | 'date'; unit?: string }
+
+export const generalEquipmentCategoryCodes = ['earthmoving', 'compaction', 'road_equipment', 'concrete_equipment', 'pumps_dewatering', 'workshop_rebar', 'site_equipment', 'equipment'] as const satisfies readonly AssetCategoryCode[]
+export const isGeneralEquipmentCategoryCode = (code: AssetCategoryCode | undefined): boolean => code !== undefined && generalEquipmentCategoryCodes.includes(code as (typeof generalEquipmentCategoryCodes)[number])
+
+const generalEquipmentFields: AssetField[] = [
+  { key: 'equipment_type', labelFr: 'Type de matériel', labelAr: 'نوع المعدات', type: 'text' },
+  { key: 'sub_category', labelFr: 'Sous-catégorie', labelAr: 'الفئة الفرعية', type: 'text' },
+  { key: 'counter_at_purchase', labelFr: 'Compteur à l’achat', labelAr: 'العداد عند الشراء', type: 'text' },
+  { key: 'purchase_price', labelFr: 'Prix d’achat', labelAr: 'سعر الشراء', type: 'text' },
+  { key: 'shipping_cost', labelFr: 'Coût d’expédition', labelAr: 'تكلفة الشحن', type: 'text' },
+  { key: 'official_document_type', labelFr: 'Type de document officiel', labelAr: 'نوع الوثيقة الرسمية', type: 'text' },
+  { key: 'official_document_location', labelFr: 'Emplacement du document', labelAr: 'مكان الوثيقة', type: 'text' },
+]
 
 export const assetCategories: Array<{ code: AssetCategoryCode; labelFr: string; labelAr: string; fields: AssetField[]; columns: string[] }> = [
   { code: 'tower_crane', labelFr: 'Grues', labelAr: 'الرافعات', fields: [
@@ -19,15 +32,14 @@ export const assetCategories: Array<{ code: AssetCategoryCode; labelFr: string; 
     { key: 'lifting_height_m', labelFr: 'Hauteur de levage (m)', labelAr: 'ارتفاع الرفع (م)', type: 'number', unit: 'm' },
     { key: 'platform_length_m', labelFr: 'Longueur de plateforme (m)', labelAr: 'طول المنصة (م)', type: 'number', unit: 'm' },
   ], columns: ['load_capacity_kg', 'lifting_height_m'] },
-  { code: 'equipment', labelFr: 'Matériel', labelAr: 'المعدات', fields: [
-    { key: 'equipment_type', labelFr: 'Type de matériel', labelAr: 'نوع المعدات', type: 'text' },
-    { key: 'sub_category', labelFr: 'Sous-catégorie', labelAr: 'الفئة الفرعية', type: 'text' },
-    { key: 'counter_at_purchase', labelFr: 'Compteur à l’achat', labelAr: 'العداد عند الشراء', type: 'text' },
-    { key: 'purchase_price', labelFr: 'Prix d’achat', labelAr: 'سعر الشراء', type: 'text' },
-    { key: 'shipping_cost', labelFr: 'Coût d’expédition', labelAr: 'تكلفة الشحن', type: 'text' },
-    { key: 'official_document_type', labelFr: 'Type de document officiel', labelAr: 'نوع الوثيقة الرسمية', type: 'text' },
-    { key: 'official_document_location', labelFr: 'Emplacement du document', labelAr: 'مكان الوثيقة', type: 'text' },
-  ], columns: ['equipment_type', 'sub_category'] },
+  { code: 'earthmoving', labelFr: 'Engins de terrassement', labelAr: 'معدات الحفر والردم', fields: generalEquipmentFields, columns: ['equipment_type', 'sub_category'] },
+  { code: 'compaction', labelFr: 'Matériel de compactage', labelAr: 'معدات الدمك', fields: generalEquipmentFields, columns: ['equipment_type', 'sub_category'] },
+  { code: 'road_equipment', labelFr: 'Matériel routier', labelAr: 'معدات الطرق', fields: generalEquipmentFields, columns: ['equipment_type', 'sub_category'] },
+  { code: 'concrete_equipment', labelFr: 'Matériel de béton', labelAr: 'معدات الخرسانة', fields: generalEquipmentFields, columns: ['equipment_type', 'sub_category'] },
+  { code: 'pumps_dewatering', labelFr: 'Pompes et assèchement', labelAr: 'مضخات ونزح المياه', fields: generalEquipmentFields, columns: ['equipment_type', 'sub_category'] },
+  { code: 'workshop_rebar', labelFr: 'Atelier et ferraillage', labelAr: 'معدات الورشة وحديد التسليح', fields: generalEquipmentFields, columns: ['equipment_type', 'sub_category'] },
+  { code: 'site_equipment', labelFr: 'Équipements de chantier', labelAr: 'معدات موقع العمل', fields: generalEquipmentFields, columns: ['equipment_type', 'sub_category'] },
+  { code: 'equipment', labelFr: 'Autres matériels', labelAr: 'معدات أخرى', fields: generalEquipmentFields, columns: ['equipment_type', 'sub_category'] },
   { code: 'formwork_scaffolding', labelFr: 'Coffrage et échafaudage', labelAr: 'القوالب والسقالات', fields: [
     { key: 'system_type', labelFr: 'Type de système', labelAr: 'نوع النظام', type: 'text' },
     { key: 'quantity', labelFr: 'Quantité', labelAr: 'الكمية', type: 'number' },

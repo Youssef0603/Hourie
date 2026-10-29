@@ -21,7 +21,6 @@ function physicalLocation(item: EquipmentSummary): string {
 const commonFields: AssetExportField[] = [
   { key: 'display_id', labelFr: 'N°', labelAr: 'الرقم', value: (item) => item.display_id },
   { key: 'asset_code', labelFr: 'Code actif', labelAr: 'رمز الأصل', value: (item) => item.asset_code },
-  { key: 'category', labelFr: 'Catégorie', labelAr: 'الفئة', value: (item) => item.category.name },
   { key: 'brand', labelFr: 'Marque', labelAr: 'العلامة التجارية', value: (item) => item.brand },
   { key: 'model', labelFr: 'Modèle', labelAr: 'الطراز', value: (item) => item.model },
   { key: 'serial_number', labelFr: 'Numéro de série', labelAr: 'الرقم التسلسلي', value: (item) => item.serial_number },
@@ -31,6 +30,7 @@ const commonFields: AssetExportField[] = [
   { key: 'supplier', labelFr: 'Fournisseur', labelAr: 'المورّد', value: (item) => item.supplier },
   { key: 'origin', labelFr: 'Origine', labelAr: 'المنشأ', value: (item) => item.origin },
   { key: 'condition', labelFr: 'État', labelAr: 'الحالة', value: (item, catalogs) => catalogLabel(catalogs, 'equipment_condition', item.condition) },
+  { key: 'usage_status', labelFr: 'Utilisation actuelle', labelAr: 'الاستخدام الحالي', value: (item) => item.usage_status === 'in_use' ? 'En utilisation' : item.usage_status === 'not_in_use' ? 'Non utilisé' : '' },
   { key: 'project', labelFr: 'Chantier', labelAr: 'الموقع / المشروع', value: (item) => item.current_project_assignment?.project.name },
   { key: 'location', labelFr: 'Localisation physique', labelAr: 'الموقع الفعلي', value: (item) => physicalLocation(item) },
   { key: 'custodian', labelFr: 'Responsable / conducteur', labelAr: 'المسؤول / السائق', value: (item) => item.custodian?.name },
@@ -68,10 +68,15 @@ export function assetExportFields(view: AssetView): AssetExportField[] {
   const commonExportFields = view === 'car'
     ? commonFields.filter((field) => field.key !== 'responsible')
     : commonFields
+  const categoryTechnicalFields = technicalFields(view)
+  const equipmentTypeField = categoryTechnicalFields.find((field) => field.key === 'equipment_type')
+  const orderedCommonFields = commonExportFields.flatMap((field) => field.key === 'asset_code' && equipmentTypeField
+    ? [field, equipmentTypeField]
+    : [field])
   const fields = [
-    ...commonExportFields,
+    ...orderedCommonFields,
     ...(view === 'all' || view === 'generator' ? generatorFields : []),
-    ...technicalFields(view),
+    ...categoryTechnicalFields.filter((field) => field.key !== 'equipment_type'),
   ]
   const unique = new Map(fields.map((field) => [field.key, field]))
   return [...unique.values()]
@@ -79,11 +84,13 @@ export function assetExportFields(view: AssetView): AssetExportField[] {
 
 export function defaultAssetExportFields(view: AssetView): string[] {
   if (view === 'car') return ['brand', 'model', 'serial_number', 'registration_number']
-  if (view === 'generator') return ['display_id', 'asset_code', 'brand', 'model', 'apparent_power_kva', 'active_power_kw', 'fuel_type', 'condition', 'project', 'location']
-  if (view === 'all') return ['display_id', 'asset_code', 'category', 'brand', 'model', 'serial_number', 'condition', 'project', 'location']
+  if (view === 'generator') return ['display_id', 'asset_code', 'brand', 'model', 'apparent_power_kva', 'active_power_kw', 'fuel_type', 'condition', 'usage_status', 'project', 'location']
+  if (view === 'all') return ['display_id', 'asset_code', 'equipment_type', 'brand', 'model', 'serial_number', 'condition', 'usage_status', 'project', 'location']
 
   const category = assetCategory(view)
-  return ['display_id', 'asset_code', 'brand', 'model', 'serial_number', ...(category?.columns ?? []), 'condition', 'project', 'location']
+  const categoryColumns = (category?.columns ?? []).filter((field) => field !== 'equipment_type')
+  const equipmentType = category?.fields.some((field) => field.key === 'equipment_type') ? ['equipment_type'] : []
+  return ['display_id', 'asset_code', ...equipmentType, 'brand', 'model', 'serial_number', ...categoryColumns, 'condition', 'usage_status', 'project', 'location']
 }
 
 export function assetExportFieldLabel(field: AssetExportField, language: Language): string {

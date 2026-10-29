@@ -355,6 +355,27 @@ it('returns authenticated filter options with distinct projects and physical loc
         ->assertJsonPath('data.catalogs.0.is_active', true);
 });
 
+it('returns type, sub-category, and brand options for specialized material categories', function () {
+    $user = User::factory()->create();
+    $category = EquipmentCategory::factory()->create([
+        'code' => 'earthmoving',
+        'name' => 'Engins de terrassement',
+    ]);
+    Equipment::factory()->for($category, 'category')->create([
+        'brand' => 'Caterpillar',
+        'asset_details' => [
+            'equipment_type' => 'Excavator',
+            'sub_category' => 'Earth Moving',
+        ],
+    ]);
+
+    $this->actingAs($user, 'web')->getJson('/api/v1/equipment-filter-options')
+        ->assertOk()
+        ->assertJsonPath('data.asset_filter_values.earthmoving.equipment_type.0', 'Excavator')
+        ->assertJsonPath('data.asset_filter_values.earthmoving.sub_category.0', 'Earth Moving')
+        ->assertJsonPath('data.asset_filter_values.earthmoving.brand.0', 'Caterpillar');
+});
+
 it('allows managers to remove equipment from the active inventory', function () {
     $manager = User::factory()->create(['role' => UserRole::Manager]);
     $equipment = Equipment::factory()->create();

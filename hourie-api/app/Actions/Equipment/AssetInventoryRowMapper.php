@@ -16,12 +16,23 @@ class AssetInventoryRowMapper
     {
         $type = $this->text($row['E'] ?? null);
         $typeLower = mb_strtolower((string) $type);
+        $subCategory = $this->text($row['C'] ?? null);
+        $subCategoryLower = mb_strtolower((string) $subCategory);
         $categoryCode = match (true) {
             $typeLower === 'generator' => 'generator',
             $typeLower === 'mobile crane' => 'tower_crane',
             $this->text($row['B'] ?? null) === 'Formwork' => 'formwork_scaffolding',
             in_array($typeLower, ['car', 'utility car'], true) => 'car',
             in_array($typeLower, ['hauler', 'road tractor', 'trailor', 'trailer', 'crane truck'], true) => 'truck_dumper',
+            in_array($typeLower, ['excavator', 'wheel loader', 'skid loader', 'grader', 'wheel excavator', 'dozer', 'backhoe'], true) => 'earthmoving',
+            in_array($typeLower, ['asphalt roller', 'rouleau duplex', 'roller', 'vibrating roller'], true) => 'compaction',
+            in_array($typeLower, ['sweeper', 'asphalt paver', 'bitumen sprayer', 'floor saw', 'milling machine', 'soil stabilizer'], true) => 'road_equipment',
+            in_array($typeLower, ['concrete mixer', 'transit mixer', 'concrete bucket', 'concrete pump'], true) => 'concrete_equipment',
+            $typeLower === 'batching plant' && $subCategoryLower === 'concrete' => 'concrete_equipment',
+            $typeLower === 'batching plant' && $subCategoryLower === 'asphalt & paving' => 'road_equipment',
+            $typeLower === 'motor pump' => 'pumps_dewatering',
+            in_array($typeLower, ['bending machine', 'cutting machine', 'diesel welding machine', 'bar cutting machine', 'bar bending machine'], true) => 'workshop_rebar',
+            in_array($typeLower, ['portable light tower', 'tower light', 'fuel tank', 'air compressor', 'forklift', 'water tank'], true) => 'site_equipment',
             default => 'equipment',
         };
         $commonDetails = [
@@ -36,10 +47,10 @@ class AssetInventoryRowMapper
         $assetDetails = match ($categoryCode) {
             'car' => [...$commonDetails, 'fuel_type' => null, 'odometer_km' => null],
             'truck_dumper' => [...$commonDetails, 'vehicle_type' => $type, 'payload_tonnes' => null, 'fuel_type' => null, 'odometer_km' => null],
-            'tower_crane' => [...$commonDetails, 'crane_type' => $type, 'sub_category' => $this->text($row['C'] ?? null)],
-            'formwork_scaffolding' => [...$commonDetails, 'system_type' => $type, 'quantity' => $this->numberFromText($row['J'] ?? null), 'unit' => $this->unit($row['J'] ?? null), 'sub_category' => $this->text($row['C'] ?? null)],
+            'tower_crane' => [...$commonDetails, 'crane_type' => $type, 'sub_category' => $subCategory],
+            'formwork_scaffolding' => [...$commonDetails, 'system_type' => $type, 'quantity' => $this->numberFromText($row['J'] ?? null), 'unit' => $this->unit($row['J'] ?? null), 'sub_category' => $subCategory],
             'generator' => null,
-            default => [...$commonDetails, 'equipment_type' => $type, 'sub_category' => $this->text($row['C'] ?? null)],
+            default => [...$commonDetails, 'equipment_type' => $type, 'sub_category' => $subCategory],
         };
 
         return [

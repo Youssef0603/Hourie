@@ -3,7 +3,7 @@ import { fr, type Language } from '../../../i18n/fr'
 import { ActionIcon } from '../../../shared/components/ActionIcon'
 import { SearchableSelect } from '../../../shared/components/SearchableSelect'
 import { catalogLabel, catalogOptions } from '../catalogs'
-import { assetFieldLabel, type AssetCategoryCode, type AssetField } from '../assetCategories'
+import { assetFieldLabel, isGeneralEquipmentCategoryCode, type AssetCategoryCode, type AssetField } from '../assetCategories'
 import { filterableLocationOptions, locationOptionLabel } from '../locationLabel'
 import type { EquipmentFilterOptions, EquipmentFilters } from '../types'
 
@@ -31,6 +31,7 @@ export function AssetFilterDrawer({ categoryCode, fields, filters, language, opt
       <div className="filter-drawer-content">
         <fieldset className="drawer-basic-filters"><legend>{fr.equipment.filters}</legend><div className="advanced-filter-grid">
           <label><span>{fr.equipment.condition}</span><SearchableSelect ariaLabel={fr.equipment.condition} value={filters.condition} onChange={(value) => onChange('condition', value)} placeholder={fr.common.all} options={catalogOptions(options?.catalogs, 'equipment_condition').map((option) => ({ value: option.code, label: catalogLabel(options?.catalogs, 'equipment_condition', option.code) }))} /></label>
+          <label><span>{fr.equipment.usageStatus}</span><SearchableSelect ariaLabel={fr.equipment.usageStatus} value={filters.usage_status} onChange={(value) => onChange('usage_status', value)} placeholder={fr.common.all} options={[{ value: 'in_use', label: fr.equipment.usageInUse }, { value: 'not_in_use', label: fr.equipment.usageNotInUse }]} /></label>
           {!fixedProject && <label><span>{fr.equipment.project}</span><SearchableSelect ariaLabel={fr.equipment.project} value={filters.project_id} onChange={(value) => { onChange('project_id', value); onChange('location_id', '') }} placeholder={fr.common.all} options={(options?.projects ?? []).map((project) => ({ value: String(project.id), label: project.name }))} /></label>}
           <label><span>{fr.equipment.location}</span><SearchableSelect ariaLabel={fr.equipment.location} value={filters.location_id} onChange={(value) => onChange('location_id', value)} placeholder={fr.common.all} options={physicalLocations.map((location) => ({ value: String(location.id), label: filters.project_id === '' ? locationOptionLabel(location) : location.name }))} /></label>
           <label><span>{fr.equipment.custodian}</span><SearchableSelect ariaLabel={fr.equipment.custodian} value={filters.custodian_employee_id} onChange={(value) => onChange('custodian_employee_id', value)} placeholder={fr.common.all} options={(options?.employees ?? []).map((employee) => ({ value: String(employee.id), label: employee.name }))} /></label>
@@ -61,7 +62,7 @@ function CategorySpecificAssetFilters({ categoryCode, filters, options, onChange
   const range = (label: string, minimum: keyof EquipmentFilters, maximum: keyof EquipmentFilters, unit = '') => <div className="range-filter"><span>{label}{unit && <small className="range-filter-unit">({unit})</small>}</span><div><input type="number" min="0" value={String(filters[minimum])} onChange={(event) => onChange(minimum, event.target.value)} placeholder={fr.common.minimum} /><input type="number" min="0" value={String(filters[maximum])} onChange={(event) => onChange(maximum, event.target.value)} placeholder={fr.common.maximum} /></div></div>
   const booleanSelect = (label: string, name: keyof EquipmentFilters, selectedLabel: string) => <label><span>{label}</span><SearchableSelect ariaLabel={label} value={String(filters[name])} onChange={(value) => onChange(name, value)} placeholder={fr.common.all} options={[{ value: '1', label: selectedLabel }]} /></label>
 
-  if (categoryCode === 'equipment') return <fieldset><legend>{fr.assets.materialFilters}</legend><div className="advanced-filter-grid">
+  if (isGeneralEquipmentCategoryCode(categoryCode)) return <fieldset><legend>{fr.assets.materialFilters}</legend><div className="advanced-filter-grid">
     <label><span>{fr.equipment.serialNumber}</span><input {...input('serial_number')} placeholder={fr.equipment.serialNumber} /></label>
     {select(fr.assets.equipmentType, 'equipment_type', 'equipment_type')}
     {select(fr.assets.subCategory, 'sub_category', 'sub_category')}

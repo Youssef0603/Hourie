@@ -19,7 +19,7 @@ class UpdateEquipment
             $equipment->loadMissing('generatorDetails', 'currentProjectAssignment.project', 'currentLocation');
             $previousValues = [
                 'equipment' => $equipment->only([
-                    'brand', 'model', 'serial_number', 'registration_number', 'manufacture_year', 'purchase_date', 'supplier', 'origin', 'condition',
+                    'brand', 'model', 'serial_number', 'registration_number', 'manufacture_year', 'purchase_date', 'supplier', 'origin', 'condition', 'usage_status',
                     'current_location_id', 'custodian_employee_id', 'observations',
                 ]),
                 'project_id' => $equipment->currentProjectAssignment?->project_id,
@@ -60,7 +60,7 @@ class UpdateEquipment
                 'previous_values' => $previousValues,
                 'new_values' => [
                     'equipment' => $equipment->only([
-                        'brand', 'model', 'serial_number', 'registration_number', 'manufacture_year', 'purchase_date', 'supplier', 'origin', 'condition',
+                        'brand', 'model', 'serial_number', 'registration_number', 'manufacture_year', 'purchase_date', 'supplier', 'origin', 'condition', 'usage_status',
                         'current_location_id', 'custodian_employee_id', 'observations',
                     ]),
                     'project_id' => $equipment->currentProjectAssignment?->project_id,

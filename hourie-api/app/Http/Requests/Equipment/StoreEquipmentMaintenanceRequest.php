@@ -21,6 +21,7 @@ class StoreEquipmentMaintenanceRequest extends FormRequest
         return [
             'maintenance_date' => ['required', 'date'],
             'engine_hours' => ['nullable', 'numeric', 'min:0'],
+            'maintenance_interval_hours' => ['nullable', 'numeric', 'gt:0', 'required_with:engine_hours'],
             'intervention_type' => ['required', $this->maintenanceTypeRule()],
             'oil_changed' => ['nullable', 'boolean'],
             'oil_quantity_litres' => [

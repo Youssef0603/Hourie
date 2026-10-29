@@ -33,6 +33,7 @@ class EquipmentSummaryResource extends JsonResource
             'origin' => $this->origin,
             'asset_details' => $this->asset_details,
             'condition' => $this->condition,
+            'usage_status' => $this->usage_status,
             'current_location' => $this->whenLoaded('currentLocation', function (): ?array {
                 if ($this->currentLocation === null) {
                     return null;
@@ -75,5 +76,4 @@ class EquipmentSummaryResource extends JsonResource
             'fuel_type' => $this->whenLoaded('generatorDetails', fn () => $this->generatorDetails?->fuel_type),
         ];
     }
-
 }

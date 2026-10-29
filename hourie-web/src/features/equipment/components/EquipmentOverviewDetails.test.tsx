@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { assetCategory } from "../assetCategories";
+import { assetCategory, generalEquipmentCategoryCodes } from "../assetCategories";
 import type { Equipment } from "../types";
 import {
   AssetSpecificationDetails,
@@ -43,6 +43,28 @@ describe("EquipmentIdentificationDetails", () => {
 });
 
 describe("AssetSpecificationDetails", () => {
+  it.each(generalEquipmentCategoryCodes)("shows recorded technical data for %s", (categoryCode) => {
+    render(
+      <AssetSpecificationDetails
+        equipment={
+          {
+            asset_details: {
+              equipment_type: "Excavator",
+              sub_category: "Earth Moving",
+            },
+          } as unknown as Equipment
+        }
+        definition={assetCategory(categoryCode)!}
+        language="fr"
+      />,
+    );
+
+    expect(screen.getByText("Type de matériel")).toBeVisible();
+    expect(screen.getByText("Excavator")).toBeVisible();
+    expect(screen.getByText("Sous-catégorie")).toBeVisible();
+    expect(screen.getByText("Earth Moving")).toBeVisible();
+  });
+
   it("shows recorded truck plate data and hides empty characteristics", () => {
     render(
       <AssetSpecificationDetails

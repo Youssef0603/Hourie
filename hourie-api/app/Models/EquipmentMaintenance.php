@@ -14,6 +14,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'created_by_user_id',
     'maintenance_date',
     'engine_hours',
+    'maintenance_interval_hours',
+    'next_maintenance_engine_hours',
     'intervention_type',
     'oil_changed',
     'oil_quantity_litres',
@@ -54,6 +56,8 @@ class EquipmentMaintenance extends Model
         return [
             'maintenance_date' => 'date:Y-m-d',
             'engine_hours' => 'decimal:2',
+            'maintenance_interval_hours' => 'decimal:2',
+            'next_maintenance_engine_hours' => 'decimal:2',
             'oil_changed' => 'boolean',
             'oil_quantity_litres' => 'decimal:2',
             'oil_filter_changed' => 'boolean',

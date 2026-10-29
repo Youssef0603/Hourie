@@ -15,6 +15,7 @@ function completeMaintenancePayload(Employee $technician): array
     return [
         'maintenance_date' => '2026-09-15',
         'engine_hours' => 1250.5,
+        'maintenance_interval_hours' => 250,
         'intervention_type' => 'mechanical',
         'oil_changed' => true,
         'oil_quantity_litres' => 18.5,
@@ -46,6 +47,8 @@ it('allows a generator manager to record every maintenance field and audits it',
         ->assertCreated()
         ->assertJsonPath('data.maintenance_date', '2026-09-15')
         ->assertJsonPath('data.engine_hours', '1250.50')
+        ->assertJsonPath('data.maintenance_interval_hours', '250.00')
+        ->assertJsonPath('data.next_maintenance_engine_hours', '1500.50')
         ->assertJsonPath('data.intervention_type', 'mechanical')
         ->assertJsonPath('data.oil_changed', true)
         ->assertJsonPath('data.oil_quantity_litres', '18.50')

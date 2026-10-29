@@ -80,6 +80,9 @@ class EquipmentMaintenanceController extends Controller
         $data['oil_quantity_litres'] = ($data['oil_changed'] ?? null) === true
             ? ($data['oil_quantity_litres'] ?? null)
             : null;
+        $data['next_maintenance_engine_hours'] = isset($data['engine_hours'], $data['maintenance_interval_hours'])
+            ? round((float) $data['engine_hours'] + (float) $data['maintenance_interval_hours'], 2)
+            : null;
 
         return $data;
     }

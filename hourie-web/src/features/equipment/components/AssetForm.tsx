@@ -48,6 +48,7 @@ export function AssetForm({ categoryCode, language, options, equipment, onSaved,
     supplier: equipment?.supplier ?? '',
     origin: equipment?.origin ?? '',
     condition: equipment?.condition ?? '',
+    usage_status: equipment?.usage_status ?? '',
     project_id: equipment?.current_project_assignment?.project.id.toString() ?? '',
     current_location_id: equipment?.current_location?.id.toString() ?? '',
     custodian_employee_id: equipment?.custodian?.id.toString() ?? '',
@@ -92,7 +93,7 @@ export function AssetForm({ categoryCode, language, options, equipment, onSaved,
     const payload = {
       brand: textOrNull(form.brand), model: textOrNull(form.model), serial_number: textOrNull(form.serial_number),
       ...(isCar ? { registration_number: textOrNull(form.registration_number) } : {}),
-      manufacture_year: numberOrNull(form.manufacture_year), purchase_date: textOrNull(form.purchase_date), supplier: textOrNull(form.supplier), origin: textOrNull(form.origin), condition: textOrNull(form.condition),
+      manufacture_year: numberOrNull(form.manufacture_year), purchase_date: textOrNull(form.purchase_date), supplier: textOrNull(form.supplier), origin: textOrNull(form.origin), condition: textOrNull(form.condition), usage_status: textOrNull(form.usage_status),
       project_id: numberOrNull(form.project_id), current_location_id: numberOrNull(form.current_location_id),
       custodian_employee_id: numberOrNull(form.custodian_employee_id), observations: textOrNull(form.observations),
       asset_details: { ...assetDetails, purchase_price_currency: priceCurrencies.purchase_price, shipping_cost_currency: priceCurrencies.shipping_cost },
@@ -129,6 +130,7 @@ export function AssetForm({ categoryCode, language, options, equipment, onSaved,
         <label><span>{fr.assets.supplier}</span><input value={form.supplier} onChange={(event) => update('supplier', event.target.value)} /></label>
         <label><span>{fr.equipment.origin}</span><input value={form.origin} onChange={(event) => update('origin', event.target.value)} /></label>
         <label><span>{fr.equipment.condition}</span><SearchableSelect ariaLabel={fr.equipment.condition} value={form.condition} onChange={(value) => update('condition', value)} placeholder={fr.common.toComplete} options={catalogOptions(options.catalogs, 'equipment_condition').map((option) => ({ value: option.code, label: catalogLabel(options.catalogs, 'equipment_condition', option.code) }))} /></label>
+        <label><span>{fr.equipment.usageStatus}</span><SearchableSelect ariaLabel={fr.equipment.usageStatus} value={form.usage_status} onChange={(value) => update('usage_status', value)} placeholder={fr.common.toComplete} options={[{ value: 'in_use', label: fr.equipment.usageInUse }, { value: 'not_in_use', label: fr.equipment.usageNotInUse }]} /></label>
       </div></InventoryFormSection>
       {category.fields.length > 0 && <InventoryFormSection title={fr.assets.specifications} icon="specifications"><div className="maintenance-form-grid asset-form-grid-3">
         {category.fields.filter((field) => !bungalowBooleanFields.has(field.key)).map(renderDetailField)}

@@ -71,7 +71,18 @@ export function EquipmentDetailPanel({
   const categoryCode = selected?.category.code ?? "generator";
   const isOtherAsset = isAssetCategoryCode(categoryCode);
   const assetDefinition = isOtherAsset ? assetCategory(categoryCode) : null;
-  const isInsurableAsset = ["car", "truck_dumper", "equipment"].includes(categoryCode);
+  const isInsurableAsset = [
+    "car",
+    "truck_dumper",
+    "earthmoving",
+    "compaction",
+    "road_equipment",
+    "concrete_equipment",
+    "pumps_dewatering",
+    "workshop_rebar",
+    "site_equipment",
+    "equipment",
+  ].includes(categoryCode);
   const isSold = selected?.condition === "sold" || catalogLabel(
     options?.catalogs,
     "equipment_condition",

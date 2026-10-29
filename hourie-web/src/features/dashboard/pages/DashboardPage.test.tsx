@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DashboardPage } from "./DashboardPage";
@@ -10,76 +10,51 @@ vi.mock("../../../shared/api/http", async (importOriginal) => ({
   apiRequest,
 }));
 
+const asset = {
+  id: 12,
+  asset_code: "A.H-GEN-292",
+  label: "Himoinsa HSY-15",
+  category_code: "generator",
+  category_name: "Générateurs",
+  serial_number: "X1CH128057",
+  location_name: "Centrale",
+  project_name: "Gesco",
+  issues: ["Défectueux"],
+  severity: "critical",
+  path: "/assets/generator/12",
+};
+
 const dashboard = {
-  generated_at: "2026-10-08T10:00:00.000Z",
-  summary: {
-    active_sites: 7,
-    active_equipment: 284,
-    assigned_equipment: 44,
-    unassigned_equipment: 240,
-    maintenance_alerts: 2,
-    critical_alerts: 3,
-    upcoming_deadlines: 3,
-    active_people: 28,
+  generated_at: new Date().toISOString(),
+  sections: {
+    repair_required: { total: 1, items: [asset] },
+    unknown_location: { total: 4, items: [{ ...asset, id: 13, asset_code: "A.H-POM-326", issues: ["Localisation physique inconnue"], severity: "warning" }] },
+    missing_identity_or_documents: { total: 3, items: [{ ...asset, id: 14, asset_code: "A.H-CAM-102", issues: ["Aucun document"], severity: "warning" }] },
+    maintenance_by_hours: { total: 1, items: [{ ...asset, current_engine_hours: 1490, next_maintenance_engine_hours: 1500, hours_remaining: 10, issues: ["Entretien proche"], severity: "warning" }] },
+    recent_transfers: { total: 1, items: [{ ...asset, occurred_at: "2026-10-28T10:00:00.000Z", from: "Bassam", to: "Gesco", issues: ["Affectation mise à jour"], severity: "info" }] },
+    incomplete_records: { total: 9, items: [{ ...asset, id: 15, asset_code: "A.H-MAT-327", issues: ["Fournisseur à compléter"], severity: "info" }] },
   },
-  urgent_actions: [{ key: "insurance-1", title: "Assurance POL-1", description: "Échéance dans 10 jours", severity: "warning", path: "/insurance/1" }],
-  deadlines: [{ id: 1, type: "insurance", label: "Assurance POL-1", due_on: "2026-10-18", days_remaining: 10, severity: "warning", path: "/insurance/1" }],
-  equipment_status: { assigned: 44, available: 240, to_monitor: 2, out_of_service: 0 },
-  equipment_categories: [{ code: "generator", name: "Générateurs", total: 24 }],
-  project_health: [{
-    id: 1,
-    name: "Bassam",
-    equipment_count: 12,
-    alert_count: 1,
-    status: "attention",
-    path: "/sites/1",
-    alerts: [{ key: "responsible-1", type: "responsible", title: "Responsable non attribué", description: "Aucun responsable n’est associé à ce chantier.", severity: "warning", path: "/sites/1" }],
-  }],
 };
 
 describe("DashboardPage", () => {
   beforeEach(() => apiRequest.mockResolvedValue({ data: dashboard }));
 
-  it("shows executive metrics and navigates from actionable content", async () => {
+  it("shows the six operational queues and opens the affected asset", async () => {
     const user = userEvent.setup();
     const onNavigate = vi.fn();
     render(<DashboardPage onNavigate={onNavigate} />);
 
     expect(await screen.findByRole("heading", { name: "Tableau de bord" })).toBeVisible();
-    expect(screen.getAllByText("284")[0]).toBeVisible();
-    expect(screen.getByRole("button", { name: /28.*Personnel actif/ })).toBeVisible();
-    expect(screen.getAllByText("Assurance POL-1")).toHaveLength(2);
-    expect(screen.getByText("Bassam")).toBeVisible();
-    await user.click(screen.getByRole("button", { name: /Chantiers actifs/ }));
-    expect(onNavigate).toHaveBeenCalledWith("/sites");
+    expect(screen.getAllByText("Équipements à réparer")[0]).toBeVisible();
+    expect(screen.getAllByText("Localisation inconnue")[0]).toBeVisible();
+    expect(screen.getAllByText("Identification et documents")[0]).toBeVisible();
+    expect(screen.getAllByText("Entretien par heures moteur")[0]).toBeVisible();
+    expect(screen.getAllByText("Transferts récents")[0]).toBeVisible();
+    expect(screen.getAllByText("Fiches à compléter")[0]).toBeVisible();
+    expect(screen.getByText("10 h restantes")).toBeVisible();
+    expect(screen.getByText("Bassam → Gesco")).toBeVisible();
 
-    await user.click(screen.getAllByRole("button", { name: /Assurance POL-1.*Échéance dans 10 jours/ })[0]);
-    expect(onNavigate).toHaveBeenCalledWith("/insurance/1");
-
-    await user.click(screen.getByRole("button", { name: /Bassam.*1 alerte/ }));
-    expect(screen.getByRole("dialog", { name: "Alertes · Bassam" })).toBeVisible();
-    expect(screen.getByText("Responsable non attribué")).toBeVisible();
-  });
-
-  it("keeps the dashboard compact and opens all priority actions on demand", async () => {
-    const user = userEvent.setup();
-    const urgentActions = Array.from({ length: 6 }, (_, index) => ({
-      key: `insurance-${index + 1}`,
-      title: `Assurance POL-${index + 1}`,
-      description: `Échéance dans ${index + 1} jours`,
-      severity: "warning",
-      path: `/insurance/${index + 1}`,
-    }));
-    apiRequest.mockResolvedValueOnce({ data: { ...dashboard, urgent_actions: urgentActions } });
-
-    render(<DashboardPage onNavigate={vi.fn()} />);
-
-    expect(await screen.findByText("Assurance POL-4")).toBeVisible();
-    expect(screen.queryByText("Assurance POL-5")).not.toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Voir toutes les actions" }));
-
-    const dialog = screen.getByRole("dialog", { name: "Toutes les actions prioritaires" });
-    expect(within(dialog).getByText("Assurance POL-5")).toBeVisible();
-    expect(within(dialog).getByText("Assurance POL-6")).toBeVisible();
+    await user.click(screen.getAllByRole("button", { name: /A.H-GEN-292/ })[0]);
+    expect(onNavigate).toHaveBeenCalledWith("/assets/generator/12");
   });
 });

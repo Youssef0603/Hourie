@@ -97,6 +97,7 @@ class ListEquipment
                 $query->whereRaw("LOWER({$column}) like ?", ['%'.strtolower(trim($filters['asset_value'])).'%']);
             })
             ->when($filters['condition'] ?? null, fn (Builder $query, string $condition) => $query->where('condition', $condition))
+            ->when($filters['usage_status'] ?? null, fn (Builder $query, string $usageStatus) => $query->where('usage_status', $usageStatus))
             ->when($filters['project_id'] ?? null, function (Builder $query, int $projectId): void {
                 $query->whereHas('currentProjectAssignment', fn (Builder $query) => $query->where('project_id', $projectId));
             })
@@ -180,8 +181,12 @@ class ListEquipment
 
     private function whereAssetText(Builder $query, string $field, string $value): Builder
     {
+        $jsonValue = $query->getConnection()->getDriverName() === 'sqlite'
+            ? "json_extract(asset_details, '$.{$field}')"
+            : "JSON_UNQUOTE(JSON_EXTRACT(asset_details, '$.{$field}'))";
+
         return $query->whereRaw(
-            "LOWER(JSON_UNQUOTE(JSON_EXTRACT(asset_details, '$.{$field}'))) like ?",
+            "LOWER({$jsonValue}) like ?",
             ['%'.mb_strtolower(trim($value)).'%'],
         );
     }

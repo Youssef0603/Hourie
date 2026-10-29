@@ -25,6 +25,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'supplier',
     'origin',
     'condition',
+    'usage_status',
     'observations',
     'asset_details',
     'is_active',

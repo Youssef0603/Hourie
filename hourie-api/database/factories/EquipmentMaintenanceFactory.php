@@ -18,6 +18,7 @@ class EquipmentMaintenanceFactory extends Factory
             'created_by_user_id' => User::factory(),
             'maintenance_date' => fake()->date(),
             'engine_hours' => fake()->randomFloat(2, 0, 20000),
+            'maintenance_interval_hours' => 250,
             'intervention_type' => 'mechanical',
             'oil_changed' => true,
             'oil_quantity_litres' => 18.5,

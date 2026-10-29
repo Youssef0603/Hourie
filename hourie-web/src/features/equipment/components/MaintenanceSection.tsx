@@ -29,6 +29,7 @@ type MaintenanceSectionProps = {
 type FormState = {
   maintenance_date: string
   engine_hours: string
+  maintenance_interval_hours: string
   intervention_type: string
   oil_changed: string
   oil_quantity_litres: string
@@ -47,6 +48,7 @@ type FormState = {
 const emptyForm: FormState = {
   maintenance_date: '',
   engine_hours: '',
+  maintenance_interval_hours: '',
   intervention_type: '',
   oil_changed: '',
   oil_quantity_litres: '',
@@ -79,6 +81,7 @@ function maintenanceForm(maintenance: EquipmentMaintenance): FormState {
   return {
     maintenance_date: maintenance.maintenance_date,
     engine_hours: maintenance.engine_hours ?? '',
+    maintenance_interval_hours: maintenance.maintenance_interval_hours ?? '',
     intervention_type: maintenance.intervention_type,
     oil_changed: maintenance.oil_changed === null ? '' : String(maintenance.oil_changed),
     oil_quantity_litres: maintenance.oil_quantity_litres ?? '',
@@ -176,6 +179,7 @@ export function MaintenanceSection({
     const payload: MaintenancePayload = {
       maintenance_date: form.maintenance_date,
       engine_hours: nullableNumber(form.engine_hours),
+      maintenance_interval_hours: nullableNumber(form.maintenance_interval_hours),
       intervention_type: form.intervention_type as MaintenanceType,
       oil_changed: nullableBoolean(form.oil_changed),
       oil_quantity_litres: form.oil_changed === 'true' ? nullableNumber(form.oil_quantity_litres) : null,
@@ -242,6 +246,7 @@ export function MaintenanceSection({
           <div className="maintenance-form-grid">
             <label><span>{fr.maintenance.date}</span><input required type="date" value={form.maintenance_date} onChange={(event) => update('maintenance_date', event.target.value)} /></label>
             <label><span>{fr.equipment.engineHours}</span><input min="0" step="0.01" type="number" value={form.engine_hours} onChange={(event) => update('engine_hours', event.target.value)} placeholder="1250,50" /></label>
+            <label><span>Intervalle d’entretien (h)</span><input required={form.engine_hours !== ''} min="0.01" step="0.01" type="number" value={form.maintenance_interval_hours} onChange={(event) => update('maintenance_interval_hours', event.target.value)} placeholder="Selon le manuel" /></label>
             <label className="field-wide"><span>{fr.maintenance.interventionType} <em>*</em></span><SearchableSelect required ariaLabel={fr.maintenance.interventionType} value={form.intervention_type} onChange={(value) => update('intervention_type', value)} placeholder={fr.common.toComplete} options={[...(currentTypeIsUnavailable ? [{ value: form.intervention_type, label: catalogLabel(catalogs, 'maintenance_type', form.intervention_type) }] : []), ...maintenanceTypes.map((option) => ({ value: option.code, label: catalogLabel(catalogs, 'maintenance_type', option.code) }))]} /></label>
             <fieldset className="maintenance-operations field-wide">
               <legend>{fr.maintenance.operations}</legend>
@@ -301,6 +306,8 @@ export function MaintenanceSection({
                   <div className="maintenance-card-body" id={`maintenance-details-${maintenance.id}`}>
                     <dl>
                       <div><dt>{fr.equipment.engineHours}</dt><dd>{value(maintenance.engine_hours)}</dd></div>
+                      <div><dt>Intervalle d’entretien</dt><dd>{maintenance.maintenance_interval_hours ? `${maintenance.maintenance_interval_hours} h` : fr.common.notProvided}</dd></div>
+                      <div><dt>Prochain entretien à</dt><dd>{maintenance.next_maintenance_engine_hours ? `${maintenance.next_maintenance_engine_hours} h` : fr.common.notProvided}</dd></div>
                       <div><dt>{fr.maintenance.oil_changed}</dt><dd>{answer(maintenance.oil_changed)}</dd></div>
                       <div><dt>{fr.maintenance.oilQuantity}</dt><dd>{maintenance.oil_quantity_litres ? `${maintenance.oil_quantity_litres} L` : fr.common.notProvided}</dd></div>
                       <div><dt>{fr.maintenance.oil_filter_changed}</dt><dd>{answer(maintenance.oil_filter_changed)}</dd></div>

@@ -35,6 +35,7 @@ export type EquipmentSummary = {
   origin: string | null;
   asset_details: Record<string, string | number | null> | null;
   condition: EquipmentCondition | null;
+  usage_status: "in_use" | "not_in_use" | null;
   current_location:
     | (NamedReference & {
         parent: NamedReference | null;
@@ -72,6 +73,8 @@ export type EquipmentMaintenance = {
   id: number;
   maintenance_date: string;
   engine_hours: string | null;
+  maintenance_interval_hours: string | null;
+  next_maintenance_engine_hours: string | null;
   intervention_type: MaintenanceType;
   oil_changed: boolean | null;
   oil_quantity_litres: string | null;
@@ -96,6 +99,7 @@ export type MaintenanceType = string;
 export type MaintenancePayload = {
   maintenance_date: string;
   engine_hours: number | null;
+  maintenance_interval_hours: number | null;
   intervention_type: MaintenanceType;
   oil_changed: boolean | null;
   oil_quantity_litres: number | null;
@@ -227,6 +231,7 @@ export type EquipmentFilters = {
   q: string;
   category: string;
   condition: string;
+  usage_status: string;
   project_id: string;
   location_id: string;
   custodian_employee_id: string;

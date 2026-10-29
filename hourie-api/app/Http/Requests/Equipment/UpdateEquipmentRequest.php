@@ -39,6 +39,7 @@ class UpdateEquipmentRequest extends FormRequest
             'supplier' => ['sometimes', 'nullable', 'string', 'max:255'],
             'origin' => ['sometimes', 'nullable', 'string', 'max:255'],
             'condition' => ['present', 'nullable', $this->activeCatalogOption('equipment_condition')],
+            'usage_status' => ['sometimes', 'nullable', Rule::in(['in_use', 'not_in_use'])],
             'project_id' => ['sometimes', 'nullable', 'integer', Rule::exists('projects', 'id')->where('is_active', true)],
             'current_location_id' => ['sometimes', 'nullable', 'integer', Rule::exists('locations', 'id')->where('is_active', true)],
             'custodian_employee_id' => ['present', 'nullable', 'integer', Rule::exists('employees', 'id')->where('is_active', true)],

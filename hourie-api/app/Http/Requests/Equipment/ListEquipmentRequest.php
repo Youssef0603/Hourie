@@ -32,6 +32,7 @@ class ListEquipmentRequest extends FormRequest
             'q' => ['nullable', 'string', 'max:100'],
             'category' => ['nullable', 'string', 'max:50'],
             'condition' => ['nullable', Rule::exists('catalog_options', 'code')->where('group', 'equipment_condition')],
+            'usage_status' => ['nullable', Rule::in(['in_use', 'not_in_use'])],
             'project_id' => ['nullable', 'integer', 'exists:projects,id'],
             'location_id' => ['nullable', 'integer', 'exists:locations,id'],
             'custodian_employee_id' => ['nullable', 'integer', 'exists:employees,id'],

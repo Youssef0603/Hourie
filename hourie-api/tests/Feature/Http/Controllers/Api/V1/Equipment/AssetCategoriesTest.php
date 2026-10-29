@@ -20,6 +20,7 @@ function carPayload(): array
         'registration_number' => 'AA-406-CG',
         'manufacture_year' => 2022,
         'condition' => null,
+        'usage_status' => 'in_use',
         'custodian_employee_id' => null,
         'observations' => null,
         'asset_details' => [
@@ -42,6 +43,7 @@ it('creates and lists a car without generator details', function () {
         ->assertJsonMissingPath('data.asset_details.chassis_number')
         ->assertJsonPath('data.asset_details.inspection_date', '2026-10-15')
         ->assertJsonPath('data.asset_details.fuel_type', 'Diesel')
+        ->assertJsonPath('data.usage_status', 'in_use')
         ->assertJsonPath('data.generator_details', null);
 
     $id = $response->json('data.id');
@@ -83,10 +85,12 @@ it('updates only the fields supported by the asset category', function () {
     $payload = carPayload();
     unset($payload['category_code']);
     $payload['asset_details']['odometer_km'] = 45000;
+    $payload['usage_status'] = 'not_in_use';
 
     $this->actingAs($manager, 'web')->patchJson("/api/v1/equipment/{$id}", $payload)
         ->assertOk()
-        ->assertJsonPath('data.asset_details.odometer_km', 45000);
+        ->assertJsonPath('data.asset_details.odometer_km', 45000)
+        ->assertJsonPath('data.usage_status', 'not_in_use');
 
     expect(Equipment::query()->findOrFail($id)->generatorDetails)->toBeNull();
 });
@@ -169,5 +173,47 @@ it('supports every non-generator category and the all-assets inventory', functio
 
     $this->actingAs($manager, 'web')->getJson('/api/v1/equipment')
         ->assertOk()
-        ->assertJsonCount(7, 'data');
+        ->assertJsonCount(count(EquipmentCategory::ASSET_CATEGORIES) - 1, 'data');
+});
+
+it('supports add, details, edit, filtering, and the correct id prefix for every specialized material category', function () {
+    $manager = User::factory()->create(['role' => UserRole::GeneratorManager]);
+
+    foreach (EquipmentCategory::GENERAL_EQUIPMENT_CATEGORY_CODES as $code) {
+        if ($code === 'equipment') {
+            continue;
+        }
+
+        $definition = EquipmentCategory::ASSET_CATEGORIES[$code];
+        $payload = carPayload();
+        $payload['category_code'] = $code;
+        unset($payload['registration_number']);
+        $payload['asset_details'] = array_fill_keys(array_keys($definition['fields']), null);
+        $payload['asset_details']['equipment_type'] = 'Type initial '.$code;
+        $payload['asset_details']['sub_category'] = 'Sous-catégorie initiale';
+
+        $created = $this->actingAs($manager, 'web')->postJson('/api/v1/equipment', $payload)
+            ->assertCreated()
+            ->assertJsonPath('data.category.code', $code)
+            ->assertJsonPath('data.asset_details.equipment_type', 'Type initial '.$code);
+
+        $id = $created->json('data.id');
+        expect($created->json('data.asset_code'))->toBe(EquipmentCategory::assetCode($code, $id));
+
+        $this->actingAs($manager, 'web')->getJson("/api/v1/equipment/{$id}")
+            ->assertOk()
+            ->assertJsonPath('data.category.code', $code)
+            ->assertJsonPath('data.asset_details.sub_category', 'Sous-catégorie initiale');
+
+        unset($payload['category_code']);
+        $payload['asset_details']['equipment_type'] = 'Type modifié '.$code;
+        $this->actingAs($manager, 'web')->patchJson("/api/v1/equipment/{$id}", $payload)
+            ->assertOk()
+            ->assertJsonPath('data.asset_details.equipment_type', 'Type modifié '.$code);
+
+        $this->actingAs($manager, 'web')->getJson('/api/v1/equipment?category='.$code.'&equipment_type='.urlencode('Type modifié '.$code))
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $id);
+    }
 });

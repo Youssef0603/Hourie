@@ -30,6 +30,7 @@ type FormState = {
   supplier: string
   origin: string
   condition: string
+  usage_status: string
   project_id: string
   current_location_id: string
   custodian_employee_id: string
@@ -60,6 +61,7 @@ function initialForm(equipment: Equipment): FormState {
     supplier: equipment.supplier ?? '',
     origin: equipment.origin ?? '',
     condition: equipment.condition ?? '',
+    usage_status: equipment.usage_status ?? '',
     project_id: equipment.current_project_assignment?.project.id.toString() ?? '',
     current_location_id: equipment.current_location?.id.toString() ?? '',
     custodian_employee_id: equipment.custodian?.id.toString() ?? '',
@@ -136,6 +138,7 @@ export function EquipmentEditForm({ equipment, employees, projects, locations, c
         supplier: text(form.supplier),
         origin: text(form.origin),
         condition: text(form.condition),
+        usage_status: text(form.usage_status),
         project_id: number(form.project_id),
         current_location_id: number(form.current_location_id),
         custodian_employee_id: number(form.custodian_employee_id),
@@ -185,6 +188,7 @@ export function EquipmentEditForm({ equipment, employees, projects, locations, c
         <label><span>{fr.assets.supplier}</span><input value={form.supplier} onChange={(event) => update('supplier', event.target.value)} /></label>
         <label><span>{fr.equipment.origin}</span><input value={form.origin} onChange={(event) => update('origin', event.target.value)} /></label>
         <label><span>{fr.equipment.condition}</span><SearchableSelect ariaLabel={fr.equipment.condition} value={form.condition} onChange={(value) => update('condition', value)} placeholder={fr.common.notProvided} options={catalogOptions(catalogs, 'equipment_condition').map((option) => ({ value: option.code, label: catalogLabel(catalogs, 'equipment_condition', option.code) }))} /></label>
+        <label><span>{fr.equipment.usageStatus}</span><SearchableSelect ariaLabel={fr.equipment.usageStatus} value={form.usage_status} onChange={(value) => update('usage_status', value)} placeholder={fr.common.toComplete} options={[{ value: 'in_use', label: fr.equipment.usageInUse }, { value: 'not_in_use', label: fr.equipment.usageNotInUse }]} /></label>
         {conditionIsSold(catalogs, form.condition) && <label><span>Acheteur <em>*</em></span><input required value={form.sold_to} onChange={(event) => update('sold_to', event.target.value)} placeholder="Nom de l’acheteur" /></label>}
         <label><span>{fr.equipment.project}</span><SearchableSelect ariaLabel={fr.equipment.project} value={form.project_id} onChange={updateProject} placeholder={fr.common.notProvided} options={projects.map((project) => ({ value: String(project.id), label: project.name }))} /></label>
         <label><span>{fr.equipment.location}</span><SearchableSelect ariaLabel={fr.equipment.location} value={form.current_location_id} onChange={(value) => update('current_location_id', value)} placeholder={fr.common.notProvided} options={physicalLocationOptions.map((location) => ({ value: String(location.id), label: form.project_id === '' ? locationOptionLabel(location) : location.name }))} /></label>

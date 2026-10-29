@@ -14,6 +14,8 @@ class EquipmentMaintenanceResource extends JsonResource
             'id' => $this->id,
             'maintenance_date' => $this->maintenance_date?->format('Y-m-d'),
             'engine_hours' => $this->engine_hours,
+            'maintenance_interval_hours' => $this->maintenance_interval_hours,
+            'next_maintenance_engine_hours' => $this->next_maintenance_engine_hours,
             'intervention_type' => $this->intervention_type,
             'oil_changed' => $this->oil_changed,
             'oil_quantity_litres' => $this->oil_quantity_litres,
