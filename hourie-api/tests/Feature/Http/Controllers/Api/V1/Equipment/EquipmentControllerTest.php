@@ -168,6 +168,25 @@ it('matches search words across separate equipment fields', function () {
         ->assertJsonPath('data.0.id', $matching->id);
 });
 
+it('searches asset detail values without matching internal json field names', function () {
+    $user = User::factory()->create();
+    $category = EquipmentCategory::factory()->create(['code' => 'road_equipment']);
+    $matching = Equipment::factory()->for($category, 'category')->create([
+        'brand' => 'Paver',
+        'asset_details' => ['equipment_type' => 'Volvo finisher'],
+    ]);
+    Equipment::factory()->for($category, 'category')->create([
+        'brand' => 'Sweeper',
+        'asset_details' => ['invoice_date' => '2024-07-17', 'equipment_type' => 'Sweeper'],
+    ]);
+
+    $this->actingAs($user, 'web')
+        ->getJson('/api/v1/equipment?category=road_equipment&q=vo')
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $matching->id);
+});
+
 it('finds a car by its assigned driver name', function () {
     $user = User::factory()->create();
     $driver = Employee::factory()->create(['name' => 'Aminata Traoré']);

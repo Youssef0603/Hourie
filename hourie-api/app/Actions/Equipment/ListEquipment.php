@@ -83,7 +83,20 @@ class ListEquipment
                             "CONCAT_WS(' ', asset_code, brand, model, serial_number, registration_number, supplier, origin) like ?",
                             [$pattern],
                         )
-                        ->orWhere('asset_details', 'like', $pattern)
+                        ->orWhere(function (Builder $assetDetailsQuery) use ($trimmedSearch): void {
+                            $valuePattern = '%'.mb_strtolower($trimmedSearch).'%';
+
+                            foreach ($this->searchableAssetDetailFields() as $field) {
+                                $column = $assetDetailsQuery->getConnection()->getDriverName() === 'sqlite'
+                                    ? "json_extract(asset_details, '$.{$field}')"
+                                    : "JSON_UNQUOTE(JSON_EXTRACT(asset_details, '$.{$field}'))";
+
+                                $assetDetailsQuery->orWhereRaw(
+                                    "LOWER(COALESCE({$column}, '')) like ?",
+                                    [$valuePattern],
+                                );
+                            }
+                        })
                         ->orWhere('observations', 'like', $pattern)
                         ->orWhereHas('custodian', fn (Builder $custodianQuery) => $custodianQuery
                             ->whereRaw('LOWER(name) like ?', ['%'.mb_strtolower($trimmedSearch).'%']));
@@ -189,6 +202,16 @@ class ListEquipment
             "LOWER({$jsonValue}) like ?",
             ['%'.mb_strtolower(trim($value)).'%'],
         );
+    }
+
+    /** @return list<string> */
+    private function searchableAssetDetailFields(): array
+    {
+        return collect(EquipmentCategory::ASSET_CATEGORIES)
+            ->flatMap(fn (array $definition): array => array_keys($definition['fields']))
+            ->unique()
+            ->values()
+            ->all();
     }
 
     private function whereAssetNumber(Builder $query, string $field, string $operator, int|float|string $value): Builder

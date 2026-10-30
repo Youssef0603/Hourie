@@ -7,7 +7,7 @@ import { Modal } from "../../../shared/components/Modal";
 import { assetCategory, isAssetCategoryCode } from "../assetCategories";
 import { removeEquipmentTransfer } from "../api";
 import { catalogLabel } from "../catalogs";
-import { displayedValue } from "../equipmentDisplay";
+import { displayedValue, equipmentBrandLabel } from "../equipmentDisplay";
 import type { Equipment, EquipmentFilterOptions } from "../types";
 import { EquipmentCoverageDetails } from "./EquipmentCoverageDetails";
 import { EquipmentDetailSection } from "./EquipmentDetailSection";
@@ -299,7 +299,7 @@ function DetailHeader({ equipment, onClose }: { equipment: Equipment; onClose: (
       <div>
         <p className="section-label">{equipment.category.name}</p>
         <h2>{equipment.asset_code}</h2>
-        <p>{[equipment.brand, equipment.model].filter(Boolean).join(" ") || fr.common.notProvided}</p>
+        <p>{[equipmentBrandLabel(equipment), equipment.model].filter(Boolean).join(" ")}</p>
       </div>
       <button type="button" aria-label={fr.common.close} onClick={onClose}><ActionIcon name="close" /></button>
     </header>

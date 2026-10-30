@@ -87,6 +87,12 @@ function section(title: string): HTMLDetailsElement {
 }
 
 describe("EquipmentDetailPanel section expansion", () => {
+  it("shows the equipment type beside the brand in the header", () => {
+    renderPanel(equipment({ asset_details: { equipment_type: "Compresseur" } }));
+
+    expect(screen.getByText("Compresseur · Atlas Copco XAS 97")).toBeInTheDocument();
+  });
+
   it("opens populated optional sections", () => {
     renderPanel(equipment({
       observations: "Needs inspection",
