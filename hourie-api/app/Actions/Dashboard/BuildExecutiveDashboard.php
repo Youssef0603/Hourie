@@ -2,6 +2,7 @@
 
 namespace App\Actions\Dashboard;
 
+use App\Enums\EquipmentChangeSource;
 use App\Enums\EquipmentChangeType;
 use App\Enums\EquipmentCondition;
 use App\Models\Equipment;
@@ -37,8 +38,8 @@ class BuildExecutiveDashboard
             $item->condition === EquipmentCondition::OutOfService->value ? 'Hors service' : 'Défectueux',
         ], 'critical'));
 
-        $unknownLocation = $equipment->filter(fn (Equipment $item): bool => $item->current_location_id === null)
-            ->map(fn (Equipment $item): array => $this->assetItem($item, ['Localisation physique inconnue'], 'warning'));
+        $unassignedProject = $equipment->filter(fn (Equipment $item): bool => $item->currentProjectAssignment === null)
+            ->map(fn (Equipment $item): array => $this->assetItem($item, ['Projet non affecté'], 'warning'));
 
         $missingIdentityOrDocuments = $equipment->map(function (Equipment $item): ?array {
             $issues = collect();
@@ -102,7 +103,7 @@ class BuildExecutiveDashboard
             'generated_at' => now()->toISOString(),
             'sections' => [
                 'repair_required' => $this->section($repairRequired),
-                'unknown_location' => $this->section($unknownLocation),
+                'unknown_location' => $this->section($unassignedProject),
                 'missing_identity_or_documents' => $this->section($missingIdentityOrDocuments),
                 'maintenance_by_hours' => $this->section($maintenanceByHours),
                 'recent_transfers' => $this->section($recentTransfers),
@@ -119,6 +120,7 @@ class BuildExecutiveDashboard
                 EquipmentChangeType::LocationChanged->value,
                 EquipmentChangeType::ProjectAssignmentChanged->value,
             ])
+            ->where('source', EquipmentChangeSource::Transfer->value)
             ->where('occurred_at', '>=', now()->subDays(30))
             ->with(['equipment.category:id,code,name', 'equipment.currentLocation:id,name', 'equipment.currentProjectAssignment.project:id,name'])
             ->latest('occurred_at')

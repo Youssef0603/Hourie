@@ -46,7 +46,7 @@ describe("DashboardPage", () => {
 
     expect(await screen.findByRole("heading", { name: "Tableau de bord" })).toBeVisible();
     expect(screen.getAllByText("Équipements à réparer")[0]).toBeVisible();
-    expect(screen.getAllByText("Localisation inconnue")[0]).toBeVisible();
+    expect(screen.getAllByText("Projet non affecté")[0]).toBeVisible();
     expect(screen.getAllByText("Identification et documents")[0]).toBeVisible();
     expect(screen.getAllByText("Entretien par heures moteur")[0]).toBeVisible();
     expect(screen.getAllByText("Transferts récents")[0]).toBeVisible();

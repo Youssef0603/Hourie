@@ -27,8 +27,8 @@ const sectionMeta: Record<SectionKey, {
     tone: "critical",
   },
   unknown_location: {
-    title: "Localisation inconnue",
-    subtitle: "Actifs sans localisation physique enregistrée",
+    title: "Projet non affecté",
+    subtitle: "Actifs sans chantier ou projet enregistré",
     icon: "location",
     tone: "warning",
   },

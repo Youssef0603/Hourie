@@ -7,8 +7,10 @@ use App\Models\Equipment;
 use App\Models\EquipmentCategory;
 use App\Models\EquipmentChange;
 use App\Models\EquipmentMaintenance;
+use App\Models\EquipmentProjectAssignment;
 use App\Models\GeneratorDetail;
 use App\Models\Location;
+use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 
@@ -22,6 +24,7 @@ it('returns the six operational equipment queues', function (): void {
     $user = User::factory()->create(['role' => UserRole::Manager, 'must_change_password' => false, 'is_active' => true]);
     $category = EquipmentCategory::query()->create(['code' => 'generator', 'name' => 'Générateurs', 'is_active' => true]);
     $location = Location::factory()->create();
+    $project = Project::factory()->create();
 
     $repair = Equipment::factory()->create([
         'equipment_category_id' => $category->id,
@@ -42,6 +45,13 @@ it('returns the six operational equipment queues', function (): void {
         'equipment_category_id' => $category->id,
         'current_location_id' => $location->id,
     ]);
+    $assignedWithoutPhysicalLocation = Equipment::factory()->create([
+        'equipment_category_id' => $category->id,
+        'current_location_id' => null,
+    ]);
+    EquipmentProjectAssignment::factory()->for($repair)->for($project)->create();
+    EquipmentProjectAssignment::factory()->for($maintenanceEquipment)->for($project)->create();
+    EquipmentProjectAssignment::factory()->for($assignedWithoutPhysicalLocation)->for($project)->create();
     GeneratorDetail::factory()->for($maintenanceEquipment)->create(['current_engine_hours' => 1490]);
     EquipmentMaintenance::factory()->for($maintenanceEquipment)->create([
         'engine_hours' => 1250,
@@ -55,11 +65,20 @@ it('returns the six operational equipment queues', function (): void {
         'new_values' => ['location' => 'Gesco'],
         'occurred_at' => now()->subDay(),
     ]);
+    EquipmentChange::factory()->for($assignedWithoutPhysicalLocation)->create([
+        'change_type' => EquipmentChangeType::ProjectAssignmentChanged,
+        'source' => EquipmentChangeSource::Manual,
+        'previous_values' => ['project' => null],
+        'new_values' => ['project' => $project->name],
+        'occurred_at' => now()->subDay(),
+    ]);
 
     $this->actingAs($user, 'web')->getJson('/api/v1/dashboard')
         ->assertOk()
         ->assertJsonPath('data.sections.repair_required.total', 1)
         ->assertJsonPath('data.sections.unknown_location.total', 1)
+        ->assertJsonPath('data.sections.unknown_location.items.0.asset_code', $unknown->asset_code)
+        ->assertJsonPath('data.sections.unknown_location.items.0.issues.0', 'Projet non affecté')
         ->assertJsonPath('data.sections.maintenance_by_hours.total', 1)
         ->assertJsonPath('data.sections.maintenance_by_hours.items.0.hours_remaining', 10)
         ->assertJsonPath('data.sections.recent_transfers.total', 1)
