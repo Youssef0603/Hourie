@@ -144,6 +144,25 @@ function equipmentAuditLabel(
   return fr.audit.equipmentActions[type];
 }
 
+function qualityFiltersFromSearch(search: string): Partial<EquipmentFilters> {
+  const parameters = new URLSearchParams(search);
+
+  return {
+    without_invoice: parameters.get("without_invoice") === "1" ? "1" : "",
+    missing_serial: parameters.get("missing_serial") === "1" ? "1" : "",
+    unassigned: parameters.get("unassigned") === "1" ? "1" : "",
+    missing_usage_status:
+      parameters.get("missing_usage_status") === "1" ? "1" : "",
+  };
+}
+
+const qualityFilterKeys: Array<keyof EquipmentFilters> = [
+  "without_invoice",
+  "missing_serial",
+  "unassigned",
+  "missing_usage_status",
+];
+
 export function EquipmentPage({
   user,
   isLoggingOut,
@@ -153,11 +172,13 @@ export function EquipmentPage({
   onToggleLanguage,
 }: EquipmentPageProps) {
   const [pathname, setPathname] = useState(() => window.location.pathname);
+  const [filterQuery, setFilterQuery] = useState(() => window.location.search);
   const route = parseWorkspaceRoute(pathname);
   const previousSiteId = useRef(route.siteId);
   const previousAssetCategory = useRef(
     route.section === "assets" ? route.assetCategory : "generator",
   );
+  const previousFilterQuery = useRef(filterQuery);
   const activeSection = route.section;
   const usesInventory =
     route.section === "generators" ||
@@ -167,6 +188,7 @@ export function EquipmentPage({
     route.section === "assets" || route.siteId !== null;
   const [filters, setFilters] = useState(() => ({
     ...initialFilters,
+    ...qualityFiltersFromSearch(window.location.search),
     category: route.siteId
       ? ""
       : route.section === "assets"
@@ -217,9 +239,12 @@ export function EquipmentPage({
         hourieHasPrevious: historyState?.hourieHasPrevious ?? false,
       },
       "",
-      canonicalPath,
+      `${canonicalPath}${window.location.search}`,
     );
-    const onPopState = () => setPathname(window.location.pathname);
+    const onPopState = () => {
+      setPathname(window.location.pathname);
+      setFilterQuery(window.location.search);
+    };
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
   }, []);
@@ -239,6 +264,8 @@ export function EquipmentPage({
         : "generator";
     const wasAssetCategory = previousAssetCategory.current;
     previousAssetCategory.current = currentCategory;
+    const filterQueryChanged = previousFilterQuery.current !== filterQuery;
+    previousFilterQuery.current = filterQuery;
     // The browser history is an external source of navigation state. Reset
     // transient panels as a transition so a route render is never blocked.
     startTransition(() => {
@@ -282,12 +309,17 @@ export function EquipmentPage({
     } else {
       startTransition(() => {
         setSiteContext(null);
-        if (wasSiteId !== null || wasAssetCategory !== currentCategory) {
+        if (
+          wasSiteId !== null ||
+          wasAssetCategory !== currentCategory ||
+          filterQueryChanged
+        ) {
           setIsLoading(true);
           setResult(null);
           setSearch("");
           setFilters({
             ...initialFilters,
+            ...qualityFiltersFromSearch(filterQuery),
             category: currentCategory === "all" ? "" : currentCategory,
           });
         }
@@ -310,20 +342,36 @@ export function EquipmentPage({
     return () => {
       cancelled = true;
     };
-  }, [pathname, user.permissions.manage_sites]);
+  }, [filterQuery, pathname, user.permissions.manage_sites]);
 
   function navigate(path: string, replace = false) {
-    if (window.location.pathname === path) return;
+    const nextUrl = new URL(path, window.location.origin);
+    const nextPath = `${nextUrl.pathname}${nextUrl.search}`;
+    const currentPath = `${window.location.pathname}${window.location.search}`;
+    if (currentPath === nextPath) return;
     if (replace) {
-      window.history.replaceState(window.history.state, "", path);
+      window.history.replaceState(window.history.state, "", nextPath);
     } else {
       window.history.pushState(
         { hourieWorkspace: true, hourieHasPrevious: true },
         "",
-        path,
+        nextPath,
       );
     }
-    setPathname(path);
+    setPathname(nextUrl.pathname);
+    setFilterQuery(nextUrl.search);
+  }
+
+  function clearQualityFilterQuery() {
+    if (window.location.search === "") return;
+
+    window.history.replaceState(
+      window.history.state,
+      "",
+      window.location.pathname,
+    );
+    previousFilterQuery.current = "";
+    setFilterQuery("");
   }
 
   function navigateSection(section: WorkspaceRoute["section"]) {
@@ -351,14 +399,13 @@ export function EquipmentPage({
       return;
     }
 
-    navigate(
-      route.siteId
+    const inventoryPath = route.siteId
         ? `/sites/${route.siteId}`
         : route.section === "assets"
           ? `/assets/${route.assetCategory}`
-          : "/assets/generator",
-      true,
-    );
+          : "/assets/generator";
+
+    navigate(`${inventoryPath}${window.location.search}`, true);
   }
 
   useEffect(() => {
@@ -465,6 +512,20 @@ export function EquipmentPage({
   }
 
   function updateFilter(name: keyof EquipmentFilters, value: string) {
+    if (qualityFilterKeys.includes(name)) {
+      const parameters = new URLSearchParams(window.location.search);
+      if (value === "") parameters.delete(name);
+      else parameters.set(name, value);
+      const search = parameters.toString();
+      const nextQuery = search === "" ? "" : `?${search}`;
+      window.history.replaceState(
+        window.history.state,
+        "",
+        `${window.location.pathname}${nextQuery}`,
+      );
+      previousFilterQuery.current = nextQuery;
+      setFilterQuery(nextQuery);
+    }
     setIsLoading(true);
     setError(null);
     setFilters((current) => ({ ...current, [name]: value, page: 1 }));
@@ -488,13 +549,13 @@ export function EquipmentPage({
   }
 
   function openEquipment(id: number) {
-    navigate(
-      route.siteId
+    const detailPath = route.siteId
         ? `/sites/${route.siteId}/generators/${id}`
         : route.section === "assets"
           ? `/assets/${route.assetCategory}/${id}`
-          : `/assets/generator/${id}`,
-    );
+          : `/assets/generator/${id}`;
+
+    navigate(`${detailPath}${window.location.search}`);
   }
 
   const isSiteView = siteContext !== null;
@@ -963,6 +1024,7 @@ export function EquipmentPage({
               openEquipment(equipment.id);
             }}
             onClearFilters={() => {
+              clearQualityFilterQuery();
               setIsLoading(true);
               setError(null);
               setFilters({
@@ -973,6 +1035,7 @@ export function EquipmentPage({
               });
             }}
             onCategorySelect={(selectedCategory) => {
+              clearQualityFilterQuery();
               setIsLoading(true);
               setError(null);
               setSearch("");
@@ -1005,6 +1068,7 @@ export function EquipmentPage({
               openEquipment(equipment.id);
             }}
             onClearFilters={() => {
+              clearQualityFilterQuery();
               setIsLoading(true);
               setError(null);
               setFilters({
@@ -1017,6 +1081,7 @@ export function EquipmentPage({
               });
             }}
             onCategorySelect={(selectedCategory) => {
+              clearQualityFilterQuery();
               setIsLoading(true);
               setError(null);
               setSearch("");

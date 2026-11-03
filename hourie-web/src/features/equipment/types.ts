@@ -262,6 +262,8 @@ export type EquipmentFilters = {
   odometer_km_min: string;
   odometer_km_max: string;
   unassigned: string;
+  missing_serial: string;
+  missing_usage_status: string;
   bungalow_type: string;
   bungalow_group: "" | "office" | "sanitary" | "guard";
   air_conditioning: string;

@@ -6,6 +6,7 @@ import { catalogLabel, catalogOptions } from '../catalogs'
 import { assetFieldLabel, isGeneralEquipmentCategoryCode, type AssetCategoryCode, type AssetField } from '../assetCategories'
 import { filterableLocationOptions, locationOptionLabel } from '../locationLabel'
 import type { EquipmentFilterOptions, EquipmentFilters } from '../types'
+import { DataQualityFilterChips } from './DataQualityFilterChips'
 
 type AssetFilterDrawerProps = {
   categoryCode?: AssetCategoryCode
@@ -37,6 +38,7 @@ export function AssetFilterDrawer({ categoryCode, fields, filters, language, opt
           <label><span>{fr.equipment.custodian}</span><SearchableSelect ariaLabel={fr.equipment.custodian} value={filters.custodian_employee_id} onChange={(value) => onChange('custodian_employee_id', value)} placeholder={fr.common.all} options={(options?.employees ?? []).map((employee) => ({ value: String(employee.id), label: employee.name }))} /></label>
           <label><span>{fr.equipment.sort}</span><SearchableSelect ariaLabel={fr.equipment.sort} value={filters.sort} onChange={(value) => onChange('sort', value)} placeholder={fr.equipment.manufacturedNewestFirst} includeEmpty={false} options={[{ value: 'manufacture_year_desc', label: fr.equipment.manufacturedNewestFirst }, { value: 'manufacture_year_asc', label: fr.equipment.manufacturedOldestFirst }]} /></label>
         </div></fieldset>
+        <DataQualityFilterChips filters={filters} onChange={onChange} />
         <div className="advanced-filter-panel">
           <fieldset><legend>{fr.equipment.assignmentAndDateFilters}</legend><div className="advanced-filter-grid">
             <label><span>{fr.assets.supplier}</span><input {...field('supplier')} /></label>

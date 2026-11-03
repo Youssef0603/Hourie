@@ -1133,6 +1133,59 @@ html[dir="rtl"] .search-clear-button {
   padding: 1.15rem;
 }
 
+.data-quality-filter-chips {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 0.85rem;
+  border-radius: 0.45rem;
+  padding: 0.55rem 0.65rem;
+  background: color-mix(in srgb, var(--color-primary) 5%, white);
+}
+
+.data-quality-filter-chips > span {
+  flex: 0 0 auto;
+  color: var(--color-text-muted);
+  font-size: 0.68rem;
+  font-weight: 650;
+}
+
+.data-quality-filter-chips > div {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.data-quality-filter-chips button {
+  display: inline-flex;
+  min-height: 1.75rem;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 25%, white);
+  border-radius: 999px;
+  padding: 0.25rem 0.55rem;
+  color: var(--color-primary);
+  background: white;
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.data-quality-filter-chips button:hover {
+  border-color: var(--color-primary);
+}
+
+.data-quality-filter-chips button svg {
+  width: 0.7rem;
+  height: 0.7rem;
+  fill: none;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-width: 2;
+}
+
 .drawer-basic-filters,
 .filter-drawer .advanced-filter-panel fieldset {
   min-width: 0;

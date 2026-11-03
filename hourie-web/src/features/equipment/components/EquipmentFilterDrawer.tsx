@@ -5,6 +5,7 @@ import { SearchableSelect } from '../../../shared/components/SearchableSelect'
 import { locationOptionLabel } from '../locationLabel'
 import { catalogLabel, catalogOptions } from '../catalogs'
 import type { EquipmentFilterOptions, EquipmentFilters } from '../types'
+import { DataQualityFilterChips } from './DataQualityFilterChips'
 
 type EquipmentFilterDrawerProps = {
   filters: EquipmentFilters
@@ -29,6 +30,7 @@ export function EquipmentFilterDrawer({ filters, options, isSiteView, physicalLo
           <label><span>{fr.equipment.location}</span><SearchableSelect ariaLabel={fr.equipment.location} value={filters.location_id} onChange={(value) => onChange('location_id', value)} placeholder={fr.common.all} options={physicalLocationOptions.map((location) => ({ value: String(location.id), label: filters.project_id === '' ? locationOptionLabel(location) : location.name }))} /></label>
           <label><span>{fr.equipment.sort}</span><SearchableSelect ariaLabel={fr.equipment.sort} value={filters.sort} onChange={(value) => onChange('sort', value)} placeholder={fr.equipment.manufacturedNewestFirst} includeEmpty={false} options={[{ value: 'manufacture_year_desc', label: fr.equipment.manufacturedNewestFirst }, { value: 'manufacture_year_asc', label: fr.equipment.manufacturedOldestFirst }]} /></label>
         </div></fieldset>
+        <DataQualityFilterChips filters={filters} onChange={onChange} />
         <AdvancedEquipmentFilters filters={filters} options={options} onChange={onChange} />
       </div>
     </aside>

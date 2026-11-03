@@ -119,6 +119,14 @@ class ListEquipment
             ->when($filters['brand'] ?? null, fn (Builder $query, string $value) => $query->where('brand', 'like', '%'.trim($value).'%'))
             ->when($filters['model'] ?? null, fn (Builder $query, string $value) => $query->where('model', 'like', '%'.trim($value).'%'))
             ->when($filters['serial_number'] ?? null, fn (Builder $query, string $value) => $query->where('serial_number', 'like', '%'.trim($value).'%'))
+            ->when($filters['missing_serial'] ?? false, fn (Builder $query) => $query
+                ->where(fn (Builder $query) => $query
+                    ->whereNull('serial_number')
+                    ->orWhere('serial_number', '')))
+            ->when($filters['missing_usage_status'] ?? false, fn (Builder $query) => $query
+                ->where(fn (Builder $query) => $query
+                    ->whereNull('usage_status')
+                    ->orWhere('usage_status', '')))
             ->when($filters['registration_number'] ?? null, fn (Builder $query, string $value) => $query->where('registration_number', 'like', '%'.trim($value).'%'))
             ->when(isset($filters['manufacture_year_from']), fn (Builder $query) => $query->where('manufacture_year', '>=', $filters['manufacture_year_from']))
             ->when(isset($filters['manufacture_year_to']), fn (Builder $query) => $query->where('manufacture_year', '<=', $filters['manufacture_year_to']))

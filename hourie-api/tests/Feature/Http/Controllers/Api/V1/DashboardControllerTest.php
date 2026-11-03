@@ -20,7 +20,7 @@ it('requires authentication to view the operational dashboard', function (): voi
     $this->getJson('/api/v1/dashboard')->assertUnauthorized();
 });
 
-it('returns the six operational equipment queues', function (): void {
+it('returns the executive equipment dashboard', function (): void {
     $user = User::factory()->create(['role' => UserRole::Manager, 'must_change_password' => false, 'is_active' => true]);
     $category = EquipmentCategory::query()->create(['code' => 'generator', 'name' => 'Générateurs', 'is_active' => true]);
     $location = Location::factory()->create();
@@ -75,18 +75,16 @@ it('returns the six operational equipment queues', function (): void {
 
     $this->actingAs($user, 'web')->getJson('/api/v1/dashboard')
         ->assertOk()
-        ->assertJsonPath('data.sections.repair_required.total', 1)
-        ->assertJsonPath('data.sections.unknown_location.total', 1)
-        ->assertJsonPath('data.sections.unknown_location.items.0.asset_code', $unknown->asset_code)
-        ->assertJsonPath('data.sections.unknown_location.items.0.issues.0', 'Projet non affecté')
-        ->assertJsonPath('data.sections.maintenance_by_hours.total', 1)
-        ->assertJsonPath('data.sections.maintenance_by_hours.items.0.hours_remaining', 10)
-        ->assertJsonPath('data.sections.recent_transfers.total', 1)
-        ->assertJsonPath('data.sections.recent_transfers.items.0.to', 'Gesco')
-        ->assertJsonFragment(['asset_code' => $repair->asset_code])
-        ->assertJsonFragment(['asset_code' => $unknown->asset_code])
-        ->assertJsonStructure(['data' => ['generated_at', 'sections' => [
-            'repair_required', 'unknown_location', 'missing_identity_or_documents',
-            'maintenance_by_hours', 'recent_transfers', 'incomplete_records',
-        ]]]);
+        ->assertJsonPath('data.summary.active_equipment', 4)
+        ->assertJsonPath('data.summary.active_projects', 1)
+        ->assertJsonPath('data.priority_actions.0.key', 'repair')
+        ->assertJsonPath('data.priority_actions.0.title', '1 équipements à réparer')
+        ->assertJsonPath('data.priority_actions.1.key', 'maintenance')
+        ->assertJsonPath('data.priority_actions.1.title', '1 maintenances à planifier')
+        ->assertJsonPath('data.data_quality.missing_serials', 1)
+        ->assertJsonPath('data.data_quality.missing_projects', 1)
+        ->assertJsonCount(2, 'data.recent_activity')
+        ->assertJsonStructure(['data' => [
+            'generated_at', 'summary', 'priority_actions', 'deadlines', 'data_quality', 'recent_activity',
+        ]]);
 });

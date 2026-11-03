@@ -10,51 +10,65 @@ vi.mock("../../../shared/api/http", async (importOriginal) => ({
   apiRequest,
 }));
 
-const asset = {
-  id: 12,
-  asset_code: "A.H-GEN-292",
-  label: "Himoinsa HSY-15",
-  category_code: "generator",
-  category_name: "Générateurs",
-  serial_number: "X1CH128057",
-  location_name: "Centrale",
-  project_name: "Gesco",
-  issues: ["Défectueux"],
-  severity: "critical",
-  path: "/assets/generator/12",
-};
-
 const dashboard = {
   generated_at: new Date().toISOString(),
-  sections: {
-    repair_required: { total: 1, items: [asset] },
-    unknown_location: { total: 4, items: [{ ...asset, id: 13, asset_code: "A.H-POM-326", issues: ["Localisation physique inconnue"], severity: "warning" }] },
-    missing_identity_or_documents: { total: 3, items: [{ ...asset, id: 14, asset_code: "A.H-CAM-102", issues: ["Aucun document"], severity: "warning" }] },
-    maintenance_by_hours: { total: 1, items: [{ ...asset, current_engine_hours: 1490, next_maintenance_engine_hours: 1500, hours_remaining: 10, issues: ["Entretien proche"], severity: "warning" }] },
-    recent_transfers: { total: 1, items: [{ ...asset, occurred_at: "2026-10-28T10:00:00.000Z", from: "Bassam", to: "Gesco", issues: ["Affectation mise à jour"], severity: "info" }] },
-    incomplete_records: { total: 9, items: [{ ...asset, id: 15, asset_code: "A.H-MAT-327", issues: ["Fournisseur à compléter"], severity: "info" }] },
+  summary: {
+    active_equipment: 312,
+    active_projects: 7,
+    tracked_projects: 9,
+    operational_equipment: 169,
+    availability_rate: 54,
+    attention_points: 22,
   },
+  priority_actions: [
+    { key: "repair", title: "18 équipements à réparer", description: "5 hors service et 13 défectueux", severity: "critical", path: "/assets/all" },
+    { key: "maintenance", title: "3 maintenances à planifier", description: "1 dépassée, 2 à moins de 50 heures", severity: "warning", path: "/assets/generator" },
+  ],
+  deadlines: [
+    { id: 2, type: "temporary_admission", label: "AT S214", due_on: "2026-10-31", days_remaining: -3, severity: "critical", path: "/temporary-admissions/2" },
+  ],
+  data_quality: {
+    completeness_percent: 62,
+    missing_invoices: 24,
+    missing_serials: 8,
+    missing_projects: 5,
+    missing_usage_status: 312,
+  },
+  recent_activity: [
+    { id: 1, type: "maintenance_recorded", title: "Maintenance enregistrée", description: "A.H-GEN-292 · Himoinsa HSY-15", occurred_at: new Date().toISOString(), initials: "MK", path: "/assets/generator/12" },
+  ],
 };
 
 describe("DashboardPage", () => {
   beforeEach(() => apiRequest.mockResolvedValue({ data: dashboard }));
 
-  it("shows the six operational queues and opens the affected asset", async () => {
+  it("shows the executive overview and opens a priority action", async () => {
     const user = userEvent.setup();
     const onNavigate = vi.fn();
     render(<DashboardPage onNavigate={onNavigate} />);
 
     expect(await screen.findByRole("heading", { name: "Tableau de bord" })).toBeVisible();
-    expect(screen.getAllByText("Équipements à réparer")[0]).toBeVisible();
-    expect(screen.getAllByText("Projet non affecté")[0]).toBeVisible();
-    expect(screen.getAllByText("Identification et documents")[0]).toBeVisible();
-    expect(screen.getAllByText("Entretien par heures moteur")[0]).toBeVisible();
-    expect(screen.getAllByText("Transferts récents")[0]).toBeVisible();
-    expect(screen.getAllByText("Fiches à compléter")[0]).toBeVisible();
-    expect(screen.getByText("10 h restantes")).toBeVisible();
-    expect(screen.getByText("Bassam → Gesco")).toBeVisible();
+    expect(screen.getByText("Synthèse du parc")).toBeVisible();
+    expect(screen.getByText("Actifs suivis")).toBeVisible();
+    expect(screen.getByText("Actions prioritaires")).toBeVisible();
+    expect(screen.getByText("Échéances administratives")).toBeVisible();
+    expect(screen.getByText("Qualité des données")).toBeVisible();
+    expect(screen.getByText("Activité récente")).toBeVisible();
+    expect(screen.getByText("La complétude globale de votre inventaire est de", { exact: false })).toBeVisible();
 
-    await user.click(screen.getAllByRole("button", { name: /A.H-GEN-292/ })[0]);
-    expect(onNavigate).toHaveBeenCalledWith("/assets/generator/12");
+    await user.click(screen.getByRole("button", { name: /18 équipements à réparer/ }));
+    expect(onNavigate).toHaveBeenCalledWith("/assets/all");
+
+    await user.click(screen.getByRole("button", { name: /24 factures manquantes/ }));
+    expect(onNavigate).toHaveBeenCalledWith("/assets/all?without_invoice=1");
+
+    await user.click(screen.getByRole("button", { name: /8 numéros de série manquants/ }));
+    expect(onNavigate).toHaveBeenCalledWith("/assets/all?missing_serial=1");
+
+    await user.click(screen.getByRole("button", { name: /5 actifs sans chantier/ }));
+    expect(onNavigate).toHaveBeenCalledWith("/assets/all?unassigned=1");
+
+    await user.click(screen.getByRole("button", { name: /312 utilisations actuelles à renseigner/ }));
+    expect(onNavigate).toHaveBeenCalledWith("/assets/all?missing_usage_status=1");
   });
 });

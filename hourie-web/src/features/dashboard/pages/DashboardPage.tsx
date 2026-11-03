@@ -3,62 +3,8 @@ import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { EmptyState } from "../../../shared/components/EmptyState";
 import { LoadingSpinner } from "../../../shared/components/LoadingSpinner";
 import { getDashboard } from "../api";
-import type {
-  DashboardAssetItem,
-  DashboardData,
-  DashboardMaintenanceItem,
-  DashboardSection,
-  DashboardTransferItem,
-} from "../types";
+import type { DashboardData } from "../types";
 import "./dashboard-page.css";
-
-type SectionKey = keyof DashboardData["sections"];
-
-const sectionMeta: Record<SectionKey, {
-  title: string;
-  subtitle: string;
-  icon: Parameters<typeof ActionIcon>[0]["name"];
-  tone: string;
-}> = {
-  repair_required: {
-    title: "Équipements à réparer",
-    subtitle: "Équipements défectueux ou hors service",
-    icon: "maintenance",
-    tone: "critical",
-  },
-  unknown_location: {
-    title: "Projet non affecté",
-    subtitle: "Actifs sans chantier ou projet enregistré",
-    icon: "location",
-    tone: "warning",
-  },
-  missing_identity_or_documents: {
-    title: "Identification et documents",
-    subtitle: "Numéros de série ou documents manquants",
-    icon: "identification",
-    tone: "warning",
-  },
-  maintenance_by_hours: {
-    title: "Entretien par heures moteur",
-    subtitle: "Échéance dépassée ou à moins de 50 heures",
-    icon: "history",
-    tone: "maintenance",
-  },
-  recent_transfers: {
-    title: "Transferts récents",
-    subtitle: "Affectations modifiées durant les 30 derniers jours",
-    icon: "transfer",
-    tone: "transfer",
-  },
-  incomplete_records: {
-    title: "Fiches à compléter",
-    subtitle: "Informations essentielles encore manquantes",
-    icon: "note",
-    tone: "info",
-  },
-};
-
-const sectionOrder = Object.keys(sectionMeta) as SectionKey[];
 
 export function DashboardPage({ onNavigate }: { onNavigate: (path: string) => void }) {
   const [data, setData] = useState<DashboardData | null>(null);
@@ -86,97 +32,182 @@ export function DashboardPage({ onNavigate }: { onNavigate: (path: string) => vo
   if (loading) return <main className="dashboard-page"><LoadingSpinner label="Chargement du tableau de bord…" /></main>;
   if (error || !data) return <main className="dashboard-page"><div className="form-alert" role="alert">{error}</div><button className="secondary-button" type="button" onClick={load}>Réessayer</button></main>;
 
+  const summaryCards = [
+    {
+      label: "Actifs suivis",
+      value: data.summary.active_equipment,
+      meta: "équipements actifs dans l’inventaire",
+      icon: "specifications" as const,
+      tone: "teal",
+      path: "/assets/all",
+    },
+    {
+      label: "Chantiers actifs",
+      value: data.summary.active_projects,
+      meta: `sur ${data.summary.tracked_projects} chantiers suivis`,
+      icon: "location" as const,
+      tone: "blue",
+      path: "/sites",
+    },
+    {
+      label: "Disponibilité du parc",
+      value: `${data.summary.availability_rate}%`,
+      meta: `${data.summary.operational_equipment} actifs en bon état confirmé`,
+      icon: "maintenance" as const,
+      tone: "green",
+      path: "/assets/all",
+    },
+    {
+      label: "Points d’attention",
+      value: data.summary.attention_points,
+      meta: "réparations, entretiens et échéances",
+      icon: "note" as const,
+      tone: "amber",
+      path: "#priority-actions",
+    },
+  ];
+
+  const qualityItems = [
+    { label: "factures manquantes", value: data.data_quality.missing_invoices, icon: "invoice" as const, path: "/assets/all?without_invoice=1" },
+    { label: "numéros de série manquants", value: data.data_quality.missing_serials, icon: "identification" as const, path: "/assets/all?missing_serial=1" },
+    { label: "actifs sans chantier", value: data.data_quality.missing_projects, icon: "location" as const, path: "/assets/all?unassigned=1" },
+    { label: "utilisations actuelles à renseigner", value: data.data_quality.missing_usage_status, icon: "note" as const, path: "/assets/all?missing_usage_status=1" },
+  ];
+
   return (
     <main className="dashboard-page">
       <header className="dashboard-heading">
         <div>
-          <p className="section-label">SUIVI OPÉRATIONNEL</p>
+          <p className="section-label">VUE D’ENSEMBLE <span>•</span> RAPPORT D’EXPLOITATION</p>
           <h1>Tableau de bord</h1>
-          <p>Les éléments qui demandent une vérification ou une action.</p>
+          <p>Pilotez vos chantiers et votre parc d’équipements en un coup d’œil.</p>
+          <small>Situation au {formatDate(data.generated_at)} · Direction du matériel · Côte d’Ivoire</small>
         </div>
         <div className="dashboard-heading-actions">
-          <span>Actualisé {formatRelative(data.generated_at)}</span>
+          <span><i aria-hidden="true">✓</i>Données actualisées {formatRelative(data.generated_at)}</span>
           <button className="dashboard-refresh-button" type="button" onClick={load}><ActionIcon name="refresh" />Actualiser</button>
         </div>
       </header>
 
-      <nav className="dashboard-summary" aria-label="Résumé des points à traiter">
-        {sectionOrder.map((key) => {
-          const meta = sectionMeta[key];
-          return <button key={key} type="button" onClick={() => document.querySelector(`#dashboard-${key}`)?.scrollIntoView({ behavior: "smooth" })}>
-            <span className={`dashboard-summary-icon ${meta.tone}`}><ActionIcon name={meta.icon} /></span>
-            <span><strong>{data.sections[key].total.toLocaleString("fr-FR")}</strong><small>{meta.title}</small></span>
-            <ActionIcon name="expand" />
-          </button>;
-        })}
-      </nav>
+      <section className="dashboard-overview" aria-label="Synthèse du parc">
+        <header>
+          <div><h2>Synthèse du parc</h2><p>Indicateurs consolidés sur l’ensemble des chantiers</p></div>
+          <span><i />Données en temps réel</span>
+        </header>
+        <div className="dashboard-kpis">
+          {summaryCards.map((card) => (
+            <button key={card.label} type="button" onClick={() => navigate(card.path, onNavigate)}>
+              <span className={`dashboard-kpi-icon ${card.tone}`}><ActionIcon name={card.icon} /></span>
+              <ActionIcon name="expand" />
+              <span className="dashboard-kpi-value">
+                <strong>{typeof card.value === "number" ? card.value.toLocaleString("fr-FR") : card.value}</strong>
+                <small>{card.meta}</small>
+              </span>
+              <b>{card.label}</b>
+            </button>
+          ))}
+        </div>
+      </section>
 
-      <div className="dashboard-operational-grid">
-        {sectionOrder.map((key) => (
-          <OperationalSection
-            key={key}
-            sectionKey={key}
-            section={data.sections[key]}
-            onNavigate={onNavigate}
-          />
-        ))}
+      <section className="dashboard-card dashboard-priorities" id="priority-actions">
+        <CardHeading title="Actions prioritaires" subtitle="Les éléments qui nécessitent votre attention" />
+        {data.priority_actions.length === 0
+          ? <EmptyState compact icon="inbox" title="Aucune action urgente" description="Aucune réparation, maintenance ou échéance critique n’est signalée." />
+          : <div className="dashboard-priority-list">{data.priority_actions.map((item) => (
+            <button key={item.key} type="button" onClick={() => onNavigate(item.path)}>
+              <span className={`dashboard-priority-icon ${item.severity}`}><ActionIcon name={priorityIcon(item.key)} /></span>
+              <span><strong>{item.title}</strong><small>{item.description}</small></span>
+              <ActionIcon name="expand" />
+            </button>
+          ))}</div>}
+      </section>
+
+      <div className="dashboard-detail-grid">
+        <section className="dashboard-card dashboard-deadlines">
+          <CardHeading title="Échéances administratives" subtitle="Assurances, cautions et AT à contrôler" />
+          {data.deadlines.length === 0
+            ? <EmptyState compact icon="history" title="Aucune échéance proche" description="Aucune échéance dépassée ou prévue dans les 90 prochains jours." />
+            : <div className="dashboard-deadline-list">{data.deadlines.map((item) => (
+              <button key={`${item.type}-${item.id}`} type="button" onClick={() => onNavigate(item.path)}>
+                <span className={`dashboard-deadline-icon ${item.severity}`}><ActionIcon name={deadlineIcon(item.type)} /></span>
+                <span><small>{deadlineType(item.type)}</small><strong>{item.label}</strong></span>
+                <time dateTime={item.due_on}>{formatDate(item.due_on)}</time>
+                <em className={item.severity}>{deadlineLabel(item.days_remaining)}</em>
+                <ActionIcon name="expand" />
+              </button>
+            ))}</div>}
+        </section>
+
+        <section className="dashboard-card dashboard-quality">
+          <CardHeading title="Qualité des données" subtitle="Informations à compléter pour fiabiliser l’inventaire" />
+          <div className="dashboard-quality-score">
+            <span><ActionIcon name="specifications" /></span>
+            <p>La complétude globale de votre inventaire est de <strong>{data.data_quality.completeness_percent}%</strong>.</p>
+          </div>
+          <div className="dashboard-quality-list">{qualityItems.map((item) => (
+            <button key={item.label} type="button" onClick={() => onNavigate(item.path)}>
+              <ActionIcon name={item.icon} />
+              <span><strong>{item.value.toLocaleString("fr-FR")}</strong> {item.label}</span>
+              <ActionIcon name="expand" />
+            </button>
+          ))}</div>
+        </section>
       </div>
+
+      <section className="dashboard-card dashboard-activity">
+        <CardHeading title="Activité récente" subtitle="Dernières opérations enregistrées" />
+        {data.recent_activity.length === 0
+          ? <EmptyState compact icon="history" title="Aucune activité récente" description="Les prochaines opérations apparaîtront ici." />
+          : <div className="dashboard-activity-list">{data.recent_activity.map((item) => (
+            <button key={item.id} type="button" onClick={() => onNavigate(item.path)}>
+              <span className={`dashboard-activity-avatar ${activityTone(item.type)}`}>{item.initials}</span>
+              <span><strong>{item.title}</strong><small>{item.description}</small><em><ActionIcon name="history" />{formatRelative(item.occurred_at)}</em></span>
+            </button>
+          ))}</div>}
+      </section>
     </main>
   );
 }
 
-function OperationalSection({
-  sectionKey,
-  section,
-  onNavigate,
-}: {
-  sectionKey: SectionKey;
-  section: DashboardSection<DashboardAssetItem | DashboardMaintenanceItem | DashboardTransferItem>;
-  onNavigate: (path: string) => void;
-}) {
-  const meta = sectionMeta[sectionKey];
-
-  return (
-    <section className="dashboard-operational-card" id={`dashboard-${sectionKey}`}>
-      <header>
-        <span className={`dashboard-card-icon ${meta.tone}`}><ActionIcon name={meta.icon} /></span>
-        <div><h2>{meta.title}</h2><p>{meta.subtitle}</p></div>
-        <strong>{section.total.toLocaleString("fr-FR")}</strong>
-      </header>
-      {section.items.length === 0
-        ? <EmptyState compact icon="inbox" title="Aucun élément" description="Rien à traiter dans cette section." />
-        : <div className="dashboard-asset-list">{section.items.map((item) => (
-          <button key={item.id} type="button" onClick={() => onNavigate(item.path)}>
-            <span className="dashboard-asset-main">
-              <span><b>{item.asset_code}</b><em>{item.category_name ?? "Équipement"}</em></span>
-              <strong>{item.label}</strong>
-              <small>{item.project_name ?? item.location_name ?? "Aucune affectation"}</small>
-            </span>
-            <span className="dashboard-asset-context">
-              {sectionKey === "maintenance_by_hours"
-                ? <MaintenanceContext item={item as DashboardMaintenanceItem} />
-                : sectionKey === "recent_transfers"
-                  ? <TransferContext item={item as DashboardTransferItem} />
-                  : <IssueContext item={item} />}
-            </span>
-            <ActionIcon name="expand" />
-          </button>
-        ))}</div>}
-      {section.total > section.items.length && <button className="dashboard-view-all" type="button" onClick={() => onNavigate("/assets/all")}>Voir tous les actifs concernés<ActionIcon name="expand" /></button>}
-    </section>
-  );
+function CardHeading({ title, subtitle }: { title: string; subtitle: string }) {
+  return <header className="dashboard-card-heading"><div><h2>{title}</h2><p>{subtitle}</p></div></header>;
 }
 
-function IssueContext({ item }: { item: DashboardAssetItem }) {
-  return <>{item.issues.slice(0, 2).map((issue) => <em className={item.severity} key={issue}>{issue}</em>)}{item.issues.length > 2 && <small>+{item.issues.length - 2}</small>}</>;
+function navigate(path: string, onNavigate: (path: string) => void) {
+  if (path.startsWith("#")) document.querySelector(path)?.scrollIntoView({ behavior: "smooth" });
+  else onNavigate(path);
 }
 
-function MaintenanceContext({ item }: { item: DashboardMaintenanceItem }) {
-  return <><strong className={item.hours_remaining <= 0 ? "critical" : "warning"}>{item.hours_remaining <= 0 ? `${Math.abs(item.hours_remaining)} h dépassées` : `${item.hours_remaining} h restantes`}</strong><small>{item.current_engine_hours} h / {item.next_maintenance_engine_hours} h</small></>;
+function priorityIcon(key: string): Parameters<typeof ActionIcon>[0]["name"] {
+  if (key === "repair" || key === "maintenance") return "maintenance";
+  return "invoice";
 }
 
-function TransferContext({ item }: { item: DashboardTransferItem }) {
-  return <><strong>{item.from && item.to ? `${item.from} → ${item.to}` : item.to ?? "Affectation modifiée"}</strong><small>{new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium" }).format(new Date(item.occurred_at))}</small></>;
+function deadlineIcon(type: DashboardData["deadlines"][number]["type"]): Parameters<typeof ActionIcon>[0]["name"] {
+  return { insurance: "identification", bond: "invoice", temporary_admission: "note" }[type] as Parameters<typeof ActionIcon>[0]["name"];
+}
+
+function deadlineType(type: DashboardData["deadlines"][number]["type"]) {
+  return { insurance: "Assurance", bond: "Caution", temporary_admission: "Admission temporaire" }[type];
+}
+
+function deadlineLabel(days: number) {
+  if (days < 0) return `Expiré depuis ${Math.abs(days).toLocaleString("fr-FR")} j`;
+  if (days === 0) return "Aujourd’hui";
+  if (days === 1) return "Demain";
+  return `J-${days}`;
+}
+
+function activityTone(type: string) {
+  if (type.includes("maintenance")) return "amber";
+  if (type.includes("project") || type.includes("location")) return "teal";
+  if (type === "initial_import") return "blue";
+  return "violet";
+}
+
+function formatDate(value: string) {
+  const date = value.includes("T") ? new Date(value) : new Date(`${value}T00:00:00`);
+  return new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "long", year: "numeric" }).format(date);
 }
 
 function formatRelative(value: string) {
@@ -184,5 +215,8 @@ function formatRelative(value: string) {
   if (minutes < 1) return "à l’instant";
   if (minutes < 60) return `il y a ${minutes} min`;
   const hours = Math.round(minutes / 60);
-  return hours < 24 ? `il y a ${hours} h` : new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium" }).format(new Date(value));
+  if (hours < 24) return `il y a ${hours} h`;
+  const days = Math.round(hours / 24);
+  if (days < 7) return `il y a ${days} j`;
+  return formatDate(value);
 }

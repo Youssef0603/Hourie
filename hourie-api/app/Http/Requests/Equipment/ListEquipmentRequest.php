@@ -63,6 +63,8 @@ class ListEquipmentRequest extends FormRequest
             'odometer_km_min' => ['nullable', 'numeric', 'min:0'],
             'odometer_km_max' => ['nullable', 'numeric', 'min:0', ...$greaterThanOrEqualWhenMinimumIsPresent('odometer_km_min')],
             'unassigned' => ['nullable', 'boolean'],
+            'missing_serial' => ['nullable', 'boolean'],
+            'missing_usage_status' => ['nullable', 'boolean'],
             'bungalow_type' => ['nullable', 'string', 'max:100'],
             'bungalow_group' => ['nullable', Rule::in(['office', 'sanitary', 'guard'])],
             'air_conditioning' => ['nullable', 'string', 'max:100'],

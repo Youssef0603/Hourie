@@ -340,6 +340,32 @@ it('filters equipment without invoices for inventory exports', function () {
         ->assertJsonPath('data.0.id', $withoutInvoice->id);
 });
 
+it('filters equipment with missing serial numbers or usage statuses', function () {
+    $user = User::factory()->create();
+    $complete = Equipment::factory()->create([
+        'serial_number' => 'SERIAL-001',
+        'usage_status' => 'in_use',
+    ]);
+    $missing = Equipment::factory()->create([
+        'serial_number' => null,
+        'usage_status' => null,
+    ]);
+
+    $this->actingAs($user, 'web')
+        ->getJson('/api/v1/equipment?missing_serial=1')
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $missing->id);
+
+    $this->actingAs($user, 'web')
+        ->getJson('/api/v1/equipment?missing_usage_status=1')
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $missing->id);
+
+    expect($complete->id)->not->toBe($missing->id);
+});
+
 it('returns 422 for an invalid equipment filter', function () {
     $user = User::factory()->create();
 
