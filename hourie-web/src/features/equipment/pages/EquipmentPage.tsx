@@ -309,11 +309,7 @@ export function EquipmentPage({
     } else {
       startTransition(() => {
         setSiteContext(null);
-        if (
-          wasSiteId !== null ||
-          wasAssetCategory !== currentCategory ||
-          filterQueryChanged
-        ) {
+        if (wasSiteId !== null) {
           setIsLoading(true);
           setResult(null);
           setSearch("");
@@ -322,6 +318,21 @@ export function EquipmentPage({
             ...qualityFiltersFromSearch(filterQuery),
             category: currentCategory === "all" ? "" : currentCategory,
           });
+        } else if (
+          wasAssetCategory !== currentCategory ||
+          filterQueryChanged
+        ) {
+          setIsLoading(true);
+          setResult(null);
+          if (filterQueryChanged) setSearch("");
+          setFilters((current) => ({
+            ...current,
+            ...(filterQueryChanged
+              ? qualityFiltersFromSearch(filterQuery)
+              : {}),
+            category: currentCategory === "all" ? "" : currentCategory,
+            page: 1,
+          }));
         }
       });
     }
@@ -1035,15 +1046,13 @@ export function EquipmentPage({
               });
             }}
             onCategorySelect={(selectedCategory) => {
-              clearQualityFilterQuery();
               setIsLoading(true);
               setError(null);
-              setSearch("");
-              setFilters({
-                ...initialFilters,
+              setFilters((current) => ({
+                ...current,
                 category: selectedCategory === "all" ? "" : selectedCategory,
-                project_id: String(siteContext.id),
-              });
+                page: 1,
+              }));
             }}
           />
         ) : activeSection === "assets" ? (
@@ -1081,14 +1090,13 @@ export function EquipmentPage({
               });
             }}
             onCategorySelect={(selectedCategory) => {
-              clearQualityFilterQuery();
               setIsLoading(true);
               setError(null);
-              setSearch("");
-              setFilters({
-                ...initialFilters,
+              setFilters((current) => ({
+                ...current,
                 category: selectedCategory === "all" ? "" : selectedCategory,
-              });
+                page: 1,
+              }));
             }}
           />
         ) : activeSection === "insurance" ? (

@@ -122,7 +122,7 @@ export function AssetForm({ categoryCode, language, options, equipment, onSaved,
       </div></InventoryFormSection>
       <InventoryFormSection title={fr.equipment.identification} icon="identification"><div className="maintenance-form-grid asset-form-grid-3">
         <label><span>{fr.equipment.brand}</span><input required value={form.brand} onChange={(event) => update('brand', event.target.value)} /></label>
-        <label><span>{fr.equipment.model}</span><input required value={form.model} onChange={(event) => update('model', event.target.value)} /></label>
+        <label><span>{fr.equipment.model}</span><input value={form.model} onChange={(event) => update('model', event.target.value)} /></label>
         <label><span>{fr.equipment.serialNumber}</span><input value={form.serial_number} onChange={(event) => update('serial_number', event.target.value)} /></label>
         {isCar && <label><span>{fr.equipment.registrationNumber}</span><input value={form.registration_number} onChange={(event) => update('registration_number', event.target.value)} /></label>}
         <label><span>{fr.equipment.manufactureYear}</span><input type="number" min="1900" max="2100" value={form.manufacture_year} onChange={(event) => update('manufacture_year', event.target.value)} /></label>
