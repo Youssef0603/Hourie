@@ -247,7 +247,7 @@ describe('PeoplePage', () => {
         manufacture_year: 2007,
         purchase_date: null,
         asset_details: null,
-        condition: 'very_good',
+        condition: 'good',
         current_location: null,
         current_project_assignment: null,
         custodian: { id: 1, name: 'Youssef Yassine' },

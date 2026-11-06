@@ -46,7 +46,6 @@ class BuildExecutiveDashboard
         $administrativeAttention = $deadlines->where('days_remaining', '<=', 30);
         $dataQuality = $this->dataQuality($equipment);
         $operationalEquipment = $equipment->filter(fn (Equipment $item): bool => in_array($item->condition, [
-            EquipmentCondition::VeryGood->value,
             EquipmentCondition::Good->value,
         ], true))->count();
         $activeProjects = Project::query()->where('is_active', true)->where('status', 'active')->count();

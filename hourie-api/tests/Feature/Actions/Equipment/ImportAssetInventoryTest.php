@@ -55,6 +55,23 @@ it('imports the Excel model without storing its source code', function () {
     expect(EquipmentImportRow::query()->sole()->raw_data)->not->toHaveKey('D');
 });
 
+it('normalizes the legacy Very Good condition to Good', function () {
+    $actor = User::factory()->create(['role' => UserRole::GeneratorManager]);
+
+    app(ImportAssetInventory::class)->handle('2026 equipment.xlsx', 'asset-workbook-condition-hash', [
+        6 => [
+            'B' => 'Equipment',
+            'E' => 'Excavator',
+            'F' => 'Caterpillar',
+            'H' => '320',
+            'J' => 'TEST-CONDITION-001',
+            'O' => 'Very Good',
+        ],
+    ], $actor);
+
+    expect(Equipment::query()->sole()->condition)->toBe('good');
+});
+
 it('does not use a formwork quantity as a serial number', function () {
     $actor = User::factory()->create(['role' => UserRole::GeneratorManager]);
 

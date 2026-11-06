@@ -121,7 +121,7 @@ class AssetInventoryRowMapper
 
     private function condition(?string $value): ?string
     {
-        return mb_strtolower((string) $this->text($value)) === 'very good' ? 'very_good' : null;
+        return mb_strtolower((string) $this->text($value)) === 'very good' ? 'good' : null;
     }
 
     private function currency(?string $value, ?string $source = null): string

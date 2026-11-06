@@ -3,7 +3,6 @@ import type { CSSProperties } from 'react'
 import { activeLanguage } from '../../i18n/fr'
 
 const fallbackConditions: Record<string, { fr: string; ar: string; color: string }> = {
-  very_good: { fr: 'Très bon', ar: 'جيد جداً', color: '#237a4b' },
   good: { fr: 'Bon', ar: 'جيد', color: '#4b8f68' },
   to_monitor: { fr: 'À surveiller', ar: 'يحتاج إلى متابعة', color: '#a36213' },
   defective: { fr: 'Défectueux', ar: 'معطل', color: '#c27012' },
