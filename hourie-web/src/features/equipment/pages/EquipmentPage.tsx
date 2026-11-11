@@ -18,7 +18,7 @@ import { AssetExportDialog } from "../components/AssetExportDialog";
 import {
   assetExportFields,
   defaultAssetExportFields,
-  downloadAssetInventoryCsv,
+  downloadGeneratorInventoryExcel,
 } from "../assetExport";
 import {
   assetCategoryLabel,
@@ -504,7 +504,7 @@ export function EquipmentPage({
         category: "generator",
         without_invoice: generatorExportWithoutInvoices ? "1" : "",
       });
-      downloadAssetInventoryCsv(
+      downloadGeneratorInventoryExcel(
         generators,
         exportFields,
         selectedFields,

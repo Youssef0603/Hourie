@@ -13,9 +13,14 @@ export function catalogOptions(options: CatalogOption[] | undefined, group: Cata
   return (options ?? []).filter((option) => option.group === group && option.is_active !== false)
 }
 
-export function catalogBadgeStyle(options: CatalogOption[] | undefined, group: CatalogOption['group'], code: string | null): CSSProperties | undefined {
-  const color = options?.find((item) => item.group === group && item.code === code)?.color
+export function catalogColor(options: CatalogOption[] | undefined, group: CatalogOption['group'], code: string | null): string | undefined {
+  return options?.find((item) => item.group === group && item.code === code)?.color
     ?? (group === 'equipment_condition' && code ? fallbackConditions[code]?.color : undefined)
+    ?? undefined
+}
+
+export function catalogBadgeStyle(options: CatalogOption[] | undefined, group: CatalogOption['group'], code: string | null): CSSProperties | undefined {
+  const color = catalogColor(options, group, code)
   return color ? { color, backgroundColor: `${color}18`, borderColor: `${color}45` } : undefined
 }
 

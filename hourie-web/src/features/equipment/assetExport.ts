@@ -1,6 +1,7 @@
 import type { Language } from '../../i18n/fr'
+import { strToU8, zipSync } from 'fflate'
 import { assetCategories, assetCategory, type AssetView } from './assetCategories'
-import { catalogLabel } from './catalogs'
+import { catalogColor, catalogLabel } from './catalogs'
 import type { CatalogOption, EquipmentSummary } from './types'
 
 export type AssetExportField = {
@@ -97,6 +98,23 @@ export function assetExportFieldLabel(field: AssetExportField, language: Languag
   return language === 'ar' ? field.labelAr : field.labelFr
 }
 
+export function generatorsGroupedByProject(items: EquipmentSummary[]): EquipmentSummary[] {
+  return items
+    .filter((item) => item.current_project_assignment?.project.name?.trim())
+    .sort((left, right) => {
+      const leftProject = left.current_project_assignment?.project.name ?? ''
+      const rightProject = right.current_project_assignment?.project.name ?? ''
+      const projectOrder = leftProject.localeCompare(rightProject, 'fr', { sensitivity: 'base' })
+
+      if (projectOrder !== 0) return projectOrder
+
+      return String(left.display_id).localeCompare(String(right.display_id), 'fr', {
+        numeric: true,
+        sensitivity: 'base',
+      })
+    })
+}
+
 function csvCell(value: string | number | null | undefined): string {
   return `"${String(value ?? '').replaceAll('"', '""')}"`
 }
@@ -132,6 +150,124 @@ export function downloadAssetInventoryCsv(
   const link = document.createElement('a')
   link.href = url
   link.download = `${filename}-${new Date().toISOString().slice(0, 10)}.csv`
+  document.body.append(link)
+  link.click()
+  link.remove()
+  window.setTimeout(() => window.URL.revokeObjectURL(url), 0)
+}
+
+function xmlCell(value: string | number | null | undefined, reference: string, style: number, numeric = false): string {
+  if (numeric) return `<c r="${reference}" s="${style}"><v>${value}</v></c>`
+  return `<c r="${reference}" s="${style}" t="inlineStr"><is><t xml:space="preserve">${xmlText(value)}</t></is></c>`
+}
+
+function xmlText(value: string | number | null | undefined): string {
+  return String(value ?? '')
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&apos;')
+}
+
+function columnName(index: number): string {
+  let result = ''
+  let current = index + 1
+  while (current > 0) {
+    const remainder = (current - 1) % 26
+    result = String.fromCharCode(65 + remainder) + result
+    current = Math.floor((current - 1) / 26)
+  }
+  return result
+}
+
+function excelColor(color: string | undefined): string {
+  const normalized = color?.match(/^#?([0-9a-f]{6})$/i)?.[1]
+  return (normalized ?? '6B7280').toUpperCase()
+}
+
+function lightColor(color: string): string {
+  const channels = color.match(/.{2}/g)?.map((channel) => Number.parseInt(channel, 16)) ?? [107, 114, 128]
+  return channels.map((channel) => Math.round(255 - ((255 - channel) * 0.12)).toString(16).padStart(2, '0')).join('').toUpperCase()
+}
+
+function workbookStyles(conditionColors: string[]): string {
+  const conditionFonts = conditionColors.map((color) => `<font><sz val="11"/><color rgb="FF${color}"/><name val="Aptos"/></font>`).join('')
+  const conditionFills = conditionColors.map((color) => `<fill><patternFill patternType="solid"><fgColor rgb="FF${lightColor(color)}"/><bgColor indexed="64"/></patternFill></fill>`).join('')
+  const conditionFormats = conditionColors.map((_, index) => `<xf numFmtId="0" fontId="${index + 2}" fillId="${index + 3}" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center"/></xf>`).join('')
+
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <fonts count="${conditionColors.length + 2}"><font><sz val="11"/><color theme="1"/><name val="Aptos"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Aptos"/></font>${conditionFonts}</fonts>
+  <fills count="${conditionColors.length + 3}"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF19243A"/><bgColor indexed="64"/></patternFill></fill>${conditionFills}</fills>
+  <borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border><border><left style="thin"><color rgb="FFD9DDE5"/></left><right style="thin"><color rgb="FFD9DDE5"/></right><top style="thin"><color rgb="FFD9DDE5"/></top><bottom style="thin"><color rgb="FFD9DDE5"/></bottom><diagonal/></border></borders>
+  <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
+  <cellXfs count="${conditionColors.length + 4}"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf><xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf><xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment vertical="center"/></xf>${conditionFormats}</cellXfs>
+  <cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
+</styleSheet>`
+}
+
+export function buildGeneratorInventoryWorkbook(
+  items: EquipmentSummary[],
+  availableFields: AssetExportField[],
+  selectedFields: string[],
+  language: Language = 'fr',
+  catalogs: CatalogOption[] = [],
+): Uint8Array {
+  const generators = generatorsGroupedByProject(items)
+  const fields = selectedFields
+    .map((key) => availableFields.find((field) => field.key === key))
+    .filter((field): field is AssetExportField => field !== undefined)
+  const conditionCodes = [...new Set(generators.map((item) => item.condition).filter((condition): condition is string => Boolean(condition)))]
+  const conditionColors = conditionCodes.map((code) => excelColor(catalogColor(catalogs, 'equipment_condition', code)))
+  const conditionStyles = new Map(conditionCodes.map((code, index) => [code, index + 4]))
+  const headers = [language === 'ar' ? 'م' : 'N°', ...fields.map((field) => field.key === 'display_id'
+    ? (language === 'ar' ? 'رقم الأصل' : 'N° actif')
+    : assetExportFieldLabel(field, language))]
+  const values = generators.map((item) => fields.map((field) => field.value(item, catalogs)))
+  const widths = headers.map((header, columnIndex) => {
+    const maxLength = Math.max(header.length, ...values.map((row) => String(row[columnIndex - 1] ?? '').length))
+    return Math.min(Math.max(maxLength + 2, columnIndex === 0 ? 6 : 12), 38)
+  })
+  const columns = widths.map((width, index) => `<col min="${index + 1}" max="${index + 1}" width="${width}" customWidth="1"/>`).join('')
+  const headerCells = headers.map((header, index) => xmlCell(header, `${columnName(index)}1`, 1)).join('')
+  const rows = generators.map((item, rowIndex) => {
+    const excelRow = rowIndex + 2
+    const cells = fields.map((field, fieldIndex) => {
+      const style = field.key === 'condition' && item.condition ? conditionStyles.get(item.condition) ?? 3 : 3
+      return xmlCell(field.value(item, catalogs), `${columnName(fieldIndex + 1)}${excelRow}`, style)
+    }).join('')
+    return `<row r="${excelRow}" ht="22" customHeight="1">${xmlCell(rowIndex + 1, `A${excelRow}`, 2, true)}${cells}</row>`
+  }).join('')
+  const lastColumn = columnName(headers.length - 1)
+  const sheet = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>${columns}</cols><sheetData><row r="1" ht="24" customHeight="1">${headerCells}</row>${rows}</sheetData><autoFilter ref="A1:${lastColumn}${generators.length + 1}"/><printOptions horizontalCentered="1"/><pageMargins left="0.25" right="0.25" top="0.35" bottom="0.35" header="0.15" footer="0.15"/><pageSetup paperSize="9" orientation="landscape" scale="75" fitToWidth="0" fitToHeight="0" horizontalDpi="300" verticalDpi="300"/></worksheet>`
+  const files: Record<string, Uint8Array> = {
+    '[Content_Types].xml': strToU8('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'),
+    '_rels/.rels': strToU8('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'),
+    'xl/workbook.xml': strToU8(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Générateurs" sheetId="1" r:id="rId1"/></sheets><definedNames><definedName name="_xlnm.Print_Area" localSheetId="0">'Générateurs'!$A$1:$${lastColumn}$${generators.length + 1}</definedName><definedName name="_xlnm.Print_Titles" localSheetId="0">'Générateurs'!$1:$1</definedName></definedNames></workbook>`),
+    'xl/_rels/workbook.xml.rels': strToU8('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'),
+    'xl/styles.xml': strToU8(workbookStyles(conditionColors)),
+    'xl/worksheets/sheet1.xml': strToU8(sheet),
+  }
+  return zipSync(files, { level: 6 })
+}
+
+export function downloadGeneratorInventoryExcel(
+  items: EquipmentSummary[],
+  availableFields: AssetExportField[],
+  selectedFields: string[],
+  language: Language,
+  filename: string,
+  catalogs: CatalogOption[] = [],
+): void {
+  const workbook = buildGeneratorInventoryWorkbook(items, availableFields, selectedFields, language, catalogs)
+  const blob = new Blob([workbook as BlobPart], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+  const url = window.URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `${filename}-${new Date().toISOString().slice(0, 10)}.xlsx`
   document.body.append(link)
   link.click()
   link.remove()
