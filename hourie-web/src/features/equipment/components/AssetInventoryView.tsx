@@ -20,7 +20,7 @@ import { EquipmentInventoryTable } from './EquipmentInventoryTable'
 import { EquipmentCreationPanel } from './EquipmentCreationPanel'
 import { EmptyState } from '../../../shared/components/EmptyState'
 import { getAllEquipment } from '../api'
-import { assetExportFields, defaultAssetExportFields, downloadAssetInventoryCsv, downloadGeneratorInventoryExcel } from '../assetExport'
+import { assetExportFields, defaultAssetExportFields, downloadAssetInventoryExcel } from '../assetExport'
 import { AssetExportDialog } from './AssetExportDialog'
 
 type AssetInventoryViewProps = {
@@ -90,8 +90,7 @@ export function AssetInventoryView({ category, language, options, filters, searc
         without_invoice: isGeneratorSelected && exportWithoutInvoices ? '1' : '',
       })
       const filename = isGeneratorSelected && exportWithoutInvoices ? 'generateurs-sans-facture' : `inventaire-${exportView}`
-      if (isGeneratorSelected) downloadGeneratorInventoryExcel(assets, exportFields, selectedFields, language, filename, options?.catalogs)
-      else downloadAssetInventoryCsv(assets, exportFields, selectedFields, language, filename, options?.catalogs)
+      downloadAssetInventoryExcel(assets, exportFields, selectedFields, language, filename, exportTitle, options?.catalogs)
       setShowAssetExport(false)
     } catch {
       setExportError(fr.assets.exportError)

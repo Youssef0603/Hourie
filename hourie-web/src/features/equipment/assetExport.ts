@@ -84,26 +84,41 @@ export function assetExportFields(view: AssetView): AssetExportField[] {
 }
 
 export function defaultAssetExportFields(view: AssetView): string[] {
-  if (view === 'car') return ['brand', 'model', 'serial_number', 'registration_number']
-  if (view === 'generator') return ['display_id', 'asset_code', 'brand', 'model', 'apparent_power_kva', 'active_power_kw', 'fuel_type', 'condition', 'usage_status', 'project', 'location']
-  if (view === 'all') return ['display_id', 'asset_code', 'equipment_type', 'brand', 'model', 'serial_number', 'condition', 'usage_status', 'project', 'location']
+  if (view === 'car') return ['asset_code', 'brand', 'model', 'serial_number', 'registration_number']
+  if (view === 'generator') return ['asset_code', 'display_id', 'brand', 'model', 'apparent_power_kva', 'active_power_kw', 'fuel_type', 'condition', 'usage_status', 'project', 'location']
+  if (view === 'all') return ['asset_code', 'equipment_type', 'display_id', 'brand', 'model', 'serial_number', 'condition', 'usage_status', 'project', 'location']
 
   const category = assetCategory(view)
   const categoryColumns = (category?.columns ?? []).filter((field) => field !== 'equipment_type')
   const equipmentType = category?.fields.some((field) => field.key === 'equipment_type') ? ['equipment_type'] : []
-  return ['display_id', 'asset_code', ...equipmentType, 'brand', 'model', 'serial_number', ...categoryColumns, 'condition', 'usage_status', 'project', 'location']
+  return ['asset_code', ...equipmentType, 'display_id', 'brand', 'model', 'serial_number', ...categoryColumns, 'condition', 'usage_status', 'project', 'location']
+}
+
+function orderedExportFields(
+  availableFields: AssetExportField[],
+  selectedFields: string[],
+): AssetExportField[] {
+  const fields = selectedFields
+    .map((key) => availableFields.find((field) => field.key === key))
+    .filter((field): field is AssetExportField => field !== undefined)
+  const assetCode = fields.find((field) => field.key === 'asset_code')
+
+  return assetCode ? [assetCode, ...fields.filter((field) => field.key !== 'asset_code')] : fields
 }
 
 export function assetExportFieldLabel(field: AssetExportField, language: Language): string {
   return language === 'ar' ? field.labelAr : field.labelFr
 }
 
-export function generatorsGroupedByProject(items: EquipmentSummary[]): EquipmentSummary[] {
+export function assetsGroupedByProject(items: EquipmentSummary[]): EquipmentSummary[] {
   return items
-    .filter((item) => item.current_project_assignment?.project.name?.trim())
     .sort((left, right) => {
-      const leftProject = left.current_project_assignment?.project.name ?? ''
-      const rightProject = right.current_project_assignment?.project.name ?? ''
+      const leftProject = left.current_project_assignment?.project.name?.trim() ?? ''
+      const rightProject = right.current_project_assignment?.project.name?.trim() ?? ''
+
+      if (!leftProject && rightProject) return 1
+      if (leftProject && !rightProject) return -1
+
       const projectOrder = leftProject.localeCompare(rightProject, 'fr', { sensitivity: 'base' })
 
       if (projectOrder !== 0) return projectOrder
@@ -113,6 +128,10 @@ export function generatorsGroupedByProject(items: EquipmentSummary[]): Equipment
         sensitivity: 'base',
       })
     })
+}
+
+export function generatorsGroupedByProject(items: EquipmentSummary[]): EquipmentSummary[] {
+  return assetsGroupedByProject(items)
 }
 
 function csvCell(value: string | number | null | undefined): string {
@@ -126,9 +145,7 @@ export function buildAssetInventoryCsv(
   language: Language = 'fr',
   catalogs: CatalogOption[] = [],
 ): string {
-  const fields = selectedFields
-    .map((key) => availableFields.find((field) => field.key === key))
-    .filter((field): field is AssetExportField => field !== undefined)
+  const fields = orderedExportFields(availableFields, selectedFields)
   const rows = items.map((item) => fields.map((field) => field.value(item, catalogs)))
 
   return `\uFEFF${[
@@ -208,32 +225,43 @@ function workbookStyles(conditionColors: string[]): string {
 </styleSheet>`
 }
 
-export function buildGeneratorInventoryWorkbook(
+function excelSheetName(title: string): string {
+  const cleaned = title.replace(/[\\/?*[\]:]/g, ' ').trim().slice(0, 31)
+  return cleaned || 'Inventaire'
+}
+
+function excelFormulaSheetName(name: string): string {
+  return `'${name.replaceAll("'", "''")}'`
+}
+
+export function buildAssetInventoryWorkbook(
   items: EquipmentSummary[],
   availableFields: AssetExportField[],
   selectedFields: string[],
   language: Language = 'fr',
+  title = language === 'ar' ? 'جرد المعدات' : 'Inventaire des équipements',
   catalogs: CatalogOption[] = [],
 ): Uint8Array {
-  const generators = generatorsGroupedByProject(items)
-  const fields = selectedFields
-    .map((key) => availableFields.find((field) => field.key === key))
-    .filter((field): field is AssetExportField => field !== undefined)
-  const conditionCodes = [...new Set(generators.map((item) => item.condition).filter((condition): condition is string => Boolean(condition)))]
+  const groupedAssets = assetsGroupedByProject(items)
+  const fields = orderedExportFields(availableFields, selectedFields)
+  const conditionCodes = [...new Set(groupedAssets.map((item) => item.condition).filter((condition): condition is string => Boolean(condition)))]
   const conditionColors = conditionCodes.map((code) => excelColor(catalogColor(catalogs, 'equipment_condition', code)))
   const conditionStyles = new Map(conditionCodes.map((code, index) => [code, index + 4]))
   const headers = [language === 'ar' ? 'م' : 'N°', ...fields.map((field) => field.key === 'display_id'
     ? (language === 'ar' ? 'رقم الأصل' : 'N° actif')
     : assetExportFieldLabel(field, language))]
-  const values = generators.map((item) => fields.map((field) => field.value(item, catalogs)))
+  const values = groupedAssets.map((item) => fields.map((field) => field.value(item, catalogs)))
   const widths = headers.map((header, columnIndex) => {
     const maxLength = Math.max(header.length, ...values.map((row) => String(row[columnIndex - 1] ?? '').length))
-    return Math.min(Math.max(maxLength + 2, columnIndex === 0 ? 6 : 12), 38)
+    const field = fields[columnIndex - 1]
+    const minimumWidth = columnIndex === 0 ? 6 : field?.key === 'serial_number' ? 32 : 12
+    const padding = field?.key === 'serial_number' ? 6 : 2
+    return Math.min(Math.max(maxLength + padding, minimumWidth), field?.key === 'serial_number' ? 50 : 38)
   })
   const columns = widths.map((width, index) => `<col min="${index + 1}" max="${index + 1}" width="${width}" customWidth="1"/>`).join('')
-  const headerCells = headers.map((header, index) => xmlCell(header, `${columnName(index)}1`, 1)).join('')
-  const rows = generators.map((item, rowIndex) => {
-    const excelRow = rowIndex + 2
+  const headerCells = headers.map((header, index) => xmlCell(header, `${columnName(index)}2`, 1)).join('')
+  const rows = groupedAssets.map((item, rowIndex) => {
+    const excelRow = rowIndex + 3
     const cells = fields.map((field, fieldIndex) => {
       const style = field.key === 'condition' && item.condition ? conditionStyles.get(item.condition) ?? 3 : 3
       return xmlCell(field.value(item, catalogs), `${columnName(fieldIndex + 1)}${excelRow}`, style)
@@ -241,17 +269,58 @@ export function buildGeneratorInventoryWorkbook(
     return `<row r="${excelRow}" ht="22" customHeight="1">${xmlCell(rowIndex + 1, `A${excelRow}`, 2, true)}${cells}</row>`
   }).join('')
   const lastColumn = columnName(headers.length - 1)
+  const lastRow = groupedAssets.length + 2
+  const sheetName = excelSheetName(title)
+  const formulaSheetName = excelFormulaSheetName(sheetName)
   const sheet = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>${columns}</cols><sheetData><row r="1" ht="24" customHeight="1">${headerCells}</row>${rows}</sheetData><autoFilter ref="A1:${lastColumn}${generators.length + 1}"/><printOptions horizontalCentered="1"/><pageMargins left="0.25" right="0.25" top="0.35" bottom="0.35" header="0.15" footer="0.15"/><pageSetup paperSize="9" orientation="landscape" scale="75" fitToWidth="0" fitToHeight="0" horizontalDpi="300" verticalDpi="300"/></worksheet>`
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="2" topLeftCell="A3" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>${columns}</cols><sheetData><row r="1" ht="30" customHeight="1">${xmlCell(title, 'A1', 1)}</row><row r="2" ht="24" customHeight="1">${headerCells}</row>${rows}</sheetData><mergeCells count="1"><mergeCell ref="A1:${lastColumn}1"/></mergeCells><autoFilter ref="A2:${lastColumn}${lastRow}"/><printOptions horizontalCentered="1"/><pageMargins left="0.25" right="0.25" top="0.35" bottom="0.35" header="0.15" footer="0.15"/><pageSetup paperSize="9" orientation="landscape" scale="75" fitToWidth="0" fitToHeight="0" horizontalDpi="300" verticalDpi="300"/></worksheet>`
   const files: Record<string, Uint8Array> = {
     '[Content_Types].xml': strToU8('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>'),
     '_rels/.rels': strToU8('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'),
-    'xl/workbook.xml': strToU8(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Générateurs" sheetId="1" r:id="rId1"/></sheets><definedNames><definedName name="_xlnm.Print_Area" localSheetId="0">'Générateurs'!$A$1:$${lastColumn}$${generators.length + 1}</definedName><definedName name="_xlnm.Print_Titles" localSheetId="0">'Générateurs'!$1:$1</definedName></definedNames></workbook>`),
+    'xl/workbook.xml': strToU8(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="${xmlText(sheetName)}" sheetId="1" r:id="rId1"/></sheets><definedNames><definedName name="_xlnm.Print_Area" localSheetId="0">${formulaSheetName}!$A$1:$${lastColumn}$${lastRow}</definedName><definedName name="_xlnm.Print_Titles" localSheetId="0">${formulaSheetName}!$1:$2</definedName></definedNames></workbook>`),
     'xl/_rels/workbook.xml.rels': strToU8('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'),
     'xl/styles.xml': strToU8(workbookStyles(conditionColors)),
     'xl/worksheets/sheet1.xml': strToU8(sheet),
   }
   return zipSync(files, { level: 6 })
+}
+
+export function buildGeneratorInventoryWorkbook(
+  items: EquipmentSummary[],
+  availableFields: AssetExportField[],
+  selectedFields: string[],
+  language: Language = 'fr',
+  catalogs: CatalogOption[] = [],
+): Uint8Array {
+  return buildAssetInventoryWorkbook(
+    items,
+    availableFields,
+    selectedFields,
+    language,
+    language === 'ar' ? 'المولدات' : 'Générateurs',
+    catalogs,
+  )
+}
+
+export function downloadAssetInventoryExcel(
+  items: EquipmentSummary[],
+  availableFields: AssetExportField[],
+  selectedFields: string[],
+  language: Language,
+  filename: string,
+  title: string,
+  catalogs: CatalogOption[] = [],
+): void {
+  const workbook = buildAssetInventoryWorkbook(items, availableFields, selectedFields, language, title, catalogs)
+  const blob = new Blob([workbook as BlobPart], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+  const url = window.URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `${filename}-${new Date().toISOString().slice(0, 10)}.xlsx`
+  document.body.append(link)
+  link.click()
+  link.remove()
+  window.setTimeout(() => window.URL.revokeObjectURL(url), 0)
 }
 
 export function downloadGeneratorInventoryExcel(
@@ -262,14 +331,13 @@ export function downloadGeneratorInventoryExcel(
   filename: string,
   catalogs: CatalogOption[] = [],
 ): void {
-  const workbook = buildGeneratorInventoryWorkbook(items, availableFields, selectedFields, language, catalogs)
-  const blob = new Blob([workbook as BlobPart], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
-  const url = window.URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = `${filename}-${new Date().toISOString().slice(0, 10)}.xlsx`
-  document.body.append(link)
-  link.click()
-  link.remove()
-  window.setTimeout(() => window.URL.revokeObjectURL(url), 0)
+  downloadAssetInventoryExcel(
+    items,
+    availableFields,
+    selectedFields,
+    language,
+    filename,
+    language === 'ar' ? 'المولدات' : 'Générateurs',
+    catalogs,
+  )
 }
