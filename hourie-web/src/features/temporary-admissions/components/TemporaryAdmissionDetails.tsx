@@ -255,7 +255,11 @@ export function TemporaryAdmissionDetails({
     currentEquipmentPage * 3 + 3,
   );
 
-  function documentList(documents: AdmissionDocument[], emptyMessage: string) {
+  function documentList(
+    documents: AdmissionDocument[],
+    emptyMessage: string,
+    pageSize = 3,
+  ) {
     if (!documents.length) {
       return <p className="document-list-empty">{emptyMessage}</p>;
     }
@@ -264,6 +268,7 @@ export function TemporaryAdmissionDetails({
       <PaginatedDocumentList
         documents={documents}
         emptyMessage={emptyMessage}
+        pageSize={pageSize}
         renderDocument={(document) => (
           <article key={document.id}>
             <button
@@ -652,8 +657,14 @@ export function TemporaryAdmissionDetails({
               )}
             </div>
             <div className="temporary-admission-documents-group">
-              <h4>{operationPhrase("Factures")}</h4>
-              {documentList(invoiceDocuments, operationPhrase("Aucune facture ajoutée."))}
+              <h4>
+                {operationPhrase("Factures")} ({invoiceDocuments.length})
+              </h4>
+              {documentList(
+                invoiceDocuments,
+                operationPhrase("Aucune facture ajoutée."),
+                20,
+              )}
               {canManage && (
                 <DocumentUploadDropzone
                   compact

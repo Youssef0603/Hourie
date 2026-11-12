@@ -4,15 +4,21 @@ export function PaginatedDocumentList<T extends { id: number }>({
   documents,
   emptyMessage,
   renderDocument,
+  pageSize = 3,
 }: {
   documents: T[];
   emptyMessage: string;
   renderDocument: (document: T) => ReactNode;
+  pageSize?: number;
 }) {
   const [page, setPage] = useState(0);
-  const pageCount = Math.max(1, Math.ceil(documents.length / 3));
+  const safePageSize = Math.max(1, pageSize);
+  const pageCount = Math.max(1, Math.ceil(documents.length / safePageSize));
   const currentPage = Math.min(page, pageCount - 1);
-  const visible = documents.slice(currentPage * 3, currentPage * 3 + 3);
+  const visible = documents.slice(
+    currentPage * safePageSize,
+    currentPage * safePageSize + safePageSize,
+  );
 
   if (!documents.length) {
     return <p className="document-list-empty">{emptyMessage}</p>;

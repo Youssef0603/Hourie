@@ -93,6 +93,53 @@ describe("TemporaryAdmissionsPage", () => {
     await waitFor(() => expect(apiRequest).toHaveBeenCalledTimes(3));
   });
 
+  it("shows every invoice attached to the same temporary admission together", async () => {
+    const invoiceNames = [
+      "VHI162720.pdf",
+      "VHI162721.pdf",
+      "VHI162722.pdf",
+      "VHI162723.pdf",
+    ];
+    const admissionWithInvoices = {
+      ...admission,
+      documents: [
+        ...admission.documents,
+        ...invoiceNames.map((original_name, index) => ({
+          id: 10 + index,
+          document_type: "invoice",
+          document_date: null,
+          original_name,
+          size_bytes: 1200,
+          url: `/api/v1/temporary-admissions/1/documents/${10 + index}/file`,
+        })),
+      ],
+    };
+    apiRequest.mockImplementation((path: string) => {
+      if (path.startsWith("/api/v1/temporary-admissions?")) {
+        return Promise.resolve({
+          data: [{ ...admissionWithInvoices, equipment: [], documents: [], documents_count: 5 }],
+          meta: { current_page: 1, from: 1, last_page: 1, per_page: 10, to: 1, total: 1 },
+        });
+      }
+      if (path === "/api/v1/temporary-admissions/1") {
+        return Promise.resolve({ data: admissionWithInvoices });
+      }
+      if (path === "/api/v1/temporary-admission-equipment-options") {
+        return Promise.resolve({ data: admission.equipment });
+      }
+      return Promise.reject(new Error(`Unexpected request: ${path}`));
+    });
+
+    const user = userEvent.setup();
+    render(<TemporaryAdmissionsPage canManage />);
+    await user.click(await screen.findByText("S1445"));
+
+    expect(await screen.findByText("Factures (4)")).toBeVisible();
+    for (const invoiceName of invoiceNames) {
+      expect(screen.getByText(invoiceName)).toBeVisible();
+    }
+  });
+
   it("shows a compact empty state when no equipment is linked", async () => {
     const user = userEvent.setup();
     apiRequest.mockImplementation((path: string) => {
