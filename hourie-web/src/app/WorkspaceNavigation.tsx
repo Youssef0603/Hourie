@@ -6,7 +6,6 @@ import { LanguageSwitch } from "../shared/components/LanguageSwitch";
 import { NavigationIcon } from "../shared/components/NavigationIcon";
 import { ActionIcon } from "../shared/components/ActionIcon";
 import { LoadingSpinner } from "../shared/components/LoadingSpinner";
-import hourieLogo from "../assets/hourie-logo.svg";
 import type { WorkspaceRoute } from "./routes";
 import {
   assetCategories,
@@ -31,38 +30,75 @@ export const workspaceModules = () => [
 ] as const;
 
 export function WorkspaceNavigationCards({
+  language,
   activeSection,
+  activeAssetCategory,
   onNavigate,
 }: {
+  language: Language;
   activeSection: WorkspaceRoute["section"];
+  activeAssetCategory: AssetView;
   onNavigate: (path: string) => void;
 }) {
+  const assetModules = [
+    { category: "all" as const, label: fr.assets.all, path: "/assets/all" },
+    { category: "generator" as const, label: fr.navigation.generators, path: "/assets/generator" },
+    ...assetCategories.map((category) => ({
+      category: category.code,
+      label: assetCategoryLabel(category.code, language),
+      path: `/assets/${category.code}`,
+    })),
+  ];
+  const managementModules = workspaceModules().filter((module) =>
+    !["dashboard", "assets"].includes(module.section),
+  );
+
   return (
     <section
       className="workspace-navigation-cards"
       aria-label={fr.navigation.quickAccess}
     >
       <header>
-        <h2>{fr.navigation.title}</h2>
+        <h2>{fr.navigation.applications}</h2>
       </header>
-      <div>
-        {workspaceModules().map((module) => {
-          const isActive =
-            module.section === activeSection ||
-            (module.section === "assets" && activeSection === "generators");
+      <div className="workspace-navigation-scroll">
+        <button
+          type="button"
+          className={activeSection === "dashboard" ? "active" : undefined}
+          aria-current={activeSection === "dashboard" ? "page" : undefined}
+          onClick={() => onNavigate("/dashboard")}
+        >
+          <span><NavigationIcon name="dashboard" /></span>
+          <strong>{fr.navigation.dashboard}</strong>
+        </button>
+        {assetModules.map((module) => {
+          const isActive = (activeSection === "assets" || activeSection === "generators") && activeAssetCategory === module.category;
 
           return (
             <button
-              key={module.path}
+              key={module.category}
               type="button"
               className={isActive ? "active" : undefined}
               aria-current={isActive ? "page" : undefined}
               onClick={() => onNavigate(module.path)}
             >
-              <span><NavigationIcon name={module.icon} /></span>
+              <span><AssetCategoryIcon category={module.category} /></span>
               <strong>{module.label}</strong>
             </button>
           );
+        })}
+        {managementModules.map((module) => {
+          const isActive = module.section === activeSection;
+          return <button
+            key={module.path}
+            type="button"
+            className={isActive ? "active" : undefined}
+            aria-current={isActive ? "page" : undefined}
+            onClick={() => onNavigate(module.path)}
+          >
+            <span><NavigationIcon name={module.icon} /></span>
+            <strong>{module.label}</strong>
+          </button>;
         })}
       </div>
     </section>
@@ -74,6 +110,7 @@ export function WorkspaceHeader({
   language,
   activeSection,
   onToggleLanguage,
+  onSearch,
   onNavigateSettings,
   onLogout,
   isLoggingOut,
@@ -82,21 +119,26 @@ export function WorkspaceHeader({
   language: Language;
   activeSection: WorkspaceRoute["section"];
   onToggleLanguage: () => void;
+  onSearch: (query: string) => void;
   onNavigateSettings: () => void;
   onLogout: () => void;
   isLoggingOut: boolean;
 }) {
+  const [query, setQuery] = useState("");
+
   return (
     <header className="workspace-header">
       <div className="workspace-brand">
-        <span className="workspace-logo-frame">
-          <img
-            className="workspace-logo"
-            src={hourieLogo}
-            alt={fr.app.companyName}
-          />
+        <span className="workspace-monogram" aria-hidden="true">A</span>
+        <span className="workspace-brand-copy">
+          <strong>A.B. HOURIE</strong>
+          <small>ASSET OPERATIONS</small>
         </span>
       </div>
+      <form className="workspace-global-search" role="search" onSubmit={(event) => { event.preventDefault(); if (query.trim()) onSearch(query.trim()); }}>
+        <ActionIcon name="search" />
+        <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={language === "ar" ? "البحث عن الأصول والمواقع والأشخاص..." : "Rechercher actifs, sites, personnes..."} aria-label={fr.equipment.search} />
+      </form>
       <div className="user-menu">
         <LanguageSwitch language={language} onToggle={onToggleLanguage} />
         {user.permissions.manage_sites && (
@@ -121,6 +163,11 @@ export function WorkspaceHeader({
               <span className="user-avatar" aria-hidden="true">
                 {userInitials(user.name)}
               </span>
+              <span className="account-menu-identity">
+                <strong>{user.name}</strong>
+                <small>{fr.roles[user.role]}</small>
+              </span>
+              <ActionIcon name="expand" />
             </MenuButton>
             <MenuItems anchor="bottom end" className="account-dropdown">
               <div className="account-dropdown-identity">

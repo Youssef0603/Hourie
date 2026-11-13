@@ -53,7 +53,7 @@ export function EquipmentInventoryTable({
         {isLoading && <div className="table-state"><LoadingSpinner label={fr.common.loading} /></div>}
         {!isLoading && result?.data.length === 0 && <EmptyState title={fr.assets.noResults} description="Modifiez votre recherche ou vos filtres pour afficher d’autres actifs." />}
       </div>
-      {result && result.meta.last_page > 1 && <nav className="pagination" aria-label={fr.equipment.pagination}><span>{fr.equipment.results(result.meta.from, result.meta.to, result.meta.total)}</span><div><button type="button" disabled={result.meta.current_page === 1 || isLoading} onClick={() => onChangePage(result.meta.current_page - 1)}>{fr.common.previous}</button><span>{fr.equipment.page(result.meta.current_page, result.meta.last_page)}</span><button type="button" disabled={result.meta.current_page === result.meta.last_page || isLoading} onClick={() => onChangePage(result.meta.current_page + 1)}>{fr.common.next}</button></div></nav>}
+      {result && <nav className="pagination" aria-label={fr.equipment.pagination}><span>{fr.equipment.results(result.meta.from, result.meta.to, result.meta.total)}</span><div><button type="button" disabled={result.meta.current_page === 1 || isLoading} onClick={() => onChangePage(result.meta.current_page - 1)}>{fr.common.previous}</button><span>{result.meta.current_page}</span><button type="button" disabled={result.meta.current_page === result.meta.last_page || isLoading} onClick={() => onChangePage(result.meta.current_page + 1)}>{fr.common.next}</button></div></nav>}
     </>
   }
 
@@ -63,12 +63,12 @@ export function EquipmentInventoryTable({
               <thead>
                 <tr>
                   <th>{fr.equipment.number}</th>
-                  <th>{fr.equipment.brand}</th>
-                  <th>{fr.equipment.model}</th>
+                  <th>{fr.equipment.identification}</th>
                   <th>{fr.equipment.apparentPowerShort}</th>
-                  <th>{fr.equipment.serialNumber}</th>
+                  <th>{fr.equipment.activePowerShort}</th>
                   <th>{fr.equipment.fuel}</th>
                   <th>{fr.equipment.condition}</th>
+                  <th>{fr.equipment.usageStatus}</th>
                   <th>{fr.equipment.project}</th>
                   <th>{fr.equipment.locationShort}</th>
                 </tr>
@@ -86,17 +86,17 @@ export function EquipmentInventoryTable({
                       }
                     }}
                   >
-                    <td><strong>{equipment.display_id}</strong><span className="secondary-cell">{equipment.asset_code}</span></td>
-                    <td>{equipment.brand ?? fr.common.notProvided}</td>
-                    <td>{equipment.model ?? fr.common.notProvided}</td>
+                    <td><strong>{equipment.asset_code}</strong><span className="secondary-cell">{equipment.serial_number ?? equipment.display_id}</span></td>
+                    <td><span className="primary-cell">{[equipment.brand, equipment.model].filter(Boolean).join(' ') || fr.common.notProvided}</span><span className="secondary-cell">{equipment.category.name}</span></td>
                     <td>{measurement(equipment.power?.apparent_kva, 'kVA')}</td>
-                    <td>{equipment.serial_number ?? fr.common.notProvided}</td>
+                    <td>{measurement(equipment.power?.active_kw, 'kW')}</td>
                     <td>{equipment.fuel_type ? <span className="status-badge" style={catalogBadgeStyle(options?.catalogs, 'fuel_type', equipment.fuel_type)}>{catalogLabel(options?.catalogs, 'fuel_type', equipment.fuel_type)}</span> : fr.common.notProvided}</td>
                     <td>
                       <span className={`status-badge status-${equipment.condition ?? 'unknown'}`} style={catalogBadgeStyle(options?.catalogs, 'equipment_condition', equipment.condition)}>
                         {equipment.condition ? catalogLabel(options?.catalogs, 'equipment_condition', equipment.condition) : fr.common.notProvided}
                       </span>
                     </td>
+                    <td>{equipment.usage_status ? <span className={`status-badge usage-status-${equipment.usage_status}`}>{equipment.usage_status === 'in_use' ? fr.equipment.usageInUse : fr.equipment.usageNotInUse}</span> : fr.common.notProvided}</td>
                     <td>{equipment.current_project_assignment?.project.name ?? fr.common.notProvided}</td>
                     <td>{locationName(equipment)}</td>
                   </tr>
@@ -107,7 +107,7 @@ export function EquipmentInventoryTable({
             {!isLoading && result?.data.length === 0 && <EmptyState title={fr.equipment.empty} description="Modifiez votre recherche ou vos filtres pour afficher d’autres générateurs." />}
           </div>
 
-          {result && result.meta.last_page > 1 && (
+          {result && (
             <nav className="pagination" aria-label={fr.equipment.pagination}>
               <span>
                 {fr.equipment.results(result.meta.from, result.meta.to, result.meta.total)}
@@ -120,7 +120,7 @@ export function EquipmentInventoryTable({
                 >
                   {fr.common.previous}
                 </button>
-                <span>{fr.equipment.page(result.meta.current_page, result.meta.last_page)}</span>
+                <span>{result.meta.current_page}</span>
                 <button
                   type="button"
                   disabled={result.meta.current_page === result.meta.last_page || isLoading}

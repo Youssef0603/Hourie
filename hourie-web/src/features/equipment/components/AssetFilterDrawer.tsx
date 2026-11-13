@@ -6,6 +6,7 @@ import { catalogLabel, catalogOptions } from '../catalogs'
 import { assetFieldLabel, isGeneralEquipmentCategoryCode, type AssetCategoryCode, type AssetField } from '../assetCategories'
 import { filterableLocationOptions, locationOptionLabel } from '../locationLabel'
 import type { EquipmentFilterOptions, EquipmentFilters } from '../types'
+import { initialFilters } from '../filters'
 import { DataQualityFilterChips } from './DataQualityFilterChips'
 
 type AssetFilterDrawerProps = {
@@ -52,6 +53,10 @@ export function AssetFilterDrawer({ categoryCode, fields, filters, language, opt
           </div></fieldset>}
         </div>
       </div>
+      <footer className="filter-drawer-actions">
+        <button className="table-refresh-button" type="button" onClick={() => Object.entries(initialFilters).forEach(([name, value]) => { if (name !== 'category' && name !== 'project_id') onChange(name as keyof EquipmentFilters, String(value)) })}>{fr.equipment.clearFilters}</button>
+        <button className="primary-button" type="button" onClick={onClose}>{fr.common.apply}</button>
+      </footer>
     </aside>
   </div>
 }

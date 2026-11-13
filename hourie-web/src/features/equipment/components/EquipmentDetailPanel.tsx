@@ -6,7 +6,7 @@ import { LoadingSpinner } from "../../../shared/components/LoadingSpinner";
 import { Modal } from "../../../shared/components/Modal";
 import { assetCategory, isAssetCategoryCode } from "../assetCategories";
 import { removeEquipmentTransfer } from "../api";
-import { catalogLabel } from "../catalogs";
+import { catalogBadgeStyle, catalogLabel } from "../catalogs";
 import { displayedValue, equipmentBrandLabel } from "../equipmentDisplay";
 import type { Equipment, EquipmentFilterOptions } from "../types";
 import { EquipmentCoverageDetails } from "./EquipmentCoverageDetails";
@@ -142,7 +142,7 @@ export function EquipmentDetailPanel({
     <>
       <div className={`detail-backdrop${nested ? " nested-detail-backdrop" : ""}`} onMouseDown={() => !isLoadingDetail && onClose()}>
         <aside
-          className="detail-panel"
+          className="detail-panel equipment-detail-panel"
           role="dialog"
           aria-modal="true"
           aria-label={isOtherAsset ? fr.assets.details : fr.equipment.details}
@@ -153,7 +153,7 @@ export function EquipmentDetailPanel({
             <LoadingSpinner className="detail-loading" label={fr.common.loading} />
           ) : selected && (
             <>
-              <DetailHeader equipment={selected} onClose={onClose} />
+              <DetailHeader equipment={selected} options={options} onClose={onClose} />
               <div className="detail-content" key={selected.id}>
                 <DetailActions
                   isOtherAsset={isOtherAsset}
@@ -293,13 +293,16 @@ function hasDetailValue(value: unknown): boolean {
   return value !== null && value !== undefined;
 }
 
-function DetailHeader({ equipment, onClose }: { equipment: Equipment; onClose: () => void }) {
+function DetailHeader({ equipment, options, onClose }: { equipment: Equipment; options: EquipmentFilterOptions | null; onClose: () => void }) {
   return (
     <header className="detail-header">
       <div>
-        <p className="section-label">{equipment.category.name}</p>
-        <h2>{equipment.asset_code}</h2>
-        <p>{[equipmentBrandLabel(equipment), equipment.model].filter(Boolean).join(" ")}</p>
+        <p className="section-label"><strong>{equipment.asset_code}</strong><span>{equipment.category.name}</span></p>
+        <h2>{[equipmentBrandLabel(equipment), equipment.model].filter(Boolean).join(" ")}</h2>
+        <div className="detail-header-badges">
+          {equipment.condition && <span className="status-badge" style={catalogBadgeStyle(options?.catalogs, "equipment_condition", equipment.condition)}>{catalogLabel(options?.catalogs, "equipment_condition", equipment.condition)}</span>}
+          {equipment.usage_status && <span className={`status-badge usage-status-${equipment.usage_status}`}>{equipment.usage_status === "in_use" ? fr.equipment.usageInUse : fr.equipment.usageNotInUse}</span>}
+        </div>
       </div>
       <button type="button" aria-label={fr.common.close} onClick={onClose}><ActionIcon name="close" /></button>
     </header>

@@ -28,7 +28,9 @@ describe("WorkspaceNavigationCards", () => {
     const onNavigate = vi.fn();
     render(
       <WorkspaceNavigationCards
+        language="fr"
         activeSection="people"
+        activeAssetCategory="generator"
         onNavigate={onNavigate}
       />,
     );
@@ -36,7 +38,7 @@ describe("WorkspaceNavigationCards", () => {
     const navigation = screen.getByRole("region", { name: "Accès aux espaces" });
     expect(within(navigation).getByRole("button", { name: "Personnel" })).toHaveAttribute("aria-current", "page");
 
-    await userEvent.click(within(navigation).getByRole("button", { name: "Actifs" }));
+    await userEvent.click(within(navigation).getByRole("button", { name: "Tous les actifs" }));
     expect(onNavigate).toHaveBeenCalledWith("/assets/all");
   });
 });
@@ -52,6 +54,7 @@ describe("WorkspaceHeader", () => {
         language="fr"
         activeSection="dashboard"
         onToggleLanguage={vi.fn()}
+        onSearch={vi.fn()}
         onNavigateSettings={onNavigateSettings}
         onLogout={vi.fn()}
         isLoggingOut={false}
@@ -77,6 +80,7 @@ describe("WorkspaceHeader", () => {
         language="fr"
         activeSection="catalogs"
         onToggleLanguage={vi.fn()}
+        onSearch={vi.fn()}
         onNavigateSettings={onNavigateSettings}
         onLogout={vi.fn()}
         isLoggingOut={false}

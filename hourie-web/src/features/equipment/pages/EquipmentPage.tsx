@@ -676,13 +676,21 @@ export function EquipmentPage({
         language={language}
         activeSection={activeSection}
         onToggleLanguage={onToggleLanguage}
+        onSearch={(query) => {
+          setSearch(query);
+          navigate("/assets/all");
+        }}
         onNavigateSettings={() => navigateSection("catalogs")}
         onLogout={onLogout}
         isLoggingOut={isLoggingOut}
       />
 
       <WorkspaceNavigationCards
+        language={language}
         activeSection={activeSection}
+        activeAssetCategory={
+          route.section === "assets" ? route.assetCategory : "generator"
+        }
         onNavigate={(path) => navigate(path)}
       />
 
@@ -734,7 +742,9 @@ export function EquipmentPage({
                 )}
                 {(!isSiteView || siteContext?.address) && (
                   <p>
-                    {isSiteView ? siteContext?.address : fr.equipment.subtitle}
+                    {isSiteView
+                      ? siteContext?.address
+                      : `${fr.equipment.subtitle} — ${(result?.meta.total ?? 0).toLocaleString("fr-FR")} ${fr.equipment.items}`}
                   </p>
                 )}
               </div>
@@ -928,6 +938,7 @@ export function EquipmentPage({
                       title={fr.equipment.addGenerator}
                     >
                       <ActionIcon name="add" />
+                      <span>{fr.equipment.addGenerator}</span>
                     </button>
                   )}
                   <button

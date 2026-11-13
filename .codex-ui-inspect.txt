@@ -1,0 +1,82 @@
+/Users/yousefyassin/Documents/hourie
+hourie-api/AGENTS.md
+ M hourie-web/package-lock.json
+?? .codex-ui-inspect.txt
+hourie-web/src/i18n/fr.ts:93:    pagination: 'Pagination de l’inventaire',
+hourie-web/src/i18n/fr.ts:165:    advancedFilters: 'Filtres avancés',
+hourie-web/src/i18n/fr.ts:198:    dashboard: 'Tableau de bord',
+hourie-web/src/i18n/fr.ts:210:    all: 'Tous les actifs',
+hourie-web/src/i18n/fr.ts:211:    categories: 'Catégories d’actifs',
+hourie-web/src/i18n/fr.ts:625:    pagination: 'صفحات المخزون',
+hourie-web/src/i18n/operations.ts:9:    title: "Tableau de bord",
+hourie-web/src/features/directory/pages/SitesPage.tsx:17:import type { PaginationMeta } from '../../../shared/api/pagination'
+hourie-web/src/features/directory/pages/SitesPage.tsx:34:  const [pagination, setPagination] = useState<PaginationMeta | null>(null)
+hourie-web/src/features/directory/pages/SitesPage.tsx:144:  const page = pagination?.current_page ?? currentPage
+hourie-web/src/features/directory/pages/SitesPage.tsx:145:  const totalPages = pagination?.last_page ?? 1
+hourie-web/src/features/directory/pages/SitesPage.tsx:289:          {pagination && <nav className="pagination" aria-label={fr.equipment.pagination}><span>{fr.equipment.results(pagination.from, pagination.to, pagination.total)}</span><div><button type="button" disabled={page === 1 || isRefreshing} onClick={() => void refreshSites(page - 1)}>{fr.common.previous}</button><span>{fr.equipment.page(page, totalPages)}</span><button type="button" disabled={page === totalPages || isRefreshing} onClick={() => void refreshSites(page + 1)}>{fr.common.next}</button></div></nav>}
+hourie-web/src/features/directory/api.ts:2:import type { PaginatedResponse } from '../../shared/api/pagination'
+hourie-web/src/shared/components/PaginatedDocumentList.tsx:32:          className="document-list-pagination"
+hourie-web/src/features/temporary-admissions/pages/TemporaryAdmissionsPage.tsx:15:import type { PaginatedResponse, PaginationMeta } from "../../../shared/api/pagination";
+hourie-web/src/features/temporary-admissions/pages/TemporaryAdmissionsPage.tsx:33:  const [pagination, setPagination] = useState<PaginationMeta | null>(null);
+hourie-web/src/features/temporary-admissions/pages/TemporaryAdmissionsPage.tsx:84:  const pageCount = pagination?.last_page ?? 1;
+hourie-web/src/features/temporary-admissions/pages/TemporaryAdmissionsPage.tsx:85:  const currentPage = pagination?.current_page ?? page;
+hourie-web/src/features/temporary-admissions/pages/TemporaryAdmissionsPage.tsx:120:          value={pagination?.total ?? visible.length}
+hourie-web/src/features/temporary-admissions/pages/TemporaryAdmissionsPage.tsx:216:          <nav className="pagination insurance-pagination">
+hourie-web/src/features/temporary-admissions/pages/TemporaryAdmissionsPage.tsx:218:              {pagination ? `${pagination.from ?? 0}–${pagination.to ?? 0} ${text.of} ${pagination.total}` : text.count(visible.length)}
+hourie-web/src/features/insurance/pages/InsurancePage.tsx:27:import type { PaginatedResponse, PaginationMeta } from "../../../shared/api/pagination";
+hourie-web/src/features/insurance/pages/InsurancePage.tsx:46:  const [pagination, setPagination] = useState<PaginationMeta | null>(null);
+hourie-web/src/features/insurance/pages/InsurancePage.tsx:155:          value={pagination?.total ?? filteredPolicies.length}
+hourie-web/src/features/insurance/pages/InsurancePage.tsx:310:          <nav className="pagination insurance-pagination">
+hourie-web/src/features/insurance/pages/InsurancePage.tsx:311:            <span>{pagination ? `${pagination.from ?? 0}–${pagination.to ?? 0} ${text.of} ${pagination.total}` : text.policiesCount(filteredPolicies.length)}</span>
+hourie-web/src/features/insurance/pages/InsurancePage.tsx:313:              <button type="button" disabled={!pagination || pagination.current_page === 1 || loading} onClick={() => setPage((current) => current - 1)}>
+hourie-web/src/features/insurance/pages/InsurancePage.tsx:316:              <span>{pagination?.current_page ?? 1} / {pagination?.last_page ?? 1}</span>
+hourie-web/src/features/insurance/pages/InsurancePage.tsx:317:              <button type="button" disabled={!pagination || pagination.current_page === pagination.last_page || loading} onClick={() => setPage((current) => current + 1)}>
+hourie-web/src/features/equipment/pages/equipment-page.css:557:.pagination button,
+hourie-web/src/features/equipment/pages/equipment-page.css:606:.pagination button:hover:not(:disabled),
+hourie-web/src/features/equipment/pages/equipment-page.css:3613:.pagination {
+hourie-web/src/features/equipment/pages/equipment-page.css:3623:.pagination > div {
+hourie-web/src/features/equipment/pages/equipment-page.css:3629:.pagination button {
+hourie-web/src/features/equipment/pages/equipment-page.css:3637:.pagination button:disabled {
+hourie-web/src/features/equipment/pages/equipment-page.css:4503:.transfer-history-pagination {
+hourie-web/src/features/equipment/pages/equipment-page.css:4513:.transfer-history-pagination button {
+hourie-web/src/features/equipment/pages/equipment-page.css:4523:.transfer-history-pagination button:disabled {
+hourie-web/src/features/equipment/pages/equipment-page.css:6113:.maintenance-warning-panel > .pagination {
+hourie-web/src/features/equipment/pages/equipment-page.css:6254:  .pagination {
+hourie-web/src/features/equipment/pages/equipment-page.css:6259:  .pagination {
+hourie-web/src/features/equipment/pages/equipment-page.css:8171:.insurance-covered-equipment-pagination {
+hourie-web/src/features/equipment/pages/equipment-page.css:8178:.insurance-covered-equipment-pagination button {
+hourie-web/src/features/equipment/pages/equipment-page.css:8189:.insurance-covered-equipment-pagination button:disabled {
+hourie-web/src/features/equipment/pages/equipment-page.css:8193:.insurance-covered-equipment-pagination span {
+hourie-web/src/features/equipment/pages/equipment-page.css:8370:.document-list-pagination {
+hourie-web/src/features/equipment/pages/equipment-page.css:8379:.document-list-pagination button {
+hourie-web/src/features/equipment/pages/equipment-page.css:8391:.document-list-pagination button:disabled {
+hourie-web/src/features/equipment/pages/equipment-page.css:8489:.insurance-detail-covered-pagination {
+hourie-web/src/features/equipment/pages/equipment-page.css:8496:.insurance-detail-covered-pagination button {
+hourie-web/src/features/equipment/pages/equipment-page.css:8507:.insurance-detail-covered-pagination button:disabled {
+hourie-web/src/features/equipment/pages/equipment-page.css:8511:.insurance-detail-covered-pagination span {
+hourie-web/src/features/bonds/pages/BondsPage.tsx:17:import type { PaginatedResponse, PaginationMeta } from "../../../shared/api/pagination";
+hourie-web/src/features/bonds/pages/BondsPage.tsx:28:  const [pagination, setPagination] = useState<PaginationMeta | null>(null);
+hourie-web/src/features/bonds/pages/BondsPage.tsx:73:  const pageCount = pagination?.last_page ?? 1;
+hourie-web/src/features/bonds/pages/BondsPage.tsx:74:  const currentPage = pagination?.current_page ?? page;
+hourie-web/src/features/bonds/pages/BondsPage.tsx:104:          value={pagination?.total ?? visible.length}
+hourie-web/src/features/bonds/pages/BondsPage.tsx:230:          <nav className="pagination insurance-pagination">
+hourie-web/src/features/bonds/pages/BondsPage.tsx:232:              {pagination ? activeLanguage === "ar" ? `${pagination.from ?? 0}–${pagination.to ?? 0} من ${pagination.total}` : `${pagination.from ?? 0}–${pagination.to ?? 0} sur ${pagination.total}` : activeLanguage === "ar" ? `${visible.length} ضمان` : `${visible.length} caution(s)`}
+hourie-web/src/features/temporary-admissions/components/TemporaryAdmissionDetails.tsx:542:                  className="document-list-pagination"
+hourie-web/src/features/directory/pages/PeoplePage.tsx:23:import type { PaginationMeta } from "../../../shared/api/pagination";
+hourie-web/src/features/directory/pages/PeoplePage.tsx:67:  const [pagination, setPagination] = useState<PaginationMeta | null>(null);
+hourie-web/src/features/directory/pages/PeoplePage.tsx:126:  const page = pagination?.current_page ?? currentPage;
+hourie-web/src/features/directory/pages/PeoplePage.tsx:127:  const totalPages = pagination?.last_page ?? 1;
+hourie-web/src/features/directory/pages/PeoplePage.tsx:219:          value={pagination?.total ?? people.length}
+hourie-web/src/features/directory/pages/PeoplePage.tsx:402:            {pagination && (
+hourie-web/src/features/directory/pages/PeoplePage.tsx:403:              <nav className="pagination" aria-label={fr.equipment.pagination}>
+hourie-web/src/features/directory/pages/PeoplePage.tsx:404:                <span>{fr.equipment.results(pagination.from, pagination.to, pagination.total)}</span>
+hourie-web/src/features/insurance/components/InsuranceCoveragePickers.tsx:96:              className="insurance-covered-equipment-pagination"
+hourie-web/src/features/insurance/components/InsuranceCoveragePickers.tsx:212:              className="insurance-covered-equipment-pagination"
+hourie-web/src/features/dashboard/pages/DashboardPage.tsx:82:          <h1>Tableau de bord</h1>
+hourie-web/src/features/dashboard/pages/DashboardPage.test.tsx:50:    expect(await screen.findByRole("heading", { name: "Tableau de bord" })).toBeVisible();
+hourie-web/src/features/insurance/components/InsuranceCoveredItems.tsx:165:              className="insurance-detail-covered-pagination"
+hourie-web/src/features/equipment/components/AssetInventoryView.tsx:168:      {result && result.meta.last_page > 1 && <nav className="pagination" aria-label={fr.equipment.pagination}><span>{fr.equipment.results(result.meta.from, result.meta.to, result.meta.total)}</span><div><button type="button" disabled={result.meta.current_page === 1 || isLoading} onClick={() => onPageChange(result.meta.current_page - 1)}>{fr.common.previous}</button><span>{fr.equipment.page(result.meta.current_page, result.meta.last_page)}</span><button type="button" disabled={result.meta.current_page === result.meta.last_page || isLoading} onClick={() => onPageChange(result.meta.current_page + 1)}>{fr.common.next}</button></div></nav>}
+hourie-web/src/features/equipment/components/EquipmentHistoryDetails.tsx:78:        <nav className="transfer-history-pagination" aria-label="Pagination des transferts">
+hourie-web/src/features/equipment/components/MaintenanceWarningsPage.tsx:91:          <nav className="pagination" aria-label={fr.equipment.pagination}>
+hourie-web/src/features/equipment/components/EquipmentInventoryTable.tsx:56:      {result && result.meta.last_page > 1 && <nav className="pagination" aria-label={fr.equipment.pagination}><span>{fr.equipment.results(result.meta.from, result.meta.to, result.meta.total)}</span><div><button type="button" disabled={result.meta.current_page === 1 || isLoading} onClick={() => onChangePage(result.meta.current_page - 1)}>{fr.common.previous}</button><span>{fr.equipment.page(result.meta.current_page, result.meta.last_page)}</span><button type="button" disabled={result.meta.current_page === result.meta.last_page || isLoading} onClick={() => onChangePage(result.meta.current_page + 1)}>{fr.common.next}</button></div></nav>}
+hourie-web/src/features/equipment/components/EquipmentInventoryTable.tsx:111:            <nav className="pagination" aria-label={fr.equipment.pagination}>

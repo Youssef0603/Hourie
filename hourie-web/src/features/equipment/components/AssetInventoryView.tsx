@@ -101,7 +101,7 @@ export function AssetInventoryView({ category, language, options, filters, searc
 
   return <main className="equipment-page asset-page">
     <section className="page-heading">
-      <div><p className="section-label">{fr.assets.title}</p><h1>{title}</h1><p>{fr.assets.subtitle}</p></div>
+      <div><p className="section-label">{fr.assets.title}</p><h1>{title}</h1><p>{fr.assets.subtitle} — {(result?.meta.total ?? 0).toLocaleString('fr-FR')} actif(s)</p></div>
       <div className="heading-actions">
         <TotalCount value={result?.meta.total} label={fr.assets.title} loading={isLoading} />
       </div>
@@ -122,7 +122,7 @@ export function AssetInventoryView({ category, language, options, filters, searc
           <button className="table-refresh-button import-excel-action" type="button" onClick={() => { setExportError(null); setExportWithoutInvoices(false); setShowAssetExport(true) }}><ActionIcon name="download" /><span>{fr.assets.exportExcel}</span></button>
           {canManage && category === 'all' && !isGeneratorSelected && <button className="table-refresh-button import-excel-action" type="button" onClick={() => setShowAssetImport(true)}><ActionIcon name="upload" /><span>{fr.assets.importExcel}</span></button>}
           {canManage && isGeneratorSelected && <button className="table-refresh-button import-excel-action" type="button" onClick={() => setShowImportGenerator(true)}><ActionIcon name="upload" /><span>{fr.equipment.importExcel}</span></button>}
-          {canManage && selectedCategory && options && <button className="table-refresh-button table-add-button" type="button" onClick={() => isGeneratorSelected ? setShowAddGenerator(true) : setShowAdd(true)} aria-label={isGeneratorSelected ? fr.equipment.addGenerator : fr.assets.add} title={isGeneratorSelected ? fr.equipment.addGenerator : fr.assets.add}><ActionIcon name="add" /></button>}
+          {canManage && selectedCategory && options && <button className="table-refresh-button table-add-button" type="button" onClick={() => isGeneratorSelected ? setShowAddGenerator(true) : setShowAdd(true)} aria-label={isGeneratorSelected ? fr.equipment.addGenerator : fr.assets.add} title={isGeneratorSelected ? fr.equipment.addGenerator : fr.assets.add}><ActionIcon name="add" /><span>{isGeneratorSelected ? fr.equipment.addGenerator : fr.assets.add}</span></button>}
           <button className="table-refresh-button filter-refresh-button" type="button" onClick={onRefresh} aria-label={fr.common.refresh} title={fr.common.refresh}><ActionIcon name="refresh" /></button>
           {activeFilterCount > 0 && <button className="clear-filters" type="button" onClick={onClearFilters}>{fr.equipment.clearFilters}</button>}
         </div>
@@ -165,7 +165,7 @@ export function AssetInventoryView({ category, language, options, filters, searc
         {isLoading && <div className="table-state"><LoadingSpinner label={fr.common.loading} /></div>}
         {!isLoading && result?.data.length === 0 && <EmptyState title={fr.assets.noResults} description="Modifiez votre recherche ou vos filtres pour afficher d’autres actifs." />}
       </div>
-      {result && result.meta.last_page > 1 && <nav className="pagination" aria-label={fr.equipment.pagination}><span>{fr.equipment.results(result.meta.from, result.meta.to, result.meta.total)}</span><div><button type="button" disabled={result.meta.current_page === 1 || isLoading} onClick={() => onPageChange(result.meta.current_page - 1)}>{fr.common.previous}</button><span>{fr.equipment.page(result.meta.current_page, result.meta.last_page)}</span><button type="button" disabled={result.meta.current_page === result.meta.last_page || isLoading} onClick={() => onPageChange(result.meta.current_page + 1)}>{fr.common.next}</button></div></nav>}
+      {result && <nav className="pagination" aria-label={fr.equipment.pagination}><span>{fr.equipment.results(result.meta.from, result.meta.to, result.meta.total)}</span><div><button type="button" disabled={result.meta.current_page === 1 || isLoading} onClick={() => onPageChange(result.meta.current_page - 1)}>{fr.common.previous}</button><span>{result.meta.current_page}</span><button type="button" disabled={result.meta.current_page === result.meta.last_page || isLoading} onClick={() => onPageChange(result.meta.current_page + 1)}>{fr.common.next}</button></div></nav>}
       </>}
     </section>
     {showAdd && selectedAssetCategory && options && <EquipmentCreationPanel eyebrow={assetCategoryLabel(selectedAssetCategory, language)} title={selectedAssetCategory === 'portacabin' ? fr.assets.addBungalow : fr.assets.add} action={<button className="primary-button" type="submit" form="create-asset-form">{fr.common.save}</button>} onClose={() => setShowAdd(false)}><AssetForm formId="create-asset-form" categoryCode={selectedAssetCategory} language={language} options={options} onSaved={(equipment) => { setShowAdd(false); onCreated(equipment) }} /></EquipmentCreationPanel>}

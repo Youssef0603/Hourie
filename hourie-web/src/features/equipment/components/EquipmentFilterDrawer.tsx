@@ -5,6 +5,7 @@ import { SearchableSelect } from '../../../shared/components/SearchableSelect'
 import { locationOptionLabel } from '../locationLabel'
 import { catalogLabel, catalogOptions } from '../catalogs'
 import type { EquipmentFilterOptions, EquipmentFilters } from '../types'
+import { initialFilters } from '../filters'
 import { DataQualityFilterChips } from './DataQualityFilterChips'
 
 type EquipmentFilterDrawerProps = {
@@ -33,6 +34,10 @@ export function EquipmentFilterDrawer({ filters, options, isSiteView, physicalLo
         <DataQualityFilterChips filters={filters} onChange={onChange} />
         <AdvancedEquipmentFilters filters={filters} options={options} onChange={onChange} />
       </div>
+      <footer className="filter-drawer-actions">
+        <button className="table-refresh-button" type="button" onClick={() => Object.entries(initialFilters).forEach(([name, value]) => { if (name !== 'category' && name !== 'project_id') onChange(name as keyof EquipmentFilters, String(value)) })}>{fr.equipment.clearFilters}</button>
+        <button className="primary-button" type="button" onClick={onClose}>{fr.common.apply}</button>
+      </footer>
     </aside>
   </div>
 }
