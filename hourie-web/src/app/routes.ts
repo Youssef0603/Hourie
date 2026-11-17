@@ -47,6 +47,11 @@ export type WorkspaceRoute =
       section: "catalogs";
       equipmentId: null;
       siteId: null;
+    }
+  | {
+      section: "documents";
+      equipmentId: null;
+      siteId: null;
     };
 
 export function parseWorkspaceRoute(pathname: string): WorkspaceRoute {
@@ -200,6 +205,8 @@ export function parseWorkspaceRoute(pathname: string): WorkspaceRoute {
     };
   if (parts[0] === "settings" && parts.length === 1)
     return { section: "catalogs", siteId: null, equipmentId: null };
+  if (parts[0] === "documents" && parts.length === 1)
+    return { section: "documents", siteId: null, equipmentId: null };
 
   return { section: "dashboard", siteId: null, equipmentId: null };
 }

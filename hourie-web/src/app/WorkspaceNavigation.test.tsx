@@ -18,6 +18,7 @@ const user: AuthenticatedUser = {
     delete_maintenance: true,
     delete_equipment: true,
     manage_sites: true,
+    manage_purchase_orders: true,
     manage_users: true,
     manage_manager_accounts: true,
   },

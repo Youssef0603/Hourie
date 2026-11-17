@@ -96,6 +96,11 @@ const DashboardPage = lazy(() =>
     default: module.DashboardPage,
   })),
 );
+const PurchaseOrdersPage = lazy(() =>
+  import("../../purchase-orders/pages/PurchaseOrdersPage").then((module) => ({
+    default: module.PurchaseOrdersPage,
+  })),
+);
 
 type EquipmentPageProps = {
   user: AuthenticatedUser;
@@ -1126,6 +1131,14 @@ export function EquipmentPage({
               canManage={user.permissions.manage_equipment}
               initialAdmissionId={route.temporaryAdmissionId}
               relatedEquipmentContext={{ user, language, options }}
+            />
+          </Suspense>
+        ) : activeSection === "documents" ? (
+          <Suspense fallback={<FeaturePageLoading />}>
+            <PurchaseOrdersPage
+              defaultPreparedBy={user.name}
+              canManage={user.permissions.manage_purchase_orders}
+              projects={options?.projects ?? []}
             />
           </Suspense>
         ) : activeSection === "sites" ? (

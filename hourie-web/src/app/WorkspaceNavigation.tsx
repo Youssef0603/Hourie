@@ -28,6 +28,7 @@ export const workspaceModules = () => [
   { section: "insurance", label: fr.navigation.insurance, path: "/insurance", icon: "insurance" },
   { section: "bonds", label: fr.navigation.bonds, path: "/bonds", icon: "bonds" },
   { section: "temporary-admissions", label: fr.navigation.temporaryAdmissions, path: "/temporary-admissions", icon: "insurance" },
+  { section: "documents", label: fr.navigation.documents, path: "/documents", icon: "documents" },
 ] as const;
 
 export function WorkspaceNavigationCards({
@@ -301,6 +302,15 @@ export function WorkspaceSidebar({
         >
           <NavigationIcon name="insurance" />
           <span className="nav-label">{fr.navigation.temporaryAdmissions}</span>
+        </button>
+        <button
+          title={fr.navigation.documents}
+          className={`sidebar-section-link${activeSection === "documents" ? " active" : ""}`}
+          type="button"
+          onClick={() => onNavigate("documents")}
+        >
+          <NavigationIcon name="documents" />
+          <span className="nav-label">{fr.navigation.documents}</span>
         </button>
         <button
           title={fr.navigation.sites}

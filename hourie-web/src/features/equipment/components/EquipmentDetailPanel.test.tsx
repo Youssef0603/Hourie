@@ -19,6 +19,7 @@ const user: AuthenticatedUser = {
     delete_maintenance: false,
     delete_equipment: false,
     manage_sites: false,
+    manage_purchase_orders: false,
     manage_users: false,
     manage_manager_accounts: false,
   },

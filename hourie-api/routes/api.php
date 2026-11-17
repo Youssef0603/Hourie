@@ -9,10 +9,10 @@ use App\Http\Controllers\Api\V1\EmployeeController;
 use App\Http\Controllers\Api\V1\Equipment\AssetImportController;
 use App\Http\Controllers\Api\V1\Equipment\EquipmentController;
 use App\Http\Controllers\Api\V1\Equipment\EquipmentFilterOptionsController;
+use App\Http\Controllers\Api\V1\Equipment\EquipmentGeneratorDocumentController;
 use App\Http\Controllers\Api\V1\Equipment\EquipmentImageController;
 use App\Http\Controllers\Api\V1\Equipment\EquipmentImportController;
 use App\Http\Controllers\Api\V1\Equipment\EquipmentInvoiceController;
-use App\Http\Controllers\Api\V1\Equipment\EquipmentGeneratorDocumentController;
 use App\Http\Controllers\Api\V1\Equipment\EquipmentMaintenanceController;
 use App\Http\Controllers\Api\V1\Equipment\EquipmentTransferController;
 use App\Http\Controllers\Api\V1\Equipment\EquipmentVehicleDocumentController;
@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\V1\Equipment\MaintenanceWarningController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\InsurancePolicyController;
 use App\Http\Controllers\Api\V1\NotificationSettingsController;
+use App\Http\Controllers\Api\V1\PurchaseOrderController;
 use App\Http\Controllers\Api\V1\SiteController;
 use App\Http\Controllers\Api\V1\TemporaryAdmissionController;
 use App\Http\Middleware\EnsurePasswordWasChanged;
@@ -41,6 +42,7 @@ Route::prefix('v1/auth')->name('auth.')->group(function (): void {
 });
 
 Route::prefix('v1')->middleware(['auth:sanctum', EnsureUserIsActive::class, EnsurePasswordWasChanged::class])->group(function (): void {
+    Route::apiResource('purchase-orders', PurchaseOrderController::class);
     Route::get('dashboard', DashboardController::class)->name('dashboard');
     Route::apiResource('catalog-options', CatalogOptionController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::get('notification-settings', [NotificationSettingsController::class, 'show']);
