@@ -49,6 +49,18 @@ return [
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],
 
+        'microsoft-graph' => [
+            'transport' => 'microsoft-graph',
+            'tenant_id' => env('MICROSOFT_GRAPH_TENANT_ID'),
+            'client_id' => env('MICROSOFT_GRAPH_CLIENT_ID'),
+            'client_secret' => env('MICROSOFT_GRAPH_CLIENT_SECRET'),
+            'sender' => env('MAIL_FROM_ADDRESS'),
+            'login_base_url' => env('MICROSOFT_LOGIN_BASE_URL', 'https://login.microsoftonline.com'),
+            'graph_base_url' => env('MICROSOFT_GRAPH_BASE_URL', 'https://graph.microsoft.com/v1.0'),
+            'connect_timeout' => 5,
+            'timeout' => 30,
+        ],
+
         'ses' => [
             'transport' => 'ses',
         ],

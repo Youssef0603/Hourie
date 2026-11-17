@@ -5,15 +5,18 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 use RuntimeException;
 use Symfony\Component\Process\Process;
 use Throwable;
+use ZipArchive;
 
 class CreateHourieBackup extends Command
 {
     protected $signature = 'hourie:backup';
 
-    protected $description = 'Back up the Hourie database and uploaded files to the configured USB drive';
+    protected $description = 'Back up the Hourie database and uploaded files to the configured backup destination';
 
     /** @var resource|null */
     private $lockHandle;
@@ -29,10 +32,10 @@ class CreateHourieBackup extends Command
         $partialDirectory = null;
 
         try {
-            $usbPath = rtrim((string) config('hourie-backup.usb_path'), DIRECTORY_SEPARATOR);
-            $this->validateUsb($usbPath);
+            $destinationPath = rtrim((string) config('hourie-backup.root'), '\\/');
+            $this->validateDestination($destinationPath);
 
-            $backupRoot = $usbPath.DIRECTORY_SEPARATOR.trim((string) config('hourie-backup.directory'), DIRECTORY_SEPARATOR);
+            $backupRoot = $destinationPath.DIRECTORY_SEPARATOR.trim((string) config('hourie-backup.directory'), '\\/');
             File::ensureDirectoryExists($backupRoot);
 
             $timestamp = now()->format('Y-m-d_H-i-s');
@@ -46,8 +49,8 @@ class CreateHourieBackup extends Command
             $this->info('Archivage des documents importés…');
             $filesArchive = $this->archiveUploads($partialDirectory);
 
-            $this->verifyArchive($databaseArchive, (string) config('hourie-backup.gzip_binary'), ['-t', $databaseArchive]);
-            $this->verifyArchive($filesArchive, (string) config('hourie-backup.tar_binary'), ['-tzf', $filesArchive]);
+            $this->verifyZipArchive($databaseArchive, 'database.sql');
+            $this->verifyZipArchive($filesArchive);
 
             $checksums = [
                 basename($databaseArchive) => hash_file('sha256', $databaseArchive),
@@ -61,7 +64,8 @@ class CreateHourieBackup extends Command
                 'created_at' => now()->toIso8601String(),
                 'application' => (string) config('app.name'),
                 'database' => (string) config('database.connections.mysql.database'),
-                'usb_uuid' => (string) config('hourie-backup.usb_uuid'),
+                'destination' => $destinationPath,
+                'volume_uuid' => (string) config('hourie-backup.volume_uuid'),
                 'verified' => true,
             ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES).PHP_EOL);
 
@@ -74,7 +78,7 @@ class CreateHourieBackup extends Command
 
             $size = collect(File::files($finalDirectory))->sum(fn (\SplFileInfo $file) => $file->getSize());
             $this->info('Sauvegarde vérifiée : '.$finalDirectory.' ('.$this->formatBytes($size).')');
-            Log::info('Hourie USB backup completed.', ['path' => $finalDirectory, 'bytes' => $size]);
+            Log::info('Hourie backup completed.', ['path' => $finalDirectory, 'bytes' => $size]);
 
             return self::SUCCESS;
         } catch (Throwable $exception) {
@@ -83,7 +87,7 @@ class CreateHourieBackup extends Command
             }
 
             $this->error('Échec de la sauvegarde : '.$exception->getMessage());
-            Log::error('Hourie USB backup failed.', ['error' => $exception->getMessage()]);
+            Log::error('Hourie backup failed.', ['error' => $exception->getMessage()]);
 
             return self::FAILURE;
         } finally {
@@ -91,20 +95,36 @@ class CreateHourieBackup extends Command
         }
     }
 
-    private function validateUsb(string $usbPath): void
+    private function validateDestination(string $destinationPath): void
     {
-        if ($usbPath === '' || ! File::isDirectory($usbPath)) {
-            throw new RuntimeException('La clé USB configurée n’est pas connectée.');
+        if ($destinationPath === '' || ! File::isDirectory($destinationPath)) {
+            throw new RuntimeException('La destination de sauvegarde configurée n’est pas disponible.');
         }
 
-        $expectedUuid = strtoupper(trim((string) config('hourie-backup.usb_uuid')));
-        if ($expectedUuid === '') {
-            throw new RuntimeException('BACKUP_USB_UUID doit être configuré.');
+        $expectedUuid = strtoupper(trim((string) config('hourie-backup.volume_uuid')));
+        if ($expectedUuid !== '') {
+            $this->validateMacVolume($destinationPath, $expectedUuid);
+        }
+
+        if (! is_writable($destinationPath)) {
+            throw new RuntimeException('La destination de sauvegarde est en lecture seule.');
+        }
+
+        $freeBytes = disk_free_space($destinationPath);
+        if ($freeBytes === false || $freeBytes < (int) config('hourie-backup.minimum_free_bytes')) {
+            throw new RuntimeException('La destination de sauvegarde ne dispose pas d’assez d’espace libre.');
+        }
+    }
+
+    private function validateMacVolume(string $destinationPath, string $expectedUuid): void
+    {
+        if (PHP_OS_FAMILY !== 'Darwin') {
+            throw new RuntimeException('BACKUP_VOLUME_UUID est uniquement pris en charge sur macOS.');
         }
 
         $diskutil = (string) config('hourie-backup.diskutil_binary');
         $this->requireExecutable($diskutil);
-        $process = new Process([$diskutil, 'info', $usbPath]);
+        $process = new Process([$diskutil, 'info', $destinationPath]);
         $process->setTimeout(30)->run();
 
         if (! $process->isSuccessful()) {
@@ -123,22 +143,15 @@ class CreateHourieBackup extends Command
         if (strtolower(trim($locationMatch[1] ?? '')) !== 'external') {
             throw new RuntimeException('Le volume configuré n’est pas un support externe.');
         }
-        if (strtolower(trim($readOnlyMatch[1] ?? '')) !== 'no' || ! is_writable($usbPath)) {
+        if (strtolower(trim($readOnlyMatch[1] ?? '')) !== 'no') {
             throw new RuntimeException('La clé USB est en lecture seule.');
-        }
-
-        $freeBytes = disk_free_space($usbPath);
-        if ($freeBytes === false || $freeBytes < (int) config('hourie-backup.minimum_free_bytes')) {
-            throw new RuntimeException('La clé USB ne dispose pas d’assez d’espace libre.');
         }
     }
 
     private function dumpDatabase(string $directory): string
     {
         $binary = (string) config('hourie-backup.mysqldump_binary');
-        $gzip = (string) config('hourie-backup.gzip_binary');
         $this->requireExecutable($binary);
-        $this->requireExecutable($gzip);
 
         $connection = config('database.connections.mysql');
         if (! is_array($connection) || empty($connection['database'])) {
@@ -149,7 +162,7 @@ class CreateHourieBackup extends Command
         File::ensureDirectoryExists($credentialsDirectory);
         $credentialsPath = $credentialsDirectory.'/mysql-'.bin2hex(random_bytes(8)).'.cnf';
         $sqlPath = $directory.'/database.sql';
-        $archivePath = $sqlPath.'.gz';
+        $archivePath = $directory.'/database.zip';
 
         try {
             File::put($credentialsPath, implode(PHP_EOL, [
@@ -180,9 +193,10 @@ class CreateHourieBackup extends Command
                 throw new RuntimeException('Le fichier SQL généré est vide.');
             }
 
-            $this->runProcess([$gzip, '-9', $sqlPath], 3600);
+            $this->createZipArchive($archivePath, ['database.sql' => $sqlPath]);
         } finally {
             File::delete($credentialsPath);
+            File::delete($sqlPath);
         }
 
         return $archivePath;
@@ -190,18 +204,14 @@ class CreateHourieBackup extends Command
 
     private function archiveUploads(string $directory): string
     {
-        $binary = (string) config('hourie-backup.tar_binary');
-        $this->requireExecutable($binary);
-        $archivePath = $directory.'/uploaded-files.tar.gz';
+        $archivePath = $directory.'/uploaded-files.zip';
+        $uploadDirectories = [
+            'private' => storage_path('app/private'),
+            'equipment-images' => (string) config('filesystems.disks.equipment-images.root'),
+            'equipment-documents' => (string) config('filesystems.disks.equipment-documents.root'),
+        ];
 
-        $this->runProcess([
-            $binary,
-            '-czf',
-            $archivePath,
-            '-C',
-            storage_path(),
-            'app',
-        ], 3600);
+        $this->createZipArchiveFromDirectories($archivePath, $uploadDirectories);
 
         if (! File::exists($archivePath) || File::size($archivePath) === 0) {
             throw new RuntimeException('L’archive des documents est vide.');
@@ -210,14 +220,82 @@ class CreateHourieBackup extends Command
         return $archivePath;
     }
 
-    /** @param array<int, string> $arguments */
-    private function verifyArchive(string $path, string $binary, array $arguments): void
+    private function verifyZipArchive(string $path, ?string $requiredEntry = null): void
     {
         if (! File::exists($path) || File::size($path) === 0) {
             throw new RuntimeException('Un fichier de sauvegarde attendu est absent.');
         }
 
-        $this->runProcess([$binary, ...$arguments], 3600);
+        $archive = new ZipArchive;
+        if ($archive->open($path, ZipArchive::CHECKCONS) !== true) {
+            throw new RuntimeException('Une archive de sauvegarde est corrompue.');
+        }
+
+        try {
+            if ($requiredEntry !== null && $archive->locateName($requiredEntry) === false) {
+                throw new RuntimeException('Une archive de sauvegarde est incomplète.');
+            }
+        } finally {
+            $archive->close();
+        }
+    }
+
+    /** @param array<string, string> $files */
+    private function createZipArchive(string $archivePath, array $files): void
+    {
+        $archive = new ZipArchive;
+        if ($archive->open($archivePath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+            throw new RuntimeException('Impossible de créer l’archive de sauvegarde.');
+        }
+
+        try {
+            foreach ($files as $archiveName => $sourcePath) {
+                if (! $archive->addFile($sourcePath, $archiveName)) {
+                    throw new RuntimeException('Impossible d’ajouter un fichier à l’archive de sauvegarde.');
+                }
+            }
+        } finally {
+            $archive->close();
+        }
+    }
+
+    /** @param array<string, string> $directories */
+    private function createZipArchiveFromDirectories(string $archivePath, array $directories): void
+    {
+        $archive = new ZipArchive;
+        if ($archive->open($archivePath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+            throw new RuntimeException('Impossible de créer l’archive des documents.');
+        }
+
+        try {
+            foreach ($directories as $prefix => $directory) {
+                if (! File::isDirectory($directory)) {
+                    continue;
+                }
+
+                $files = new RecursiveIteratorIterator(
+                    new RecursiveDirectoryIterator($directory, RecursiveDirectoryIterator::SKIP_DOTS),
+                );
+
+                foreach ($files as $file) {
+                    if (! $file->isFile()) {
+                        continue;
+                    }
+
+                    $relativePath = substr($file->getPathname(), strlen($directory) + 1);
+                    $archiveName = $prefix.'/'.str_replace(DIRECTORY_SEPARATOR, '/', $relativePath);
+                    if (! $archive->addFile($file->getPathname(), $archiveName)) {
+                        throw new RuntimeException('Impossible d’ajouter un document à l’archive.');
+                    }
+                }
+            }
+
+            if ($archive->numFiles === 0) {
+                $archive->addFromString('README.txt', 'No uploaded files existed when this backup was created.');
+            }
+        } finally {
+            $archive->close();
+        }
     }
 
     private function pruneOldBackups(string $backupRoot): void
@@ -245,7 +323,11 @@ class CreateHourieBackup extends Command
 
     private function requireExecutable(string $path): void
     {
-        if ($path === '' || ! is_executable($path)) {
+        $isAvailable = str_contains($path, DIRECTORY_SEPARATOR) || preg_match('/^[A-Za-z]:[\\\\\/]/', $path) === 1
+            ? File::isFile($path)
+            : true;
+
+        if ($path === '' || ! $isAvailable) {
             throw new RuntimeException('Programme de sauvegarde introuvable : '.$path);
         }
     }
