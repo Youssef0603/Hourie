@@ -48,6 +48,7 @@
 .po-row-menu summary::-webkit-details-marker { display: none; }
 .po-row-menu summary:hover, .po-row-menu[open] summary { border-color: var(--color-border); color: var(--color-text-strong); background: var(--color-surface); }
 .po-row-menu-popover { position: absolute; z-index: 5; top: calc(100% + .25rem); inset-inline-end: 0; display: grid; min-width: 7.5rem; overflow: hidden; border: 1px solid var(--color-border); border-radius: var(--control-radius); padding: .25rem; background: #fff; box-shadow: 0 10px 26px rgb(18 20 24 / 14%); }
+.equipment-table tbody tr:nth-last-child(-n + 2) .po-row-menu-popover { top: auto; bottom: calc(100% + .25rem); }
 .po-row-menu-popover button { border: 0; border-radius: calc(var(--control-radius) - 1px); padding: .45rem .55rem; color: var(--color-text-strong); background: transparent; text-align: start; cursor: pointer; font-size: .68rem; font-weight: 650; }
 .po-row-menu-popover button:hover { background: var(--color-surface); }
 .po-row-menu-popover .danger-text { color: var(--color-danger, #b42318); }
@@ -66,10 +67,10 @@
 .po-sheet-stage { padding: 1rem; overflow: auto; }
 .po-sheet-stage .purchase-order-sheet { zoom: .82; }
 .purchase-order-sheet { box-sizing: border-box; width: 210mm; min-height: 297mm; margin: auto; padding: 11mm 12mm; background: #fff; color: #17335c; box-shadow: 0 8px 30px rgb(15 23 42 / 15%); font-family: "Times New Roman", Times, serif; }
-.po-document-header { display: grid; min-height: 21mm; grid-template-columns: 48mm minmax(0, 1fr) 36mm; align-items: end; margin-bottom: 3mm; }
-.po-document-logo { width: 43mm; max-height: 19mm; object-fit: contain; object-position: left bottom; }
-.po-document-header h2 { justify-self: center; margin: 0 0 1mm; color: #174f88; font-size: 17px; line-height: 1; white-space: nowrap; }
-.po-document-header > strong { justify-self: end; margin-bottom: .5mm; color: #a5302c; font-size: 16px; letter-spacing: .06em; white-space: nowrap; }
+.po-document-header { position: relative; height: 28mm; margin-bottom: 2mm; }
+.po-document-logo { position: absolute; top: 0; left: 0; width: 41mm; max-height: 18mm; object-fit: contain; object-position: left top; }
+.po-document-header h2 { position: absolute; bottom: 2mm; left: 50%; margin: 0; color: #174f88; font-size: 17px; line-height: 1; white-space: nowrap; transform: translateX(-50%); }
+.po-document-header > strong { position: absolute; right: 0; bottom: 1.5mm; color: #a5302c; font-size: 16px; letter-spacing: .06em; white-space: nowrap; }
 .po-document-parties { display: grid; grid-template-columns: 1fr 1fr; gap: 24mm; padding: 0 2mm 3mm; }
 .po-document-parties p { display: grid; min-height: 5.4mm; grid-template-columns: auto minmax(0, 1fr); align-items: end; gap: 1.5mm; margin: 0; font-size: 9px; }
 .po-document-parties p b { white-space: nowrap; }
@@ -87,6 +88,7 @@
 .po-document-table td:first-child, .po-document-table td:nth-child(4) { text-align: center; }
 .po-document-table td:nth-child(5), .po-document-table td:nth-child(6), .po-document-table tfoot td { text-align: right; }
 .po-document-table tfoot th, .po-document-table tfoot td { height: 5.5mm; }
+.po-document-table tfoot tr > td:first-child { border: 0; background: #fff; }
 .po-document-table tfoot th { background: #82acd1; color: #173f70; text-align: center; }
 .po-signatures { position: relative; display: grid; gap: 1.5mm; margin-top: 4mm; }
 .po-signatures p { display: grid; min-height: 5.5mm; grid-template-columns: 32mm 1fr; align-items: end; margin: 0; font-size: 9px; }

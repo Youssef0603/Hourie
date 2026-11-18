@@ -1139,6 +1139,8 @@ export function EquipmentPage({
               defaultPreparedBy={user.name}
               canManage={user.permissions.manage_purchase_orders}
               projects={options?.projects ?? []}
+              view={route.documentView}
+              onNavigate={(view) => navigate(view === "purchase-orders" ? "/documents/purchase-orders" : "/documents")}
             />
           </Suspense>
         ) : activeSection === "sites" ? (

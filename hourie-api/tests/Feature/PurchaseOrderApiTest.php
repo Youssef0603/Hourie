@@ -93,3 +93,14 @@ it('rejects a purchase order without any line items', function () {
         ->assertUnprocessable()
         ->assertJsonValidationErrors('items');
 });
+
+it('rejects decimal purchase order quantities', function () {
+    $manager = User::factory()->create(['role' => UserRole::Manager]);
+    $items = purchaseOrderPayload()['items'];
+    $items[0]['quantity'] = 1.5;
+
+    $this->actingAs($manager, 'web')
+        ->postJson('/api/v1/purchase-orders', purchaseOrderPayload(['items' => $items]))
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('items.0.quantity');
+});

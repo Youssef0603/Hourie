@@ -13,6 +13,7 @@ import "./purchase-orders-page.css";
 
 type EditableItem = PurchaseOrderItem & { key: string };
 type EditableOrder = Omit<PurchaseOrderPayload, "items"> & { items: EditableItem[] };
+type DocumentView = "templates" | "purchase-orders";
 
 const emptyItem = (): EditableItem => ({
   key: crypto.randomUUID(),
@@ -58,13 +59,23 @@ function editableOrder(order: PurchaseOrder): EditableOrder {
     vat_rate: order.vat_rate,
     currency: order.currency,
     notes: order.notes ?? "",
-    items: order.items.map((item) => ({ ...item, key: crypto.randomUUID() })),
+    items: order.items.map((item) => ({
+      ...item,
+      quantity: Number.isFinite(Number(item.quantity)) ? String(Math.trunc(Number(item.quantity))) : item.quantity,
+      key: crypto.randomUUID(),
+    })),
   };
 }
 
 function numeric(value: string) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function integerInput(value: string) {
+  if (value === "") return "";
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? String(Math.trunc(parsed)) : "";
 }
 
 function money(value: number | string, currency = "XOF") {
@@ -136,7 +147,7 @@ function PurchaseOrderSheet({ order }: { order: PurchaseOrder }) {
   );
 }
 
-export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = [] }: { defaultPreparedBy: string; canManage: boolean; projects?: Array<{ id: number; name: string }> }) {
+export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = [], view, onNavigate }: { defaultPreparedBy: string; canManage: boolean; projects?: Array<{ id: number; name: string }>; view?: DocumentView; onNavigate?: (view: DocumentView) => void }) {
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -145,7 +156,14 @@ export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = []
   const [preview, setPreview] = useState<PurchaseOrder | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeTemplate, setActiveTemplate] = useState<"purchase-order" | null>(null);
+  const [localView, setLocalView] = useState<DocumentView>("templates");
+  const currentView = view ?? localView;
+  const activeTemplate = currentView === "purchase-orders" ? "purchase-order" : null;
+
+  function navigateView(nextView: DocumentView) {
+    if (onNavigate) onNavigate(nextView);
+    else setLocalView(nextView);
+  }
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -226,7 +244,7 @@ export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = []
         <section className="document-template-section">
           <h2>Modèles</h2>
           <div className="document-template-grid">
-          <button className="document-template-card" type="button" onClick={() => setActiveTemplate("purchase-order")}>
+          <button className="document-template-card" type="button" onClick={() => navigateView("purchase-orders")}>
             <span className="document-template-icon"><NavigationDocumentIcon /></span>
             <span><strong>Bon de commande</strong><small>Commandes fournisseurs</small></span>
           </button>
@@ -236,7 +254,7 @@ export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = []
 
       {activeTemplate === "purchase-order" && <>
         <nav className="breadcrumbs" aria-label="Fil d’Ariane">
-          <button type="button" onClick={() => setActiveTemplate(null)}>Documents</button>
+          <button type="button" onClick={() => navigateView("templates")}>Documents</button>
           <span aria-hidden="true">/</span>
           <strong aria-current="page">Bons de commande</strong>
         </nav>
@@ -275,7 +293,7 @@ export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = []
             <InventoryFormSection title="Articles" icon="invoice">
               <div className="po-lines-section">
                 <div className="po-lines-heading"><span>Articles commandés</span><button type="button" className="maintenance-add" onClick={() => updateField("items", [...editor.items, emptyItem()])}><ActionIcon name="add" /> Ajouter une ligne</button></div>
-                <div className="po-lines-table-wrap"><table className="po-lines-table"><thead><tr><th>N°</th><th>Code budget</th><th>Description *</th><th>Quantité *</th><th>Prix unitaire *</th><th>Total</th><th /></tr></thead><tbody>{editor.items.map((item, index) => <tr key={item.key}><td>{index + 1}</td><td><input aria-label={`Code budget ligne ${index + 1}`} value={item.budget_code ?? ""} onChange={(event) => updateItem(item.key, "budget_code", event.target.value)} /></td><td><input aria-label="Description *" required value={item.description} onChange={(event) => updateItem(item.key, "description", event.target.value)} /></td><td><input aria-label="Quantité *" required min="0.001" step="0.001" type="number" value={item.quantity} onChange={(event) => updateItem(item.key, "quantity", event.target.value)} /></td><td><input aria-label="Prix unitaire *" required min="0" step="0.01" type="number" value={item.unit_price} onChange={(event) => updateItem(item.key, "unit_price", event.target.value)} /></td><td>{money(numeric(item.quantity) * numeric(item.unit_price), editor.currency)}</td><td><button aria-label={`Supprimer la ligne ${index + 1}`} type="button" className="po-remove-line" disabled={editor.items.length === 1} onClick={() => updateField("items", editor.items.filter((candidate) => candidate.key !== item.key))}><ActionIcon name="delete" /></button></td></tr>)}</tbody></table></div>
+            <div className="po-lines-table-wrap"><table className="po-lines-table"><thead><tr><th>N°</th><th>Code budget</th><th>Description *</th><th>Quantité *</th><th>Prix unitaire *</th><th>Total</th><th /></tr></thead><tbody>{editor.items.map((item, index) => <tr key={item.key}><td>{index + 1}</td><td><input aria-label={`Code budget ligne ${index + 1}`} value={item.budget_code ?? ""} onChange={(event) => updateItem(item.key, "budget_code", event.target.value)} /></td><td><input aria-label="Description *" required value={item.description} onChange={(event) => updateItem(item.key, "description", event.target.value)} /></td><td><input aria-label="Quantité *" required min="1" step="1" inputMode="numeric" type="number" value={item.quantity} onChange={(event) => updateItem(item.key, "quantity", integerInput(event.target.value))} /></td><td><input aria-label="Prix unitaire *" required min="0" step="0.01" type="number" value={item.unit_price} onChange={(event) => updateItem(item.key, "unit_price", event.target.value)} /></td><td>{money(numeric(item.quantity) * numeric(item.unit_price), editor.currency)}</td><td><button aria-label={`Supprimer la ligne ${index + 1}`} type="button" className="po-remove-line" disabled={editor.items.length === 1} onClick={() => updateField("items", editor.items.filter((candidate) => candidate.key !== item.key))}><ActionIcon name="delete" /></button></td></tr>)}</tbody></table></div>
               </div>
             </InventoryFormSection>
             <InventoryFormSection title="Validation et totaux" icon="specifications">

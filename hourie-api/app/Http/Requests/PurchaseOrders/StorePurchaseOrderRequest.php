@@ -36,7 +36,7 @@ class StorePurchaseOrderRequest extends FormRequest
             'items' => ['required', 'array', 'min:1', 'max:50'],
             'items.*.budget_code' => ['nullable', 'string', 'max:100'],
             'items.*.description' => ['required', 'string', 'max:2000'],
-            'items.*.quantity' => ['required', 'numeric', 'gt:0', 'max:999999999'],
+            'items.*.quantity' => ['required', 'integer', 'min:1', 'max:4294967295'],
             'items.*.unit_price' => ['required', 'numeric', 'min:0', 'max:9999999999999'],
         ];
     }
