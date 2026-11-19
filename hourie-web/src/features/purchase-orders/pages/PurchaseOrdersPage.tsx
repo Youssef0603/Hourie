@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
-import hourieLogo from "../../../assets/documents/logo-hourie-document.svg";
-import hourieStamp from "../../../assets/documents/hourie-stamp-transparent.png";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { EmptyState } from "../../../shared/components/EmptyState";
 import { LoadingSpinner } from "../../../shared/components/LoadingSpinner";
+import { PaginatedDocumentList } from "../../../shared/components/PaginatedDocumentList";
 import { SearchableSelect } from "../../../shared/components/SearchableSelect";
+import { DocumentUploadDropzone } from "../../../shared/components/DocumentUploadDropzone";
+import type { PaginationMeta } from "../../../shared/api/pagination";
 import { InventoryFormSection } from "../../equipment/components/AssetForm";
 import { EquipmentCreationPanel } from "../../equipment/components/EquipmentCreationPanel";
-import { deletePurchaseOrder, getPurchaseOrders, savePurchaseOrder } from "../api";
-import type { PurchaseOrder, PurchaseOrderItem, PurchaseOrderPayload } from "../types";
+import { deletePurchaseOrder, deletePurchaseOrderDeliveryNote, downloadPurchaseOrderDeliveryNote, downloadPurchaseOrderPdf, getPurchaseOrders, previewPurchaseOrderDeliveryNote, savePurchaseOrder, uploadPurchaseOrderDeliveryNotes } from "../api";
+import type { PurchaseOrder, PurchaseOrderDeliveryNote, PurchaseOrderItem, PurchaseOrderPayload } from "../types";
 import "./purchase-orders-page.css";
 
 type EditableItem = PurchaseOrderItem & { key: string };
@@ -94,65 +95,23 @@ function dateLabel(value: string) {
   return new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium" }).format(new Date(`${value}T00:00:00`));
 }
 
-function printPurchaseOrder(order: PurchaseOrder) {
-  const previousTitle = document.title;
-  const supplier = order.supplier_name
-    .normalize("NFD")
-    .replace(/\p{M}/gu, "")
-    .replace(/[^a-zA-Z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "")
-    .toUpperCase();
-
-  document.title = `Bon_de_commande_${order.number}${supplier ? `_${supplier}` : ""}`;
-  window.print();
-  document.title = previousTitle;
-}
-
-function PurchaseOrderSheet({ order }: { order: PurchaseOrder }) {
-  const blankRows = Array.from({ length: Math.max(0, 20 - order.items.length) });
-
-  return (
-    <article className="purchase-order-sheet">
-      <header className="po-document-header">
-        <img className="po-document-logo" src={hourieLogo} alt="A.R. Hourie Entreprises" />
-        <h2>BON DE COMMANDE</h2>
-        <strong>N° {order.number}</strong>
-      </header>
-      <section className="po-document-parties">
-        <div><p><b>A :</b><span>{order.supplier_name}</span></p><p><b>Tél. :</b><span>{order.supplier_phone || ""}</span></p><p><b>Fax :</b><span>{order.supplier_fax || ""}</span></p></div>
-        <div><p><b>Date :</b><span>{dateLabel(order.ordered_on)}</span></p><p><b>Agent de suivi :</b><span>{order.follow_up_agent || ""}</span></p><p><b>Contact :</b><span>{order.contact_name || ""}</span></p></div>
-      </section>
-      <table className="po-document-table">
-        <thead><tr><th>Art.<br />N°</th><th>Code Bud.</th><th>Référence et Description</th><th>Qté</th><th>Prix Unit.</th><th>Total</th></tr></thead>
-        <tbody>
-          {order.items.map((item, index) => (
-            <tr key={item.id ?? index}><td>{index + 1}</td><td>{item.budget_code || ""}</td><td>{item.description}</td><td>{Number(item.quantity)}</td><td>{money(item.unit_price, order.currency)}</td><td>{money(item.total ?? 0, order.currency)}</td></tr>
-          ))}
-          {blankRows.map((_, index) => <tr className="po-blank-row" key={`blank-${index}`}><td>{order.items.length + index + 1}</td><td /><td /><td /><td /><td /></tr>)}
-        </tbody>
-        <tfoot>
-          <tr><td colSpan={4} /><th>Total HT</th><td>{money(order.subtotal, order.currency)}</td></tr>
-          <tr><td colSpan={4} /><th>TVA ({Number(order.vat_rate)} %)</th><td>{money(order.vat_amount, order.currency)}</td></tr>
-          <tr><td colSpan={4} /><th>Total TTC</th><td>{money(order.total, order.currency)}</td></tr>
-        </tfoot>
-      </table>
-      <section className="po-signatures">
-        <p><b>Préparé par :</b> <span>{order.prepared_by || ""}</span></p>
-        <p><b>Commandé par :</b> <span>{order.ordered_by || ""}</span></p>
-        <p><b>Validé par :</b> <span>{order.approved_by || ""}</span></p>
-        <img className="po-company-stamp" src={hourieStamp} alt="Cachet A.R. Hourie Entreprises" />
-      </section>
-      <section className="po-document-footer"><p><b>MOTIF :</b><span>{order.reason || ""}</span></p><p><b>PROJET :</b><span>{order.project_name || ""}</span></p>{order.notes && <p><b>NOTES :</b><span>{order.notes}</span></p>}</section>
-    </article>
-  );
+function fileSize(bytes: number) {
+  return bytes < 1024 * 1024
+    ? `${Math.max(1, Math.round(bytes / 1024))} Ko`
+    : `${(bytes / 1024 / 1024).toFixed(1)} Mo`;
 }
 
 export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = [], view, onNavigate }: { defaultPreparedBy: string; canManage: boolean; projects?: Array<{ id: number; name: string }>; view?: DocumentView; onNavigate?: (view: DocumentView) => void }) {
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState<PaginationMeta | null>(null);
   const [loading, setLoading] = useState(true);
   const [editor, setEditor] = useState<EditableOrder | null>(null);
   const [editingId, setEditingId] = useState<number | undefined>();
+  const [deliveryNoteFiles, setDeliveryNoteFiles] = useState<File[]>([]);
+  const [editorDeliveryNotes, setEditorDeliveryNotes] = useState<PurchaseOrderDeliveryNote[]>([]);
+  const [selectedOrder, setSelectedOrder] = useState<PurchaseOrder | null>(null);
   const [preview, setPreview] = useState<PurchaseOrder | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -168,14 +127,15 @@ export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = []
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await getPurchaseOrders(search);
+      const response = await getPurchaseOrders(search, page);
       setOrders(response.data);
+      setPagination(response.meta);
     } catch {
       setError("Impossible de charger les bons de commande.");
     } finally {
       setLoading(false);
     }
-  }, [search]);
+  }, [page, search]);
 
   useEffect(() => {
     if (activeTemplate !== "purchase-order") return;
@@ -192,7 +152,23 @@ export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = []
   const closeEditor = useCallback(() => {
     setEditor(null);
     setEditingId(undefined);
+    setDeliveryNoteFiles([]);
+    setEditorDeliveryNotes([]);
   }, []);
+
+  function createOrder() {
+    setEditingId(undefined);
+    setEditor(newOrder(defaultPreparedBy));
+    setDeliveryNoteFiles([]);
+    setEditorDeliveryNotes([]);
+  }
+
+  function editOrder(order: PurchaseOrder) {
+    setEditingId(order.id);
+    setEditor(editableOrder(order));
+    setDeliveryNoteFiles([]);
+    setEditorDeliveryNotes(order.delivery_notes);
+  }
 
   function updateField<K extends keyof EditableOrder>(field: K, value: EditableOrder[K]) {
     setEditor((current) => current ? { ...current, [field]: value } : current);
@@ -216,9 +192,24 @@ export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = []
     };
     try {
       const response = await savePurchaseOrder(payload, editingId);
+      let savedOrder = response.data;
+      if (deliveryNoteFiles.length > 0) {
+        try {
+          const uploaded = await uploadPurchaseOrderDeliveryNotes(savedOrder.id, deliveryNoteFiles);
+          savedOrder = { ...savedOrder, delivery_notes: [...savedOrder.delivery_notes, ...uploaded] };
+        } catch {
+          setEditingId(savedOrder.id);
+          setEditorDeliveryNotes(savedOrder.delivery_notes);
+          setError("Le bon de commande est enregistré, mais le bon de livraison n’a pas pu être ajouté. Réessayez l’envoi du document.");
+          await refresh();
+          return;
+        }
+      }
       setEditor(null);
       setEditingId(undefined);
-      setPreview(response.data);
+      setDeliveryNoteFiles([]);
+      setEditorDeliveryNotes([]);
+      setPreview(savedOrder);
       await refresh();
     } catch {
       setError("Vérifiez les informations du bon de commande puis réessayez.");
@@ -230,8 +221,43 @@ export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = []
   async function remove(order: PurchaseOrder) {
     if (!window.confirm(`Supprimer le bon de commande N° ${order.number} ?`)) return;
     await deletePurchaseOrder(order.id);
+    if (selectedOrder?.id === order.id) setSelectedOrder(null);
     if (preview?.id === order.id) setPreview(null);
     await refresh();
+  }
+
+  async function exportPdf(order: PurchaseOrder) {
+    setError(null);
+    try {
+      await downloadPurchaseOrderPdf(order);
+    } catch {
+      setError("Impossible de télécharger le PDF du bon de commande.");
+    }
+  }
+
+  async function removeDeliveryNote(document: PurchaseOrderDeliveryNote) {
+    if (!editingId || !window.confirm(`Supprimer le bon de livraison « ${document.original_name} » ?`)) return;
+    try {
+      await deletePurchaseOrderDeliveryNote(editingId, document.id);
+      setEditorDeliveryNotes((current) => current.filter((item) => item.id !== document.id));
+      setOrders((current) => current.map((order) => order.id === editingId
+        ? { ...order, delivery_notes: order.delivery_notes.filter((item) => item.id !== document.id) }
+        : order));
+    } catch {
+      setError("Impossible de supprimer le bon de livraison.");
+    }
+  }
+
+  function previewDeliveryNote(document: PurchaseOrderDeliveryNote) {
+    if (!previewPurchaseOrderDeliveryNote(document)) setError("Impossible d’ouvrir le bon de livraison.");
+  }
+
+  async function downloadDeliveryNote(document: PurchaseOrderDeliveryNote) {
+    try {
+      await downloadPurchaseOrderDeliveryNote(document);
+    } catch {
+      setError("Impossible de télécharger le bon de livraison.");
+    }
   }
 
   return (
@@ -263,11 +289,22 @@ export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = []
             <h1>Bons de commande</h1>
             <p>Consultez et gérez tous les bons de commande.</p>
           </div>
-          {canManage && <button className="table-refresh-button table-add-button" type="button" aria-label="Créer un bon de commande" title="Créer un bon de commande" onClick={() => { setEditingId(undefined); setEditor(newOrder(defaultPreparedBy)); }}><ActionIcon name="add" /></button>}
+          {canManage && <button className="table-refresh-button table-add-button" type="button" aria-label="Créer un bon de commande" title="Créer un bon de commande" onClick={createOrder}><ActionIcon name="add" /></button>}
         </section>
 
-        <section className="inventory-panel po-history"><div className="filter-bar"><div className="search-field"><label htmlFor="po-search">Documents enregistrés</label><input id="po-search" type="search" placeholder="Numéro, fournisseur ou projet" value={search} onChange={(event) => setSearch(event.target.value)} /></div><button className="table-refresh-button" type="button" onClick={() => void refresh()}><ActionIcon name="refresh" /> Actualiser</button></div>{loading ? <div className="table-state"><LoadingSpinner label="Chargement des bons de commande…" /></div> : orders.length === 0 ? <EmptyState title="Aucun bon de commande" description="Créez le premier bon de commande avec le bouton +." /> : <div className="equipment-table-wrap"><table className="equipment-table"><thead><tr><th>N°</th><th>Date</th><th>Fournisseur</th><th>Projet</th><th>Total TTC</th><th>Modifié</th><th /></tr></thead><tbody>{orders.map((order) => <tr key={order.id}><td><strong>{order.number}</strong></td><td>{dateLabel(order.ordered_on)}</td><td>{order.supplier_name}</td><td>{order.project_name || "—"}</td><td>{money(order.total, order.currency)}</td><td>{dateLabel(order.updated_at.slice(0, 10))}</td><td className="po-actions-cell"><details className="po-row-menu"><summary aria-label={`Actions du bon ${order.number}`}><span aria-hidden="true">•••</span></summary><div className="po-row-menu-popover"><button type="button" onClick={(event) => { event.currentTarget.closest("details")?.removeAttribute("open"); setPreview(order); }}>Aperçu</button>{canManage && <><button type="button" onClick={(event) => { event.currentTarget.closest("details")?.removeAttribute("open"); setEditingId(order.id); setEditor(editableOrder(order)); }}>Modifier</button><button className="danger-text" type="button" onClick={(event) => { event.currentTarget.closest("details")?.removeAttribute("open"); void remove(order); }}>Supprimer</button></>}</div></details></td></tr>)}</tbody></table></div>}</section>
+        <section className="inventory-panel po-history"><div className="filter-bar"><div className="search-field"><label htmlFor="po-search">Documents enregistrés</label><input id="po-search" type="search" placeholder="Numéro, fournisseur ou projet" value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} /></div><button className="table-refresh-button" type="button" onClick={() => void refresh()}><ActionIcon name="refresh" /> Actualiser</button></div>{loading ? <div className="table-state"><LoadingSpinner label="Chargement des bons de commande…" /></div> : orders.length === 0 ? <EmptyState title="Aucun bon de commande" description="Créez le premier bon de commande avec le bouton +." /> : <div className="equipment-table-wrap"><table className="equipment-table"><thead><tr><th>N°</th><th>Date</th><th>Fournisseur</th><th>Projet</th><th>Total TTC</th><th>Modifié</th></tr></thead><tbody>{orders.map((order) => <tr key={order.id} tabIndex={0} onClick={() => setSelectedOrder(order)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setSelectedOrder(order); } }}><td><strong>{order.number}</strong></td><td>{dateLabel(order.ordered_on)}</td><td>{order.supplier_name}</td><td>{order.project_name || "—"}</td><td>{money(order.total, order.currency)}</td><td>{dateLabel(order.updated_at.slice(0, 10))}</td></tr>)}</tbody></table></div>}{pagination && pagination.last_page > 1 && <nav className="pagination" aria-label="Pagination des bons de commande"><span>Résultats {pagination.from}–{pagination.to} sur {pagination.total}</span><div><button type="button" disabled={page === 1 || loading} onClick={() => setPage((current) => current - 1)}>Précédent</button><span>Page {page} sur {pagination.last_page}</span><button type="button" disabled={page === pagination.last_page || loading} onClick={() => setPage((current) => current + 1)}>Suivant</button></div></nav>}</section>
       </>}
+
+      {selectedOrder && (
+        <PurchaseOrderDetails
+          order={selectedOrder}
+          canManage={canManage}
+          onClose={() => setSelectedOrder(null)}
+          onPreview={() => { setPreview(selectedOrder); setSelectedOrder(null); }}
+          onEdit={() => { editOrder(selectedOrder); setSelectedOrder(null); }}
+          onDelete={() => void remove(selectedOrder)}
+        />
+      )}
 
       {editor && (
         <EquipmentCreationPanel
@@ -278,6 +315,13 @@ export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = []
         >
         <form id="purchase-order-form" className="generator-create-form asset-form purchase-order-editor" onSubmit={submit}>
           <div className="asset-form-layout">
+            <InventoryFormSection title="Bon de livraison" icon="invoice">
+              <div className="po-delivery-notes-editor equipment-invoices-section">
+                <DocumentUploadDropzone compact title="Ajouter le bon de livraison" description="PDF uniquement · 10 Mo maximum" disabled={saving} onFiles={(files) => setDeliveryNoteFiles((current) => [...current, ...files])} />
+                {deliveryNoteFiles.length > 0 && <div className="po-pending-documents">{deliveryNoteFiles.map((file, index) => <div key={`${file.name}-${file.lastModified}-${index}`}><span>{file.name}</span><button type="button" aria-label={`Retirer ${file.name}`} onClick={() => setDeliveryNoteFiles((current) => current.filter((_, fileIndex) => fileIndex !== index))}><ActionIcon name="close" /></button></div>)}</div>}
+                {editorDeliveryNotes.length > 0 && <><div className="section-heading-row"><div><h3>Documents enregistrés</h3><p>{editorDeliveryNotes.length} bon{editorDeliveryNotes.length > 1 ? "s" : ""} de livraison</p></div></div><PaginatedDocumentList pageSize={3} documents={editorDeliveryNotes} emptyMessage="Aucun bon de livraison" renderDocument={(document) => <article key={document.id}><button className="invoice-preview-button" type="button" onClick={() => previewDeliveryNote(document)}><span className="invoice-pdf-badge">PDF</span><span><strong>{document.original_name}</strong><small>{fileSize(document.size_bytes)} · {dateLabel(document.created_at.slice(0, 10))}{document.uploaded_by ? ` · Ajouté par ${document.uploaded_by.name}` : ""}</small></span></button><button className="invoice-download-button" type="button" onClick={() => void downloadDeliveryNote(document)}><ActionIcon name="expand" /> Télécharger</button><button className="invoice-delete-button" type="button" aria-label={`Supprimer ${document.original_name}`} onClick={() => void removeDeliveryNote(document)}><ActionIcon name="delete" /></button></article>} /></>}
+              </div>
+            </InventoryFormSection>
             <InventoryFormSection title="Informations" icon="identification">
               <div className="maintenance-form-grid asset-form-grid-2">
                 <label><span>Fournisseur *</span><input required value={editor.supplier_name} onChange={(event) => updateField("supplier_name", event.target.value)} /></label>
@@ -307,8 +351,61 @@ export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = []
         </EquipmentCreationPanel>
       )}
 
-      {preview && <div className="po-preview-backdrop" onMouseDown={() => setPreview(null)}><section className="po-preview-panel" role="dialog" aria-modal="true" aria-label={`Bon de commande ${preview.number}`} onMouseDown={(event) => event.stopPropagation()}><header><div><strong>Aperçu du bon N° {preview.number}</strong><small>Utilisez « Exporter en PDF », puis choisissez « Enregistrer au format PDF ».</small></div><div>{canManage && <button className="secondary-button" type="button" onClick={() => { setEditingId(preview.id); setEditor(editableOrder(preview)); setPreview(null); }}><ActionIcon name="edit" /> Modifier</button>}<button className="primary-button" type="button" onClick={() => printPurchaseOrder(preview)}><ActionIcon name="download" /> Exporter en PDF</button><button className="po-preview-close" type="button" aria-label="Fermer l’aperçu" title="Fermer" onClick={() => setPreview(null)}><ActionIcon name="close" /></button></div></header><div className="po-sheet-stage"><PurchaseOrderSheet order={preview} /></div></section></div>}
+      {preview && <div className="po-preview-backdrop" onMouseDown={() => setPreview(null)}><section className="po-preview-panel" role="dialog" aria-modal="true" aria-label={`Bon de commande ${preview.number}`} onMouseDown={(event) => event.stopPropagation()}><header><div><strong>Aperçu du bon N° {preview.number}</strong><small>Le PDF est enregistré dans le stockage sécurisé des documents.</small></div><div>{canManage && <button className="secondary-button" type="button" onClick={() => { editOrder(preview); setPreview(null); }}><ActionIcon name="edit" /> Modifier</button>}<button className="primary-button" type="button" onClick={() => void exportPdf(preview)}><ActionIcon name="download" /> Exporter en PDF</button><button className="po-preview-close" type="button" aria-label="Fermer l’aperçu" title="Fermer" onClick={() => setPreview(null)}><ActionIcon name="close" /></button></div></header>{preview.delivery_notes.length > 0 && <div className="po-preview-delivery-notes"><strong>Bon{preview.delivery_notes.length > 1 ? "s" : ""} de livraison :</strong>{preview.delivery_notes.map((document) => <button type="button" key={document.id} onClick={() => previewDeliveryNote(document)}><ActionIcon name="invoice" /> {document.original_name}</button>)}</div>}<div className="po-sheet-stage"><iframe className="po-pdf-frame" title={`Aperçu PDF du bon ${preview.number}`} src={`${preview.pdf_url}?preview=1#toolbar=0&navpanes=0&scrollbar=0`} /></div></section></div>}
     </main>
+  );
+}
+
+function PurchaseOrderDetails({ order, canManage, onClose, onPreview, onEdit, onDelete }: { order: PurchaseOrder; canManage: boolean; onClose: () => void; onPreview: () => void; onEdit: () => void; onDelete: () => void }) {
+  return (
+    <div className="detail-backdrop" onMouseDown={onClose}>
+      <aside className="detail-panel insurance-side-panel purchase-order-detail-panel" role="dialog" aria-modal="true" aria-label={`Détail du bon de commande ${order.number}`} onMouseDown={(event) => event.stopPropagation()}>
+        <header className="detail-header">
+          <div>
+            <p className="section-label">Bon de commande</p>
+            <h2>N° {order.number}</h2>
+            <p>{order.supplier_name}</p>
+          </div>
+          <button type="button" aria-label="Fermer" onClick={onClose}><ActionIcon name="close" /></button>
+        </header>
+        <div className="detail-content insurance-side-content">
+          <div className="detail-primary-actions purchase-order-detail-actions">
+            {canManage && <button className="equipment-edit-button detail-toolbar-button" type="button" onClick={onEdit}><ActionIcon name="edit" /> Modifier</button>}
+            <button className="equipment-history-button detail-toolbar-button" type="button" onClick={onPreview}><ActionIcon name="invoice" /> Aperçu</button>
+            {canManage && <button className="danger-button detail-delete-button" type="button" aria-label="Supprimer" title="Supprimer" onClick={onDelete}><ActionIcon name="delete" /></button>}
+          </div>
+          <section>
+            <h3><ActionIcon name="identification" /> Informations principales</h3>
+            <dl>
+              <div><dt>Fournisseur</dt><dd>{order.supplier_name}</dd></div>
+              <div><dt>Date</dt><dd>{dateLabel(order.ordered_on)}</dd></div>
+              <div><dt>Projet</dt><dd>{order.project_name || "À compléter"}</dd></div>
+              <div><dt>Motif</dt><dd>{order.reason || "À compléter"}</dd></div>
+              <div><dt>Téléphone</dt><dd>{order.supplier_phone || "À compléter"}</dd></div>
+              <div><dt>Contact</dt><dd>{order.contact_name || "À compléter"}</dd></div>
+            </dl>
+          </section>
+          <section>
+            <h3><ActionIcon name="invoice" /> Articles commandés</h3>
+            <div className="po-detail-items">
+              {order.items.map((item, index) => <article key={item.id ?? index}><span>{index + 1}</span><div><strong>{item.description}</strong><small>{item.budget_code || "Sans code budget"} · {item.quantity} × {money(item.unit_price, order.currency)}</small></div><b>{money(item.total ?? numeric(item.quantity) * numeric(item.unit_price), order.currency)}</b></article>)}
+            </div>
+          </section>
+          <section>
+            <h3><ActionIcon name="specifications" /> Totaux</h3>
+            <dl>
+              <div><dt>Total HT</dt><dd>{money(order.subtotal, order.currency)}</dd></div>
+              <div><dt>TVA ({Number(order.vat_rate)} %)</dt><dd>{money(order.vat_amount, order.currency)}</dd></div>
+              <div><dt>Total TTC</dt><dd><strong>{money(order.total, order.currency)}</strong></dd></div>
+            </dl>
+          </section>
+          {order.delivery_notes.length > 0 && <section>
+            <h3><ActionIcon name="invoice" /> Bons de livraison</h3>
+            <div className="po-detail-documents">{order.delivery_notes.map((document) => <article key={document.id}><span className="invoice-pdf-badge">PDF</span><div><strong>{document.original_name}</strong><small>{fileSize(document.size_bytes)} · {dateLabel(document.created_at.slice(0, 10))}</small></div></article>)}</div>
+          </section>}
+        </div>
+      </aside>
+    </div>
   );
 }
 

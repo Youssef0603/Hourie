@@ -8,6 +8,16 @@ export type PurchaseOrderItem = {
   total?: string;
 };
 
+export type PurchaseOrderDeliveryNote = {
+  id: number;
+  url: string;
+  original_name: string;
+  mime_type: string;
+  size_bytes: number;
+  uploaded_by: { id: number; name: string } | null;
+  created_at: string;
+};
+
 export type PurchaseOrder = {
   id: number;
   number: string;
@@ -25,6 +35,9 @@ export type PurchaseOrder = {
   vat_rate: string;
   currency: string;
   notes: string | null;
+  pdf_url: string;
+  pdf_generated_at: string | null;
+  delivery_notes: PurchaseOrderDeliveryNote[];
   items: PurchaseOrderItem[];
   subtotal: string;
   vat_amount: string;
@@ -36,5 +49,5 @@ export type PurchaseOrder = {
 
 export type PurchaseOrderPayload = Omit<
   PurchaseOrder,
-  "id" | "number" | "subtotal" | "vat_amount" | "total" | "creator" | "created_at" | "updated_at"
+  "id" | "number" | "subtotal" | "vat_amount" | "total" | "pdf_url" | "pdf_generated_at" | "delivery_notes" | "creator" | "created_at" | "updated_at"
 >;

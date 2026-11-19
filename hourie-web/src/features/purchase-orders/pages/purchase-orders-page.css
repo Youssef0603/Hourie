@@ -12,6 +12,12 @@
 .po-workspace-heading { margin-bottom: .75rem; }
 .po-workspace-heading .table-add-button svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width: 1.7; }
 .purchase-order-editor { display: block; }
+.po-delivery-notes-editor { display: grid; gap: .65rem; }
+.po-pending-documents { display: grid; gap: .35rem; }
+.po-pending-documents > div { display: flex; align-items: center; justify-content: space-between; gap: .5rem; border: 1px solid var(--color-border); border-radius: var(--control-radius); padding: .4rem .55rem; color: var(--color-text-strong); background: #fbfcfd; font-size: .68rem; }
+.po-pending-documents span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.po-pending-documents button { display: grid; width: 1.7rem; height: 1.7rem; flex: 0 0 auto; place-items: center; border: 0; padding: 0; color: var(--color-text-muted); background: transparent; cursor: pointer; }
+.po-pending-documents svg { width: .9rem; fill: none; stroke: currentColor; stroke-width: 1.7; }
 .po-editor-header, .po-lines-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 .po-editor-header h2, .po-lines-heading h3 { margin: .15rem 0 0; }
 .po-editor-header > div:last-child { display: flex; gap: .6rem; }
@@ -42,16 +48,18 @@
 .detail-section-body .po-live-totals dd { color: var(--color-text-strong); font-size: .76rem; font-weight: 700; }
 .detail-section-body .po-live-totals div:last-child dd { color: var(--color-primary); }
 .po-history { overflow: hidden; }
-.po-actions-cell { width: 2.5rem; text-align: end; }
-.po-row-menu { position: relative; display: inline-block; }
-.po-row-menu summary { display: grid; width: 1.8rem; height: 1.8rem; place-items: center; border: 1px solid transparent; border-radius: var(--control-radius); color: var(--color-text-muted); cursor: pointer; font-size: .85rem; font-weight: 800; letter-spacing: .06em; list-style: none; }
-.po-row-menu summary::-webkit-details-marker { display: none; }
-.po-row-menu summary:hover, .po-row-menu[open] summary { border-color: var(--color-border); color: var(--color-text-strong); background: var(--color-surface); }
-.po-row-menu-popover { position: absolute; z-index: 5; top: calc(100% + .25rem); inset-inline-end: 0; display: grid; min-width: 7.5rem; overflow: hidden; border: 1px solid var(--color-border); border-radius: var(--control-radius); padding: .25rem; background: #fff; box-shadow: 0 10px 26px rgb(18 20 24 / 14%); }
-.equipment-table tbody tr:nth-last-child(-n + 2) .po-row-menu-popover { top: auto; bottom: calc(100% + .25rem); }
-.po-row-menu-popover button { border: 0; border-radius: calc(var(--control-radius) - 1px); padding: .45rem .55rem; color: var(--color-text-strong); background: transparent; text-align: start; cursor: pointer; font-size: .68rem; font-weight: 650; }
-.po-row-menu-popover button:hover { background: var(--color-surface); }
-.po-row-menu-popover .danger-text { color: var(--color-danger, #b42318); }
+.po-history .equipment-table tbody td { padding-block: .72rem; }
+.purchase-order-detail-panel { width: min(100%, 30rem); }
+.purchase-order-detail-actions .equipment-history-button { margin-inline-start: 0; }
+.purchase-order-detail-actions .detail-delete-button { margin-inline-start: auto; }
+.po-detail-items, .po-detail-documents { display: grid; gap: .4rem; margin-top: .7rem; }
+.po-detail-items article, .po-detail-documents article { display: flex; min-width: 0; align-items: center; gap: .6rem; border: 1px solid var(--color-border); border-radius: var(--control-radius); padding: .55rem .65rem; background: #fff; }
+.po-detail-items article > span { display: grid; width: 1.65rem; height: 1.65rem; flex: 0 0 auto; place-items: center; border-radius: 50%; color: var(--color-primary); background: var(--color-primary-soft); font-size: .65rem; font-weight: 700; }
+.po-detail-items article > div, .po-detail-documents article > div { display: grid; min-width: 0; flex: 1; gap: .1rem; }
+.po-detail-items strong, .po-detail-documents strong { overflow: hidden; color: var(--color-text-strong); font-size: .7rem; text-overflow: ellipsis; white-space: nowrap; }
+.po-detail-items small, .po-detail-documents small { color: var(--color-text-muted); font-size: .61rem; }
+.po-detail-items article > b { flex: 0 0 auto; color: var(--color-text-strong); font-size: .68rem; white-space: nowrap; }
+.po-detail-documents .invoice-pdf-badge { flex: 0 0 auto; }
 .po-preview-backdrop { position: fixed; inset: 0; z-index: 100; background: rgb(15 23 42 / 70%); padding: 1.25rem; overflow: auto; }
 .po-preview-panel { width: min(900px, 100%); margin: 0 auto; background: #eef2f6; border-radius: 14px; overflow: hidden; box-shadow: 0 24px 60px rgb(0 0 0 / 28%); }
 .po-preview-panel > header { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .65rem .75rem; background: #fff; border-bottom: 1px solid #dbe4ee; }
@@ -59,12 +67,18 @@
 .po-preview-panel > header > div:first-child { display: grid; gap: .15rem; }
 .po-preview-panel > header strong { font-size: .82rem; }
 .po-preview-panel > header small { color: #64748b; font-size: .68rem; }
+.po-preview-delivery-notes { display: flex; align-items: center; gap: .4rem; overflow-x: auto; border-bottom: 1px solid #dbe4ee; padding: .45rem .75rem; background: #fff; font-size: .65rem; }
+.po-preview-delivery-notes > strong { flex: 0 0 auto; }
+.po-preview-delivery-notes button { display: inline-flex; flex: 0 0 auto; align-items: center; gap: .25rem; border: 1px solid var(--color-border); border-radius: 6px; padding: .3rem .45rem; color: var(--color-text-strong); background: #fff; font-size: .62rem; cursor: pointer; }
+.po-preview-delivery-notes button:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.po-preview-delivery-notes button svg { width: .9rem; height: .9rem; fill: none; stroke: currentColor; stroke-width: 1.7; }
 .po-preview-panel button { display: inline-flex; align-items: center; gap: .35rem; }
 .po-preview-panel button svg { width: 18px; }
 .po-preview-close { display: grid !important; width: 2rem; height: 2rem; flex: 0 0 auto; place-items: center; border: 1px solid var(--color-border); border-radius: var(--control-radius); padding: 0; color: var(--color-text-strong); background: #fff; cursor: pointer; }
 .po-preview-close:hover { color: var(--color-primary); background: var(--color-primary-soft); }
 .po-preview-close svg { width: 1rem !important; height: 1rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-width: 1.8; }
 .po-sheet-stage { padding: 1rem; overflow: auto; }
+.po-pdf-frame { display: block; width: 210mm; height: 297mm; margin: auto; border: 0; background: #fff; box-shadow: 0 8px 30px rgb(15 23 42 / 15%); }
 .po-sheet-stage .purchase-order-sheet { zoom: .82; }
 .purchase-order-sheet { box-sizing: border-box; width: 210mm; min-height: 297mm; margin: auto; padding: 11mm 12mm; background: #fff; color: #17335c; box-shadow: 0 8px 30px rgb(15 23 42 / 15%); font-family: "Times New Roman", Times, serif; }
 .po-document-header { position: relative; height: 28mm; margin-bottom: 2mm; }

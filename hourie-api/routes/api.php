@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\InsurancePolicyController;
 use App\Http\Controllers\Api\V1\NotificationSettingsController;
 use App\Http\Controllers\Api\V1\PurchaseOrderController;
+use App\Http\Controllers\Api\V1\PurchaseOrderDeliveryNoteController;
 use App\Http\Controllers\Api\V1\SiteController;
 use App\Http\Controllers\Api\V1\TemporaryAdmissionController;
 use App\Http\Middleware\EnsurePasswordWasChanged;
@@ -42,6 +43,12 @@ Route::prefix('v1/auth')->name('auth.')->group(function (): void {
 });
 
 Route::prefix('v1')->middleware(['auth:sanctum', EnsureUserIsActive::class, EnsurePasswordWasChanged::class])->group(function (): void {
+    Route::post('purchase-orders/{purchaseOrder}/delivery-notes', [PurchaseOrderDeliveryNoteController::class, 'store']);
+    Route::get('purchase-orders/{purchaseOrder}/delivery-notes/{deliveryNote}/file', [PurchaseOrderDeliveryNoteController::class, 'show'])
+        ->name('purchase-orders.delivery-notes.show');
+    Route::delete('purchase-orders/{purchaseOrder}/delivery-notes/{deliveryNote}', [PurchaseOrderDeliveryNoteController::class, 'destroy']);
+    Route::get('purchase-orders/{purchaseOrder}/pdf', [PurchaseOrderController::class, 'pdf'])
+        ->name('purchase-orders.pdf');
     Route::apiResource('purchase-orders', PurchaseOrderController::class);
     Route::get('dashboard', DashboardController::class)->name('dashboard');
     Route::apiResource('catalog-options', CatalogOptionController::class)->only(['index', 'store', 'update', 'destroy']);

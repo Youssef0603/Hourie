@@ -31,6 +31,20 @@ class PurchaseOrderResource extends JsonResource
             'vat_rate' => $this->vat_rate,
             'currency' => $this->currency,
             'notes' => $this->notes,
+            'pdf_url' => route('purchase-orders.pdf', $this->resource, false),
+            'pdf_generated_at' => $this->pdf_generated_at?->toISOString(),
+            'delivery_notes' => $this->whenLoaded('deliveryNotes', fn () => $this->deliveryNotes->map(fn ($document) => [
+                'id' => $document->id,
+                'url' => route('purchase-orders.delivery-notes.show', [$this->resource, $document], false),
+                'original_name' => $document->original_name,
+                'mime_type' => $document->mime_type,
+                'size_bytes' => $document->size_bytes,
+                'uploaded_by' => $document->uploader === null ? null : [
+                    'id' => $document->uploader->id,
+                    'name' => $document->uploader->name,
+                ],
+                'created_at' => $document->created_at?->toISOString(),
+            ])),
             'items' => $this->whenLoaded('items', fn () => $this->items->map(fn ($item) => [
                 'id' => $item->id,
                 'position' => $item->position,

@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['number', 'created_by_user_id', 'supplier_name', 'supplier_phone', 'supplier_fax', 'ordered_on', 'follow_up_agent', 'contact_name', 'project_name', 'reason', 'prepared_by', 'ordered_by', 'approved_by', 'vat_rate', 'currency', 'notes'])]
+#[Fillable(['number', 'created_by_user_id', 'supplier_name', 'supplier_phone', 'supplier_fax', 'ordered_on', 'follow_up_agent', 'contact_name', 'project_name', 'reason', 'prepared_by', 'ordered_by', 'approved_by', 'vat_rate', 'currency', 'notes', 'pdf_disk', 'pdf_path', 'pdf_generated_at'])]
 class PurchaseOrder extends Model
 {
     /** @use HasFactory<PurchaseOrderFactory> */
@@ -25,6 +25,11 @@ class PurchaseOrder extends Model
     public function items(): HasMany
     {
         return $this->hasMany(PurchaseOrderItem::class)->orderBy('position');
+    }
+
+    public function deliveryNotes(): HasMany
+    {
+        return $this->hasMany(PurchaseOrderDeliveryNote::class)->latest();
     }
 
     public function subtotal(): BigDecimal
@@ -50,6 +55,7 @@ class PurchaseOrder extends Model
         return [
             'ordered_on' => 'date:Y-m-d',
             'vat_rate' => 'decimal:2',
+            'pdf_generated_at' => 'datetime',
         ];
     }
 }

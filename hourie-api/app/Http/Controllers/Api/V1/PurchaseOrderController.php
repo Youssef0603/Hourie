@@ -7,18 +7,21 @@ use App\Http\Requests\PurchaseOrders\StorePurchaseOrderRequest;
 use App\Http\Requests\PurchaseOrders\UpdatePurchaseOrderRequest;
 use App\Http\Resources\PurchaseOrderResource;
 use App\Models\PurchaseOrder;
+use App\Services\PurchaseOrderPdfService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PurchaseOrderController extends Controller
 {
     public function index(Request $request): AnonymousResourceCollection
     {
         $query = PurchaseOrder::query()
-            ->with(['items', 'creator:id,name'])
+            ->with(['items', 'creator:id,name', 'deliveryNotes.uploader:id,name'])
             ->latest('ordered_on')
             ->latest('id');
 
@@ -33,7 +36,7 @@ class PurchaseOrderController extends Controller
         return PurchaseOrderResource::collection($query->paginate(max(1, min(100, $request->integer('per_page', 20)))));
     }
 
-    public function store(StorePurchaseOrderRequest $request): JsonResponse
+    public function store(StorePurchaseOrderRequest $request, PurchaseOrderPdfService $pdfService): JsonResponse
     {
         $purchaseOrder = DB::transaction(function () use ($request): PurchaseOrder {
             $validated = $request->validated();
@@ -52,7 +55,9 @@ class PurchaseOrderController extends Controller
             return $purchaseOrder;
         });
 
-        return (new PurchaseOrderResource($this->loadPurchaseOrder($purchaseOrder)))
+        $purchaseOrder = $pdfService->generateAndStore($purchaseOrder);
+
+        return (new PurchaseOrderResource($purchaseOrder))
             ->response()
             ->setStatusCode(201);
     }
@@ -62,7 +67,7 @@ class PurchaseOrderController extends Controller
         return new PurchaseOrderResource($this->loadPurchaseOrder($purchaseOrder));
     }
 
-    public function update(UpdatePurchaseOrderRequest $request, PurchaseOrder $purchaseOrder): PurchaseOrderResource
+    public function update(UpdatePurchaseOrderRequest $request, PurchaseOrder $purchaseOrder, PurchaseOrderPdfService $pdfService): PurchaseOrderResource
     {
         DB::transaction(function () use ($request, $purchaseOrder): void {
             $validated = $request->validated();
@@ -74,12 +79,36 @@ class PurchaseOrderController extends Controller
             $purchaseOrder->items()->createMany($this->numberedItems($items));
         });
 
-        return new PurchaseOrderResource($this->loadPurchaseOrder($purchaseOrder->fresh()));
+        return new PurchaseOrderResource($pdfService->generateAndStore($purchaseOrder->fresh()));
+    }
+
+    public function pdf(Request $request, PurchaseOrder $purchaseOrder, PurchaseOrderPdfService $pdfService): StreamedResponse
+    {
+        if (! $purchaseOrder->pdf_disk || ! $purchaseOrder->pdf_path || ! Storage::disk($purchaseOrder->pdf_disk)->exists($purchaseOrder->pdf_path)) {
+            $purchaseOrder = $pdfService->generateAndStore($purchaseOrder);
+        }
+
+        $headers = [
+            'Content-Type' => 'application/pdf',
+            'Cache-Control' => 'private, no-store',
+            'X-Content-Type-Options' => 'nosniff',
+        ];
+        $filename = $pdfService->filename($purchaseOrder);
+
+        if ($request->boolean('preview')) {
+            return Storage::disk($purchaseOrder->pdf_disk)->response($purchaseOrder->pdf_path, $filename, $headers, 'inline');
+        }
+
+        return Storage::disk($purchaseOrder->pdf_disk)->download($purchaseOrder->pdf_path, $filename, $headers);
     }
 
     public function destroy(Request $request, PurchaseOrder $purchaseOrder): Response
     {
         $this->authorizeAccess($request);
+        if ($purchaseOrder->pdf_disk && $purchaseOrder->pdf_path) {
+            Storage::disk($purchaseOrder->pdf_disk)->delete($purchaseOrder->pdf_path);
+        }
+        $purchaseOrder->deliveryNotes->each(fn ($document) => Storage::disk($document->disk)->delete($document->path));
         $purchaseOrder->delete();
 
         return response()->noContent();
@@ -101,6 +130,6 @@ class PurchaseOrderController extends Controller
 
     private function loadPurchaseOrder(PurchaseOrder $purchaseOrder): PurchaseOrder
     {
-        return $purchaseOrder->load(['items', 'creator:id,name']);
+        return $purchaseOrder->load(['items', 'creator:id,name', 'deliveryNotes.uploader:id,name']);
     }
 }

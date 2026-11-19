@@ -4,8 +4,14 @@ use App\Enums\UserRole;
 use App\Models\PurchaseOrder;
 use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 uses(LazilyRefreshDatabase::class);
+
+beforeEach(function (): void {
+    Storage::fake((string) config('filesystems.equipment_documents_disk'));
+});
 
 function purchaseOrderPayload(array $overrides = []): array
 {
@@ -42,6 +48,8 @@ it('creates a numbered purchase order and calculates exact totals', function () 
         ->assertJsonPath('data.subtotal', '2601.00')
         ->assertJsonPath('data.vat_amount', '468.18')
         ->assertJsonPath('data.total', '3069.18')
+        ->assertJsonPath('data.pdf_url', '/api/v1/purchase-orders/1/pdf')
+        ->assertJsonCount(0, 'data.delivery_notes')
         ->assertJsonCount(2, 'data.items');
     $this->assertDatabaseHas('purchase_orders', [
         'number' => 813,
@@ -52,6 +60,54 @@ it('creates a numbered purchase order and calculates exact totals', function () 
         'position' => 2,
         'description' => 'Sable',
     ]);
+    $purchaseOrder = PurchaseOrder::query()->firstOrFail();
+    expect($purchaseOrder->pdf_generated_at)->not->toBeNull();
+    Storage::disk($purchaseOrder->pdf_disk)->assertExists($purchaseOrder->pdf_path);
+});
+
+it('stores previews and deletes delivery notes attached to a purchase order', function () {
+    $manager = User::factory()->create(['role' => UserRole::Manager]);
+    $purchaseOrder = PurchaseOrder::factory()->create(['created_by_user_id' => $manager->id]);
+
+    $upload = $this->actingAs($manager, 'web')->post(
+        "/api/v1/purchase-orders/{$purchaseOrder->id}/delivery-notes",
+        ['delivery_notes' => [UploadedFile::fake()->create('Bon de livraison BL18413.pdf', 120, 'application/pdf')]],
+        ['Accept' => 'application/json'],
+    );
+
+    $upload->assertCreated()
+        ->assertJsonPath('data.0.original_name', 'Bon de livraison BL18413.pdf');
+    $document = $purchaseOrder->deliveryNotes()->firstOrFail();
+    Storage::disk($document->disk)->assertExists($document->path);
+
+    $this->actingAs($manager, 'web')
+        ->get("/api/v1/purchase-orders/{$purchaseOrder->id}/delivery-notes/{$document->id}/file?preview=1")
+        ->assertOk()
+        ->assertHeader('content-disposition', 'inline; filename="Bon de livraison BL18413.pdf"');
+
+    $this->actingAs($manager, 'web')
+        ->deleteJson("/api/v1/purchase-orders/{$purchaseOrder->id}/delivery-notes/{$document->id}")
+        ->assertNoContent();
+    Storage::disk($document->disk)->assertMissing($document->path);
+    $this->assertDatabaseMissing('purchase_order_delivery_notes', ['id' => $document->id]);
+});
+
+it('downloads the stored purchase order pdf', function () {
+    $manager = User::factory()->create(['role' => UserRole::Manager]);
+    $purchaseOrder = PurchaseOrder::factory()->create(['number' => 901, 'created_by_user_id' => $manager->id]);
+    $purchaseOrder->items()->create([
+        'position' => 1,
+        'description' => 'Générateur',
+        'quantity' => 1,
+        'unit_price' => 39812.50,
+    ]);
+
+    $response = $this->actingAs($manager, 'web')->get("/api/v1/purchase-orders/{$purchaseOrder->id}/pdf");
+
+    $response->assertOk()->assertHeader('content-type', 'application/pdf');
+    $purchaseOrder->refresh();
+    Storage::disk($purchaseOrder->pdf_disk)->assertExists($purchaseOrder->pdf_path);
+    expect(Storage::disk($purchaseOrder->pdf_disk)->size($purchaseOrder->pdf_path))->toBeGreaterThan(1000);
 });
 
 it('updates an existing purchase order while preserving its number', function () {
