@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { normalizeSearch } from "../text";
 import {
   Combobox,
   ComboboxButton,
@@ -8,14 +9,6 @@ import {
 } from "@headlessui/react";
 import { fr } from "../../i18n/fr";
 import type { SearchableOption } from "./SearchableSelect";
-
-function searchableText(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/\p{M}/gu, "")
-    .toLocaleLowerCase()
-    .trim();
-}
 
 export function SearchableMultiSelect({
   values,
@@ -36,9 +29,9 @@ export function SearchableMultiSelect({
 }) {
   const [query, setQuery] = useState("");
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const normalizedQuery = searchableText(query);
+  const normalizedQuery = normalizeSearch(query);
   const filtered = normalizedQuery
-    ? options.filter((option) => searchableText(option.label).includes(normalizedQuery))
+    ? options.filter((option) => normalizeSearch(option.label).includes(normalizedQuery))
     : options;
 
   return (

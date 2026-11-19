@@ -1,8 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { normalizeSearch } from "../../../shared/text";
 import { fr } from "../../../i18n/fr";
 import { deleteEmployee, getEmployee, getEmployees } from "../api";
 import type { Employee, EmployeeDetails } from "../types";
-import { ActionIcon } from "../../../shared/components/ActionIcon";
+import { FilterToggleButton, ToolbarIconButton } from "../../../shared/components/ToolbarButtons";
+import { Pagination } from "../../../shared/components/Pagination";
+import { SearchField } from "../../../shared/components/SearchField";
+import { clickableRow } from "../../../shared/clickableRow";
+import { formatDate } from "../../../shared/format";
 import { Modal } from "../../../shared/components/Modal";
 import { ApiError } from "../../../shared/api/http";
 import { LoadingSpinner } from "../../../shared/components/LoadingSpinner";
@@ -44,13 +49,6 @@ type PeoplePageProps = {
     options: EquipmentFilterOptions | null;
   };
 };
-
-function normalizeSearch(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLocaleLowerCase();
-}
 
 export function PeoplePage({
   canAdd,
@@ -123,8 +121,6 @@ export function PeoplePage({
   const activeFilterCount = [accessFilter, roleFilter, jobTitleFilter, activityFilter, projectFilter, companyLocationFilter].filter(
     Boolean,
   ).length;
-  const page = pagination?.current_page ?? currentPage;
-  const totalPages = pagination?.last_page ?? 1;
   const personEditFormId = selectedPerson
     ? `person-edit-form-${selectedPerson.id}`
     : "person-edit-form";
@@ -245,50 +241,26 @@ export function PeoplePage({
       )}
       <section className="inventory-panel">
         <div className="filter-bar">
-          <label className="search-field">
-            <span>{fr.equipment.search}</span>
-            <input
-              type="search"
-              value={search}
-              onChange={(event) => {
-                setSearch(event.target.value);
-                setCurrentPage(1);
-              }}
-              placeholder={fr.directory.peopleSearchPlaceholder}
-            />
-          </label>
+          <SearchField
+            label={fr.equipment.search}
+            value={search}
+            onChange={(value) => {
+              setSearch(value);
+              setCurrentPage(1);
+            }}
+            placeholder={fr.directory.peopleSearchPlaceholder}
+          />
           <div className="filter-toolbar-actions">
-            <button
-              className={`advanced-filter-toggle${showFilters ? " active" : ""}`}
-              type="button"
+            <FilterToggleButton
+              label={fr.equipment.filters}
+              active={showFilters}
+              count={activeFilterCount}
               onClick={() => setShowFilters((value) => !value)}
-              aria-expanded={showFilters}
-            >
-              <ActionIcon name="filter" />
-              <span>{fr.equipment.filters}</span>
-              {activeFilterCount > 0 && <strong>{activeFilterCount}</strong>}
-            </button>
+            />
             {canAdd && (
-              <button
-                className="table-refresh-button table-add-button"
-                type="button"
-                onClick={() => setShowForm(true)}
-                aria-label={fr.directory.addPerson}
-                title={fr.directory.addPerson}
-              >
-                <ActionIcon name="add" />
-              </button>
+              <ToolbarIconButton icon="add" label={fr.directory.addPerson} onClick={() => setShowForm(true)} />
             )}
-            <button
-              className="table-refresh-button filter-refresh-button"
-              type="button"
-                    onClick={() => void refreshPeople()}
-              disabled={isRefreshing}
-              aria-label={fr.common.refresh}
-              title={fr.common.refresh}
-            >
-              <ActionIcon name="refresh" />
-            </button>
+            <ToolbarIconButton icon="refresh" label={fr.common.refresh} disabled={isRefreshing} onClick={() => void refreshPeople()} />
             {activeFilterCount > 0 && (
               <button
                 className="clear-filters"
@@ -367,14 +339,7 @@ export function PeoplePage({
                 {visiblePeople.map((person) => (
                   <tr
                     key={person.id}
-                    tabIndex={0}
-                    onClick={() => openPerson(person.id)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        openPerson(person.id);
-                      }
-                    }}
+                    {...clickableRow(() => openPerson(person.id))}
                   >
                     <td>
                       <span className="directory-table-person">
@@ -389,37 +354,19 @@ export function PeoplePage({
                     <td>{person.current_project?.name ?? person.current_company_location?.name ?? fr.common.notAssigned}</td>
                     <td>{person.phone_number ?? fr.common.notAssigned}</td>
                     <td>
-                      {person.employment_date
-                        ? new Intl.DateTimeFormat("fr-FR").format(
-                            new Date(`${person.employment_date}T00:00:00`),
-                          )
-                        : fr.common.notAssigned}
+                      {formatDate(person.employment_date, { fallback: fr.common.notAssigned })}
                     </td>
                   </tr>
                 ))}
               </tbody>
             </DataTable>
             {pagination && (
-              <nav className="pagination" aria-label={fr.equipment.pagination}>
-                <span>{fr.equipment.results(pagination.from, pagination.to, pagination.total)}</span>
-                <div>
-                  <button
-                    type="button"
-                    disabled={page === 1 || isRefreshing}
-                    onClick={() => void refreshPeople(page - 1)}
-                  >
-                    {fr.common.previous}
-                  </button>
-                  <span>{fr.equipment.page(page, totalPages)}</span>
-                  <button
-                    type="button"
-                    disabled={page === totalPages || isRefreshing}
-                    onClick={() => void refreshPeople(page + 1)}
-                  >
-                    {fr.common.next}
-                  </button>
-                </div>
-              </nav>
+              <Pagination
+                meta={pagination}
+                disabled={isRefreshing}
+                hideWhenSinglePage={false}
+                onPageChange={(nextPage) => void refreshPeople(nextPage)}
+              />
             )}
           </>
         )}

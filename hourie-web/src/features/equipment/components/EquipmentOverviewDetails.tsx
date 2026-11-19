@@ -1,5 +1,5 @@
 import { fr, type Language } from "../../../i18n/fr";
-import { formatMoney } from "../../../shared/formatMoney";
+import { formatMoney } from "../../../shared/format";
 import { assetCategory, assetFieldLabel } from "../assetCategories";
 import { catalogBadgeStyle, catalogLabel } from "../catalogs";
 import { displayedValue, locationName, measurement } from "../equipmentDisplay";

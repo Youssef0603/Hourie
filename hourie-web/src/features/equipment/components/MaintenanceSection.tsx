@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { fr } from '../../../i18n/fr'
 import { ApiError } from '../../../shared/api/http'
 import { ActionIcon } from '../../../shared/components/ActionIcon'
-import { formatMoney } from '../../../shared/formatMoney'
+import { formatMoney } from '../../../shared/format'
 import { deleteMaintenance, saveMaintenance } from '../api'
 import type {
   Equipment,

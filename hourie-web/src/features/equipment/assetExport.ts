@@ -154,24 +154,6 @@ export function buildAssetInventoryCsv(
   ].map((row) => row.map(csvCell).join(';')).join('\r\n')}`
 }
 
-export function downloadAssetInventoryCsv(
-  items: EquipmentSummary[],
-  availableFields: AssetExportField[],
-  selectedFields: string[],
-  language: Language,
-  filename: string,
-  catalogs: CatalogOption[] = [],
-): void {
-  const blob = new Blob([buildAssetInventoryCsv(items, availableFields, selectedFields, language, catalogs)], { type: 'text/csv;charset=utf-8' })
-  const url = window.URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = `${filename}-${new Date().toISOString().slice(0, 10)}.csv`
-  document.body.append(link)
-  link.click()
-  link.remove()
-  window.setTimeout(() => window.URL.revokeObjectURL(url), 0)
-}
 
 function xmlCell(value: string | number | null | undefined, reference: string, style: number, numeric = false): string {
   if (numeric) return `<c r="${reference}" s="${style}"><v>${value}</v></c>`

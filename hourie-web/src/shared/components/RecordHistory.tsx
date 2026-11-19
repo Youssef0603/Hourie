@@ -1,6 +1,7 @@
 import { EmptyState } from "./EmptyState";
 import { LoadingSpinner } from "./LoadingSpinner";
-import { operationPhrase, operationsLocale } from "../../i18n/operations";
+import { operationPhrase } from "../../i18n/operations";
+import { formatDateTime } from "../format";
 
 export type RecordHistoryEntry = {
   id: number;
@@ -17,10 +18,6 @@ type RecordHistoryProps = {
   error?: string;
 };
 
-const historyDate = (value: string) => new Intl.DateTimeFormat(operationsLocale(), {
-  dateStyle: "medium",
-  timeStyle: "short",
-}).format(new Date(value));
 
 export function RecordHistory({ entries, actionLabels, emptyDescription, loading = false, error }: RecordHistoryProps) {
   if (loading) return <LoadingSpinner label={operationPhrase("Chargement de l’historique…")} />;
@@ -32,7 +29,7 @@ export function RecordHistory({ entries, actionLabels, emptyDescription, loading
       <span className="audit-dot" aria-hidden="true" />
       <div>
         <strong>{actionLabels[entry.action] ?? operationPhrase("Modification enregistrée")}</strong>
-        <p>{operationPhrase("Par")} {entry.actor?.name ?? operationPhrase("le système")} · <time dateTime={entry.occurred_at}>{historyDate(entry.occurred_at)}</time></p>
+        <p>{operationPhrase("Par")} {entry.actor?.name ?? operationPhrase("le système")} · <time dateTime={entry.occurred_at}>{formatDateTime(entry.occurred_at)}</time></p>
       </div>
     </article>)}
   </div>;

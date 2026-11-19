@@ -20,10 +20,6 @@ import {
   defaultAssetExportFields,
   downloadGeneratorInventoryExcel,
 } from "../assetExport";
-import {
-  assetCategoryLabel,
-  isAssetCategoryCode,
-} from "../assetCategories";
 import { advancedFilterKeys, initialFilters } from "../filters";
 import { filterableLocationOptions } from "../locationLabel";
 import { SiteEditForm } from "../../directory/components/SiteEditForm";
@@ -32,9 +28,14 @@ import type { Site } from "../../directory/types";
 import { fr, type Language } from "../../../i18n/fr";
 import {
   WorkspaceHeader,
-  WorkspaceNavigationCards,
+  WorkspaceSidebar,
 } from "../../../app/WorkspaceNavigation";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
+import { SearchField } from "../../../shared/components/SearchField";
+import {
+  FilterToggleButton,
+  ToolbarIconButton,
+} from "../../../shared/components/ToolbarButtons";
 import { Modal } from "../../../shared/components/Modal";
 import { LoadingSpinner } from "../../../shared/components/LoadingSpinner";
 import { TotalCount } from "../../../shared/components/TotalCount";
@@ -57,6 +58,8 @@ import type {
   EquipmentFilters,
   EquipmentListResponse,
 } from "../types";
+import { equipmentAuditLabel } from "../equipmentAudit";
+import { formatDateTime } from "../../../shared/format";
 import "./equipment-page.css";
 
 const SettingsPage = lazy(() =>
@@ -121,33 +124,6 @@ function FeaturePageLoading() {
   );
 }
 
-function auditDate(value: string) {
-  return new Intl.DateTimeFormat("fr-FR", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(value));
-}
-
-function equipmentAuditLabel(
-  type: Equipment["changes"][number]["type"],
-  categoryCode: string,
-  language: Language,
-): string {
-  if (categoryCode === "generator") return fr.audit.equipmentActions[type];
-
-  const category = isAssetCategoryCode(categoryCode)
-    ? assetCategoryLabel(categoryCode, language)
-    : fr.assets.title;
-
-  if (type === "initial_import") return fr.audit.assetImported(category);
-  if (type === "identity_updated")
-    return fr.audit.assetIdentityUpdated(category);
-  if (type === "specifications_updated")
-    return fr.audit.assetSpecificationsUpdated(category);
-  if (type === "archived") return fr.audit.assetArchived(category);
-
-  return fr.audit.equipmentActions[type];
-}
 
 function qualityFiltersFromSearch(search: string): Partial<EquipmentFilters> {
   const parameters = new URLSearchParams(search);
@@ -178,6 +154,7 @@ export function EquipmentPage({
 }: EquipmentPageProps) {
   const [pathname, setPathname] = useState(() => window.location.pathname);
   const [filterQuery, setFilterQuery] = useState(() => window.location.search);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const route = parseWorkspaceRoute(pathname);
   const previousSiteId = useRef(route.siteId);
   const previousAssetCategory = useRef(
@@ -676,6 +653,14 @@ export function EquipmentPage({
 
   return (
     <div className="workspace-shell">
+      <WorkspaceSidebar
+        activeSection={activeSection}
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        onNavigate={(path) => navigate(path)}
+      />
+
+      <div className="app-main">
       <WorkspaceHeader
         user={user}
         language={language}
@@ -684,11 +669,8 @@ export function EquipmentPage({
         onNavigateSettings={() => navigateSection("catalogs")}
         onLogout={onLogout}
         isLoggingOut={isLoggingOut}
-      />
-
-      <WorkspaceNavigationCards
-        activeSection={activeSection}
-        onNavigate={(path) => navigate(path)}
+        isSidebarOpen={isSidebarOpen}
+        onOpenSidebar={() => setIsSidebarOpen(true)}
       />
 
       <div className="workspace-layout">
@@ -865,39 +847,20 @@ export function EquipmentPage({
               aria-label={fr.equipment.title}
             >
               <div className="filter-bar">
-                <div className="search-field has-custom-clear">
-                  <label htmlFor="equipment-search">
-                    {fr.equipment.search}
-                  </label>
-                  <input
-                    id="equipment-search"
-                    type="search"
-                    value={search}
-                    onChange={(event) => setSearch(event.target.value)}
-                    placeholder={fr.equipment.searchPlaceholder}
-                  />
-                  {search !== "" && (
-                    <button
-                      className="search-clear-button"
-                      type="button"
-                      onClick={() => setSearch("")}
-                      aria-label={fr.common.clearSearch}
-                    >
-                      <ActionIcon name="close" />
-                    </button>
-                  )}
-                </div>
+                <SearchField
+                  id="equipment-search"
+                  label={fr.equipment.search}
+                  value={search}
+                  onChange={setSearch}
+                  placeholder={fr.equipment.searchPlaceholder}
+                />
                 <div className="filter-toolbar-actions">
-                  <button
-                    className={`advanced-filter-toggle${showFilterDrawer ? " active" : ""}`}
-                    type="button"
+                  <FilterToggleButton
+                    label={fr.equipment.filters}
+                    active={showFilterDrawer}
+                    count={hasFilters ? advancedFilterCount || 1 : 0}
                     onClick={() => setShowFilterDrawer(true)}
-                    aria-expanded={showFilterDrawer}
-                  >
-                    <ActionIcon name="filter" />
-                    <span>{fr.equipment.filters}</span>
-                    {hasFilters && <strong>{advancedFilterCount || 1}</strong>}
-                  </button>
+                  />
                   <button
                     className="table-refresh-button import-excel-action"
                     type="button"
@@ -925,25 +888,17 @@ export function EquipmentPage({
                     </button>
                   )}
                   {user.permissions.manage_equipment && (
-                    <button
-                      className="table-refresh-button table-add-button"
-                      type="button"
+                    <ToolbarIconButton
+                      icon="add"
+                      label={fr.equipment.addGenerator}
                       onClick={() => setShowAddGenerator(true)}
-                      aria-label={fr.equipment.addGenerator}
-                      title={fr.equipment.addGenerator}
-                    >
-                      <ActionIcon name="add" />
-                    </button>
+                    />
                   )}
-                  <button
-                    className="table-refresh-button filter-refresh-button"
-                    type="button"
+                  <ToolbarIconButton
+                    icon="refresh"
+                    label={fr.common.refresh}
                     onClick={refreshInventory}
-                    aria-label={fr.common.refresh}
-                    title={fr.common.refresh}
-                  >
-                    <ActionIcon name="refresh" />
-                  </button>
+                  />
                   {hasFilters && (
                     <button
                       className="clear-filters"
@@ -1177,6 +1132,7 @@ export function EquipmentPage({
           </Suspense>
         )}
       </div>
+      </div>
 
       {(activeSection === "generators" ||
         activeSection === "assets" ||
@@ -1222,7 +1178,7 @@ export function EquipmentPage({
                       <p>
                         {fr.audit.by(change.actor?.name ?? fr.audit.system)} ·{" "}
                         <time dateTime={change.occurred_at}>
-                          {auditDate(change.occurred_at)}
+                          {formatDateTime(change.occurred_at)}
                         </time>
                       </p>
                     </div>
@@ -1247,7 +1203,7 @@ export function EquipmentPage({
                     <p>
                       {fr.audit.by(change.actor?.name ?? fr.audit.system)} ·{" "}
                       <time dateTime={change.occurred_at}>
-                        {auditDate(change.occurred_at)}
+                        {formatDateTime(change.occurred_at)}
                       </time>
                     </p>
                   </div>

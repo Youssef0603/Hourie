@@ -1,6 +1,7 @@
 import type { InsuranceKind, InsurancePolicy } from './types'
-import { formatAmount } from '../../shared/formatMoney'
-import { operationsLocale, operationsText } from '../../i18n/operations'
+import { formatAmount, formatDate } from '../../shared/format'
+import { expiryStatus, type ExpiryStatus } from '../../shared/expiry'
+import { operationsText } from '../../i18n/operations'
 
 export const insuranceTypes: Array<{ code: InsuranceKind }> = [
   { code: 'trc_rc' },
@@ -22,17 +23,11 @@ export function formatInsuranceMoney(amount: string | null) {
 }
 
 export function formatInsuranceDate(date: string | null) {
-  return date ? new Intl.DateTimeFormat(operationsLocale()).format(new Date(`${date}T00:00:00`)) : operationsText().insurance.toComplete
+  return formatDate(date, { fallback: operationsText().insurance.toComplete })
 }
 
-export function insurancePolicyStatus(policy: InsurancePolicy): 'active' | 'soon' | 'expired' {
-  if (!policy.ends_on) return 'active'
-  const end = new Date(`${policy.ends_on}T23:59:59`)
-  const now = new Date()
-  if (end < now) return 'expired'
-  const limit = new Date()
-  limit.setDate(now.getDate() + 30)
-  return end <= limit ? 'soon' : 'active'
+export function insurancePolicyStatus(policy: InsurancePolicy): ExpiryStatus {
+  return expiryStatus(policy.ends_on)
 }
 
 export function insuranceStatusLabel(status: ReturnType<typeof insurancePolicyStatus>) {

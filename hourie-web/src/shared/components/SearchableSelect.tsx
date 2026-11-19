@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { normalizeSearch } from '../text'
 import { Combobox, ComboboxButton, ComboboxInput, ComboboxOption, ComboboxOptions } from '@headlessui/react'
 import { fr } from '../../i18n/fr'
 
@@ -16,17 +17,13 @@ type SearchableSelectProps = {
   includeEmpty?: boolean
 }
 
-function searchableText(value: string) {
-  return value.normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase().trim()
-}
-
 export function SearchableSelect({ value, options, onChange, placeholder, ariaLabel, disabled = false, required = false, searchable = true, includeEmpty = true }: SearchableSelectProps) {
   const [query, setQuery] = useState('')
   const buttonRef = useRef<HTMLButtonElement>(null)
-  const normalizedQuery = searchableText(query)
+  const normalizedQuery = normalizeSearch(query)
   const choices = includeEmpty ? [{ value: '', label: placeholder }, ...options] : options
   const filtered = normalizedQuery
-    ? choices.filter((option) => searchableText(option.label).includes(normalizedQuery))
+    ? choices.filter((option) => normalizeSearch(option.label).includes(normalizedQuery))
     : choices
 
   return <Combobox immediate value={value} onChange={(selected: string | null) => onChange(selected ?? '')} onClose={() => setQuery('')} disabled={disabled}>

@@ -205,6 +205,8 @@ const french = {
     sites: 'Chantiers',
     people: 'Personnel',
     settings: 'Paramètres',
+    operationsGroup: 'Exploitation',
+    administrationGroup: 'Administration',
   },
   assets: {
     title: 'Actifs',
@@ -737,6 +739,8 @@ const arabic = {
     sites: 'ورش العمل',
     people: 'الموظفون',
     settings: 'الإعدادات',
+    operationsGroup: 'التشغيل',
+    administrationGroup: 'الإدارة',
   },
   assets: {
     title: 'الأصول',

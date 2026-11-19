@@ -1,4 +1,9 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { Pagination } from "../../../shared/components/Pagination";
+import { SearchField } from "../../../shared/components/SearchField";
+import { ToolbarIconButton } from "../../../shared/components/ToolbarButtons";
+import { clickableRow } from "../../../shared/clickableRow";
+import { formatDate, formatFileSize } from "../../../shared/format";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { EmptyState } from "../../../shared/components/EmptyState";
 import { LoadingSpinner } from "../../../shared/components/LoadingSpinner";
@@ -92,14 +97,9 @@ function money(value: number | string, currency = "XOF") {
 }
 
 function dateLabel(value: string) {
-  return new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium" }).format(new Date(`${value}T00:00:00`));
+  return formatDate(value, { style: "medium", locale: "fr-FR" });
 }
 
-function fileSize(bytes: number) {
-  return bytes < 1024 * 1024
-    ? `${Math.max(1, Math.round(bytes / 1024))} Ko`
-    : `${(bytes / 1024 / 1024).toFixed(1)} Mo`;
-}
 
 export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = [], view, onNavigate }: { defaultPreparedBy: string; canManage: boolean; projects?: Array<{ id: number; name: string }>; view?: DocumentView; onNavigate?: (view: DocumentView) => void }) {
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);
@@ -292,7 +292,7 @@ export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = []
           {canManage && <button className="table-refresh-button table-add-button" type="button" aria-label="Créer un bon de commande" title="Créer un bon de commande" onClick={createOrder}><ActionIcon name="add" /></button>}
         </section>
 
-        <section className="inventory-panel po-history"><div className="filter-bar"><div className="search-field"><label htmlFor="po-search">Documents enregistrés</label><input id="po-search" type="search" placeholder="Numéro, fournisseur ou projet" value={search} onChange={(event) => { setSearch(event.target.value); setPage(1); }} /></div><button className="table-refresh-button" type="button" onClick={() => void refresh()}><ActionIcon name="refresh" /> Actualiser</button></div>{loading ? <div className="table-state"><LoadingSpinner label="Chargement des bons de commande…" /></div> : orders.length === 0 ? <EmptyState title="Aucun bon de commande" description="Créez le premier bon de commande avec le bouton +." /> : <div className="equipment-table-wrap"><table className="equipment-table"><thead><tr><th>N°</th><th>Date</th><th>Fournisseur</th><th>Projet</th><th>Total TTC</th><th>Modifié</th></tr></thead><tbody>{orders.map((order) => <tr key={order.id} tabIndex={0} onClick={() => setSelectedOrder(order)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setSelectedOrder(order); } }}><td><strong>{order.number}</strong></td><td>{dateLabel(order.ordered_on)}</td><td>{order.supplier_name}</td><td>{order.project_name || "—"}</td><td>{money(order.total, order.currency)}</td><td>{dateLabel(order.updated_at.slice(0, 10))}</td></tr>)}</tbody></table></div>}{pagination && pagination.last_page > 1 && <nav className="pagination" aria-label="Pagination des bons de commande"><span>Résultats {pagination.from}–{pagination.to} sur {pagination.total}</span><div><button type="button" disabled={page === 1 || loading} onClick={() => setPage((current) => current - 1)}>Précédent</button><span>Page {page} sur {pagination.last_page}</span><button type="button" disabled={page === pagination.last_page || loading} onClick={() => setPage((current) => current + 1)}>Suivant</button></div></nav>}</section>
+        <section className="inventory-panel po-history"><div className="filter-bar"><SearchField id="po-search" label="Documents enregistrés" placeholder="Numéro, fournisseur ou projet" value={search} onChange={(value) => { setSearch(value); setPage(1); }} /><div className="filter-toolbar-actions"><ToolbarIconButton icon="refresh" label="Actualiser" disabled={loading} onClick={() => void refresh()} /></div></div>{loading ? <div className="table-state"><LoadingSpinner label="Chargement des bons de commande…" /></div> : orders.length === 0 ? <EmptyState title="Aucun bon de commande" description="Créez le premier bon de commande avec le bouton +." /> : <div className="equipment-table-wrap"><table className="equipment-table"><thead><tr><th>N°</th><th>Date</th><th>Fournisseur</th><th>Projet</th><th>Total TTC</th><th>Modifié</th></tr></thead><tbody>{orders.map((order) => <tr key={order.id} {...clickableRow(() => setSelectedOrder(order))}><td><strong>{order.number}</strong></td><td>{dateLabel(order.ordered_on)}</td><td>{order.supplier_name}</td><td>{order.project_name || "—"}</td><td>{money(order.total, order.currency)}</td><td>{dateLabel(order.updated_at.slice(0, 10))}</td></tr>)}</tbody></table></div>}{pagination && <Pagination meta={pagination} disabled={loading} label="Pagination des bons de commande" onPageChange={setPage} />}</section>
       </>}
 
       {selectedOrder && (
@@ -319,7 +319,7 @@ export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = []
               <div className="po-delivery-notes-editor equipment-invoices-section">
                 <DocumentUploadDropzone compact title="Ajouter le bon de livraison" description="PDF uniquement · 10 Mo maximum" disabled={saving} onFiles={(files) => setDeliveryNoteFiles((current) => [...current, ...files])} />
                 {deliveryNoteFiles.length > 0 && <div className="po-pending-documents">{deliveryNoteFiles.map((file, index) => <div key={`${file.name}-${file.lastModified}-${index}`}><span>{file.name}</span><button type="button" aria-label={`Retirer ${file.name}`} onClick={() => setDeliveryNoteFiles((current) => current.filter((_, fileIndex) => fileIndex !== index))}><ActionIcon name="close" /></button></div>)}</div>}
-                {editorDeliveryNotes.length > 0 && <><div className="section-heading-row"><div><h3>Documents enregistrés</h3><p>{editorDeliveryNotes.length} bon{editorDeliveryNotes.length > 1 ? "s" : ""} de livraison</p></div></div><PaginatedDocumentList pageSize={3} documents={editorDeliveryNotes} emptyMessage="Aucun bon de livraison" renderDocument={(document) => <article key={document.id}><button className="invoice-preview-button" type="button" onClick={() => previewDeliveryNote(document)}><span className="invoice-pdf-badge">PDF</span><span><strong>{document.original_name}</strong><small>{fileSize(document.size_bytes)} · {dateLabel(document.created_at.slice(0, 10))}{document.uploaded_by ? ` · Ajouté par ${document.uploaded_by.name}` : ""}</small></span></button><button className="invoice-download-button" type="button" onClick={() => void downloadDeliveryNote(document)}><ActionIcon name="expand" /> Télécharger</button><button className="invoice-delete-button" type="button" aria-label={`Supprimer ${document.original_name}`} onClick={() => void removeDeliveryNote(document)}><ActionIcon name="delete" /></button></article>} /></>}
+                {editorDeliveryNotes.length > 0 && <><div className="section-heading-row"><div><h3>Documents enregistrés</h3><p>{editorDeliveryNotes.length} bon{editorDeliveryNotes.length > 1 ? "s" : ""} de livraison</p></div></div><PaginatedDocumentList pageSize={3} documents={editorDeliveryNotes} emptyMessage="Aucun bon de livraison" renderDocument={(document) => <article key={document.id}><button className="invoice-preview-button" type="button" onClick={() => previewDeliveryNote(document)}><span className="invoice-pdf-badge">PDF</span><span><strong>{document.original_name}</strong><small>{formatFileSize(document.size_bytes)} · {dateLabel(document.created_at.slice(0, 10))}{document.uploaded_by ? ` · Ajouté par ${document.uploaded_by.name}` : ""}</small></span></button><button className="invoice-download-button" type="button" onClick={() => void downloadDeliveryNote(document)}><ActionIcon name="expand" /> Télécharger</button><button className="invoice-delete-button" type="button" aria-label={`Supprimer ${document.original_name}`} onClick={() => void removeDeliveryNote(document)}><ActionIcon name="delete" /></button></article>} /></>}
               </div>
             </InventoryFormSection>
             <InventoryFormSection title="Informations" icon="identification">
@@ -401,7 +401,7 @@ function PurchaseOrderDetails({ order, canManage, onClose, onPreview, onEdit, on
           </section>
           {order.delivery_notes.length > 0 && <section>
             <h3><ActionIcon name="invoice" /> Bons de livraison</h3>
-            <div className="po-detail-documents">{order.delivery_notes.map((document) => <article key={document.id}><span className="invoice-pdf-badge">PDF</span><div><strong>{document.original_name}</strong><small>{fileSize(document.size_bytes)} · {dateLabel(document.created_at.slice(0, 10))}</small></div></article>)}</div>
+            <div className="po-detail-documents">{order.delivery_notes.map((document) => <article key={document.id}><span className="invoice-pdf-badge">PDF</span><div><strong>{document.original_name}</strong><small>{formatFileSize(document.size_bytes)} · {dateLabel(document.created_at.slice(0, 10))}</small></div></article>)}</div>
           </section>}
         </div>
       </aside>

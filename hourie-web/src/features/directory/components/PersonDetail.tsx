@@ -1,4 +1,5 @@
 import { fr } from "../../../i18n/fr";
+import { formatDate } from "../../../shared/format";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { EmptyState } from "../../../shared/components/EmptyState";
 import { catalogLabel } from "../../equipment/catalogs";
@@ -16,9 +17,7 @@ function initials(name: string) {
     .join("");
 }
 function date(value: string | null) {
-  return value
-    ? new Intl.DateTimeFormat("fr-FR").format(new Date(`${value}T00:00:00`))
-    : fr.common.notAssigned;
+  return formatDate(value, { fallback: fr.common.notAssigned });
 }
 
 export function PersonDetail({

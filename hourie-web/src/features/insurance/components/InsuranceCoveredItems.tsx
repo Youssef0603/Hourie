@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import { normalizeSearch } from "../../../shared/text";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { EmptyState } from "../../../shared/components/EmptyState";
 import { activeLanguage } from "../../../i18n/fr";
@@ -197,10 +198,3 @@ function InsuranceCoveredItems<T extends { id: number }>({
   );
 }
 
-function normalizeSearch(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .toLocaleLowerCase("fr-FR")
-    .trim();
-}

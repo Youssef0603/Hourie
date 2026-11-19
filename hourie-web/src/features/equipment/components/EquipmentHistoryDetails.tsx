@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { fr, type Language } from "../../../i18n/fr";
+import { formatDateTime } from "../../../shared/format";
+import { equipmentAuditLabel } from "../equipmentAudit";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { EmptyState } from "../../../shared/components/EmptyState";
-import { assetCategoryLabel, isAssetCategoryCode } from "../assetCategories";
 import type { Equipment } from "../types";
 
 export function GeneratorTransferHistory({
@@ -39,7 +40,7 @@ export function GeneratorTransferHistory({
       {visibleChanges.map((change) => (
         <article key={change.id}>
           <header>
-            <time dateTime={change.occurred_at}>{auditDate(change.occurred_at)}</time>
+            <time dateTime={change.occurred_at}>{formatDateTime(change.occurred_at)}</time>
             <div className="transfer-history-meta">
               <span>{change.actor?.name ?? fr.audit.system}</span>
               {canManage && change.can_remove && onRemove && (
@@ -114,7 +115,7 @@ export function EquipmentAuditHistory({
             <strong>{equipmentAuditLabel(change.type, equipment.category.code, language)}</strong>
             <p>
               {fr.audit.by(change.actor?.name ?? fr.audit.system)} ·{" "}
-              <time dateTime={change.occurred_at}>{auditDate(change.occurred_at)}</time>
+              <time dateTime={change.occurred_at}>{formatDateTime(change.occurred_at)}</time>
             </p>
           </div>
         </article>
@@ -129,25 +130,3 @@ function transferPlace(place: { project: string | null; location: string | null 
     : fr.common.notProvided;
 }
 
-function auditDate(value: string) {
-  return new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
-}
-
-function equipmentAuditLabel(
-  type: Equipment["changes"][number]["type"],
-  categoryCode: string,
-  language: Language,
-): string {
-  if (categoryCode === "generator") return fr.audit.equipmentActions[type];
-
-  const category = isAssetCategoryCode(categoryCode)
-    ? assetCategoryLabel(categoryCode, language)
-    : fr.assets.title;
-
-  if (type === "initial_import") return fr.audit.assetImported(category);
-  if (type === "identity_updated") return fr.audit.assetIdentityUpdated(category);
-  if (type === "specifications_updated") return fr.audit.assetSpecificationsUpdated(category);
-  if (type === "archived") return fr.audit.assetArchived(category);
-
-  return fr.audit.equipmentActions[type];
-}

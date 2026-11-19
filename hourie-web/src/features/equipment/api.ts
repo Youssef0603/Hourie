@@ -12,7 +12,6 @@ import type {
   CatalogOption,
   EquipmentMaintenance,
   MaintenancePayload,
-  MaintenanceWarningResponse,
 } from './types'
 
 export async function getEquipment(
@@ -298,6 +297,3 @@ export async function getEquipmentFilterOptions(): Promise<EquipmentFilterOption
   return response.data
 }
 
-export async function getMaintenanceWarnings(page = 1): Promise<MaintenanceWarningResponse> {
-  return apiRequest<MaintenanceWarningResponse>(`/api/v1/maintenance-warnings?page=${page}`)
-}

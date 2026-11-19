@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { apiRequest } from "../../../shared/api/http";
-import { ActionIcon } from "../../../shared/components/ActionIcon";
+import { ToolbarIconButton } from "../../../shared/components/ToolbarButtons";
+import { Pagination } from "../../../shared/components/Pagination";
+import { SearchField } from "../../../shared/components/SearchField";
+import { clickableRow } from "../../../shared/clickableRow";
 import { EmptyState } from "../../../shared/components/EmptyState";
 import { LoadingSpinner } from "../../../shared/components/LoadingSpinner";
 import { admissionError, fetchTemporaryAdmission } from "../api";
@@ -9,7 +12,8 @@ import { TemporaryAdmissionForm } from "../components/TemporaryAdmissionForm";
 import { RelatedEquipmentDetailPanel } from "../../equipment/components/RelatedEquipmentDetailPanel";
 import type { AuthenticatedUser } from "../../auth/types";
 import type { Language } from "../../../i18n/fr";
-import { operationPhrase, operationsLocale, operationsText } from "../../../i18n/operations";
+import { operationPhrase, operationsText } from "../../../i18n/operations";
+import { formatDate as formatApiDate } from "../../../shared/format";
 import type { EquipmentFilterOptions } from "../../equipment/types";
 import type { AdmissionEquipment, TemporaryAdmission } from "../types";
 import type { PaginatedResponse, PaginationMeta } from "../../../shared/api/pagination";
@@ -81,8 +85,6 @@ export function TemporaryAdmissionsPage({
   }, [text.loadError]);
 
   const visible = items;
-  const pageCount = pagination?.last_page ?? 1;
-  const currentPage = pagination?.current_page ?? page;
 
   useEffect(() => {
     if (selectedId === null) {
@@ -129,39 +131,20 @@ export function TemporaryAdmissionsPage({
       )}
       <section className="inventory-panel">
         <div className="filter-bar">
-          <label className="search-field">
-            <span>{text.search}</span>
-            <input
-              value={search}
-              onChange={(event) => {
-                setSearch(event.target.value);
-                setPage(1);
-              }}
-              placeholder={text.searchPlaceholder}
-            />
-          </label>
+          <SearchField
+            label={text.search}
+            value={search}
+            onChange={(value) => {
+              setSearch(value);
+              setPage(1);
+            }}
+            placeholder={text.searchPlaceholder}
+          />
           <div className="filter-toolbar-actions">
             {canManage && (
-              <button
-                className="table-refresh-button table-add-button"
-                type="button"
-                aria-label={text.add}
-                title={text.add}
-                onClick={() => setFormItem(null)}
-              >
-                <ActionIcon name="add" />
-              </button>
+              <ToolbarIconButton icon="add" label={text.add} onClick={() => setFormItem(null)} />
             )}
-            <button
-              className="table-refresh-button filter-refresh-button"
-              type="button"
-              aria-label={text.refresh}
-              title={text.refresh}
-              disabled={loading}
-              onClick={() => void loadItems()}
-            >
-              <ActionIcon name="refresh" />
-            </button>
+            <ToolbarIconButton icon="refresh" label={text.refresh} disabled={loading} onClick={() => void loadItems()} />
           </div>
         </div>
         {loading ? (
@@ -182,7 +165,7 @@ export function TemporaryAdmissionsPage({
               </thead>
               <tbody>
                 {visible.map((item) => (
-                  <tr key={item.id} onClick={() => setSelectedId(item.id)}>
+                  <tr key={item.id} {...clickableRow(() => setSelectedId(item.id))}>
                     <td>
                       <strong>{item.customs_reference}</strong>
                     </td>
@@ -212,31 +195,8 @@ export function TemporaryAdmissionsPage({
             }
           />
         )}
-        {!loading && (
-          <nav className="pagination insurance-pagination">
-            <span>
-              {pagination ? `${pagination.from ?? 0}–${pagination.to ?? 0} ${text.of} ${pagination.total}` : text.count(visible.length)}
-            </span>
-            <div>
-              <button
-                type="button"
-                disabled={currentPage === 1 || loading}
-                onClick={() => setPage(currentPage - 1)}
-              >
-                {text.previous}
-              </button>
-              <span>
-                {currentPage} / {pageCount}
-              </span>
-              <button
-                type="button"
-                disabled={currentPage === pageCount || loading}
-                onClick={() => setPage(currentPage + 1)}
-              >
-                {text.next}
-              </button>
-            </div>
-          </nav>
+        {!loading && pagination && (
+          <Pagination meta={pagination} onPageChange={setPage} hideWhenSinglePage={false} />
         )}
       </section>
       {formItem !== undefined && (
@@ -276,6 +236,5 @@ export function TemporaryAdmissionsPage({
 }
 
 function formatDate(value: string | null) {
-  if (!value) return operationPhrase("À compléter");
-  return new Intl.DateTimeFormat(operationsLocale()).format(new Date(`${value}T00:00:00`));
+  return formatApiDate(value, { fallback: operationPhrase("À compléter") });
 }

@@ -10,8 +10,9 @@ import { LoadingSpinner } from "../../../shared/components/LoadingSpinner";
 import { PaginatedDocumentList } from "../../../shared/components/PaginatedDocumentList";
 import { RecordHistory } from "../../../shared/components/RecordHistory";
 import { activeLanguage } from "../../../i18n/fr";
-import { formatMoney } from "../../../shared/formatMoney";
-import { operationPhrase, operationsLocale, operationsText } from "../../../i18n/operations";
+import { formatDate as formatApiDate, formatMoney } from "../../../shared/format";
+import { normalizeSearch } from "../../../shared/text";
+import { operationPhrase, operationsText } from "../../../i18n/operations";
 import {
   admissionError,
   fetchTemporaryAdmission,
@@ -820,8 +821,7 @@ export function TemporaryAdmissionDetails({
 }
 
 function formatDate(value: string | null) {
-  if (!value) return operationPhrase("À compléter");
-  return new Intl.DateTimeFormat(operationsLocale()).format(new Date(`${value}T00:00:00`));
+  return formatApiDate(value, { fallback: operationPhrase("À compléter") });
 }
 
 function selectedAtDocumentsTitle(files: File[]) {
@@ -829,10 +829,3 @@ function selectedAtDocumentsTitle(files: File[]) {
   return activeLanguage === "ar" ? `${files.length} مستند إدخال مؤقت محدد` : `${files.length} document${files.length > 1 ? "s" : ""} AT sélectionné${files.length > 1 ? "s" : ""}`;
 }
 
-function normalizeSearch(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLocaleLowerCase("fr-FR")
-    .trim();
-}

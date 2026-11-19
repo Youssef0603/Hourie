@@ -101,13 +101,11 @@ html[dir='rtl'] body {
   font-family: Tahoma, Arial, sans-serif;
 }
 
-html[dir='rtl'] .equipment-table,
-html[dir='rtl'] .user-menu {
+html[dir='rtl'] .equipment-table {
   text-align: right;
 }
 
-.session-loading,
-.authenticated-page {
+.session-loading {
   display: grid;
   min-height: 100svh;
   place-items: center;
@@ -240,44 +238,6 @@ html[dir='rtl'] .user-menu {
 
 .empty-state-compact .empty-state-copy p {
   font-size: 0.69rem;
-}
-
-.authenticated-card {
-  width: min(100%, 34rem);
-  border: 1px solid var(--color-border);
-  border-radius: 0.35rem;
-  padding: clamp(2rem, 6vw, 4rem);
-  background: white;
-  box-shadow: 0 24px 70px rgb(18 20 24 / 8%);
-  text-align: center;
-}
-
-.success-indicator {
-  display: grid;
-  width: 3.5rem;
-  aspect-ratio: 1;
-  place-items: center;
-  margin: 0 auto 1.5rem;
-  border-radius: 50%;
-  color: white;
-  background: var(--color-primary);
-  font-size: 1.4rem;
-}
-
-.authenticated-card h1 {
-  margin: 0.4rem 0 0.75rem;
-  color: var(--color-text-strong);
-  font-size: clamp(2rem, 6vw, 3rem);
-  letter-spacing: -0.045em;
-}
-
-.authenticated-card > p:not(.section-label) {
-  margin: 0 0 2rem;
-  line-height: 1.6;
-}
-
-.authenticated-card strong {
-  color: var(--color-text-strong);
 }
 
 .secondary-button {
@@ -440,8 +400,7 @@ html :is(.workspace-shell, .modal-backdrop) .detail-primary-actions :is(
   min-height: 2rem !important;
 }
 
-html :is(.workspace-shell, .modal-backdrop) .detail-primary-actions button.detail-delete-button,
-html :is(.workspace-shell, .modal-backdrop) .person-detail button.person-delete-action {
+html :is(.workspace-shell, .modal-backdrop) .detail-primary-actions button.detail-delete-button {
   width: 2rem !important;
   min-width: 2rem !important;
   height: 2rem;

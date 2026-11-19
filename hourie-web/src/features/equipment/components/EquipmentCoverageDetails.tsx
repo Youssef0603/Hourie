@@ -1,7 +1,7 @@
 import { fr } from "../../../i18n/fr";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { EmptyState } from "../../../shared/components/EmptyState";
-import { formatMoney } from "../../../shared/formatMoney";
+import { formatDate, formatMoney } from "../../../shared/format";
 import type { Equipment } from "../types";
 import { EquipmentDetailSection } from "./EquipmentDetailSection";
 import type { RelatedRecordReference } from "./RelatedRecordDetailPanel";
@@ -170,7 +170,5 @@ function hasDisplayValue<T>(value: T): value is Exclude<T, null | undefined | ""
 }
 
 function formatCoverageDate(value: string | null) {
-  return value
-    ? new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium" }).format(new Date(`${value}T00:00:00`))
-    : fr.common.notProvided;
+  return formatDate(value, { style: "medium", fallback: fr.common.notProvided });
 }

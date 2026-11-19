@@ -1,0 +1,771 @@
+/*
+ * Hourie visual theme.
+ *
+ * Loaded after every other stylesheet. It owns the design tokens, the
+ * application shell (sidebar + top bar) and the shared look of headings,
+ * panels, tables, toolbars and badges. Rules are scoped to .workspace-shell
+ * so they also win over lazily loaded page stylesheets.
+ */
+
+:root {
+  --color-primary: #d31245;
+  --color-primary-dark: #ad0e38;
+  --color-primary-soft: rgb(211 18 69 / 9%);
+  --color-surface: #f4f5f7;
+  --color-panel: #ffffff;
+  --color-text-strong: #111827;
+  --color-text: #344054;
+  --color-text-muted: #667085;
+  --color-border: #e4e7ec;
+  --color-border-strong: #d0d5dd;
+  --color-row-hover: #f9fafb;
+
+  --sidebar-width: 16.25rem;
+  --topbar-height: 3.75rem;
+  --sidebar-bg: #111418;
+  --sidebar-bg-raised: #1b1f25;
+  --sidebar-fg: #a7adb8;
+  --sidebar-fg-strong: #f5f6f8;
+  --sidebar-border: rgb(255 255 255 / 7%);
+
+  --control-height: 2.375rem;
+  --control-radius: 0.5rem;
+  --button-height: 2.375rem;
+  --button-radius: 0.5rem;
+  --panel-radius: 0.75rem;
+
+  --shadow-xs: 0 1px 2px rgb(16 24 40 / 5%);
+  --shadow-sm: 0 1px 3px rgb(16 24 40 / 7%), 0 1px 2px rgb(16 24 40 / 4%);
+  --shadow-lg: 0 12px 32px -8px rgb(16 24 40 / 18%), 0 4px 8px -4px rgb(16 24 40 / 6%);
+
+  font-family: 'Inter Variable', Inter, 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-feature-settings: 'cv11';
+  color: var(--color-text);
+}
+
+html[dir='rtl'] body {
+  font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+}
+
+/* ---------------------------------------------------------------- shell */
+
+.workspace-shell {
+  min-height: 100svh;
+  background: var(--color-surface);
+}
+
+.app-main {
+  min-width: 0;
+  margin-inline-start: var(--sidebar-width);
+}
+
+.workspace-shell .workspace-layout {
+  --workspace-page-inline-space: clamp(2rem, 4.5vw, 4.5rem);
+  display: block;
+  min-height: calc(100svh - var(--topbar-height));
+}
+
+.workspace-shell :is(.equipment-page, .directory-page, .dashboard-page) {
+  width: min(calc(100% - var(--workspace-page-inline-space)), 96rem);
+  margin-inline: auto;
+  padding: 1.75rem 0 3rem;
+}
+
+/* sidebar */
+
+.app-sidebar {
+  position: fixed;
+  z-index: 40;
+  inset-block: 0;
+  inset-inline-start: 0;
+  display: flex;
+  width: var(--sidebar-width);
+  flex-direction: column;
+  border-inline-end: 1px solid var(--sidebar-border);
+  color: var(--sidebar-fg);
+  background:
+    linear-gradient(180deg, rgb(211 18 69 / 7%) 0%, transparent 14rem),
+    var(--sidebar-bg);
+}
+
+.app-sidebar-brand {
+  display: flex;
+  height: 4.75rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--sidebar-border);
+  padding-inline: 1.25rem 0.75rem;
+}
+
+.app-sidebar-brand img {
+  display: block;
+  width: 8.75rem;
+  height: auto;
+}
+
+.app-sidebar-close {
+  display: none;
+}
+
+.app-sidebar nav {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 1rem 0.75rem;
+}
+
+.app-sidebar-group + .app-sidebar-group {
+  margin-top: 1.35rem;
+}
+
+.app-sidebar-group-label {
+  margin: 0 0 0.45rem;
+  padding-inline: 0.75rem;
+  color: #6b7280;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.workspace-shell .app-sidebar-link {
+  position: relative;
+  display: flex;
+  width: 100%;
+  min-height: 2.5rem;
+  align-items: center;
+  gap: 0.75rem;
+  border: 0;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  color: var(--sidebar-fg);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-align: start;
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.workspace-shell .app-sidebar-link + .app-sidebar-link {
+  margin-top: 0.125rem;
+}
+
+.app-sidebar-link svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+  opacity: 0.85;
+}
+
+.workspace-shell .app-sidebar-link:hover {
+  color: var(--sidebar-fg-strong);
+  background: rgb(255 255 255 / 5%);
+}
+
+.workspace-shell .app-sidebar-link.active {
+  color: #fff;
+  background: var(--sidebar-bg-raised);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 6%);
+}
+
+.workspace-shell .app-sidebar-link.active svg {
+  color: #ff4d79;
+  opacity: 1;
+}
+
+.workspace-shell .app-sidebar-link.active::before {
+  position: absolute;
+  inset-block: 0.55rem;
+  inset-inline-start: -0.75rem;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--color-primary);
+  content: '';
+}
+
+html[dir='rtl'] .workspace-shell .app-sidebar-link.active::before {
+  border-radius: 3px 0 0 3px;
+}
+
+.app-sidebar-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  border-top: 1px solid var(--sidebar-border);
+  padding: 1rem 1.5rem;
+  color: #6b7280;
+  font-size: 0.75rem;
+}
+
+.app-sidebar-footer-dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 0 3px rgb(34 197 94 / 15%);
+}
+
+.app-sidebar-backdrop {
+  display: none;
+}
+
+/* top bar */
+
+.app-topbar {
+  position: sticky;
+  z-index: 20;
+  top: 0;
+  display: flex;
+  height: var(--topbar-height);
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--color-border);
+  padding-inline: clamp(1rem, 2.25vw, 2.25rem);
+  background: rgb(255 255 255 / 88%);
+  backdrop-filter: saturate(1.4) blur(14px);
+}
+
+.app-topbar-context,
+.app-topbar-actions {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.app-topbar-logo {
+  display: none;
+}
+
+.app-topbar-trail {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+.app-topbar-trail span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.app-topbar-trail span[aria-hidden] {
+  color: var(--color-border-strong);
+}
+
+.app-topbar-trail strong {
+  color: var(--color-text-strong);
+  font-weight: 600;
+}
+
+.workspace-shell .app-topbar-icon-button,
+.workspace-shell .app-topbar-menu {
+  display: inline-grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  padding: 0;
+  color: var(--color-text-muted);
+  background: transparent;
+  cursor: pointer;
+}
+
+.workspace-shell .app-topbar-menu {
+  display: none;
+}
+
+.workspace-shell .app-topbar-icon-button:hover,
+.workspace-shell .app-topbar-menu:hover {
+  color: var(--color-text-strong);
+  background: #f2f4f7;
+}
+
+.workspace-shell .app-topbar-icon-button.active {
+  border-color: rgb(211 18 69 / 20%);
+  color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+
+.app-topbar-icon-button svg,
+.app-topbar-menu svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  fill: none;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+.app-topbar-divider {
+  width: 1px;
+  height: 1.5rem;
+  background: var(--color-border);
+}
+
+.app-topbar .language-switch {
+  font-size: 0.75rem;
+}
+
+.workspace-shell .app-account-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  border: 0;
+  border-radius: 0.6rem;
+  padding: 0.25rem 0.5rem 0.25rem 0.25rem;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  text-align: start;
+}
+
+.workspace-shell .app-account-button:hover {
+  background: #f2f4f7;
+}
+
+.app-account-avatar {
+  display: grid;
+  width: 2.125rem;
+  height: 2.125rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  background: linear-gradient(135deg, #e11d51, #9f0d33);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.app-account-identity {
+  display: grid;
+  line-height: 1.2;
+}
+
+.app-account-identity strong {
+  color: var(--color-text-strong);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.app-account-identity span {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+
+.account-dropdown {
+  border: 1px solid var(--color-border) !important;
+  border-radius: 0.75rem !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+/* ------------------------------------------------------- page headings */
+
+.workspace-shell :is(
+  .page-heading,
+  .insurance-heading,
+  .directory-heading,
+  .people-page-heading,
+  .dashboard-heading
+) {
+  margin-bottom: 1.5rem;
+}
+
+.workspace-shell :is(
+  .page-heading,
+  .insurance-heading,
+  .directory-heading,
+  .people-page-heading,
+  .dashboard-heading
+) h1 {
+  margin: 0;
+  color: var(--color-text-strong);
+  font-size: clamp(1.5rem, 1.6vw, 1.875rem);
+  font-weight: 650;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+
+.workspace-shell :is(
+  .page-heading,
+  .insurance-heading,
+  .directory-heading,
+  .people-page-heading,
+  .dashboard-heading
+) h1 + p,
+.workspace-shell .page-heading > div:first-child > p:last-child {
+  max-width: 46rem;
+  margin: 0.4rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.workspace-shell .section-label {
+  margin: 0 0 0.5rem;
+  color: var(--color-primary);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.workspace-shell .breadcrumbs {
+  margin-bottom: 1rem;
+  font-size: 0.8125rem;
+}
+
+.workspace-shell .total-count {
+  min-width: 6rem;
+  border-inline-start-width: 3px;
+  padding-inline-start: 0.85rem;
+}
+
+.workspace-shell .total-count strong {
+  font-size: 1.5rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.workspace-shell .total-count span {
+  font-size: 0.8125rem;
+}
+
+/* --------------------------------------------------------------- panels */
+
+.workspace-shell :is(.inventory-panel, .dashboard-card, .maintenance-warning-panel) {
+  border: 1px solid var(--color-border);
+  border-radius: var(--panel-radius);
+  background: var(--color-panel);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ------------------------------------------------------------- toolbars */
+
+.workspace-shell .filter-bar {
+  --table-toolbar-height: 2.375rem;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+}
+
+.workspace-shell .filter-bar .search-field input,
+.workspace-shell .search-field input[type='search'] {
+  border-color: var(--color-border-strong);
+  border-radius: var(--control-radius);
+  background-color: #fff;
+  box-shadow: var(--shadow-xs);
+  color: var(--color-text-strong);
+  font-size: 0.875rem;
+}
+
+.workspace-shell .filter-bar .search-field input:focus {
+  border-color: var(--color-primary);
+  outline: 0;
+  box-shadow: 0 0 0 4px var(--color-primary-soft);
+}
+
+/* -------------------------------------------------------------- buttons */
+
+html :is(.workspace-shell, .modal-backdrop, .login-page) :is(
+  button.primary-button:not(.close-action),
+  button.save-button,
+  button.transfer-submit-button,
+  button.site-detail-action.primary,
+  button.person-detail-action.primary
+) {
+  box-shadow: var(--shadow-xs), inset 0 1px 0 rgb(255 255 255 / 12%) !important;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+html :is(.workspace-shell, .modal-backdrop, .login-page) :is(
+  button.secondary-button,
+  button.primary-button.close-action,
+  button.table-refresh-button,
+  button.advanced-filter-toggle,
+  button.detail-toolbar-button,
+  .detail-upload-button,
+  button.invoice-upload-button,
+  button.invoice-download-button,
+  button.maintenance-add,
+  button.import-excel-action:not(.primary-button),
+  button.site-detail-action:not(.primary),
+  button.person-detail-action:not(.primary),
+  button.transfer-cancel-button
+) {
+  border-color: var(--color-border-strong) !important;
+  color: var(--color-text) !important;
+  box-shadow: var(--shadow-xs) !important;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+html :is(.workspace-shell, .modal-backdrop, .login-page) :is(
+  button.secondary-button,
+  button.primary-button.close-action,
+  button.table-refresh-button,
+  button.advanced-filter-toggle,
+  button.detail-toolbar-button,
+  .detail-upload-button,
+  button.invoice-upload-button,
+  button.invoice-download-button,
+  button.maintenance-add,
+  button.import-excel-action:not(.primary-button),
+  button.site-detail-action:not(.primary),
+  button.person-detail-action:not(.primary),
+  button.transfer-cancel-button
+):is(:hover, :focus-visible):not(:disabled) {
+  border-color: var(--color-border-strong) !important;
+  color: var(--color-text-strong) !important;
+  background: #f9fafb !important;
+}
+
+/* The "add" action is the primary action of every list: give it the brand colour. */
+html .workspace-shell button.table-add-button {
+  border-color: var(--color-primary) !important;
+  color: #fff !important;
+  background: var(--color-primary) !important;
+}
+
+html .workspace-shell button.table-add-button:is(:hover, :focus-visible):not(:disabled) {
+  border-color: var(--color-primary-dark) !important;
+  color: #fff !important;
+  background: var(--color-primary-dark) !important;
+}
+
+html :is(.workspace-shell, .modal-backdrop, .login-page) button:focus-visible {
+  outline: 0 !important;
+  box-shadow: 0 0 0 4px var(--color-primary-soft), 0 0 0 1px var(--color-primary) !important;
+}
+
+/* --------------------------------------------------------------- tables */
+
+.workspace-shell .equipment-table-wrap {
+  margin-inline: 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.workspace-shell .equipment-table th {
+  border-bottom: 1px solid var(--color-border);
+  padding: 0.65rem 0.875rem;
+  color: var(--color-text-muted);
+  background: #f9fafb;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.workspace-shell .equipment-table th:first-child,
+.workspace-shell .equipment-table td:first-child {
+  padding-inline-start: 1.25rem;
+}
+
+.workspace-shell .equipment-table th:last-child,
+.workspace-shell .equipment-table td:last-child {
+  padding-inline-end: 1.25rem;
+}
+
+.workspace-shell .equipment-table td {
+  border-bottom: 1px solid #eef0f3;
+  padding: 0.75rem 0.875rem;
+  color: var(--color-text);
+  font-size: 0.8125rem;
+  line-height: 1.35;
+}
+
+.workspace-shell .equipment-table td strong,
+.workspace-shell .equipment-table .primary-cell {
+  color: var(--color-text-strong);
+  font-weight: 600;
+}
+
+.workspace-shell .equipment-table .secondary-cell {
+  margin-top: 0.15rem;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+
+.workspace-shell .equipment-table tbody tr:hover,
+.workspace-shell .equipment-table tbody tr:focus {
+  background: var(--color-row-hover);
+}
+
+.workspace-shell .equipment-table tbody tr:focus-visible {
+  box-shadow: inset 3px 0 0 var(--color-primary);
+}
+
+.workspace-shell .pagination {
+  border-top: 1px solid var(--color-border);
+  padding: 0.85rem 1.25rem;
+  font-size: 0.8125rem;
+}
+
+.workspace-shell .pagination button {
+  border: 1px solid var(--color-border-strong);
+  border-radius: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  color: var(--color-text);
+  background: #fff;
+  box-shadow: var(--shadow-xs);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+/* --------------------------------------------------------------- badges */
+
+.workspace-shell :is(.status-badge, .project-status, .insurance-status) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border: 1px solid rgb(16 24 40 / 6%);
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem 0.15rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+.workspace-shell :is(.status-badge, .project-status, .insurance-status)::before {
+  width: 0.375rem;
+  height: 0.375rem;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: currentcolor;
+  content: '';
+}
+
+.workspace-shell .equipment-table :is(.status-badge, .project-status, .insurance-status) {
+  padding: 0.125rem 0.55rem 0.125rem 0.45rem;
+  font-size: 0.75rem;
+}
+
+/* ------------------------------------------------------------ dashboard */
+
+.workspace-shell .dashboard-card {
+  overflow: hidden;
+}
+
+/* ----------------------------------------------------------- responsive */
+
+@media (max-width: 1024px) {
+  .app-main {
+    margin-inline-start: 0;
+  }
+
+  .app-sidebar {
+    width: min(18rem, 86vw);
+    box-shadow: var(--shadow-lg);
+    transform: translateX(-100%);
+    transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    visibility: hidden;
+  }
+
+  html[dir='rtl'] .app-sidebar {
+    transform: translateX(100%);
+  }
+
+  .app-sidebar.open,
+  html[dir='rtl'] .app-sidebar.open {
+    transform: none;
+    visibility: visible;
+  }
+
+  .workspace-shell .app-sidebar-close {
+    display: inline-grid;
+    width: 2.25rem;
+    height: 2.25rem;
+    place-items: center;
+    border: 0;
+    border-radius: 0.5rem;
+    padding: 0;
+    color: var(--sidebar-fg);
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .app-sidebar-close svg {
+    width: 1.1rem;
+    height: 1.1rem;
+    fill: none;
+    stroke: currentcolor;
+    stroke-linecap: round;
+    stroke-width: 1.8;
+  }
+
+  .app-sidebar-backdrop {
+    position: fixed;
+    z-index: 39;
+    inset: 0;
+    display: block;
+    background: rgb(10 12 16 / 45%);
+    backdrop-filter: blur(2px);
+  }
+
+  .workspace-shell .app-topbar-menu {
+    display: inline-grid;
+  }
+
+  .app-topbar-trail span:first-child,
+  .app-topbar-trail span[aria-hidden] {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .workspace-shell .workspace-layout {
+    --workspace-page-inline-space: 2rem;
+  }
+
+  .workspace-shell :is(.equipment-page, .directory-page, .dashboard-page) {
+    padding-top: 1.25rem;
+  }
+
+  .app-account-identity,
+  .app-topbar-divider {
+    display: none;
+  }
+
+  .workspace-shell .filter-toolbar-actions {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin-inline: -1.25rem;
+    padding: 0.125rem 1.25rem;
+    scrollbar-width: none;
+  }
+
+  .workspace-shell .filter-toolbar-actions > * {
+    flex: 0 0 auto;
+  }
+
+  .workspace-shell .heading-actions {
+    width: 100%;
+  }
+
+  .app-topbar-actions {
+    gap: 0.35rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-sidebar {
+    transition: none;
+  }
+}

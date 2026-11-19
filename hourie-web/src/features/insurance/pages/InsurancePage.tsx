@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { apiRequest } from "../../../shared/api/http";
-import { ActionIcon } from "../../../shared/components/ActionIcon";
+import { FilterToggleButton, ToolbarIconButton } from "../../../shared/components/ToolbarButtons";
+import { Pagination } from "../../../shared/components/Pagination";
+import { SearchField } from "../../../shared/components/SearchField";
+import { clickableRow } from "../../../shared/clickableRow";
 import { EmptyState } from "../../../shared/components/EmptyState";
 import { LoadingSpinner } from "../../../shared/components/LoadingSpinner";
 import {
@@ -191,48 +194,22 @@ export function InsurancePage({
       </section>
       <section className="insurance-list-area inventory-panel">
         <div className="filter-bar">
-          <div className="search-field">
-            <label htmlFor="insurance-search">{text.search}</label>
-            <input
-              id="insurance-search"
-              type="search"
-              value={search}
-              onChange={(event) => { setSearch(event.target.value); setPage(1); }}
-              placeholder={text.searchPlaceholder}
-            />
-          </div>
+          <SearchField
+            id="insurance-search"
+            label={text.search}
+            value={search}
+            onChange={(value) => { setSearch(value); setPage(1); }}
+            placeholder={text.searchPlaceholder}
+          />
           <div className="filter-toolbar-actions">
-            <button
-              className={`advanced-filter-toggle${showFilters ? " active" : ""}`}
-              type="button"
+            <FilterToggleButton
+              label={text.filters}
+              active={showFilters}
+              count={Number(status !== "all") + Number(Boolean(projectId))}
               onClick={() => setShowFilters((value) => !value)}
-            >
-              <ActionIcon name="filter" />
-              <span>{text.filters}</span>
-              {(status !== "all" || projectId) && (
-                <strong>
-                  {Number(status !== "all") + Number(Boolean(projectId))}
-                </strong>
-              )}
-            </button>
-            <button
-              className="table-refresh-button table-add-button"
-              type="button"
-              aria-label={text.addPolicy}
-              title={text.addPolicy}
-              onClick={() => setShowAdd(true)}
-            >
-              <ActionIcon name="add" />
-            </button>
-            <button
-              className="table-refresh-button filter-refresh-button"
-              type="button"
-              aria-label={text.refresh}
-              title={text.refresh}
-              onClick={() => refreshPolicies()}
-            >
-              <ActionIcon name="refresh" />
-            </button>
+            />
+            <ToolbarIconButton icon="add" label={text.addPolicy} onClick={() => setShowAdd(true)} />
+            <ToolbarIconButton icon="refresh" label={text.refresh} onClick={() => refreshPolicies()} />
           </div>
         </div>
         <div className="equipment-table-wrap">
@@ -274,7 +251,7 @@ export function InsurancePage({
                     <tr
                       className={selectedId === policy.id ? "selected" : ""}
                       key={policy.id}
-                      onClick={() => setSelectedId(policy.id)}
+                      {...clickableRow(() => setSelectedId(policy.id))}
                     >
                       <td>
                         <strong>{policy.policy_number}</strong>
@@ -306,19 +283,8 @@ export function InsurancePage({
             </tbody>
           </table>
         </div>
-        {!loading && (
-          <nav className="pagination insurance-pagination">
-            <span>{pagination ? `${pagination.from ?? 0}–${pagination.to ?? 0} ${text.of} ${pagination.total}` : text.policiesCount(filteredPolicies.length)}</span>
-            <div>
-              <button type="button" disabled={!pagination || pagination.current_page === 1 || loading} onClick={() => setPage((current) => current - 1)}>
-                {text.previous}
-              </button>
-              <span>{pagination?.current_page ?? 1} / {pagination?.last_page ?? 1}</span>
-              <button type="button" disabled={!pagination || pagination.current_page === pagination.last_page || loading} onClick={() => setPage((current) => current + 1)}>
-                {text.next}
-              </button>
-            </div>
-          </nav>
+        {!loading && pagination && (
+          <Pagination meta={pagination} onPageChange={setPage} hideWhenSinglePage={false} />
         )}
       </section>
       {showFilters && (

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { formatDate as formatApiDate } from "../../../shared/format";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { EmptyState } from "../../../shared/components/EmptyState";
 import { LoadingSpinner } from "../../../shared/components/LoadingSpinner";
@@ -206,8 +207,7 @@ function activityTone(type: string) {
 }
 
 function formatDate(value: string) {
-  const date = value.includes("T") ? new Date(value) : new Date(`${value}T00:00:00`);
-  return new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "long", year: "numeric" }).format(date);
+  return formatApiDate(value, { style: "long", locale: "fr-FR" });
 }
 
 function formatRelative(value: string) {

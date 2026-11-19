@@ -2,6 +2,10 @@ import { useState } from 'react'
 import { fr, type Language } from '../../../i18n/fr'
 import { ActionIcon } from '../../../shared/components/ActionIcon'
 import { Modal } from '../../../shared/components/Modal'
+import { Pagination } from '../../../shared/components/Pagination'
+import { SearchField } from '../../../shared/components/SearchField'
+import { FilterToggleButton, ToolbarIconButton } from '../../../shared/components/ToolbarButtons'
+import { clickableRow } from '../../../shared/clickableRow'
 import { assetCategory, assetCategoryLabel, assetFieldLabel, isAssetCategoryCode, type AssetView } from '../assetCategories'
 import { catalogBadgeStyle, catalogLabel } from '../catalogs'
 import { equipmentBrandLabel, equipmentTypeFieldKeys, locationName } from '../equipmentDisplay'
@@ -112,18 +116,14 @@ export function AssetInventoryView({ category, language, options, filters, searc
 
     <section className="inventory-panel" aria-label={title}>
       <div className="filter-bar">
-        <div className="search-field has-custom-clear">
-          <label htmlFor="asset-inventory-search">{fr.equipment.search}</label>
-          <input id="asset-inventory-search" type="search" value={search} onChange={(event) => onSearchChange(event.target.value)} placeholder={fr.assets.searchPlaceholder} />
-          {search !== '' && <button className="search-clear-button" type="button" onClick={() => onSearchChange('')} aria-label={fr.common.clearSearch}><ActionIcon name="close" /></button>}
-        </div>
+        <SearchField id="asset-inventory-search" label={fr.equipment.search} value={search} onChange={onSearchChange} placeholder={fr.assets.searchPlaceholder} />
         <div className="filter-toolbar-actions">
-          <button className={`advanced-filter-toggle${showFilters ? ' active' : ''}`} type="button" onClick={() => setShowFilters((value) => !value)} aria-expanded={showFilters}><ActionIcon name="filter" /><span>{fr.equipment.filters}</span>{activeFilterCount > 0 && <strong>{activeFilterCount}</strong>}</button>
+          <FilterToggleButton label={fr.equipment.filters} active={showFilters} count={activeFilterCount} onClick={() => setShowFilters((value) => !value)} />
           <button className="table-refresh-button import-excel-action" type="button" onClick={() => { setExportError(null); setExportWithoutInvoices(false); setShowAssetExport(true) }}><ActionIcon name="download" /><span>{fr.assets.exportExcel}</span></button>
           {canManage && category === 'all' && !isGeneratorSelected && <button className="table-refresh-button import-excel-action" type="button" onClick={() => setShowAssetImport(true)}><ActionIcon name="upload" /><span>{fr.assets.importExcel}</span></button>}
           {canManage && isGeneratorSelected && <button className="table-refresh-button import-excel-action" type="button" onClick={() => setShowImportGenerator(true)}><ActionIcon name="upload" /><span>{fr.equipment.importExcel}</span></button>}
-          {canManage && selectedCategory && options && <button className="table-refresh-button table-add-button" type="button" onClick={() => isGeneratorSelected ? setShowAddGenerator(true) : setShowAdd(true)} aria-label={isGeneratorSelected ? fr.equipment.addGenerator : fr.assets.add} title={isGeneratorSelected ? fr.equipment.addGenerator : fr.assets.add}><ActionIcon name="add" /></button>}
-          <button className="table-refresh-button filter-refresh-button" type="button" onClick={onRefresh} aria-label={fr.common.refresh} title={fr.common.refresh}><ActionIcon name="refresh" /></button>
+          {canManage && selectedCategory && options && <ToolbarIconButton icon="add" label={isGeneratorSelected ? fr.equipment.addGenerator : fr.assets.add} onClick={() => isGeneratorSelected ? setShowAddGenerator(true) : setShowAdd(true)} />}
+          <ToolbarIconButton icon="refresh" label={fr.common.refresh} onClick={onRefresh} />
           {activeFilterCount > 0 && <button className="clear-filters" type="button" onClick={onClearFilters}>{fr.equipment.clearFilters}</button>}
         </div>
       </div>
@@ -150,7 +150,7 @@ export function AssetInventoryView({ category, language, options, filters, searc
             {fields.map((field) => <th key={field.key}>{assetFieldLabel(field, language)}</th>)}
             <th>{fr.equipment.condition}</th><th>{fr.equipment.project}</th><th>{isCarTable ? fr.equipment.driver : fr.equipment.locationShort}</th>
           </tr></thead>
-          <tbody>{!isLoading && result?.data.map((item) => <tr key={item.id} tabIndex={0} onClick={() => onOpen(item.id)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onOpen(item.id) } }}>
+          <tbody>{!isLoading && result?.data.map((item) => <tr key={item.id} {...clickableRow(() => onOpen(item.id))}>
             <td><strong>{item.display_id}</strong><span className="secondary-cell">{item.asset_code}</span></td>
             {isAllAssetsTable && <td>{item.category.code === 'generator' ? fr.navigation.generators : isAssetCategoryCode(item.category.code) ? assetCategoryLabel(item.category.code, language) : item.category.name}</td>}
             {hasModelColumn
@@ -165,7 +165,7 @@ export function AssetInventoryView({ category, language, options, filters, searc
         {isLoading && <div className="table-state"><LoadingSpinner label={fr.common.loading} /></div>}
         {!isLoading && result?.data.length === 0 && <EmptyState title={fr.assets.noResults} description="Modifiez votre recherche ou vos filtres pour afficher d’autres actifs." />}
       </div>
-      {result && result.meta.last_page > 1 && <nav className="pagination" aria-label={fr.equipment.pagination}><span>{fr.equipment.results(result.meta.from, result.meta.to, result.meta.total)}</span><div><button type="button" disabled={result.meta.current_page === 1 || isLoading} onClick={() => onPageChange(result.meta.current_page - 1)}>{fr.common.previous}</button><span>{fr.equipment.page(result.meta.current_page, result.meta.last_page)}</span><button type="button" disabled={result.meta.current_page === result.meta.last_page || isLoading} onClick={() => onPageChange(result.meta.current_page + 1)}>{fr.common.next}</button></div></nav>}
+      {result && <Pagination meta={result.meta} disabled={isLoading} onPageChange={onPageChange} />}
       </>}
     </section>
     {showAdd && selectedAssetCategory && options && <EquipmentCreationPanel eyebrow={assetCategoryLabel(selectedAssetCategory, language)} title={selectedAssetCategory === 'portacabin' ? fr.assets.addBungalow : fr.assets.add} action={<button className="primary-button" type="submit" form="create-asset-form">{fr.common.save}</button>} onClose={() => setShowAdd(false)}><AssetForm formId="create-asset-form" categoryCode={selectedAssetCategory} language={language} options={options} onSaved={(equipment) => { setShowAdd(false); onCreated(equipment) }} /></EquipmentCreationPanel>}

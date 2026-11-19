@@ -1,10 +1,13 @@
+import type { ReactNode } from 'react'
 import { fr, type Language } from '../../../i18n/fr'
 import { LoadingSpinner } from '../../../shared/components/LoadingSpinner'
 import { EmptyState } from '../../../shared/components/EmptyState'
+import { Pagination } from '../../../shared/components/Pagination'
+import { clickableRow } from '../../../shared/clickableRow'
 import { assetCategoryLabel, isAssetCategoryCode } from '../assetCategories'
 import { catalogBadgeStyle, catalogLabel } from '../catalogs'
 import { locationName, measurement } from '../equipmentDisplay'
-import type { EquipmentFilterOptions, EquipmentListResponse } from '../types'
+import type { EquipmentFilterOptions, EquipmentListResponse, EquipmentSummary } from '../types'
 
 type EquipmentInventoryTableProps = {
   result: EquipmentListResponse | null
@@ -16,120 +19,90 @@ type EquipmentInventoryTableProps = {
   language?: Language
 }
 
+type Column = { header: string; cell: (equipment: EquipmentSummary) => ReactNode }
+
 export function EquipmentInventoryTable({
   result, isLoading, options, onOpenEquipment, onChangePage, mixedCategories = false, language = 'fr',
 }: EquipmentInventoryTableProps) {
-  if (mixedCategories) {
-    return <>
-      <div className="equipment-table-wrap">
-        <table className="equipment-table asset-inventory-table">
-          <thead><tr>
-            <th>{fr.equipment.number}</th>
-            <th>{fr.equipment.category}</th>
-            <th>{fr.equipment.brand}</th>
-            <th>{fr.equipment.model}</th>
-            <th>{fr.equipment.condition}</th>
-            <th>{fr.equipment.locationShort}</th>
-          </tr></thead>
-          <tbody>{!isLoading && result?.data.map((equipment) => <tr
-            key={equipment.id}
-            tabIndex={0}
-            onClick={() => onOpenEquipment(equipment.id)}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault()
-                onOpenEquipment(equipment.id)
-              }
-            }}
-          >
-            <td><strong>{equipment.display_id}</strong><span className="secondary-cell">{equipment.asset_code}</span></td>
-            <td>{equipment.category.code === 'generator' ? fr.navigation.generators : isAssetCategoryCode(equipment.category.code) ? assetCategoryLabel(equipment.category.code, language) : equipment.category.name}</td>
-            <td>{equipment.brand ?? fr.common.notProvided}</td>
-            <td>{equipment.model ?? fr.common.notProvided}</td>
-            <td>{equipment.condition ? <span className="status-badge" style={catalogBadgeStyle(options?.catalogs, 'equipment_condition', equipment.condition)}>{catalogLabel(options?.catalogs, 'equipment_condition', equipment.condition)}</span> : fr.common.notProvided}</td>
-            <td>{locationName(equipment)}</td>
-          </tr>)}</tbody>
-        </table>
-        {isLoading && <div className="table-state"><LoadingSpinner label={fr.common.loading} /></div>}
-        {!isLoading && result?.data.length === 0 && <EmptyState title={fr.assets.noResults} description="Modifiez votre recherche ou vos filtres pour afficher d’autres actifs." />}
-      </div>
-      {result && result.meta.last_page > 1 && <nav className="pagination" aria-label={fr.equipment.pagination}><span>{fr.equipment.results(result.meta.from, result.meta.to, result.meta.total)}</span><div><button type="button" disabled={result.meta.current_page === 1 || isLoading} onClick={() => onChangePage(result.meta.current_page - 1)}>{fr.common.previous}</button><span>{fr.equipment.page(result.meta.current_page, result.meta.last_page)}</span><button type="button" disabled={result.meta.current_page === result.meta.last_page || isLoading} onClick={() => onChangePage(result.meta.current_page + 1)}>{fr.common.next}</button></div></nav>}
-    </>
+  const catalogs = options?.catalogs
+
+  const identifier: Column = {
+    header: fr.equipment.number,
+    cell: (equipment) => <><strong>{equipment.display_id}</strong><span className="secondary-cell">{equipment.asset_code}</span></>,
   }
+  const brand: Column = { header: fr.equipment.brand, cell: (equipment) => equipment.brand ?? fr.common.notProvided }
+  const model: Column = { header: fr.equipment.model, cell: (equipment) => equipment.model ?? fr.common.notProvided }
+  const location: Column = { header: fr.equipment.locationShort, cell: locationName }
+
+  const columns: Column[] = mixedCategories
+    ? [
+        identifier,
+        {
+          header: fr.equipment.category,
+          cell: (equipment) => equipment.category.code === 'generator'
+            ? fr.navigation.generators
+            : isAssetCategoryCode(equipment.category.code)
+              ? assetCategoryLabel(equipment.category.code, language)
+              : equipment.category.name,
+        },
+        brand,
+        model,
+        {
+          header: fr.equipment.condition,
+          cell: (equipment) => equipment.condition
+            ? <span className="status-badge" style={catalogBadgeStyle(catalogs, 'equipment_condition', equipment.condition)}>{catalogLabel(catalogs, 'equipment_condition', equipment.condition)}</span>
+            : fr.common.notProvided,
+        },
+        location,
+      ]
+    : [
+        identifier,
+        brand,
+        model,
+        { header: fr.equipment.apparentPowerShort, cell: (equipment) => measurement(equipment.power?.apparent_kva, 'kVA') },
+        { header: fr.equipment.serialNumber, cell: (equipment) => equipment.serial_number ?? fr.common.notProvided },
+        {
+          header: fr.equipment.fuel,
+          cell: (equipment) => equipment.fuel_type
+            ? <span className="status-badge" style={catalogBadgeStyle(catalogs, 'fuel_type', equipment.fuel_type)}>{catalogLabel(catalogs, 'fuel_type', equipment.fuel_type)}</span>
+            : fr.common.notProvided,
+        },
+        {
+          header: fr.equipment.condition,
+          cell: (equipment) => (
+            <span className={`status-badge status-${equipment.condition ?? 'unknown'}`} style={catalogBadgeStyle(catalogs, 'equipment_condition', equipment.condition)}>
+              {equipment.condition ? catalogLabel(catalogs, 'equipment_condition', equipment.condition) : fr.common.notProvided}
+            </span>
+          ),
+        },
+        { header: fr.equipment.project, cell: (equipment) => equipment.current_project_assignment?.project.name ?? fr.common.notProvided },
+        location,
+      ]
 
   return <>
-          <div className="equipment-table-wrap">
-            <table className="equipment-table">
-              <thead>
-                <tr>
-                  <th>{fr.equipment.number}</th>
-                  <th>{fr.equipment.brand}</th>
-                  <th>{fr.equipment.model}</th>
-                  <th>{fr.equipment.apparentPowerShort}</th>
-                  <th>{fr.equipment.serialNumber}</th>
-                  <th>{fr.equipment.fuel}</th>
-                  <th>{fr.equipment.condition}</th>
-                  <th>{fr.equipment.project}</th>
-                  <th>{fr.equipment.locationShort}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {!isLoading && result?.data.map((equipment) => (
-                  <tr
-                    key={equipment.id}
-                    tabIndex={0}
-                    onClick={() => onOpenEquipment(equipment.id)}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' || event.key === ' ') {
-                        event.preventDefault()
-                        onOpenEquipment(equipment.id)
-                      }
-                    }}
-                  >
-                    <td><strong>{equipment.display_id}</strong><span className="secondary-cell">{equipment.asset_code}</span></td>
-                    <td>{equipment.brand ?? fr.common.notProvided}</td>
-                    <td>{equipment.model ?? fr.common.notProvided}</td>
-                    <td>{measurement(equipment.power?.apparent_kva, 'kVA')}</td>
-                    <td>{equipment.serial_number ?? fr.common.notProvided}</td>
-                    <td>{equipment.fuel_type ? <span className="status-badge" style={catalogBadgeStyle(options?.catalogs, 'fuel_type', equipment.fuel_type)}>{catalogLabel(options?.catalogs, 'fuel_type', equipment.fuel_type)}</span> : fr.common.notProvided}</td>
-                    <td>
-                      <span className={`status-badge status-${equipment.condition ?? 'unknown'}`} style={catalogBadgeStyle(options?.catalogs, 'equipment_condition', equipment.condition)}>
-                        {equipment.condition ? catalogLabel(options?.catalogs, 'equipment_condition', equipment.condition) : fr.common.notProvided}
-                      </span>
-                    </td>
-                    <td>{equipment.current_project_assignment?.project.name ?? fr.common.notProvided}</td>
-                    <td>{locationName(equipment)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {isLoading && <div className="table-state"><LoadingSpinner label={fr.common.loading} /></div>}
-            {!isLoading && result?.data.length === 0 && <EmptyState title={fr.equipment.empty} description="Modifiez votre recherche ou vos filtres pour afficher d’autres générateurs." />}
-          </div>
-
-          {result && result.meta.last_page > 1 && (
-            <nav className="pagination" aria-label={fr.equipment.pagination}>
-              <span>
-                {fr.equipment.results(result.meta.from, result.meta.to, result.meta.total)}
-              </span>
-              <div>
-                <button
-                  type="button"
-                  disabled={result.meta.current_page === 1 || isLoading}
-                  onClick={() => onChangePage(result.meta.current_page - 1)}
-                >
-                  {fr.common.previous}
-                </button>
-                <span>{fr.equipment.page(result.meta.current_page, result.meta.last_page)}</span>
-                <button
-                  type="button"
-                  disabled={result.meta.current_page === result.meta.last_page || isLoading}
-                  onClick={() => onChangePage(result.meta.current_page + 1)}
-                >
-                  {fr.common.next}
-                </button>
-              </div>
-            </nav>
-          )}
+    <div className="equipment-table-wrap">
+      <table className={`equipment-table${mixedCategories ? ' asset-inventory-table' : ''}`}>
+        <thead>
+          <tr>{columns.map((column) => <th key={column.header}>{column.header}</th>)}</tr>
+        </thead>
+        <tbody>
+          {!isLoading && result?.data.map((equipment) => (
+            <tr key={equipment.id} {...clickableRow(() => onOpenEquipment(equipment.id))}>
+              {columns.map((column) => <td key={column.header}>{column.cell(equipment)}</td>)}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {isLoading && <div className="table-state"><LoadingSpinner label={fr.common.loading} /></div>}
+      {!isLoading && result?.data.length === 0 && (
+        <EmptyState
+          title={mixedCategories ? fr.assets.noResults : fr.equipment.empty}
+          description={mixedCategories
+            ? 'Modifiez votre recherche ou vos filtres pour afficher d’autres actifs.'
+            : 'Modifiez votre recherche ou vos filtres pour afficher d’autres générateurs.'}
+        />
+      )}
+    </div>
+    {result && <Pagination meta={result.meta} disabled={isLoading} onPageChange={onChangePage} />}
   </>
 }

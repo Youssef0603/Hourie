@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { apiRequest } from "../../../shared/api/http";
-import { ActionIcon } from "../../../shared/components/ActionIcon";
+import { FilterToggleButton, ToolbarIconButton } from "../../../shared/components/ToolbarButtons";
+import { Pagination } from "../../../shared/components/Pagination";
+import { SearchField } from "../../../shared/components/SearchField";
+import { clickableRow } from "../../../shared/clickableRow";
 import { EmptyState } from "../../../shared/components/EmptyState";
 import { LoadingSpinner } from "../../../shared/components/LoadingSpinner";
 import {
@@ -15,7 +18,6 @@ import { BondDetails } from "../components/BondDetails";
 import { BondFilters } from "../components/BondFilters";
 import { BondForm } from "../components/BondForm";
 import type { PaginatedResponse, PaginationMeta } from "../../../shared/api/pagination";
-import { activeLanguage } from "../../../i18n/fr";
 import { operationPhrase } from "../../../i18n/operations";
 import { TotalCount } from "../../../shared/components/TotalCount";
 
@@ -70,8 +72,6 @@ export function BondsPage({ initialSiteId = null }: BondsPageProps) {
   }, []);
 
   const visible = bonds;
-  const pageCount = pagination?.last_page ?? 1;
-  const currentPage = pagination?.current_page ?? page;
 
   useEffect(() => {
     if (selectedId === null) {
@@ -108,53 +108,25 @@ export function BondsPage({ initialSiteId = null }: BondsPageProps) {
       </section>
       <section className="insurance-list-area inventory-panel">
         <div className="filter-bar">
-          <div className="search-field">
-            <label htmlFor="bond-search">{operationPhrase("Rechercher")}</label>
-            <input
-              id="bond-search"
-              type="search"
-              value={search}
-              onChange={(event) => {
-                setSearch(event.target.value);
-                setPage(1);
-              }}
-              placeholder={operationPhrase("Type, banque, localisation ou chantier")}
-            />
-          </div>
+          <SearchField
+            id="bond-search"
+            label={operationPhrase("Rechercher")}
+            value={search}
+            onChange={(value) => {
+              setSearch(value);
+              setPage(1);
+            }}
+            placeholder={operationPhrase("Type, banque, localisation ou chantier")}
+          />
           <div className="filter-toolbar-actions">
-            <button
-              className={`advanced-filter-toggle${showFilters ? " active" : ""}`}
-              type="button"
+            <FilterToggleButton
+              label={operationPhrase("Filtres")}
+              active={showFilters}
+              count={Number(status !== "all") + Number(type !== "all") + Number(Boolean(siteId))}
               onClick={() => setShowFilters(true)}
-            >
-              <ActionIcon name="filter" />
-              <span>{operationPhrase("Filtres")}</span>
-              {(status !== "all" || type !== "all" || siteId) && (
-                <strong>
-                  {Number(status !== "all") +
-                    Number(type !== "all") +
-                    Number(Boolean(siteId))}
-                </strong>
-              )}
-            </button>
-            <button
-              className="table-refresh-button table-add-button"
-              type="button"
-              aria-label={operationPhrase("Ajouter une caution")}
-              title={operationPhrase("Ajouter une caution")}
-              onClick={() => setShowAdd(true)}
-            >
-              <ActionIcon name="add" />
-            </button>
-            <button
-              className="table-refresh-button filter-refresh-button"
-              type="button"
-              aria-label={operationPhrase("Actualiser")}
-              title={operationPhrase("Actualiser")}
-              onClick={refresh}
-            >
-              <ActionIcon name="refresh" />
-            </button>
+            />
+            <ToolbarIconButton icon="add" label={operationPhrase("Ajouter une caution")} onClick={() => setShowAdd(true)} />
+            <ToolbarIconButton icon="refresh" label={operationPhrase("Actualiser")} onClick={() => void refresh()} />
           </div>
         </div>
         <div className="equipment-table-wrap">
@@ -195,7 +167,7 @@ export function BondsPage({ initialSiteId = null }: BondsPageProps) {
                     <tr
                       key={bond.id}
                       className={selectedId === bond.id ? "selected" : ""}
-                      onClick={() => setSelectedId(bond.id)}
+                      {...clickableRow(() => setSelectedId(bond.id))}
                     >
                       <td>
                         <strong>{bond.project?.name || operationPhrase("À compléter")}</strong>
@@ -226,31 +198,8 @@ export function BondsPage({ initialSiteId = null }: BondsPageProps) {
             </tbody>
           </table>
         </div>
-        {!loading && (
-          <nav className="pagination insurance-pagination">
-            <span>
-              {pagination ? activeLanguage === "ar" ? `${pagination.from ?? 0}–${pagination.to ?? 0} من ${pagination.total}` : `${pagination.from ?? 0}–${pagination.to ?? 0} sur ${pagination.total}` : activeLanguage === "ar" ? `${visible.length} ضمان` : `${visible.length} caution(s)`}
-            </span>
-            <div>
-              <button
-                type="button"
-                disabled={currentPage === 1 || loading}
-                onClick={() => setPage(currentPage - 1)}
-              >
-                {operationPhrase("Précédent")}
-              </button>
-              <span>
-                {currentPage} / {pageCount}
-              </span>
-              <button
-                type="button"
-                disabled={currentPage === pageCount || loading}
-                onClick={() => setPage(currentPage + 1)}
-              >
-                {operationPhrase("Suivant")}
-              </button>
-            </div>
-          </nav>
+        {!loading && pagination && (
+          <Pagination meta={pagination} onPageChange={setPage} hideWhenSinglePage={false} />
         )}
       </section>
       {showFilters && (

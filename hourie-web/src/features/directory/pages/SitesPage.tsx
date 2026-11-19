@@ -14,6 +14,12 @@ import { LoadingSpinner } from '../../../shared/components/LoadingSpinner'
 import { SiteEditForm } from '../components/SiteEditForm'
 import { EmptyState } from '../../../shared/components/EmptyState'
 import { DataTable } from '../../../shared/components/DataTable'
+import { Pagination } from '../../../shared/components/Pagination'
+import { SearchField } from '../../../shared/components/SearchField'
+import { ToolbarIconButton } from '../../../shared/components/ToolbarButtons'
+import { clickableRow } from '../../../shared/clickableRow'
+import { formatDate } from '../../../shared/format'
+import { normalizeSearch } from '../../../shared/text'
 import type { PaginationMeta } from '../../../shared/api/pagination'
 import { DirectoryDetailPanel } from '../components/DirectoryDetailPanel'
 
@@ -131,18 +137,15 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, onOpenBonds, on
   }
 
   function formatSiteDate(value: string | null) {
-    if (!value) return fr.common.toComplete
-    return new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' }).format(new Date(`${value}T00:00:00`))
+    return formatDate(value, { style: 'long', fallback: fr.common.toComplete })
   }
 
   const projectStatusOptions = catalogOptions(catalogs, 'project_status')
   const selectedProjectStatus = status || projectStatusOptions[0]?.code || ''
-  const searchTerm = search.trim().toLocaleLowerCase('fr-FR')
+  const searchTerm = normalizeSearch(search)
   const visibleSites = searchTerm
-    ? sites.filter((site) => [site.name, site.code, site.address, site.responsible?.name].filter(Boolean).join(' ').toLocaleLowerCase('fr-FR').includes(searchTerm))
+    ? sites.filter((site) => normalizeSearch([site.name, site.code, site.address, site.responsible?.name].filter(Boolean).join(' ')).includes(searchTerm))
     : sites
-  const page = pagination?.current_page ?? currentPage
-  const totalPages = pagination?.last_page ?? 1
   const siteEditFormId = selectedSite ? `site-edit-form-${selectedSite.id}` : 'site-edit-form'
 
   return (
@@ -263,19 +266,16 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, onOpenBonds, on
       )}
       <section className="inventory-panel">
         <div className="filter-bar">
-          <label className="search-field">
-            <span>{fr.equipment.search}</span>
-            <input type="search" value={search} onChange={(event) => { setSearch(event.target.value); setCurrentPage(1) }} placeholder="Rechercher un chantier, un code, une adresse ou un responsable" />
-          </label>
+          <SearchField label={fr.equipment.search} value={search} onChange={(value) => { setSearch(value); setCurrentPage(1) }} placeholder="Rechercher un chantier, un code, une adresse ou un responsable" />
           <div className="filter-toolbar-actions">
-            {canAdd && <button className="table-refresh-button table-add-button" type="button" onClick={() => setShowForm(true)} aria-label={fr.directory.addSite} title={fr.directory.addSite}><ActionIcon name="add" /></button>}
-            <button className="table-refresh-button filter-refresh-button" type="button" onClick={() => void refreshSites()} disabled={isRefreshing} aria-label={fr.common.refresh} title={fr.common.refresh}><ActionIcon name="refresh" /></button>
+            {canAdd && <ToolbarIconButton icon="add" label={fr.directory.addSite} onClick={() => setShowForm(true)} />}
+            <ToolbarIconButton icon="refresh" label={fr.common.refresh} disabled={isRefreshing} onClick={() => void refreshSites()} />
           </div>
         </div>
         {!isRefreshing && visibleSites.length > 0 && <>
           <DataTable className="asset-inventory-table" ariaLabel={fr.directory.sites}>
               <thead><tr><th>Chantier</th><th>{fr.directory.costCode}</th><th>{fr.directory.siteResponsible}</th><th>{fr.directory.siteAddress}</th><th>{fr.directory.assignedAssets}</th><th>{fr.directory.startDate}</th><th>{fr.directory.expectedEndDate}</th><th>État</th></tr></thead>
-              <tbody>{visibleSites.map((site) => <tr key={site.id} tabIndex={0} onClick={() => openSiteDetails(site)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openSiteDetails(site) } }}>
+              <tbody>{visibleSites.map((site) => <tr key={site.id} {...clickableRow(() => openSiteDetails(site))}>
                 <td><strong>{site.name}</strong></td>
                 <td>{site.code ?? fr.common.notProvided}</td>
                 <td>{site.responsible?.name ?? fr.common.notAssigned}</td>
@@ -286,7 +286,7 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, onOpenBonds, on
                 <td><span className={`project-status project-status-${site.status}`} style={catalogBadgeStyle(catalogs, 'project_status', site.status)}>{catalogLabel(catalogs, 'project_status', site.status)}</span></td>
               </tr>)}</tbody>
           </DataTable>
-          {pagination && <nav className="pagination" aria-label={fr.equipment.pagination}><span>{fr.equipment.results(pagination.from, pagination.to, pagination.total)}</span><div><button type="button" disabled={page === 1 || isRefreshing} onClick={() => void refreshSites(page - 1)}>{fr.common.previous}</button><span>{fr.equipment.page(page, totalPages)}</span><button type="button" disabled={page === totalPages || isRefreshing} onClick={() => void refreshSites(page + 1)}>{fr.common.next}</button></div></nav>}
+          {pagination && <Pagination meta={pagination} disabled={isRefreshing} hideWhenSinglePage={false} onPageChange={(nextPage) => void refreshSites(nextPage)} />}
         </>}
         {!isRefreshing && visibleSites.length === 0 && <EmptyState icon="location" title={searchTerm ? 'Aucun chantier trouvé' : 'Aucun chantier enregistré'} description={searchTerm ? 'Modifiez votre recherche pour afficher d’autres chantiers.' : 'Les chantiers ajoutés apparaîtront ici.'} />}
         {isRefreshing && <div className="table-state"><LoadingSpinner label={fr.common.loading} /></div>}
