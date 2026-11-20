@@ -19,7 +19,7 @@ class PurchaseOrderFactory extends Factory
     public function definition(): array
     {
         return [
-            'number' => fake()->unique()->numberBetween(1000, 9999999),
+            'number' => 'BC-'.fake()->unique()->numerify('###-26-####'),
             'created_by_user_id' => User::factory(),
             'supplier_name' => fake()->company(),
             'supplier_phone' => fake()->phoneNumber(),

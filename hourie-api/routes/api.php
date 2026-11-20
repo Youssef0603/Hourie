@@ -22,7 +22,13 @@ use App\Http\Controllers\Api\V1\InsurancePolicyController;
 use App\Http\Controllers\Api\V1\NotificationSettingsController;
 use App\Http\Controllers\Api\V1\PurchaseOrderController;
 use App\Http\Controllers\Api\V1\PurchaseOrderDeliveryNoteController;
+use App\Http\Controllers\Api\V1\PurchaseOrderInvoiceController;
 use App\Http\Controllers\Api\V1\SiteController;
+use App\Http\Controllers\Api\V1\Subcontracts\SubcontractController;
+use App\Http\Controllers\Api\V1\Subcontracts\SubcontractorController;
+use App\Http\Controllers\Api\V1\Subcontracts\SubcontractValuationController;
+use App\Http\Controllers\Api\V1\Subcontracts\SubcontractValuationDocumentController;
+use App\Http\Controllers\Api\V1\Subcontracts\SubcontractVariationController;
 use App\Http\Controllers\Api\V1\TemporaryAdmissionController;
 use App\Http\Middleware\EnsurePasswordWasChanged;
 use App\Http\Middleware\EnsureUserIsActive;
@@ -47,6 +53,30 @@ Route::prefix('v1')->middleware(['auth:sanctum', EnsureUserIsActive::class, Ensu
     Route::get('purchase-orders/{purchaseOrder}/delivery-notes/{deliveryNote}/file', [PurchaseOrderDeliveryNoteController::class, 'show'])
         ->name('purchase-orders.delivery-notes.show');
     Route::delete('purchase-orders/{purchaseOrder}/delivery-notes/{deliveryNote}', [PurchaseOrderDeliveryNoteController::class, 'destroy']);
+    Route::post('purchase-orders/{purchaseOrder}/invoices', [PurchaseOrderInvoiceController::class, 'store']);
+    Route::get('purchase-orders/{purchaseOrder}/invoices/{invoice}/file', [PurchaseOrderInvoiceController::class, 'show'])
+        ->name('purchase-orders.invoices.show');
+    Route::delete('purchase-orders/{purchaseOrder}/invoices/{invoice}', [PurchaseOrderInvoiceController::class, 'destroy']);
+
+    Route::apiResource('subcontractors', SubcontractorController::class)->only(['index', 'store', 'update']);
+    Route::get('projects/{project}/next-subcontract-item-code', [SubcontractController::class, 'nextItemCode']);
+    Route::get('projects/{project}/subcontract-materials', [SubcontractController::class, 'siteMaterials']);
+    Route::apiResource('subcontracts', SubcontractController::class)->only(['index', 'store', 'show', 'update', 'destroy']);
+    Route::post('subcontracts/{subcontract}/variations', [SubcontractVariationController::class, 'store']);
+    Route::post('subcontracts/{subcontract}/valuations', [SubcontractValuationController::class, 'store']);
+    Route::get('subcontract-valuations/{valuation}', [SubcontractValuationController::class, 'show']);
+    Route::put('subcontract-valuations/{valuation}', [SubcontractValuationController::class, 'update']);
+    Route::delete('subcontract-valuations/{valuation}', [SubcontractValuationController::class, 'destroy']);
+    Route::post('subcontract-valuations/{valuation}/submit', [SubcontractValuationController::class, 'submit']);
+    Route::post('subcontract-valuations/{valuation}/return-to-draft', [SubcontractValuationController::class, 'returnToDraft']);
+    Route::post('subcontract-valuations/{valuation}/approve', [SubcontractValuationController::class, 'approve']);
+    Route::post('subcontract-valuations/{valuation}/pay', [SubcontractValuationController::class, 'pay']);
+    Route::post('subcontract-valuations/{valuation}/invoice', [SubcontractValuationController::class, 'invoice']);
+    Route::post('subcontract-valuations/{valuation}/documents', [SubcontractValuationDocumentController::class, 'store']);
+    Route::get('subcontract-valuations/{valuation}/documents/{document}/file', [SubcontractValuationDocumentController::class, 'show'])
+        ->name('subcontract-valuations.documents.show');
+    Route::delete('subcontract-valuations/{valuation}/documents/{document}', [SubcontractValuationDocumentController::class, 'destroy']);
+
     Route::get('purchase-orders/{purchaseOrder}/pdf', [PurchaseOrderController::class, 'pdf'])
         ->name('purchase-orders.pdf');
     Route::apiResource('purchase-orders', PurchaseOrderController::class);

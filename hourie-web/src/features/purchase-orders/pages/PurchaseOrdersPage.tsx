@@ -1,4 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { openDocument } from "../../../shared/documents";
+import { DocumentRow } from "../../../shared/components/DocumentRow";
+import { SupplierInvoices } from "../components/SupplierInvoices";
 import { Pagination } from "../../../shared/components/Pagination";
 import { SearchField } from "../../../shared/components/SearchField";
 import { ToolbarIconButton } from "../../../shared/components/ToolbarButtons";
@@ -13,7 +16,7 @@ import { DocumentUploadDropzone } from "../../../shared/components/DocumentUploa
 import type { PaginationMeta } from "../../../shared/api/pagination";
 import { InventoryFormSection } from "../../equipment/components/AssetForm";
 import { EquipmentCreationPanel } from "../../equipment/components/EquipmentCreationPanel";
-import { deletePurchaseOrder, deletePurchaseOrderDeliveryNote, downloadPurchaseOrderDeliveryNote, downloadPurchaseOrderPdf, getPurchaseOrders, previewPurchaseOrderDeliveryNote, savePurchaseOrder, uploadPurchaseOrderDeliveryNotes } from "../api";
+import { deletePurchaseOrder, deletePurchaseOrderDeliveryNote, downloadPurchaseOrderPdf, getPurchaseOrders, getSiteMaterials, savePurchaseOrder, uploadPurchaseOrderDeliveryNotes, type SiteMaterial } from "../api";
 import type { PurchaseOrder, PurchaseOrderDeliveryNote, PurchaseOrderItem, PurchaseOrderPayload } from "../types";
 import "./purchase-orders-page.css";
 
@@ -24,6 +27,8 @@ type DocumentView = "templates" | "purchase-orders";
 const emptyItem = (): EditableItem => ({
   key: crypto.randomUUID(),
   budget_code: "",
+  subcontract_item_material_id: null,
+  unit: "",
   description: "",
   quantity: "1",
   unit_price: "0",
@@ -37,7 +42,7 @@ function newOrder(preparedBy: string): EditableOrder {
     ordered_on: new Date().toISOString().slice(0, 10),
     follow_up_agent: "",
     contact_name: "",
-    project_name: "",
+    project_id: null,
     reason: "",
     prepared_by: preparedBy,
     ordered_by: "",
@@ -57,7 +62,7 @@ function editableOrder(order: PurchaseOrder): EditableOrder {
     ordered_on: order.ordered_on,
     follow_up_agent: order.follow_up_agent ?? "",
     contact_name: order.contact_name ?? "",
-    project_name: order.project_name ?? "",
+    project_id: order.project_id,
     reason: order.reason ?? "",
     prepared_by: order.prepared_by ?? "",
     ordered_by: order.ordered_by ?? "",
@@ -101,13 +106,26 @@ function dateLabel(value: string) {
 }
 
 
-export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = [], view, onNavigate }: { defaultPreparedBy: string; canManage: boolean; projects?: Array<{ id: number; name: string }>; view?: DocumentView; onNavigate?: (view: DocumentView) => void }) {
+export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = [], view, onNavigate }: { defaultPreparedBy: string; canManage: boolean; projects?: Array<{ id: number; name: string; code: string | null }>; view?: DocumentView; onNavigate?: (view: DocumentView) => void }) {
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState<PaginationMeta | null>(null);
   const [loading, setLoading] = useState(true);
   const [editor, setEditor] = useState<EditableOrder | null>(null);
+  const [siteMaterials, setSiteMaterials] = useState<SiteMaterial[]>([]);
+  const editorProjectId = editor?.project_id ?? null;
+
+  useEffect(() => {
+    if (!editorProjectId) return;
+    let active = true;
+    getSiteMaterials(editorProjectId)
+      .then((materials) => { if (active) setSiteMaterials(materials); })
+      .catch(() => { if (active) setSiteMaterials([]); });
+    return () => { active = false; };
+  }, [editorProjectId]);
+
+  const materialsForEditor = editorProjectId ? siteMaterials : [];
   const [editingId, setEditingId] = useState<number | undefined>();
   const [deliveryNoteFiles, setDeliveryNoteFiles] = useState<File[]>([]);
   const [editorDeliveryNotes, setEditorDeliveryNotes] = useState<PurchaseOrderDeliveryNote[]>([]);
@@ -174,6 +192,17 @@ export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = []
     setEditor((current) => current ? { ...current, [field]: value } : current);
   }
 
+  /** Links an order line to the work material it buys; its budget code follows the work item. */
+  function linkMaterial(key: string, materialId: number | null) {
+    const material = materialsForEditor.find((candidate) => candidate.id === materialId);
+    setEditor((current) => current ? {
+      ...current,
+      items: current.items.map((item) => item.key === key
+        ? { ...item, subcontract_item_material_id: material?.id ?? null, budget_code: material?.item_code ?? "", unit: material?.unit ?? item.unit ?? "" }
+        : item),
+    } : current);
+  }
+
   function updateItem(key: string, field: keyof PurchaseOrderItem, value: string) {
     setEditor((current) => current ? {
       ...current,
@@ -188,7 +217,7 @@ export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = []
     setError(null);
     const payload: PurchaseOrderPayload = {
       ...editor,
-      items: editor.items.map(({ budget_code, description, quantity, unit_price }) => ({ budget_code, description, quantity, unit_price })),
+      items: editor.items.map(({ budget_code, subcontract_item_material_id, description, quantity, unit, unit_price }) => ({ budget_code, subcontract_item_material_id, description, quantity, unit, unit_price })),
     };
     try {
       const response = await savePurchaseOrder(payload, editingId);
@@ -209,7 +238,7 @@ export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = []
       setEditingId(undefined);
       setDeliveryNoteFiles([]);
       setEditorDeliveryNotes([]);
-      setPreview(savedOrder);
+      setSelectedOrder(savedOrder);
       await refresh();
     } catch {
       setError("Vérifiez les informations du bon de commande puis réessayez.");
@@ -248,17 +277,6 @@ export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = []
     }
   }
 
-  function previewDeliveryNote(document: PurchaseOrderDeliveryNote) {
-    if (!previewPurchaseOrderDeliveryNote(document)) setError("Impossible d’ouvrir le bon de livraison.");
-  }
-
-  async function downloadDeliveryNote(document: PurchaseOrderDeliveryNote) {
-    try {
-      await downloadPurchaseOrderDeliveryNote(document);
-    } catch {
-      setError("Impossible de télécharger le bon de livraison.");
-    }
-  }
 
   return (
     <main className="equipment-page purchase-orders-page">
@@ -295,14 +313,15 @@ export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = []
         <section className="inventory-panel po-history"><div className="filter-bar"><SearchField id="po-search" label="Documents enregistrés" placeholder="Numéro, fournisseur ou projet" value={search} onChange={(value) => { setSearch(value); setPage(1); }} /><div className="filter-toolbar-actions"><ToolbarIconButton icon="refresh" label="Actualiser" disabled={loading} onClick={() => void refresh()} /></div></div>{loading ? <div className="table-state"><LoadingSpinner label="Chargement des bons de commande…" /></div> : orders.length === 0 ? <EmptyState title="Aucun bon de commande" description="Créez le premier bon de commande avec le bouton +." /> : <div className="equipment-table-wrap"><table className="equipment-table"><thead><tr><th>N°</th><th>Date</th><th>Fournisseur</th><th>Projet</th><th>Total TTC</th><th>Modifié</th></tr></thead><tbody>{orders.map((order) => <tr key={order.id} {...clickableRow(() => setSelectedOrder(order))}><td><strong>{order.number}</strong></td><td>{dateLabel(order.ordered_on)}</td><td>{order.supplier_name}</td><td>{order.project_name || "—"}</td><td>{money(order.total, order.currency)}</td><td>{dateLabel(order.updated_at.slice(0, 10))}</td></tr>)}</tbody></table></div>}{pagination && <Pagination meta={pagination} disabled={loading} label="Pagination des bons de commande" onPageChange={setPage} />}</section>
       </>}
 
-      {selectedOrder && (
+      {selectedOrder && !editor && !preview && (
         <PurchaseOrderDetails
           order={selectedOrder}
           canManage={canManage}
           onClose={() => setSelectedOrder(null)}
-          onPreview={() => { setPreview(selectedOrder); setSelectedOrder(null); }}
-          onEdit={() => { editOrder(selectedOrder); setSelectedOrder(null); }}
+          onPreview={() => setPreview(selectedOrder)}
+          onEdit={() => editOrder(selectedOrder)}
           onDelete={() => void remove(selectedOrder)}
+          onOrderChanged={(order) => { setSelectedOrder(order); void refresh(); }}
         />
       )}
 
@@ -319,25 +338,27 @@ export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = []
               <div className="po-delivery-notes-editor equipment-invoices-section">
                 <DocumentUploadDropzone compact title="Ajouter le bon de livraison" description="PDF uniquement · 10 Mo maximum" disabled={saving} onFiles={(files) => setDeliveryNoteFiles((current) => [...current, ...files])} />
                 {deliveryNoteFiles.length > 0 && <div className="po-pending-documents">{deliveryNoteFiles.map((file, index) => <div key={`${file.name}-${file.lastModified}-${index}`}><span>{file.name}</span><button type="button" aria-label={`Retirer ${file.name}`} onClick={() => setDeliveryNoteFiles((current) => current.filter((_, fileIndex) => fileIndex !== index))}><ActionIcon name="close" /></button></div>)}</div>}
-                {editorDeliveryNotes.length > 0 && <><div className="section-heading-row"><div><h3>Documents enregistrés</h3><p>{editorDeliveryNotes.length} bon{editorDeliveryNotes.length > 1 ? "s" : ""} de livraison</p></div></div><PaginatedDocumentList pageSize={3} documents={editorDeliveryNotes} emptyMessage="Aucun bon de livraison" renderDocument={(document) => <article key={document.id}><button className="invoice-preview-button" type="button" onClick={() => previewDeliveryNote(document)}><span className="invoice-pdf-badge">PDF</span><span><strong>{document.original_name}</strong><small>{formatFileSize(document.size_bytes)} · {dateLabel(document.created_at.slice(0, 10))}{document.uploaded_by ? ` · Ajouté par ${document.uploaded_by.name}` : ""}</small></span></button><button className="invoice-download-button" type="button" onClick={() => void downloadDeliveryNote(document)}><ActionIcon name="expand" /> Télécharger</button><button className="invoice-delete-button" type="button" aria-label={`Supprimer ${document.original_name}`} onClick={() => void removeDeliveryNote(document)}><ActionIcon name="delete" /></button></article>} /></>}
+                {editorDeliveryNotes.length > 0 && <><div className="section-heading-row"><div><h3>Documents enregistrés</h3><p>{editorDeliveryNotes.length} bon{editorDeliveryNotes.length > 1 ? "s" : ""} de livraison</p></div></div><PaginatedDocumentList pageSize={3} documents={editorDeliveryNotes} emptyMessage="Aucun bon de livraison" renderDocument={(document) => <DocumentRow key={document.id} url={document.url} name={document.original_name} meta={`${formatFileSize(document.size_bytes)} · ${dateLabel(document.created_at.slice(0, 10))}${document.uploaded_by ? ` · Ajouté par ${document.uploaded_by.name}` : ""}`} onError={setError} onDelete={() => void removeDeliveryNote(document)} />} /></>}
               </div>
             </InventoryFormSection>
             <InventoryFormSection title="Informations" icon="identification">
               <div className="maintenance-form-grid asset-form-grid-2">
-                <label><span>Fournisseur *</span><input required value={editor.supplier_name} onChange={(event) => updateField("supplier_name", event.target.value)} /></label>
-                <label><span>Date *</span><input required type="date" value={editor.ordered_on} onChange={(event) => updateField("ordered_on", event.target.value)} /></label>
+                <label><span>Fournisseur</span><input required value={editor.supplier_name} onChange={(event) => updateField("supplier_name", event.target.value)} /></label>
+                <label><span>Date</span><input required type="date" value={editor.ordered_on} onChange={(event) => updateField("ordered_on", event.target.value)} /></label>
                 <label><span>Téléphone</span><input value={editor.supplier_phone ?? ""} onChange={(event) => updateField("supplier_phone", event.target.value)} /></label>
                 <label><span>Fax</span><input value={editor.supplier_fax ?? ""} onChange={(event) => updateField("supplier_fax", event.target.value)} /></label>
                 <label><span>Agent de suivi</span><input value={editor.follow_up_agent ?? ""} onChange={(event) => updateField("follow_up_agent", event.target.value)} /></label>
                 <label><span>Contact</span><input value={editor.contact_name ?? ""} onChange={(event) => updateField("contact_name", event.target.value)} /></label>
-                <label><span>Projet</span><SearchableSelect ariaLabel="Projet" value={editor.project_name ?? ""} onChange={(value) => updateField("project_name", value)} placeholder="Sélectionner un projet" options={[...(editor.project_name && !projects.some((project) => project.name === editor.project_name) ? [{ value: editor.project_name, label: editor.project_name }] : []), ...projects.map((project) => ({ value: project.name, label: project.name }))]} /></label>
+                <label><span>Projet *</span><SearchableSelect ariaLabel="Projet" required value={editor.project_id ? String(editor.project_id) : ""} onChange={(value) => updateField("project_id", value ? Number(value) : null)} placeholder="Sélectionner un chantier" options={projects.map((project) => ({ value: String(project.id), label: project.code ? `${project.code} · ${project.name}` : `${project.name} (sans code analytique)` }))} /></label>
                 <label><span>Motif</span><input value={editor.reason ?? ""} onChange={(event) => updateField("reason", event.target.value)} /></label>
               </div>
             </InventoryFormSection>
             <InventoryFormSection title="Articles" icon="invoice">
               <div className="po-lines-section">
                 <div className="po-lines-heading"><span>Articles commandés</span><button type="button" className="maintenance-add" onClick={() => updateField("items", [...editor.items, emptyItem()])}><ActionIcon name="add" /> Ajouter une ligne</button></div>
-            <div className="po-lines-table-wrap"><table className="po-lines-table"><thead><tr><th>N°</th><th>Code budget</th><th>Description *</th><th>Quantité *</th><th>Prix unitaire *</th><th>Total</th><th /></tr></thead><tbody>{editor.items.map((item, index) => <tr key={item.key}><td>{index + 1}</td><td><input aria-label={`Code budget ligne ${index + 1}`} value={item.budget_code ?? ""} onChange={(event) => updateItem(item.key, "budget_code", event.target.value)} /></td><td><input aria-label="Description *" required value={item.description} onChange={(event) => updateItem(item.key, "description", event.target.value)} /></td><td><input aria-label="Quantité *" required min="1" step="1" inputMode="numeric" type="number" value={item.quantity} onChange={(event) => updateItem(item.key, "quantity", integerInput(event.target.value))} /></td><td><input aria-label="Prix unitaire *" required min="0" step="0.01" type="number" value={item.unit_price} onChange={(event) => updateItem(item.key, "unit_price", event.target.value)} /></td><td>{money(numeric(item.quantity) * numeric(item.unit_price), editor.currency)}</td><td><button aria-label={`Supprimer la ligne ${index + 1}`} type="button" className="po-remove-line" disabled={editor.items.length === 1} onClick={() => updateField("items", editor.items.filter((candidate) => candidate.key !== item.key))}><ActionIcon name="delete" /></button></td></tr>)}</tbody></table></div>
+            <div className="po-lines-table-wrap"><table className="po-lines-table"><thead><tr><th>N°</th><th>Code budget</th><th>Description *</th><th>Quantité *</th><th>Unité</th><th>Prix unitaire *</th><th>Total</th><th /></tr></thead><tbody>{editor.items.map((item, index) => <tr key={item.key}><td>{index + 1}</td><td>{materialsForEditor.length > 0
+                ? <SearchableSelect ariaLabel={`Code budget ligne ${index + 1}`} value={item.subcontract_item_material_id ? String(item.subcontract_item_material_id) : ""} onChange={(value) => linkMaterial(item.key, value ? Number(value) : null)} placeholder="Aucun (achat hors sous-traitance)" options={materialsForEditor.map((material) => ({ value: String(material.id), label: `${material.item_code} · ${material.name} (${material.unit}) — ${material.item_description}` }))} />
+                : <input aria-label={`Code budget ligne ${index + 1}`} value={item.budget_code ?? ""} onChange={(event) => updateItem(item.key, "budget_code", event.target.value)} />}</td><td><input aria-label="Description *" required value={item.description} onChange={(event) => updateItem(item.key, "description", event.target.value)} /></td><td><input aria-label="Quantité *" required min="1" step="1" inputMode="numeric" type="number" value={item.quantity} onChange={(event) => updateItem(item.key, "quantity", integerInput(event.target.value))} /></td><td><input aria-label={`Unité ligne ${index + 1}`} placeholder="t, sac, u…" title={item.subcontract_item_material_id ? "Unité du matériau de la sous-traitance" : undefined} disabled={Boolean(item.subcontract_item_material_id)} value={item.unit ?? ""} onChange={(event) => updateItem(item.key, "unit", event.target.value)} /></td><td><input aria-label="Prix unitaire *" required min="0" step="0.01" type="number" value={item.unit_price} onChange={(event) => updateItem(item.key, "unit_price", event.target.value)} /></td><td>{money(numeric(item.quantity) * numeric(item.unit_price), editor.currency)}</td><td><button aria-label={`Supprimer la ligne ${index + 1}`} type="button" className="po-remove-line" disabled={editor.items.length === 1} onClick={() => updateField("items", editor.items.filter((candidate) => candidate.key !== item.key))}><ActionIcon name="delete" /></button></td></tr>)}</tbody></table></div>
               </div>
             </InventoryFormSection>
             <InventoryFormSection title="Validation et totaux" icon="specifications">
@@ -351,12 +372,12 @@ export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = []
         </EquipmentCreationPanel>
       )}
 
-      {preview && <div className="po-preview-backdrop" onMouseDown={() => setPreview(null)}><section className="po-preview-panel" role="dialog" aria-modal="true" aria-label={`Bon de commande ${preview.number}`} onMouseDown={(event) => event.stopPropagation()}><header><div><strong>Aperçu du bon N° {preview.number}</strong><small>Le PDF est enregistré dans le stockage sécurisé des documents.</small></div><div>{canManage && <button className="secondary-button" type="button" onClick={() => { editOrder(preview); setPreview(null); }}><ActionIcon name="edit" /> Modifier</button>}<button className="primary-button" type="button" onClick={() => void exportPdf(preview)}><ActionIcon name="download" /> Exporter en PDF</button><button className="po-preview-close" type="button" aria-label="Fermer l’aperçu" title="Fermer" onClick={() => setPreview(null)}><ActionIcon name="close" /></button></div></header>{preview.delivery_notes.length > 0 && <div className="po-preview-delivery-notes"><strong>Bon{preview.delivery_notes.length > 1 ? "s" : ""} de livraison :</strong>{preview.delivery_notes.map((document) => <button type="button" key={document.id} onClick={() => previewDeliveryNote(document)}><ActionIcon name="invoice" /> {document.original_name}</button>)}</div>}<div className="po-sheet-stage"><iframe className="po-pdf-frame" title={`Aperçu PDF du bon ${preview.number}`} src={`${preview.pdf_url}?preview=1#toolbar=0&navpanes=0&scrollbar=0`} /></div></section></div>}
+      {preview && <div className="po-preview-backdrop" onMouseDown={() => setPreview(null)}><section className="po-preview-panel" role="dialog" aria-modal="true" aria-label={`Bon de commande ${preview.number}`} onMouseDown={(event) => event.stopPropagation()}><header><div><strong>Aperçu du bon N° {preview.number}</strong><small>Le PDF est enregistré dans le stockage sécurisé des documents.</small></div><div>{canManage && <button className="secondary-button" type="button" onClick={() => { editOrder(preview); setPreview(null); }}><ActionIcon name="edit" /> Modifier</button>}<button className="primary-button" type="button" onClick={() => void exportPdf(preview)}><ActionIcon name="download" /> Exporter en PDF</button><button className="po-preview-close" type="button" aria-label="Fermer l’aperçu" title="Fermer" onClick={() => setPreview(null)}><ActionIcon name="close" /></button></div></header>{preview.delivery_notes.length > 0 && <div className="po-preview-delivery-notes"><strong>Bon{preview.delivery_notes.length > 1 ? "s" : ""} de livraison :</strong>{preview.delivery_notes.map((document) => <button type="button" key={document.id} onClick={() => { if (!openDocument(document.url)) setError("Impossible d’ouvrir le bon de livraison."); }}><ActionIcon name="invoice" /> {document.original_name}</button>)}</div>}<div className="po-sheet-stage"><iframe className="po-pdf-frame" title={`Aperçu PDF du bon ${preview.number}`} src={`${preview.pdf_url}?preview=1#toolbar=0&navpanes=0&scrollbar=0`} /></div></section></div>}
     </main>
   );
 }
 
-function PurchaseOrderDetails({ order, canManage, onClose, onPreview, onEdit, onDelete }: { order: PurchaseOrder; canManage: boolean; onClose: () => void; onPreview: () => void; onEdit: () => void; onDelete: () => void }) {
+function PurchaseOrderDetails({ order, canManage, onClose, onPreview, onEdit, onDelete, onOrderChanged }: { order: PurchaseOrder; canManage: boolean; onClose: () => void; onPreview: () => void; onEdit: () => void; onDelete: () => void; onOrderChanged: (order: PurchaseOrder) => void }) {
   return (
     <div className="detail-backdrop" onMouseDown={onClose}>
       <aside className="detail-panel insurance-side-panel purchase-order-detail-panel" role="dialog" aria-modal="true" aria-label={`Détail du bon de commande ${order.number}`} onMouseDown={(event) => event.stopPropagation()}>
@@ -388,7 +409,7 @@ function PurchaseOrderDetails({ order, canManage, onClose, onPreview, onEdit, on
           <section>
             <h3><ActionIcon name="invoice" /> Articles commandés</h3>
             <div className="po-detail-items">
-              {order.items.map((item, index) => <article key={item.id ?? index}><span>{index + 1}</span><div><strong>{item.description}</strong><small>{item.budget_code || "Sans code budget"} · {item.quantity} × {money(item.unit_price, order.currency)}</small></div><b>{money(item.total ?? numeric(item.quantity) * numeric(item.unit_price), order.currency)}</b></article>)}
+              {order.items.map((item, index) => <article key={item.id ?? index}><span>{index + 1}</span><div><strong>{item.description}</strong><small>{item.material_label || item.budget_code || "Sans code budget"} · {item.quantity}{item.unit ? ` ${item.unit}` : ""} × {money(item.unit_price, order.currency)}</small></div><b>{money(item.total ?? numeric(item.quantity) * numeric(item.unit_price), order.currency)}</b></article>)}
             </div>
           </section>
           <section>
@@ -399,9 +420,10 @@ function PurchaseOrderDetails({ order, canManage, onClose, onPreview, onEdit, on
               <div><dt>Total TTC</dt><dd><strong>{money(order.total, order.currency)}</strong></dd></div>
             </dl>
           </section>
+          <SupplierInvoices order={order} canManage={canManage} onChanged={onOrderChanged} />
           {order.delivery_notes.length > 0 && <section>
             <h3><ActionIcon name="invoice" /> Bons de livraison</h3>
-            <div className="po-detail-documents">{order.delivery_notes.map((document) => <article key={document.id}><span className="invoice-pdf-badge">PDF</span><div><strong>{document.original_name}</strong><small>{formatFileSize(document.size_bytes)} · {dateLabel(document.created_at.slice(0, 10))}</small></div></article>)}</div>
+            <div className="po-detail-documents">{order.delivery_notes.map((document) => <DocumentRow key={document.id} url={document.url} name={document.original_name} meta={`${formatFileSize(document.size_bytes)} · ${dateLabel(document.created_at.slice(0, 10))}`} />)}</div>
           </section>}
         </div>
       </aside>

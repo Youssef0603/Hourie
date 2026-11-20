@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="utf-8">
-    <title>Bon de commande {{ str_pad((string) $purchaseOrder->number, 7, '0', STR_PAD_LEFT) }}</title>
+    <title>Bon de commande {{ $purchaseOrder->number }}</title>
     <style>
         @page { margin: 0; size: A4 portrait; }
         * { box-sizing: border-box; }
@@ -13,13 +13,11 @@
         .title { position: absolute; left: 57mm; top: 20mm; width: 72mm; margin: 0; color: #14508c; font-size: 17px; line-height: 1; text-align: center; white-space: nowrap; }
         .number { position: absolute; right: 0; top: 19.5mm; color: #a62522; font-size: 16px; font-weight: bold; letter-spacing: 1px; }
         .parties { width: 100%; margin-bottom: 3mm; border-collapse: collapse; table-layout: fixed; }
-        .parties td { width: 50%; padding: 0 12mm 0 2mm; vertical-align: top; }
-        .parties td:last-child { padding-right: 2mm; padding-left: 12mm; }
-        .field { width: 100%; height: 5.4mm; border-collapse: collapse; }
+        .parties td.party { width: 50%; padding: 0 12mm 0 2mm; vertical-align: top; }
+        .parties td.party-right { padding-right: 2mm; padding-left: 12mm; }
+        .field { width: 100%; height: 5.4mm; border-collapse: collapse; table-layout: fixed; }
         .field th { padding: 0 1.5mm 0 0; text-align: left; vertical-align: middle; white-space: nowrap; }
-        .parties > tbody > tr > td:first-child .field th { width: 10mm; }
-        .parties > tbody > tr > td:last-child .field th { width: 22mm; }
-        .field td { overflow: hidden; padding: 0 0 1mm; border-bottom: .35mm solid #14508c; vertical-align: middle; white-space: nowrap; }
+        .field td { overflow: hidden; padding: 0 0 1mm .5mm; text-align: left; border-bottom: .35mm solid #14508c; vertical-align: middle; white-space: nowrap; }
         .items { width: 100%; border-collapse: collapse; table-layout: fixed; }
         .items th, .items td { height: 4.25mm; padding: .6mm 1.3mm; border: .3mm solid #14508c; vertical-align: middle; }
         .items thead th { height: 9mm; background: #80aad0; text-align: center; font-weight: bold; }
@@ -38,9 +36,9 @@
         .items tfoot .clear { border: 0; }
         .items tfoot th { background: #80aad0; text-align: center; }
         .signatures { position: relative; min-height: 29mm; margin-top: 7mm; }
-        .signature-table { width: 100%; border-collapse: collapse; }
+        .signature-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
         .signature-table th { width: 32mm; height: 7mm; padding: 0; text-align: left; vertical-align: middle; white-space: nowrap; }
-        .signature-table td { height: 7mm; padding: 0 1mm 1mm; border-bottom: .35mm solid #14508c; vertical-align: middle; }
+        .signature-table td { height: 7mm; padding: 0 1mm 1mm; text-align: left; border-bottom: .35mm solid #14508c; vertical-align: middle; }
         .stamp { position: absolute; left: 91mm; top: 0; width: 27mm; height: 27mm; object-fit: contain; }
         .footer { margin-top: 4mm; border: .3mm solid #14508c; }
         .footer p { display: table; width: 100%; min-height: 7mm; margin: 0; padding: 0; border-bottom: .3mm solid #14508c; }
@@ -52,7 +50,7 @@
 </head>
 <body>
 @php
-    $number = str_pad((string) $purchaseOrder->number, 7, '0', STR_PAD_LEFT);
+    $number = $purchaseOrder->number;
     $formatNumber = static function ($value, bool $forceDecimals = false): string {
         $numberValue = (float) (string) $value;
         $hasDecimals = abs($numberValue - round($numberValue)) > 0.000001;
@@ -70,15 +68,15 @@
 
     <table class="parties">
         <tr>
-            <td>
-                <table class="field"><tr><th>À :</th><td>{{ $purchaseOrder->supplier_name }}</td></tr></table>
-                <table class="field"><tr><th>Tél. :</th><td>{{ $purchaseOrder->supplier_phone }}</td></tr></table>
-                <table class="field"><tr><th>Fax :</th><td>{{ $purchaseOrder->supplier_fax }}</td></tr></table>
+            <td class="party">
+                <table class="field"><tr><th style="width: 13%">À :</th><td>{{ $purchaseOrder->supplier_name }}</td></tr></table>
+                <table class="field"><tr><th style="width: 13%">Tél. :</th><td>{{ $purchaseOrder->supplier_phone }}</td></tr></table>
+                <table class="field"><tr><th style="width: 13%">Fax :</th><td>{{ $purchaseOrder->supplier_fax }}</td></tr></table>
             </td>
-            <td>
-                <table class="field"><tr><th>Date :</th><td>{{ $purchaseOrder->ordered_on?->locale('fr')->translatedFormat('j M Y') }}</td></tr></table>
-                <table class="field"><tr><th>Agent de suivi :</th><td>{{ $purchaseOrder->follow_up_agent }}</td></tr></table>
-                <table class="field"><tr><th>Contact :</th><td>{{ $purchaseOrder->contact_name }}</td></tr></table>
+            <td class="party party-right">
+                <table class="field"><tr><th style="width: 33%">Date :</th><td>{{ $purchaseOrder->ordered_on?->locale('fr')->translatedFormat('j M Y') }}</td></tr></table>
+                <table class="field"><tr><th style="width: 33%">Agent de suivi :</th><td>{{ $purchaseOrder->follow_up_agent }}</td></tr></table>
+                <table class="field"><tr><th style="width: 33%">Contact :</th><td>{{ $purchaseOrder->contact_name }}</td></tr></table>
             </td>
         </tr>
     </table>
@@ -93,7 +91,7 @@
                 <td>{{ $index + 1 }}</td>
                 <td>{{ $item?->budget_code }}</td>
                 <td>{{ $item?->description }}</td>
-                <td>{{ $item ? $formatNumber($item->quantity) : '' }}</td>
+                <td>{{ $item ? trim($formatNumber($item->quantity).' '.($item->unit ?? '')) : '' }}</td>
                 <td>{{ $item ? $money($item->unit_price) : '' }}</td>
                 <td>{{ $item ? $money($item->subtotal()) : '' }}</td>
             </tr>
@@ -108,9 +106,9 @@
 
     <div class="signatures">
         <table class="signature-table">
-            <tr><th>Préparé par :</th><td>{{ $purchaseOrder->prepared_by }}</td></tr>
-            <tr><th>Commandé par :</th><td>{{ $purchaseOrder->ordered_by }}</td></tr>
-            <tr><th>Validé par :</th><td>{{ $purchaseOrder->approved_by }}</td></tr>
+            <tr><th style="width: 18%">Préparé par :</th><td>{{ $purchaseOrder->prepared_by }}</td></tr>
+            <tr><th style="width: 18%">Commandé par :</th><td>{{ $purchaseOrder->ordered_by }}</td></tr>
+            <tr><th style="width: 18%">Validé par :</th><td>{{ $purchaseOrder->approved_by }}</td></tr>
         </table>
         <img class="stamp" src="{{ $stampDataUri }}" alt="Cachet">
     </div>

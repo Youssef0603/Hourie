@@ -47,14 +47,32 @@ export async function deletePurchaseOrderDeliveryNote(purchaseOrderId: number, d
   await apiRequest<void>(`/api/v1/purchase-orders/${purchaseOrderId}/delivery-notes/${deliveryNoteId}`, { method: "DELETE" });
 }
 
-export function previewPurchaseOrderDeliveryNote(deliveryNote: PurchaseOrderDeliveryNote) {
-  const url = new URL(deliveryNote.url, window.location.origin);
-  url.searchParams.set("preview", "1");
-  const previewWindow = window.open(url.toString(), "_blank");
-  if (previewWindow) previewWindow.opener = null;
-  return previewWindow !== null;
+
+export async function uploadPurchaseOrderInvoice(id: number, invoice: { number: string; date: string; amount: string; file: File }) {
+  await initializeCsrfProtection();
+  const form = new FormData();
+  form.append("invoice_number", invoice.number);
+  form.append("invoiced_on", invoice.date);
+  form.append("amount", invoice.amount);
+  form.append("invoice_file", invoice.file);
+  return (await apiRequest<{ data: PurchaseOrder }>(`/api/v1/purchase-orders/${id}/invoices`, { method: "POST", body: form })).data;
 }
 
-export function downloadPurchaseOrderDeliveryNote(deliveryNote: PurchaseOrderDeliveryNote) {
-  return downloadAuthenticatedFile(deliveryNote.url, deliveryNote.original_name);
+export async function deletePurchaseOrderInvoice(purchaseOrderId: number, invoiceId: number) {
+  await initializeCsrfProtection();
+  return (await apiRequest<{ data: PurchaseOrder }>(`/api/v1/purchase-orders/${purchaseOrderId}/invoices/${invoiceId}`, { method: "DELETE" })).data;
+}
+
+export type SiteMaterial = {
+  id: number;
+  name: string;
+  unit: string;
+  item_code: string;
+  item_description: string;
+  subcontract_reference: string;
+};
+
+/** Materials ARH supplies for the site's subcontracted work, to link order lines to. */
+export async function getSiteMaterials(projectId: number) {
+  return (await apiRequest<{ data: SiteMaterial[] }>(`/api/v1/projects/${projectId}/subcontract-materials`)).data;
 }

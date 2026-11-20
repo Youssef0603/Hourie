@@ -33,8 +33,9 @@
 .po-lines-table input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-soft); }
 .po-lines-table td:first-child { width: 45px; text-align: center; font-weight: 700; }
 .po-lines-table td:nth-child(2) { width: 140px; }
-.po-lines-table td:nth-child(4), .po-lines-table td:nth-child(5) { width: 130px; }
-.po-lines-table td:nth-child(6) { width: 150px; text-align: end; font-weight: 700; white-space: nowrap; }
+.po-lines-table td:nth-child(4), .po-lines-table td:nth-child(6) { width: 130px; }
+.po-lines-table td:nth-child(5) { width: 90px; }
+.po-lines-table td:nth-child(7) { width: 150px; text-align: end; font-weight: 700; white-space: nowrap; }
 .po-remove-line { border: 0; background: transparent; color: var(--color-danger, #b42318); padding: .4rem; cursor: pointer; }
 .po-remove-line:disabled { opacity: .25; cursor: not-allowed; }
 .po-remove-line svg { width: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; }

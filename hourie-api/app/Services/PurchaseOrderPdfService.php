@@ -13,7 +13,7 @@ class PurchaseOrderPdfService
 {
     public function generateAndStore(PurchaseOrder $purchaseOrder): PurchaseOrder
     {
-        $purchaseOrder->loadMissing(['items', 'creator:id,name', 'deliveryNotes.uploader:id,name']);
+        $purchaseOrder->loadMissing(['items.subcontractMaterial.item:id,code,description', 'creator:id,name', 'deliveryNotes.uploader:id,name', 'invoices.uploader:id,name']);
 
         $options = new Options;
         $options->set('defaultFont', 'Times-Roman');
@@ -48,7 +48,7 @@ class PurchaseOrderPdfService
             'pdf_generated_at' => now(),
         ])->saveQuietly();
 
-        return $purchaseOrder->fresh()->load(['items', 'creator:id,name', 'deliveryNotes.uploader:id,name']);
+        return $purchaseOrder->fresh()->load(['items.subcontractMaterial.item:id,code,description', 'creator:id,name', 'deliveryNotes.uploader:id,name', 'invoices.uploader:id,name']);
     }
 
     public function filename(PurchaseOrder $purchaseOrder): string
@@ -59,7 +59,7 @@ class PurchaseOrderPdfService
             ->trim('_')
             ->upper();
 
-        return 'Bon_de_commande_'.str_pad((string) $purchaseOrder->number, 7, '0', STR_PAD_LEFT)
+        return 'Bon_de_commande_'.$purchaseOrder->number
             .($supplier->isNotEmpty() ? '_'.(string) $supplier : '').'.pdf';
     }
 
