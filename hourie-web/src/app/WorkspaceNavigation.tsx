@@ -25,6 +25,7 @@ const workspaceModules = () =>
     { section: "insurance", label: fr.navigation.insurance, path: "/insurance", icon: "insurance", group: "administration" },
     { section: "bonds", label: fr.navigation.bonds, path: "/bonds", icon: "bonds", group: "administration" },
     { section: "temporary-admissions", label: fr.navigation.temporaryAdmissions, path: "/temporary-admissions", icon: "insurance", group: "administration" },
+    { section: "subcontracts", label: fr.navigation.subcontracts, path: "/subcontracts", icon: "subcontracts", group: "administration" },
     { section: "documents", label: fr.navigation.documents, path: "/documents", icon: "documents", group: "administration" },
   ] as const satisfies readonly {
     section: Section;

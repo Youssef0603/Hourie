@@ -32,6 +32,7 @@ class UserResource extends JsonResource
                 'delete_equipment' => $this->role->canDeleteEquipment(),
                 'manage_sites' => $this->role->canManageSites(),
                 'manage_purchase_orders' => $this->role->canManagePurchaseOrders(),
+                'manage_subcontracts' => $this->role->canManageSubcontracts(),
                 'manage_users' => $this->role->canManageUsers(),
                 'manage_manager_accounts' => $this->role->canManageManagerAccounts(),
             ],

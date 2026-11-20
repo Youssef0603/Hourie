@@ -1,11 +1,12 @@
 type NavigationIconProps = {
-  name: 'dashboard' | 'generators' | 'sites' | 'people' | 'settings' | 'insurance' | 'bonds' | 'documents'
+  name: 'dashboard' | 'generators' | 'sites' | 'people' | 'settings' | 'insurance' | 'bonds' | 'documents' | 'subcontracts'
 }
 
 export function NavigationIcon({ name }: NavigationIconProps) {
   if (name === 'dashboard') return <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="4" rx="1" /><rect x="14" y="11" width="7" height="10" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /></svg>
   if (name === 'insurance') return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 20 6v5c0 5-3.4 8.5-8 10-4.6-1.5-8-5-8-10V6l8-3Z" /><path d="M8.5 12 11 14.5l4.5-5" /></svg>
   if (name === 'bonds') return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h10l4 4v14H5Z" /><path d="M15 3v5h4M8 12h8M8 16h5" /><path d="m9 7 1.5 1.5L13 6" /></svg>
+  if (name === 'subcontracts') return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6l1 2h3v15H5V6h3Z" /><path d="M9 4v3h6V4M8.5 12l2 2 4-4M8 17h8" /></svg>
   if (name === 'documents') return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h10l4 4v14H5Z" /><path d="M15 3v5h4M8 12h8M8 16h8" /></svg>
   if (name === 'generators') {
     return (

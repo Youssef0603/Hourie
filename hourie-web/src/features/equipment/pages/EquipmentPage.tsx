@@ -99,6 +99,11 @@ const DashboardPage = lazy(() =>
     default: module.DashboardPage,
   })),
 );
+const SubcontractsPage = lazy(() =>
+  import("../../subcontracts/pages/SubcontractsPage").then((module) => ({
+    default: module.SubcontractsPage,
+  })),
+);
 const PurchaseOrdersPage = lazy(() =>
   import("../../purchase-orders/pages/PurchaseOrdersPage").then((module) => ({
     default: module.PurchaseOrdersPage,
@@ -1086,6 +1091,15 @@ export function EquipmentPage({
               canManage={user.permissions.manage_equipment}
               initialAdmissionId={route.temporaryAdmissionId}
               relatedEquipmentContext={{ user, language, options }}
+            />
+          </Suspense>
+        ) : activeSection === "subcontracts" ? (
+          <Suspense fallback={<FeaturePageLoading />}>
+            <SubcontractsPage
+              canManage={user.permissions.manage_subcontracts}
+              projects={options?.projects ?? []}
+              initialSubcontractId={route.section === "subcontracts" ? route.subcontractId : null}
+              onSelect={(id) => navigate(id ? `/subcontracts/${id}` : "/subcontracts", true)}
             />
           </Suspense>
         ) : activeSection === "documents" ? (

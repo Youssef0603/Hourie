@@ -49,6 +49,12 @@ export type WorkspaceRoute =
       siteId: null;
     }
   | {
+      section: "subcontracts";
+      subcontractId: number | null;
+      equipmentId: null;
+      siteId: null;
+    }
+  | {
       section: "documents";
       documentView: "templates" | "purchase-orders";
       equipmentId: null;
@@ -204,6 +210,16 @@ export function parseWorkspaceRoute(pathname: string): WorkspaceRoute {
       siteId: null,
       equipmentId: null,
     };
+  if (
+    parts[0] === "subcontracts" &&
+    (parts.length === 1 || (id(parts[1]) && parts.length === 2))
+  )
+    return {
+      section: "subcontracts",
+      subcontractId: id(parts[1]),
+      siteId: null,
+      equipmentId: null,
+    };
   if (parts[0] === "settings" && parts.length === 1)
     return { section: "catalogs", siteId: null, equipmentId: null };
   if (
@@ -245,6 +261,8 @@ export function workspacePath(route: WorkspaceRoute): string {
     return route.peopleProjectId
       ? `/people/sites/${route.peopleProjectId}`
       : "/people";
+  if (route.section === "subcontracts")
+    return `/subcontracts${route.subcontractId ? `/${route.subcontractId}` : ""}`;
   if (route.section === "documents")
     return route.documentView === "purchase-orders"
       ? "/documents/purchase-orders"
