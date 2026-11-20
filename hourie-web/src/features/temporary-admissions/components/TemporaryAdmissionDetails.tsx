@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { DocumentRow } from "../../../shared/components/DocumentRow";
 import {
   apiRequest,
-  getAuthenticatedFileObjectUrl,
 } from "../../../shared/api/http";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { DocumentUploadDropzone } from "../../../shared/components/DocumentUploadDropzone";
 import { EmptyState } from "../../../shared/components/EmptyState";
-import { LoadingSpinner } from "../../../shared/components/LoadingSpinner";
 import { PaginatedDocumentList } from "../../../shared/components/PaginatedDocumentList";
 import { RecordHistory } from "../../../shared/components/RecordHistory";
 import { activeLanguage } from "../../../i18n/fr";
@@ -163,15 +162,6 @@ export function TemporaryAdmissionDetails({
     }, operationPhrase("Impossible d’enregistrer le dédouanement."));
   }
 
-  async function preview(document: AdmissionDocument) {
-    await perform(async () => {
-      const url = await getAuthenticatedFileObjectUrl(
-        `${document.url}?preview=1`,
-      );
-      window.open(url, "_blank", "noopener,noreferrer");
-    }, operationPhrase("Impossible d’ouvrir ce document."));
-  }
-
   async function removeDocument(document: AdmissionDocument) {
     if (!window.confirm(activeLanguage === "ar" ? `هل تريد حذف « ${document.original_name} »؟` : `Supprimer « ${document.original_name} » ?`)) return;
     setDeletingDocumentId(document.id);
@@ -271,37 +261,16 @@ export function TemporaryAdmissionDetails({
         emptyMessage={emptyMessage}
         pageSize={pageSize}
         renderDocument={(document) => (
-          <article key={document.id}>
-            <button
-              type="button"
-              className="invoice-preview-button"
-              onClick={() => void preview(document)}
-              disabled={busy}
-            >
-              <span className="invoice-pdf-badge">PDF</span>
-              <span>
-                <strong>{document.original_name}</strong>
-                {document.document_date && (
-                  <small>{formatDate(document.document_date)}</small>
-                )}
-              </span>
-            </button>
-            {canManage && (
-              <button
-                type="button"
-                className="invoice-delete-button"
-                aria-label={`${operationPhrase("Supprimer")} ${document.original_name}`}
-                onClick={() => void removeDocument(document)}
-                disabled={deletingDocumentId === document.id}
-              >
-                {deletingDocumentId === document.id ? (
-                  <LoadingSpinner compact label={operationPhrase("Suppression")} />
-                ) : (
-                  <ActionIcon name="delete" />
-                )}
-              </button>
-            )}
-          </article>
+          <DocumentRow
+            key={document.id}
+            url={document.url}
+            name={document.original_name}
+            meta={document.document_date ? formatDate(document.document_date) : undefined}
+            disabled={busy}
+            onError={setError}
+            onDelete={canManage ? () => void removeDocument(document) : undefined}
+            deleting={deletingDocumentId === document.id}
+          />
         )}
       />
     );

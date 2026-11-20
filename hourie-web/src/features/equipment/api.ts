@@ -1,4 +1,4 @@
-import { apiRequest, downloadAuthenticatedFile, initializeCsrfProtection } from '../../shared/api/http'
+import { apiRequest, initializeCsrfProtection } from '../../shared/api/http'
 import type {
   Equipment,
   EquipmentFilterOptions,
@@ -215,9 +215,6 @@ export async function deleteEquipmentInvoice(equipmentId: number, invoiceId: num
   await apiRequest<void>(`/api/v1/equipment/${equipmentId}/invoices/${invoiceId}`, { method: 'DELETE' })
 }
 
-export async function downloadEquipmentInvoice(invoice: EquipmentInvoice): Promise<void> {
-  await downloadAuthenticatedFile(invoice.url, invoice.original_name)
-}
 
 export async function uploadEquipmentVehicleDocument(
   equipmentId: number,
@@ -238,25 +235,8 @@ export async function deleteEquipmentVehicleDocument(equipmentId: number, docume
   await apiRequest<void>(`/api/v1/equipment/${equipmentId}/vehicle-documents/${documentId}`, { method: 'DELETE' })
 }
 
-export async function downloadEquipmentVehicleDocument(document: EquipmentVehicleDocument): Promise<void> {
-  await downloadAuthenticatedFile(document.url, document.original_name)
-}
 
-export function previewEquipmentVehicleDocument(document: EquipmentVehicleDocument): boolean {
-  const url = new URL(document.url, window.location.origin)
-  url.searchParams.set('preview', '1')
-  const previewWindow = window.open(url.toString(), '_blank')
-  if (previewWindow) previewWindow.opener = null
-  return previewWindow !== null
-}
 
-export function previewEquipmentInvoice(invoice: EquipmentInvoice): boolean {
-  const url = new URL(invoice.url, window.location.origin)
-  url.searchParams.set('preview', '1')
-  const previewWindow = window.open(url.toString(), '_blank')
-  if (previewWindow) previewWindow.opener = null
-  return previewWindow !== null
-}
 
 export async function uploadEquipmentGeneratorDocuments(
   equipmentId: number,
@@ -277,17 +257,7 @@ export async function deleteEquipmentGeneratorDocument(equipmentId: number, docu
   await apiRequest<void>(`/api/v1/equipment/${equipmentId}/generator-documents/${documentId}`, { method: 'DELETE' })
 }
 
-export async function downloadEquipmentGeneratorDocument(document: EquipmentGeneratorDocument): Promise<void> {
-  await downloadAuthenticatedFile(document.url, document.original_name)
-}
 
-export function previewEquipmentGeneratorDocument(document: EquipmentGeneratorDocument): boolean {
-  const url = new URL(document.url, window.location.origin)
-  url.searchParams.set('preview', '1')
-  const previewWindow = window.open(url.toString(), '_blank')
-  if (previewWindow) previewWindow.opener = null
-  return previewWindow !== null
-}
 
 export async function getEquipmentFilterOptions(): Promise<EquipmentFilterOptions> {
   const response = await apiRequest<{ data: EquipmentFilterOptions }>(

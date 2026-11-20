@@ -1,15 +1,12 @@
 import { useState } from "react";
 import { fr } from "../../../i18n/fr";
 import { ApiError } from "../../../shared/api/http";
-import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { DocumentUploadDropzone } from "../../../shared/components/DocumentUploadDropzone";
 import { EmptyState } from "../../../shared/components/EmptyState";
-import { LoadingSpinner } from "../../../shared/components/LoadingSpinner";
 import { PaginatedDocumentList } from "../../../shared/components/PaginatedDocumentList";
+import { DocumentRow } from "../../../shared/components/DocumentRow";
 import {
   deleteEquipmentGeneratorDocument,
-  downloadEquipmentGeneratorDocument,
-  previewEquipmentGeneratorDocument,
   uploadEquipmentGeneratorDocuments,
 } from "../api";
 import type { Equipment, EquipmentGeneratorDocument } from "../types";
@@ -23,7 +20,6 @@ type EquipmentGeneratorDocumentsProps = {
 export function EquipmentGeneratorDocuments({ equipment, canManage, onChanged }: EquipmentGeneratorDocumentsProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
-  const [downloadingId, setDownloadingId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function upload(files: File[]) {
@@ -58,23 +54,6 @@ export function EquipmentGeneratorDocuments({ equipment, canManage, onChanged }:
     }
   }
 
-  async function download(document: EquipmentGeneratorDocument) {
-    setError(null);
-    setDownloadingId(document.id);
-    try {
-      await downloadEquipmentGeneratorDocument(document);
-    } catch {
-      setError(fr.generatorDocuments.downloadError);
-    } finally {
-      setDownloadingId(null);
-    }
-  }
-
-  function openPreview(document: EquipmentGeneratorDocument) {
-    setError(null);
-    if (!previewEquipmentGeneratorDocument(document)) setError(fr.generatorDocuments.previewError);
-  }
-
   return (
     <section className="equipment-vehicle-documents equipment-generator-documents">
       {canManage && (
@@ -94,26 +73,14 @@ export function EquipmentGeneratorDocuments({ equipment, canManage, onChanged }:
           documents={equipment.generator_documents}
           emptyMessage={fr.generatorDocuments.empty}
           renderDocument={(document) => (
-            <article key={document.id}>
-              <button className="invoice-preview-button" type="button" onClick={() => openPreview(document)}>
-                <span className="invoice-pdf-badge">PDF</span>
-                <span>
-                  <strong>{document.original_name}</strong>
-                </span>
-              </button>
-              <button className="invoice-download-button" type="button" disabled={downloadingId === document.id} onClick={() => void download(document)}>
-                {downloadingId === document.id
-                  ? <LoadingSpinner compact label={fr.common.loading} />
-                  : <><ActionIcon name="expand" />{fr.generatorDocuments.download}</>}
-              </button>
-              {canManage && (
-                <button className="invoice-delete-button" type="button" disabled={deletingId === document.id} onClick={() => void remove(document)} aria-label={fr.common.delete}>
-                  {deletingId === document.id
-                    ? <LoadingSpinner compact label={fr.common.loading} />
-                    : <ActionIcon name="delete" />}
-                </button>
-              )}
-            </article>
+            <DocumentRow
+              key={document.id}
+              url={document.url}
+              name={document.original_name}
+              onError={setError}
+              onDelete={canManage ? () => void remove(document) : undefined}
+              deleting={deletingId === document.id}
+            />
           )}
         />
       ) : (

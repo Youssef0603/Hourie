@@ -1,15 +1,12 @@
 import { useState } from "react";
 import { fr } from "../../../i18n/fr";
 import { ApiError } from "../../../shared/api/http";
-import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { DocumentUploadDropzone } from "../../../shared/components/DocumentUploadDropzone";
 import { EmptyState } from "../../../shared/components/EmptyState";
-import { LoadingSpinner } from "../../../shared/components/LoadingSpinner";
 import { PaginatedDocumentList } from "../../../shared/components/PaginatedDocumentList";
+import { DocumentRow } from "../../../shared/components/DocumentRow";
 import {
   deleteEquipmentVehicleDocument,
-  downloadEquipmentVehicleDocument,
-  previewEquipmentVehicleDocument,
   uploadEquipmentVehicleDocument,
 } from "../api";
 import type { Equipment, EquipmentVehicleDocument } from "../types";
@@ -23,7 +20,6 @@ type EquipmentVehicleDocumentsProps = {
 export function EquipmentVehicleDocuments({ equipment, canManage, onChanged }: EquipmentVehicleDocumentsProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
-  const [downloadingId, setDownloadingId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function upload(files: File[]) {
@@ -58,23 +54,6 @@ export function EquipmentVehicleDocuments({ equipment, canManage, onChanged }: E
     }
   }
 
-  async function download(document: EquipmentVehicleDocument) {
-    setError(null);
-    setDownloadingId(document.id);
-    try {
-      await downloadEquipmentVehicleDocument(document);
-    } catch {
-      setError(fr.vehicleDocuments.downloadError);
-    } finally {
-      setDownloadingId(null);
-    }
-  }
-
-  function openPreview(document: EquipmentVehicleDocument) {
-    setError(null);
-    if (!previewEquipmentVehicleDocument(document)) setError(fr.vehicleDocuments.previewError);
-  }
-
   return (
     <section className="equipment-vehicle-documents">
       {canManage && (
@@ -93,26 +72,14 @@ export function EquipmentVehicleDocuments({ equipment, canManage, onChanged }: E
           documents={equipment.vehicle_documents}
           emptyMessage={fr.vehicleDocuments.empty}
           renderDocument={(document) => (
-            <article key={document.id}>
-              <button className="invoice-preview-button" type="button" onClick={() => openPreview(document)}>
-                <span className="invoice-pdf-badge">PDF</span>
-                <span>
-                  <strong>{document.original_name}</strong>
-                </span>
-              </button>
-              <button className="invoice-download-button" type="button" disabled={downloadingId === document.id} onClick={() => void download(document)}>
-                {downloadingId === document.id
-                  ? <LoadingSpinner compact label={fr.common.loading} />
-                  : <><ActionIcon name="expand" />{fr.vehicleDocuments.download}</>}
-              </button>
-              {canManage && (
-                <button className="invoice-delete-button" type="button" disabled={deletingId === document.id} onClick={() => void remove(document)} aria-label={fr.common.delete}>
-                  {deletingId === document.id
-                    ? <LoadingSpinner compact label={fr.common.loading} />
-                    : <ActionIcon name="delete" />}
-                </button>
-              )}
-            </article>
+            <DocumentRow
+              key={document.id}
+              url={document.url}
+              name={document.original_name}
+              onError={setError}
+              onDelete={canManage ? () => void remove(document) : undefined}
+              deleting={deletingId === document.id}
+            />
           )}
         />
       ) : (

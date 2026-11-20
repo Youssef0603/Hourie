@@ -5,12 +5,14 @@ import { ActionIcon } from '../../../shared/components/ActionIcon'
 type EquipmentCreationPanelProps = {
   eyebrow: string
   title: string
+  /** Defaults to the generic "fill in, then save" hint. */
+  subtitle?: string
   children: ReactNode
   action?: ReactNode
   onClose: () => void
 }
 
-export function EquipmentCreationPanel({ eyebrow, title, children, action, onClose }: EquipmentCreationPanelProps) {
+export function EquipmentCreationPanel({ eyebrow, title, subtitle = fr.assets.creationPanelSubtitle, children, action, onClose }: EquipmentCreationPanelProps) {
   const closeButton = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
@@ -29,7 +31,7 @@ export function EquipmentCreationPanel({ eyebrow, title, children, action, onClo
   return <div className="detail-backdrop creation-backdrop" onMouseDown={onClose}>
     <aside className="detail-panel creation-panel" role="dialog" aria-modal="true" aria-label={title} onMouseDown={(event) => event.stopPropagation()}>
       <header className="detail-header creation-panel-header">
-        <div><p className="section-label">{eyebrow}</p><h2>{title}</h2><p>{fr.assets.creationPanelSubtitle}</p></div>
+        <div><p className="section-label">{eyebrow}</p><h2>{title}</h2><p>{subtitle}</p></div>
         <div className="creation-panel-header-actions">
           {action}
           <button className="creation-panel-close" ref={closeButton} type="button" onClick={onClose} aria-label={fr.common.close}><ActionIcon name="close" /></button>

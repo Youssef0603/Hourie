@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
+import { DocumentRow } from "../../../shared/components/DocumentRow";
+import { formatFileSize } from "../../../shared/format";
 import {
   apiRequest,
-  getAuthenticatedFileObjectUrl,
 } from "../../../shared/api/http";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { DocumentUploadDropzone } from "../../../shared/components/DocumentUploadDropzone";
 import { EmptyState } from "../../../shared/components/EmptyState";
-import { LoadingSpinner } from "../../../shared/components/LoadingSpinner";
 import { PaginatedDocumentList } from "../../../shared/components/PaginatedDocumentList";
 import {
   RecordHistory,
@@ -300,12 +300,6 @@ function BondDocuments({
       setDeletingId(null);
     }
   }
-  async function preview(document: BondDocument) {
-    const url = await getAuthenticatedFileObjectUrl(
-      `${document.url}?preview=1`,
-    );
-    window.open(url, "_blank", "noopener,noreferrer");
-  }
   return (
     <section className="insurance-documents-section">
       <h3>
@@ -322,36 +316,15 @@ function BondDocuments({
           documents={bond.documents}
           emptyMessage={operationPhrase("Aucun document ajouté.")}
           renderDocument={(document) => (
-            <article className="bond-document-row" key={document.id}>
-              <button
-                className="invoice-preview-button bond-document-preview"
-                type="button"
-                onClick={() => void preview(document)}
-              >
-                <span className="invoice-pdf-badge">PDF</span>
-                <span>
-                  <strong className="bond-document-name" title={document.original_name}>
-                    {document.original_name}
-                  </strong>
-                  <small>
-                    {Math.max(1, Math.round(document.size_bytes / 1024))} Ko
-                  </small>
-                </span>
-              </button>
-              <button
-                className="invoice-delete-button"
-                type="button"
-                disabled={deletingId === document.id}
-                onClick={() => void remove(document)}
-                aria-label={`${operationPhrase("Supprimer")} ${document.original_name}`}
-              >
-                {deletingId === document.id ? (
-                  <LoadingSpinner compact label={operationPhrase("Suppression")} />
-                ) : (
-                  <ActionIcon name="delete" />
-                )}
-              </button>
-            </article>
+            <DocumentRow
+              key={document.id}
+              url={document.url}
+              name={document.original_name}
+              meta={formatFileSize(document.size_bytes)}
+              onError={setError}
+              onDelete={() => void remove(document)}
+              deleting={deletingId === document.id}
+            />
           )}
         />
       ) : (

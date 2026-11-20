@@ -1,13 +1,13 @@
 import { useState } from "react";
+import { DocumentRow } from "../../../shared/components/DocumentRow";
+import { formatFileSize } from "../../../shared/format";
 import {
   ApiError,
   apiRequest,
-  getAuthenticatedFileObjectUrl,
 } from "../../../shared/api/http";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { DocumentUploadDropzone } from "../../../shared/components/DocumentUploadDropzone";
 import { EmptyState } from "../../../shared/components/EmptyState";
-import { LoadingSpinner } from "../../../shared/components/LoadingSpinner";
 import { PaginatedDocumentList } from "../../../shared/components/PaginatedDocumentList";
 import { activeLanguage } from "../../../i18n/fr";
 import { operationPhrase } from "../../../i18n/operations";
@@ -33,13 +33,6 @@ export function InsuranceDocuments({
   } | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  async function preview(document: PolicyDocument) {
-    const url = await getAuthenticatedFileObjectUrl(
-      `${document.url}?preview=1`,
-    );
-    window.open(url, "_blank", "noopener,noreferrer");
-  }
 
   async function upload(files: File[]) {
     if (!files.length) return;
@@ -120,34 +113,15 @@ export function InsuranceDocuments({
           documents={documents}
           emptyMessage={operationPhrase("Aucun document ajouté.")}
           renderDocument={(document) => (
-            <article key={document.id}>
-              <button
-                className="invoice-preview-button"
-                type="button"
-                onClick={() => void preview(document)}
-              >
-                <span className="invoice-pdf-badge">PDF</span>
-                <span>
-                  <strong>{document.original_name}</strong>
-                  <small>
-                    {Math.max(1, Math.round(document.size_bytes / 1024))} Ko
-                  </small>
-                </span>
-              </button>
-              {!readOnly && <button
-                className="invoice-delete-button"
-                type="button"
-                disabled={deletingId === document.id}
-                onClick={() => void remove(document)}
-                aria-label={`${operationPhrase("Supprimer")} ${document.original_name}`}
-              >
-                {deletingId === document.id ? (
-                  <LoadingSpinner compact label={operationPhrase("Suppression")} />
-                ) : (
-                  <ActionIcon name="delete" />
-                )}
-              </button>}
-            </article>
+            <DocumentRow
+              key={document.id}
+              url={document.url}
+              name={document.original_name}
+              meta={formatFileSize(document.size_bytes)}
+              onError={setError}
+              onDelete={readOnly ? undefined : () => void remove(document)}
+              deleting={deletingId === document.id}
+            />
           )}
         />
       ) : (
