@@ -49,8 +49,7 @@ export function GeneratorTransferForm({
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (destinationProjectId === "" || selectedDestinationLocationId === "")
-      return;
+    if (destinationProjectId === "") return;
     setIsSaving(true);
     setError(null);
 
@@ -59,7 +58,7 @@ export function GeneratorTransferForm({
         await transferEquipment(equipment.id, {
           from_project_id: currentProjectId,
           to_project_id: Number(destinationProjectId),
-          to_location_id: Number(selectedDestinationLocationId),
+          to_location_id: selectedDestinationLocationId === "" ? null : Number(selectedDestinationLocationId),
         }),
       );
     } catch (caught) {
@@ -120,15 +119,12 @@ export function GeneratorTransferForm({
         </label>
         {destinationProjectId !== "" && (
           <label className="field-wide">
-            <span>
-              {fr.equipment.destinationLocation} <em>*</em>
-            </span>
+            <span>{fr.equipment.destinationLocation}</span>
             <SearchableSelect
               ariaLabel={fr.equipment.destinationLocation}
               value={selectedDestinationLocationId}
               onChange={setDestinationLocationId}
               placeholder={fr.common.notProvided}
-              required
               options={destinationLocations.map((location) => ({
                 value: String(location.id),
                 label: location.name,
@@ -148,11 +144,7 @@ export function GeneratorTransferForm({
         <button
           className="primary-button save-button transfer-submit-button"
           type="submit"
-          disabled={
-            isSaving ||
-            destinationProjectId === "" ||
-            selectedDestinationLocationId === ""
-          }
+          disabled={isSaving || destinationProjectId === ""}
         >
           <ActionIcon name="transfer" />
           {isSaving ? (

@@ -48,7 +48,7 @@ it('transfers a generator to another active site and records its history', funct
     ]);
 });
 
-it('requires a destination physical location and rejects a location from another site', function () {
+it('allows a transfer without a physical location but rejects a location from another site', function () {
     $manager = User::factory()->create(['role' => UserRole::GeneratorManager]);
     $category = EquipmentCategory::factory()->create(['code' => 'generator']);
     $source = Project::factory()->create();
@@ -60,14 +60,17 @@ it('requires a destination physical location and rejects a location from another
     $this->actingAs($manager, 'web')->postJson("/api/v1/equipment/{$generator->id}/transfer", [
         'from_project_id' => $source->id,
         'to_project_id' => $destination->id,
-        'to_location_id' => null,
+        'to_location_id' => $wrongLocation->id,
     ])->assertUnprocessable()->assertJsonValidationErrors(['to_location_id']);
 
     $this->actingAs($manager, 'web')->postJson("/api/v1/equipment/{$generator->id}/transfer", [
         'from_project_id' => $source->id,
         'to_project_id' => $destination->id,
-        'to_location_id' => $wrongLocation->id,
-    ])->assertUnprocessable()->assertJsonValidationErrors(['to_location_id']);
+        'to_location_id' => null,
+    ])->assertOk();
+
+    expect($generator->fresh()->current_location_id)->toBeNull()
+        ->and($generator->currentProjectAssignment()->value('project_id'))->toBe($destination->id);
 });
 
 it('forbids viewers from transferring generators', function () {

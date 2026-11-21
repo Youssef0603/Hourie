@@ -125,7 +125,7 @@ export async function saveEquipment(
 
 export async function transferEquipment(
   id: number,
-  payload: { from_project_id: number | null; to_project_id: number; to_location_id: number },
+  payload: { from_project_id: number | null; to_project_id: number; to_location_id: number | null },
 ): Promise<Equipment> {
   await initializeCsrfProtection()
   return (await apiRequest<{ data: Equipment }>(`/api/v1/equipment/${id}/transfer`, {

@@ -40,6 +40,7 @@ class EquipmentTransferController extends Controller
             }
 
             $destinationProject = Project::query()->findOrFail($data['to_project_id']);
+            $data['to_location_id'] ??= null;
             $destinationLocation = $data['to_location_id'] === null
                 ? null
                 : Location::query()->findOrFail($data['to_location_id']);

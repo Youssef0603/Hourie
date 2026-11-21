@@ -29,7 +29,7 @@ class TransferEquipmentRequest extends FormRequest
         return [
             'from_project_id' => ['present', 'nullable', 'integer', 'exists:projects,id'],
             'to_project_id' => ['required', 'integer', Rule::exists('projects', 'id')->where('is_active', true)],
-            'to_location_id' => ['required', 'integer', Rule::exists('locations', 'id')->where('is_active', true)],
+            'to_location_id' => ['nullable', 'integer', Rule::exists('locations', 'id')->where('is_active', true)],
         ];
     }
 
