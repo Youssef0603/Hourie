@@ -108,4 +108,9 @@ export const assetCategoryLabel = (code: AssetCategoryCode, language: Language) 
   const category = assetCategory(code)
   return language === 'ar' ? category?.labelAr ?? code : category?.labelFr ?? code
 }
+/** Category name in the active language, for any category the API returns (including generators and custom ones). */
+export const categoryDisplayName = (category: { code: string; name: string }, language: Language) => {
+  if (category.code === 'generator') return language === 'ar' ? 'المولدات' : 'Générateurs'
+  return isAssetCategoryCode(category.code) ? assetCategoryLabel(category.code, language) : category.name
+}
 export const assetFieldLabel = (field: AssetField, language: Language) => language === 'ar' ? field.labelAr : field.labelFr

@@ -1,4 +1,10 @@
 import { activeLanguage } from "./fr";
+import { dashboardPhrases } from "./phrases/dashboard";
+import { directoryPhrases } from "./phrases/directory";
+import { equipmentPhrases } from "./phrases/equipment";
+import { purchaseOrdersPhrases } from "./phrases/purchaseOrders";
+import { sharedPhrases } from "./phrases/shared";
+import { subcontractsPhrases } from "./phrases/subcontracts";
 
 const french = {
   dashboard: {
@@ -272,7 +278,7 @@ const arabic: typeof french = {
       group_health: "الصحة الجماعية",
       equipment: "المعدات",
     },
-    statuses: { active: "نشطة", soon: "تنتهي قريباً", expired: "منتهية" },
+    statuses: { active: "سارية", soon: "تنتهي قريباً", expired: "منتهية" },
     assetsCovered: (count: number) => `${count} أصل`,
     equipmentToComplete: "المعدات غير مكتملة",
     employeesCovered: (count: number) => `${count} موظف`,
@@ -326,7 +332,7 @@ const arabic: typeof french = {
       documents: "المستندات",
       status: "الحالة",
     },
-    statuses: { active: "نشطة", returned: "مُعادة", cleared: "تم التخليص", expired: "منتهية" },
+    statuses: { active: "سارية", returned: "أُعيد تصديرها", cleared: "مُخلَّصة جمركيًا", expired: "منتهية" },
     noResults: "لا توجد نتائج",
     empty: "لا يوجد إدخال مؤقت",
     noResultsDescription: "غيّر البحث لعرض الإدخالات المؤقتة.",
@@ -533,9 +539,11 @@ const arabicOperationPhrases: Record<string, string> = {
   "Bonne exécution": "ضمان حسن التنفيذ",
   "Retenue de garantie": "ضمان المحتجزات",
   "Performance ESHS": "ضمان الأداء البيئي والاجتماعي والصحة والسلامة",
-  "Active": "نشطة",
+  "Active": "سارية",
   "Expire bientôt": "تنتهي قريباً",
   "Expirée": "منتهية",
+  "Retournée": "أُعيد تصديرها",
+  "Dédouanée": "مُخلَّصة جمركيًا",
   "Tous les états": "جميع الحالات",
   "Tous les types": "جميع الأنواع",
   "Tous les chantiers": "جميع ورش العمل",
@@ -552,7 +560,7 @@ const arabicOperationPhrases: Record<string, string> = {
   "Modifier la caution": "تعديل الضمان",
   "Renseignez la garantie financière et sa localisation précise.": "أدخل معلومات الضمان المالي وموقعه بدقة.",
   "Chantier lié": "ورشة العمل المرتبطة",
-  "Sélectionner un chantier": "اختر ورشة عمل",
+  "Sélectionner un chantier": "اختر ورشة العمل",
   "Sélectionner une localisation": "اختر موقعاً فعلياً",
   "Sélectionnez d’abord un chantier": "اختر ورشة العمل أولاً",
   "Devise": "العملة",
@@ -572,8 +580,25 @@ const arabicOperationPhrases: Record<string, string> = {
   "Les garanties et avenants associés apparaîtront ici.": "ستظهر الضمانات والملاحق المرتبطة هنا.",
 };
 
+/** Arabic for every French phrase used through operationPhrase(), one dictionary per area. */
+const arabicPhrases: Record<string, string> = {
+  ...arabicOperationPhrases,
+  ...subcontractsPhrases,
+  ...purchaseOrdersPhrases,
+  ...dashboardPhrases,
+  ...equipmentPhrases,
+  ...directoryPhrases,
+  ...sharedPhrases,
+};
+
+/** Translates a fixed French phrase; the phrase is shown as is in French. */
 export function operationPhrase(frenchPhrase: string) {
   return activeLanguage === "ar"
-    ? arabicOperationPhrases[frenchPhrase] ?? frenchPhrase
+    ? arabicPhrases[frenchPhrase] ?? frenchPhrase
     : frenchPhrase;
+}
+
+/** For sentences built with values (amounts, names, numbers): give both languages. */
+export function localized(french: string, arabic: string) {
+  return activeLanguage === "ar" ? arabic : french;
 }

@@ -125,7 +125,7 @@ class TemporaryAdmissionController extends Controller
     {
         abort_unless($request->user()?->role->canManageEquipment(), 403);
         if (in_array($temporaryAdmission->status, ['returned', 'cleared'], true)) {
-            throw ValidationException::withMessages(['cleared_on' => ['Cette admission est déjà clôturée.']]);
+            throw ValidationException::withMessages(['cleared_on' => [__('validation.admission_already_cleared')]]);
         }
         $clearedOnRules = ['required', 'date'];
         if ($temporaryAdmission->entered_on !== null) {
@@ -152,10 +152,10 @@ class TemporaryAdmissionController extends Controller
         abort_unless($request->user()?->role->canManageEquipment(), 403);
         $validated = $request->validate(['document' => ['required', 'file', 'mimes:pdf', 'max:10240'], 'document_type' => ['required', Rule::in(TemporaryAdmissionDocument::TYPES)], 'document_date' => ['nullable', 'date', 'required_if:document_type,initial,admission'], 'validity_months' => ['nullable', 'integer', 'min:1', 'max:120', 'required_if:document_type,admission']]);
         if ($validated['document_type'] === 'admission' && in_array($temporaryAdmission->status, ['returned', 'cleared'], true)) {
-            throw ValidationException::withMessages(['document' => ['Une admission clôturée ne peut plus recevoir de nouvel AT.']]);
+            throw ValidationException::withMessages(['document' => [__('validation.admission_closed_no_document')]]);
         }
         if (($validated['document_type'] ?? null) === 'admission' && $temporaryAdmission->entered_on !== null && CarbonImmutable::parse($validated['document_date'])->isBefore($temporaryAdmission->entered_on)) {
-            throw ValidationException::withMessages(['document_date' => ['La date de l’AT doit être postérieure ou égale à la date d’entrée.']]);
+            throw ValidationException::withMessages(['document_date' => [__('validation.admission_document_before_entry')]]);
         }
         $file = $request->file('document');
         $disk = (string) config('filesystems.equipment_documents_disk');

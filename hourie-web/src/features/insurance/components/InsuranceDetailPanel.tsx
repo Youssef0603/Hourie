@@ -209,7 +209,7 @@ export function InsuranceDetailPanel({
                 <dd>{formatInsuranceMoney(policy.net_premium)}</dd>
               </div>
               <div>
-                <dt>ACC</dt>
+                <dt>{operationPhrase("ACC")}</dt>
                 <dd>
                   {formatInsuranceMoney(policy.accessories_amount ?? "0")}
                 </dd>

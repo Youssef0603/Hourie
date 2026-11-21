@@ -3,7 +3,7 @@ import { apiRequest } from "../../../shared/api/http";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { DocumentUploadDropzone } from "../../../shared/components/DocumentUploadDropzone";
 import { SearchableSelect } from "../../../shared/components/SearchableSelect";
-import { operationPhrase, operationsText } from "../../../i18n/operations";
+import { localized, operationPhrase, operationsText } from "../../../i18n/operations";
 import { formatInsuranceAmount, insuranceTypeLabel, insuranceTypes } from "../policyDisplay";
 import type {
   InsuranceEquipmentOption,
@@ -272,7 +272,7 @@ export function InsuranceAddPanel({
                 />
               </label>
               <label>
-                ACC (FCFA)
+                {operationPhrase("ACC (FCFA)")}
                 <input
                   inputMode="numeric"
                   value={formatInsuranceAmount(amounts.accessories)}
@@ -337,7 +337,10 @@ export function InsuranceAddPanel({
               compact
               title={
                 documents.length
-                  ? `${documents.length} document${documents.length > 1 ? "s" : ""} sélectionné${documents.length > 1 ? "s" : ""}`
+                  ? localized(
+                      `${documents.length} document${documents.length > 1 ? "s" : ""} sélectionné${documents.length > 1 ? "s" : ""}`,
+                      documents.length === 1 ? "مستند واحد محدد" : `${documents.length} مستندات محددة`,
+                    )
                   : operationPhrase("Ajouter des documents")
               }
               description={operationPhrase("Contrats, attestations ou factures · PDF uniquement · 10 Mo maximum par fichier")}

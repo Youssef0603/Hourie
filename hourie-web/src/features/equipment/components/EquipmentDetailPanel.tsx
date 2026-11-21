@@ -1,10 +1,10 @@
 import { useState } from "react";
 import type { AuthenticatedUser } from "../../auth/types";
-import { fr, type Language } from "../../../i18n/fr";
+import { activeLanguage, fr, type Language } from "../../../i18n/fr";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { LoadingSpinner } from "../../../shared/components/LoadingSpinner";
 import { Modal } from "../../../shared/components/Modal";
-import { assetCategory, isAssetCategoryCode } from "../assetCategories";
+import { assetCategory, categoryDisplayName, isAssetCategoryCode } from "../assetCategories";
 import { removeEquipmentTransfer } from "../api";
 import { catalogLabel } from "../catalogs";
 import { displayedValue, equipmentBrandLabel } from "../equipmentDisplay";
@@ -297,7 +297,7 @@ function DetailHeader({ equipment, onClose }: { equipment: Equipment; onClose: (
   return (
     <header className="detail-header">
       <div>
-        <p className="section-label">{equipment.category.name}</p>
+        <p className="section-label">{categoryDisplayName(equipment.category, activeLanguage)}</p>
         <h2>{equipment.asset_code}</h2>
         <p>{[equipmentBrandLabel(equipment), equipment.model].filter(Boolean).join(" ")}</p>
       </div>

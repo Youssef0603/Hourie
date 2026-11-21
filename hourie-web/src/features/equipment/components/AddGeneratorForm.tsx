@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { fr } from '../../../i18n/fr'
+import { localized, operationPhrase as t } from '../../../i18n/operations'
 import { ApiError } from '../../../shared/api/http'
 import { createEquipment, uploadEquipmentImages, uploadEquipmentInvoices } from '../api'
 import { locationOptionLabel } from '../locationLabel'
@@ -118,7 +119,7 @@ export function AddGeneratorForm({ options, initialProjectId, onCreated, formId 
         <label><span>{fr.equipment.origin}</span><input value={form.origin} onChange={(event) => update('origin', event.target.value)} /></label>
         <label><span>{fr.equipment.condition}</span><SearchableSelect ariaLabel={fr.equipment.condition} value={form.condition} onChange={(value) => update('condition', value)} placeholder={fr.common.toComplete} includeEmpty={false} options={catalogOptions(options.catalogs, 'equipment_condition').map((option) => ({ value: option.code, label: catalogLabel(options.catalogs, 'equipment_condition', option.code) }))} /></label>
         <label><span>{fr.equipment.usageStatus}</span><SearchableSelect ariaLabel={fr.equipment.usageStatus} value={form.usage_status} onChange={(value) => update('usage_status', value)} placeholder={fr.common.toComplete} options={[{ value: 'in_use', label: fr.equipment.usageInUse }, { value: 'not_in_use', label: fr.equipment.usageNotInUse }]} /></label>
-        {formConditionIsSold(options.catalogs, form.condition) && <label><span>Acheteur <em>*</em></span><input required value={form.sold_to} onChange={(event) => update('sold_to', event.target.value)} placeholder="Nom de l’acheteur" /></label>}
+        {formConditionIsSold(options.catalogs, form.condition) && <label><span>{t('Acheteur')} <em>*</em></span><input required value={form.sold_to} onChange={(event) => update('sold_to', event.target.value)} placeholder={t('Nom de l’acheteur')} /></label>}
       </div></InventoryFormSection>
       <InventoryFormSection title={fr.equipment.technicalDetails} icon="specifications"><div className="maintenance-form-grid asset-form-grid-3">
         <label><span>{fr.equipment.apparentPower}</span><input type="number" min="0" step="0.01" value={form.apparent_power_kva} onChange={(event) => update('apparent_power_kva', event.target.value)} /></label>
@@ -129,7 +130,7 @@ export function AddGeneratorForm({ options, initialProjectId, onCreated, formId 
         <label><span>{fr.equipment.current}</span><input value={form.current_rating} onChange={(event) => update('current_rating', event.target.value)} /></label>
         <label><span>{fr.equipment.fuel}</span><SearchableSelect ariaLabel={fr.equipment.fuel} value={form.fuel_type} onChange={(value) => update('fuel_type', value)} placeholder={fr.common.toComplete} options={catalogOptions(options.catalogs, 'fuel_type').map((option) => ({ value: option.code, label: catalogLabel(options.catalogs, 'fuel_type', option.code) }))} /></label>
         <label><span>{fr.equipment.tank}</span><input type="number" min="0" step="0.01" value={form.tank_capacity_litres} onChange={(event) => update('tank_capacity_litres', event.target.value)} /></label>
-        <label><span>{fr.equipment.purchasePrice}</span><span className="price-input"><input type="number" min="0" step="0.01" value={form.purchase_price_fcfa} onChange={(event) => update('purchase_price_fcfa', event.target.value)} /><SearchableSelect ariaLabel={`${fr.equipment.purchasePrice} currency`} value={form.purchase_price_currency} onChange={(value) => update('purchase_price_currency', value)} placeholder="FCFA" includeEmpty={false} options={[{ value: 'XOF', label: 'FCFA' }, { value: 'EUR', label: 'EUR' }, { value: 'USD', label: 'USD' }]} /></span></label>
+        <label><span>{fr.equipment.purchasePrice}</span><span className="price-input"><input type="number" min="0" step="0.01" value={form.purchase_price_fcfa} onChange={(event) => update('purchase_price_fcfa', event.target.value)} /><SearchableSelect ariaLabel={localized(`${fr.equipment.purchasePrice} currency`, `${fr.equipment.purchasePrice} — العملة`)} value={form.purchase_price_currency} onChange={(value) => update('purchase_price_currency', value)} placeholder="FCFA" includeEmpty={false} options={[{ value: 'XOF', label: 'FCFA' }, { value: 'EUR', label: 'EUR' }, { value: 'USD', label: 'USD' }]} /></span></label>
         <label><span>{fr.equipment.engineHours}</span><input type="number" min="0" step="0.01" value={form.current_engine_hours} onChange={(event) => update('current_engine_hours', event.target.value)} /></label>
       </div></InventoryFormSection>
       <InventoryFormSection title={fr.equipment.observations} icon="note"><div className="maintenance-form-grid"><label className="field-wide"><span>{fr.equipment.observations}</span><textarea rows={3} value={form.observations} onChange={(event) => update('observations', event.target.value)} /></label></div></InventoryFormSection>

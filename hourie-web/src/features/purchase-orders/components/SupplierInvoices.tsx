@@ -6,12 +6,25 @@ import { InvoiceEntryForm } from "../../../shared/components/InvoiceEntryForm";
 import { formatDate, formatFileSize, formatMoney } from "../../../shared/format";
 import { deletePurchaseOrderInvoice, uploadPurchaseOrderInvoice } from "../api";
 import type { PurchaseOrder } from "../types";
+import { localized, operationPhrase } from "../../../i18n/operations";
 
+/** Check messages are built at render time so they follow the active language. */
 const checkMessages = {
-  not_invoiced: { tone: "info", text: () => "Aucune facture reçue pour ce bon de commande." },
-  amount_mismatch: { tone: "warning", text: (order: PurchaseOrder) => `Écart de ${formatMoney(order.invoice_check?.difference)} entre les factures (${formatMoney(order.invoice_check?.invoiced_total)}) et le total du bon (${formatMoney(order.total)}).` },
-  missing_delivery_note: { tone: "warning", text: () => "Le montant facturé correspond au bon, mais aucun bon de livraison n’a été enregistré." },
-  matched: { tone: "ok", text: () => "Commandé = livré = facturé : la facture peut être payée." },
+  not_invoiced: { tone: "info", text: () => operationPhrase("Aucune facture reçue pour ce bon de commande.") },
+  amount_mismatch: {
+    tone: "warning",
+    text: (order: PurchaseOrder) => {
+      const difference = formatMoney(order.invoice_check?.difference);
+      const invoiced = formatMoney(order.invoice_check?.invoiced_total);
+      const total = formatMoney(order.total);
+      return localized(
+        `Écart de ${difference} entre les factures (${invoiced}) et le total du bon (${total}).`,
+        `يوجد فرق قدره ${difference} بين الفواتير (${invoiced}) وإجمالي أمر الشراء (${total}).`,
+      );
+    },
+  },
+  missing_delivery_note: { tone: "warning", text: () => operationPhrase("Le montant facturé correspond au bon, mais aucun bon de livraison n’a été enregistré.") },
+  matched: { tone: "ok", text: () => operationPhrase("Commandé = livré = facturé : la facture peut être payée.") },
 } as const;
 
 /**
@@ -43,7 +56,7 @@ export function SupplierInvoices({ order, canManage, onChanged }: {
 
   return (
     <section>
-      <h3><ActionIcon name="invoice" /> Factures fournisseur</h3>
+      <h3><ActionIcon name="invoice" /> {operationPhrase("Factures fournisseur")}</h3>
       {check && <div className={`notice ${check.tone}`}>{check.text(order)}</div>}
       {error && <div className="form-alert" role="alert">{error}</div>}
       {(order.invoices?.length ?? 0) > 0 && (
@@ -52,11 +65,11 @@ export function SupplierInvoices({ order, canManage, onChanged }: {
             <DocumentRow
               key={invoice.id}
               url={invoice.url}
-              name={`Facture ${invoice.invoice_number}`}
+              name={localized(`Facture ${invoice.invoice_number}`, `الفاتورة ${invoice.invoice_number}`)}
               meta={`${formatMoney(invoice.amount)} · ${formatDate(invoice.invoiced_on, { style: "medium" })} · ${formatFileSize(invoice.size_bytes)}`}
               onError={setError}
               onDelete={canManage ? () => {
-                if (window.confirm(`Supprimer la facture ${invoice.invoice_number} ?`)) void run(() => deletePurchaseOrderInvoice(order.id, invoice.id), "Impossible de supprimer la facture.");
+                if (window.confirm(localized(`Supprimer la facture ${invoice.invoice_number} ?`, `هل تريد حذف الفاتورة ${invoice.invoice_number}؟`))) void run(() => deletePurchaseOrderInvoice(order.id, invoice.id), operationPhrase("Impossible de supprimer la facture."));
               } : undefined}
             />
           ))}
@@ -65,12 +78,12 @@ export function SupplierInvoices({ order, canManage, onChanged }: {
       {canManage && (
         <InvoiceEntryForm
           initial={{ amount: String(Number(order.total)) }}
-          amountLabel="Montant TTC"
+          amountLabel={operationPhrase("Montant TTC")}
           fileRequired
           busy={busy}
-          submitLabel="Ajouter la facture"
+          submitLabel={operationPhrase("Ajouter la facture")}
           onSubmit={(invoice) => invoice.file
-            ? run(() => uploadPurchaseOrderInvoice(order.id, { ...invoice, file: invoice.file as File }), "Impossible d’enregistrer la facture.")
+            ? run(() => uploadPurchaseOrderInvoice(order.id, { ...invoice, file: invoice.file as File }), operationPhrase("Impossible d’enregistrer la facture."))
             : Promise.resolve(false)}
         />
       )}

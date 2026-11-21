@@ -32,7 +32,7 @@ class StoreEquipmentGeneratorDocumentsRequest extends FormRequest
                 $equipment = $this->route('equipment');
 
                 if ($equipment !== null && $equipment->category()->where('code', 'generator')->doesntExist()) {
-                    $validator->errors()->add('documents', 'La documentation technique est disponible uniquement pour les générateurs.');
+                    $validator->errors()->add('documents', __('validation.generator_documents_only'));
                 }
             },
         ];

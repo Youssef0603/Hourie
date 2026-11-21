@@ -15,12 +15,9 @@ class Bond extends Model
 
     public function typeLabel(): string
     {
-        return match ($this->bond_type) {
-            'advance_payment' => 'Avance de démarrage',
-            'retention' => 'Retenue de garantie',
-            'eshs' => 'Performance ESHS',
-            default => 'Bonne exécution',
-        };
+        $type = in_array($this->bond_type, ['advance_payment', 'retention', 'eshs'], true) ? $this->bond_type : 'performance';
+
+        return __("bonds.types.{$type}");
     }
 
     public function project(): BelongsTo

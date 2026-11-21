@@ -1,4 +1,6 @@
 import { useState, type ReactNode } from "react";
+import { fr } from "../../i18n/fr";
+import { operationPhrase } from "../../i18n/operations";
 
 export function PaginatedDocumentList<T extends { id: number }>({
   documents,
@@ -30,14 +32,14 @@ export function PaginatedDocumentList<T extends { id: number }>({
       {pageCount > 1 && (
         <nav
           className="document-list-pagination"
-          aria-label="Pagination des documents"
+          aria-label={operationPhrase("Pagination des documents")}
         >
           <button
             type="button"
             disabled={currentPage === 0}
             onClick={() => setPage((value) => value - 1)}
           >
-            Précédent
+            {fr.common.previous}
           </button>
           <span>
             {currentPage + 1} / {pageCount}
@@ -47,7 +49,7 @@ export function PaginatedDocumentList<T extends { id: number }>({
             disabled={currentPage === pageCount - 1}
             onClick={() => setPage((value) => value + 1)}
           >
-            Suivant
+            {fr.common.next}
           </button>
         </nav>
       )}

@@ -3,7 +3,7 @@ import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { EmptyState } from "../../../shared/components/EmptyState";
 import { SearchableSelect } from "../../../shared/components/SearchableSelect";
 import { activeLanguage } from "../../../i18n/fr";
-import { operationPhrase } from "../../../i18n/operations";
+import { localized, operationPhrase } from "../../../i18n/operations";
 import { formatInsuranceDate } from "../policyDisplay";
 import type { InsuranceEquipmentOption } from "../types";
 
@@ -82,7 +82,7 @@ export function EquipmentCoveragePicker({
                 <button
                   className="insurance-covered-remove"
                   type="button"
-                  aria-label={`Retirer ${option.name}`}
+                  aria-label={localized(`Retirer ${option.name}`, `إزالة ${option.name}`)}
                   title={operationPhrase("Retirer")}
                   onClick={() => remove(option.id)}
                 >
@@ -196,7 +196,7 @@ export function EmployeeCoveragePicker({
                 <button
                   className="insurance-covered-remove"
                   type="button"
-                  aria-label={`Retirer ${employee.name}`}
+                  aria-label={localized(`Retirer ${employee.name}`, `إزالة ${employee.name}`)}
                   title={operationPhrase("Retirer")}
                   onClick={() =>
                     onChange(selectedIds.filter((id) => id !== employee.id))

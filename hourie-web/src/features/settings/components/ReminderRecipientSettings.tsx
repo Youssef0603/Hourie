@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { fr } from "../../../i18n/fr";
+import { localized, operationPhrase as t } from "../../../i18n/operations";
 import { ApiError, apiRequest } from "../../../shared/api/http";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { EmptyState } from "../../../shared/components/EmptyState";
@@ -35,7 +36,7 @@ export function ReminderRecipientSettings({
         setRecipients(value.data.recipients);
         setEscalationRecipient(value.data.escalation_recipient);
       })
-      .catch(() => setError("Impossible de charger les destinataires."));
+      .catch(() => setError(t("Impossible de charger les destinataires.")));
   }, []);
   useEffect(() => {
     apiRequest<{
@@ -68,8 +69,8 @@ export function ReminderRecipientSettings({
     } catch (caught) {
       setError(
         caught instanceof ApiError
-          ? (Object.values(caught.errors)[0]?.[0] ?? "Personne invalide.")
-          : "Impossible d’enregistrer les destinataires.",
+          ? (Object.values(caught.errors)[0]?.[0] ?? t("Personne invalide."))
+          : t("Impossible d’enregistrer les destinataires."),
       );
     } finally {
       setSaving(false);
@@ -84,16 +85,15 @@ export function ReminderRecipientSettings({
             <ActionIcon name="people" />
           </span>
           <div className="reminder-escalation-copy">
-            <h2>Escalade des rappels</h2>
+            <h2>{t("Escalade des rappels")}</h2>
             <p>
-              Rappels 1 à 3 : liste standard. Dès le 4e : liste standard +
-              manager.
+              {t("Rappels 1 à 3 : liste standard. Dès le 4e : liste standard + manager.")}
             </p>
           </div>
           <label className="reminder-escalation-control">
-            <span>Manager à ajouter</span>
+            <span>{t("Manager à ajouter")}</span>
             <SearchableSelect
-              ariaLabel="Responsable d’escalade"
+              ariaLabel={t("Responsable d’escalade")}
               value={
                 escalationRecipient
                   ? String(escalationRecipient.employee_id)
@@ -106,7 +106,7 @@ export function ReminderRecipientSettings({
                   false,
                 )
               }
-              placeholder="Sélectionner une personne"
+              placeholder={t("Sélectionner une personne")}
               options={people
                 .filter((person) => person.email)
                 .map((person) => ({
@@ -119,8 +119,8 @@ export function ReminderRecipientSettings({
 
         <div className="reminder-recipient-heading">
           <div>
-            <h2>Destinataires standards</h2>
-            <p>Ils reçoivent chaque rappel avant et après l’escalade.</p>
+            <h2>{t("Destinataires standards")}</h2>
+            <p>{t("Ils reçoivent chaque rappel avant et après l’escalade.")}</p>
           </div>
           <span>{recipients.length}</span>
         </div>
@@ -134,10 +134,10 @@ export function ReminderRecipientSettings({
                   <strong>{recipient.name}</strong>
                   <small>{recipient.email}</small>
                 </span>
-                <span className="account-status active">Actif</span>
+                <span className="account-status active">{localized("Actif", "نشط")}</span>
                 <button
                   type="button"
-                  aria-label={`Supprimer ${recipient.name}`}
+                  aria-label={localized(`Supprimer ${recipient.name}`, `حذف ${recipient.name}`)}
                   onClick={() =>
                     void persist(
                       recipients
@@ -156,14 +156,14 @@ export function ReminderRecipientSettings({
           ) : (
             <EmptyState
               icon="people"
-              title="Aucun destinataire"
-              description="Ajoutez une personne pour recevoir les rappels d’assurance et de visite des véhicules."
+              title={t("Aucun destinataire")}
+              description={t("Ajoutez une personne pour recevoir les rappels d’assurance et de visite des véhicules.")}
             />
           )}
         </div>
       </div>
       {isAdding && (
-        <Modal title="Ajouter un destinataire" onClose={onCloseAdd}>
+        <Modal title={t("Ajouter un destinataire")} onClose={onCloseAdd}>
           <form
             className="catalog-form"
             onSubmit={(event) => {
@@ -176,12 +176,12 @@ export function ReminderRecipientSettings({
             }}
           >
             <label className="field-wide">
-              <span>Personne</span>
+              <span>{t("Personne")}</span>
               <SearchableSelect
-                ariaLabel="Personne destinataire"
+                ariaLabel={t("Personne destinataire")}
                 value={employeeId}
                 onChange={setEmployeeId}
-                placeholder="Sélectionner une personne"
+                placeholder={t("Sélectionner une personne")}
                 includeEmpty={false}
                 options={people
                   .filter(

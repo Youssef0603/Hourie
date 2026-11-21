@@ -40,7 +40,7 @@ class StoreBondRequest extends FormRequest
 
             $locationProjectId = Location::query()->whereKey($this->integer('location_id'))->value('project_id');
             if ((int) $locationProjectId !== $this->integer('project_id')) {
-                $validator->errors()->add('location_id', 'La localisation physique doit appartenir au chantier sélectionné.');
+                $validator->errors()->add('location_id', __('validation.bond_location_project_mismatch'));
             }
         }];
     }

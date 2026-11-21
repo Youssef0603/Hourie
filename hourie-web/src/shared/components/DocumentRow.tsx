@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { fr } from "../../i18n/fr";
+import { operationPhrase } from "../../i18n/operations";
 import { downloadDocument, openDocument } from "../documents";
 import { ActionIcon } from "./ActionIcon";
 import { LoadingSpinner } from "./LoadingSpinner";
@@ -28,7 +29,7 @@ export function DocumentRow({ url, name, fileName, meta, onDelete, deleting = fa
   const [downloading, setDownloading] = useState(false);
 
   function open() {
-    if (!openDocument(url)) onError?.("Impossible d’ouvrir le document. Autorisez les fenêtres pop-up pour ce site.");
+    if (!openDocument(url)) onError?.(operationPhrase("Impossible d’ouvrir le document. Autorisez les fenêtres pop-up pour ce site."));
   }
 
   async function download() {
@@ -36,7 +37,7 @@ export function DocumentRow({ url, name, fileName, meta, onDelete, deleting = fa
     try {
       await downloadDocument(url, fileName ?? name);
     } catch {
-      onError?.("Impossible de télécharger le document.");
+      onError?.(operationPhrase("Impossible de télécharger le document."));
     } finally {
       setDownloading(false);
     }

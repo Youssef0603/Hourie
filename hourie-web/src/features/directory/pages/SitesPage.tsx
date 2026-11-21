@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { fr } from '../../../i18n/fr'
+import { operationPhrase } from '../../../i18n/operations'
 import { createSite, getSite, getSites } from '../api'
 import type { ProjectStatus, Site, SiteDetails } from '../types'
 import { ActionIcon } from '../../../shared/components/ActionIcon'
@@ -194,9 +195,9 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, onOpenBonds, on
               <button className="equipment-edit-button detail-toolbar-button" type="button" onClick={() => setIsEditingSite(true)}><ActionIcon name="edit" />{fr.directory.editThisSite}</button>
             </div>}
             <section className="site-detail-section">
-              <h3><ActionIcon name="identification" />Informations principales</h3>
+              <h3><ActionIcon name="identification" />{operationPhrase('Informations principales')}</h3>
               <dl className="site-details-facts">
-                <div><dt>État</dt><dd><span className={`project-status project-status-${selectedSite.status}`} style={catalogBadgeStyle(catalogs, 'project_status', selectedSite.status)}>{catalogLabel(catalogs, 'project_status', selectedSite.status)}</span></dd></div>
+                <div><dt>{operationPhrase('État')}</dt><dd><span className={`project-status project-status-${selectedSite.status}`} style={catalogBadgeStyle(catalogs, 'project_status', selectedSite.status)}>{catalogLabel(catalogs, 'project_status', selectedSite.status)}</span></dd></div>
                 <div><dt>{fr.directory.costCode}</dt><dd>{selectedSite.code ?? fr.common.notProvided}</dd></div>
                 <div><dt>{fr.directory.siteResponsible}</dt><dd>{selectedSite.responsible?.name ?? fr.common.notAssigned}</dd></div>
                 <div><dt>{fr.directory.siteAddress}</dt><dd>{selectedSite.address ?? fr.common.notProvided}</dd></div>
@@ -229,7 +230,7 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, onOpenBonds, on
               </div>
             </section>
             <section className="site-detail-section">
-              <h3><ActionIcon name="history" />Planification</h3>
+              <h3><ActionIcon name="history" />{operationPhrase('Planification')}</h3>
               <dl className="site-details-facts">
                 <div><dt>{fr.directory.startDate}</dt><dd>{formatSiteDate(selectedSite.start_date)}</dd></div>
                 <div><dt>{fr.directory.expectedEndDate}</dt><dd>{formatSiteDate(selectedSite.expected_end_date)}</dd></div>
@@ -242,7 +243,7 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, onOpenBonds, on
             </section>
             <section className="site-detail-section site-details-notes">
               <h3><ActionIcon name="note" />{fr.directory.siteNotes}</h3>
-              <p className={selectedSite.notes ? '' : 'site-details-notes-empty'}>{selectedSite.notes || 'Aucune observation.'}</p>
+              <p className={selectedSite.notes ? '' : 'site-details-notes-empty'}>{selectedSite.notes || operationPhrase('Aucune observation.')}</p>
             </section>
           </div>
         </DirectoryDetailPanel>
@@ -266,7 +267,7 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, onOpenBonds, on
       )}
       <section className="inventory-panel">
         <div className="filter-bar">
-          <SearchField label={fr.equipment.search} value={search} onChange={(value) => { setSearch(value); setCurrentPage(1) }} placeholder="Rechercher un chantier, un code, une adresse ou un responsable" />
+          <SearchField label={fr.equipment.search} value={search} onChange={(value) => { setSearch(value); setCurrentPage(1) }} placeholder={operationPhrase('Rechercher un chantier, un code, une adresse ou un responsable')} />
           <div className="filter-toolbar-actions">
             {canAdd && <ToolbarIconButton icon="add" label={fr.directory.addSite} onClick={() => setShowForm(true)} />}
             <ToolbarIconButton icon="refresh" label={fr.common.refresh} disabled={isRefreshing} onClick={() => void refreshSites()} />
@@ -274,7 +275,7 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, onOpenBonds, on
         </div>
         {!isRefreshing && visibleSites.length > 0 && <>
           <DataTable className="asset-inventory-table" ariaLabel={fr.directory.sites}>
-              <thead><tr><th>Chantier</th><th>{fr.directory.costCode}</th><th>{fr.directory.siteResponsible}</th><th>{fr.directory.siteAddress}</th><th>{fr.directory.assignedAssets}</th><th>{fr.directory.startDate}</th><th>{fr.directory.expectedEndDate}</th><th>État</th></tr></thead>
+              <thead><tr><th>{operationPhrase('Chantier')}</th><th>{fr.directory.costCode}</th><th>{fr.directory.siteResponsible}</th><th>{fr.directory.siteAddress}</th><th>{fr.directory.assignedAssets}</th><th>{fr.directory.startDate}</th><th>{fr.directory.expectedEndDate}</th><th>{operationPhrase('État')}</th></tr></thead>
               <tbody>{visibleSites.map((site) => <tr key={site.id} {...clickableRow(() => openSiteDetails(site))}>
                 <td><strong>{site.name}</strong></td>
                 <td>{site.code ?? fr.common.notProvided}</td>
@@ -288,7 +289,7 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, onOpenBonds, on
           </DataTable>
           {pagination && <Pagination meta={pagination} disabled={isRefreshing} hideWhenSinglePage={false} onPageChange={(nextPage) => void refreshSites(nextPage)} />}
         </>}
-        {!isRefreshing && visibleSites.length === 0 && <EmptyState icon="location" title={searchTerm ? 'Aucun chantier trouvé' : 'Aucun chantier enregistré'} description={searchTerm ? 'Modifiez votre recherche pour afficher d’autres chantiers.' : 'Les chantiers ajoutés apparaîtront ici.'} />}
+        {!isRefreshing && visibleSites.length === 0 && <EmptyState icon="location" title={operationPhrase(searchTerm ? 'Aucun chantier trouvé' : 'Aucun chantier enregistré')} description={operationPhrase(searchTerm ? 'Modifiez votre recherche pour afficher d’autres chantiers.' : 'Les chantiers ajoutés apparaîtront ici.')} />}
         {isRefreshing && <div className="table-state"><LoadingSpinner label={fr.common.loading} /></div>}
       </section>
     </main>

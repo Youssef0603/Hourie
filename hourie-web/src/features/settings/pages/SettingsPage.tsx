@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { activeLanguage, fr } from "../../../i18n/fr";
+import { operationPhrase as t } from "../../../i18n/operations";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { LoadingSpinner } from "../../../shared/components/LoadingSpinner";
 import { getCatalogOptions } from "../../equipment/api";
@@ -76,7 +77,7 @@ export function SettingsPage({ onChanged }: { onChanged: () => void }) {
         >
           <ActionIcon name="add" />
           {group === "reminder_recipients"
-            ? "Ajouter un e-mail"
+            ? t("Ajouter un e-mail")
             : fr.catalogs.add}
         </button>
       </div>
@@ -101,7 +102,7 @@ export function SettingsPage({ onChanged }: { onChanged: () => void }) {
           type="button"
           onClick={() => setGroup("reminder_recipients")}
         >
-          E-mails de rappel
+          {t("E-mails de rappel")}
         </button>
       </div>
       {group === "reminder_recipients" ? (
@@ -144,8 +145,8 @@ export function SettingsPage({ onChanged }: { onChanged: () => void }) {
             ))
           ) : (
             <EmptyState
-              title="Aucune valeur configurée"
-              description="Ajoutez une valeur pour la rendre disponible dans les formulaires."
+              title={t("Aucune valeur configurée")}
+              description={t("Ajoutez une valeur pour la rendre disponible dans les formulaires.")}
             />
           )}
         </div>

@@ -33,7 +33,7 @@ class StoreEquipmentVehicleDocumentRequest extends FormRequest
                 $equipment = $this->route('equipment');
 
                 if ($equipment !== null && $equipment->category()->where('code', 'car')->doesntExist()) {
-                    $validator->errors()->add('document', 'Les documents du véhicule sont disponibles uniquement pour les voitures.');
+                    $validator->errors()->add('document', __('validation.vehicle_documents_cars_only'));
                 }
             },
         ];

@@ -14,7 +14,8 @@ import { SubcontractDetails } from "../components/SubcontractDetails";
 import { SubcontractForm } from "../components/SubcontractForm";
 import { ValuationPanel } from "../components/ValuationPanel";
 import { VariationForm } from "../components/VariationForm";
-import { money, valuationStatusLabels } from "../display";
+import { money, valuationStatusLabel } from "../display";
+import { localized, operationPhrase } from "../../../i18n/operations";
 import type { Subcontract } from "../types";
 import "./subcontracts-page.css";
 
@@ -49,7 +50,7 @@ export function SubcontractsPage({ canManage, projects, initialSubcontractId = n
       setPagination(response.meta);
       setError(null);
     } catch {
-      setError("Impossible de charger les contrats de sous-traitance.");
+      setError(operationPhrase("Impossible de charger les contrats de sous-traitance."));
     } finally {
       setLoading(false);
     }
@@ -84,13 +85,16 @@ export function SubcontractsPage({ canManage, projects, initialSubcontractId = n
   }
 
   async function remove(subcontract: Subcontract) {
-    if (!window.confirm(`Supprimer le contrat ${subcontract.reference} ? Ses avenants et ses situations en brouillon seront aussi supprimés.`)) return;
+    if (!window.confirm(localized(
+      `Supprimer le contrat ${subcontract.reference} ? Ses avenants et ses situations en brouillon seront aussi supprimés.`,
+      `حذف العقد ${subcontract.reference}؟ سيتم أيضًا حذف ملاحق العقد وكشوف الأعمال التي لا تزال في حالة مسودة.`,
+    ))) return;
     try {
       await deleteSubcontract(subcontract.id);
       select(null);
       void refresh();
     } catch (exception) {
-      setDetailError(apiErrorMessage(exception, "Impossible de supprimer le contrat."));
+      setDetailError(apiErrorMessage(exception, operationPhrase("Impossible de supprimer le contrat.")));
     }
   }
 
@@ -108,27 +112,27 @@ export function SubcontractsPage({ canManage, projects, initialSubcontractId = n
     <main className="equipment-page asset-page">
       <section className="insurance-heading">
         <div>
-          <p className="section-label">Gestion</p>
-          <h1>Sous-traitance</h1>
-          <p>Contrats, avenants et situations de travaux des sous-traitants, avec le contrôle des factures.</p>
+          <p className="section-label">{operationPhrase("Gestion")}</p>
+          <h1>{operationPhrase("Sous-traitance")}</h1>
+          <p>{operationPhrase("Contrats, avenants et situations de travaux des sous-traitants, avec le contrôle des factures.")}</p>
         </div>
-        <TotalCount value={pagination?.total} label="Contrats" loading={loading} />
+        <TotalCount value={pagination?.total} label={operationPhrase("Contrats")} loading={loading} />
       </section>
       {error && <div className="form-alert" role="alert">{error}</div>}
 
       <section className="inventory-panel">
         <div className="filter-bar">
-          <SearchField label="Rechercher" value={search} onChange={(value) => { setSearch(value); setPage(1); }} placeholder="Référence, sous-traitant, chantier ou objet" />
+          <SearchField label={operationPhrase("Rechercher")} value={search} onChange={(value) => { setSearch(value); setPage(1); }} placeholder={operationPhrase("Référence, sous-traitant, chantier ou objet")} />
           <div className="filter-toolbar-actions">
-            {canManage && <ToolbarIconButton icon="add" label="Nouveau contrat de sous-traitance" onClick={() => setEditor({ kind: "subcontract" })} />}
-            <ToolbarIconButton icon="refresh" label="Actualiser" disabled={loading} onClick={() => void refresh()} />
+            {canManage && <ToolbarIconButton icon="add" label={operationPhrase("Nouveau contrat de sous-traitance")} onClick={() => setEditor({ kind: "subcontract" })} />}
+            <ToolbarIconButton icon="refresh" label={operationPhrase("Actualiser")} disabled={loading} onClick={() => void refresh()} />
           </div>
         </div>
-        {loading ? <div className="table-state"><LoadingSpinner label="Chargement des contrats…" /></div> : subcontracts.length === 0 ? (
-          <EmptyState icon="invoice" title="Aucun contrat de sous-traitance" description={canManage ? "Créez le premier contrat avec le bouton +." : "Les contrats apparaîtront ici."} />
+        {loading ? <div className="table-state"><LoadingSpinner label={operationPhrase("Chargement des contrats…")} /></div> : subcontracts.length === 0 ? (
+          <EmptyState icon="invoice" title={operationPhrase("Aucun contrat de sous-traitance")} description={operationPhrase(canManage ? "Créez le premier contrat avec le bouton +." : "Les contrats apparaîtront ici.")} />
         ) : (
-          <DataTable ariaLabel="Contrats de sous-traitance">
-            <thead><tr><th>Référence</th><th>Sous-traitant</th><th>Chantier</th><th>Montant révisé</th><th>Avancement</th><th>À payer</th><th>Situation en cours</th></tr></thead>
+          <DataTable ariaLabel={operationPhrase("Contrats de sous-traitance")}>
+            <thead><tr><th>{operationPhrase("Référence")}</th><th>{operationPhrase("Sous-traitant")}</th><th>{operationPhrase("Chantier")}</th><th>{operationPhrase("Montant révisé")}</th><th>{operationPhrase("Avancement")}</th><th>{operationPhrase("À payer")}</th><th>{operationPhrase("Situation en cours")}</th></tr></thead>
             <tbody>
               {subcontracts.map((subcontract) => (
                 <tr key={subcontract.id} {...clickableRow(() => select(subcontract.id))}>
@@ -144,7 +148,7 @@ export function SubcontractsPage({ canManage, projects, initialSubcontractId = n
                   </td>
                   <td>{money(subcontract.summary.to_pay_amount, subcontract.currency)}</td>
                   <td>{subcontract.summary.open_valuation
-                    ? <em className={`valuation-status ${subcontract.summary.open_valuation.status}`}>{valuationStatusLabels[subcontract.summary.open_valuation.status]}</em>
+                    ? <em className={`valuation-status ${subcontract.summary.open_valuation.status}`}>{valuationStatusLabel(subcontract.summary.open_valuation.status)}</em>
                     : <span className="secondary-cell">—</span>}</td>
                 </tr>
               ))}

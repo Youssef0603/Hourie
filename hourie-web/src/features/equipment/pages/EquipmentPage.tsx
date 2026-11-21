@@ -26,6 +26,7 @@ import { SiteEditForm } from "../../directory/components/SiteEditForm";
 import { deleteSite, getSite } from "../../directory/api";
 import type { Site } from "../../directory/types";
 import { fr, type Language } from "../../../i18n/fr";
+import { operationPhrase } from "../../../i18n/operations";
 import {
   WorkspaceHeader,
   WorkspaceSidebar,
@@ -1204,7 +1205,7 @@ export function EquipmentPage({
                 compact
                 icon="history"
                 title={fr.audit.empty}
-                description="Les modifications de cet actif apparaîtront ici."
+                description={operationPhrase("Les modifications de cet actif apparaîtront ici.")}
               />
             )
           ) : siteContext?.changes?.length ? (
@@ -1229,7 +1230,7 @@ export function EquipmentPage({
               compact
               icon="history"
               title={fr.audit.empty}
-              description="Les modifications de ce chantier apparaîtront ici."
+              description={operationPhrase("Les modifications de ce chantier apparaîtront ici.")}
             />
           )}
         </Modal>

@@ -1,3 +1,4 @@
+import { operationPhrase } from "../../i18n/operations";
 import { formatMoney } from "../../shared/format";
 import type { ValuationStatus } from "./types";
 
@@ -7,6 +8,11 @@ export const valuationStatusLabels: Record<ValuationStatus, string> = {
   approved: "Approuvée",
   paid: "Payée",
 };
+
+/** Status label in the active language, evaluated at render time. */
+export function valuationStatusLabel(status: ValuationStatus) {
+  return operationPhrase(valuationStatusLabels[status]);
+}
 
 export function money(value: string | number | null | undefined, currency = "XOF") {
   return formatMoney(value ?? 0, currency);

@@ -4,7 +4,7 @@ import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { DocumentUploadDropzone } from "../../../shared/components/DocumentUploadDropzone";
 import { SearchableMultiSelect } from "../../../shared/components/SearchableMultiSelect";
 import { activeLanguage } from "../../../i18n/fr";
-import { operationPhrase, operationsText } from "../../../i18n/operations";
+import { localized, operationPhrase, operationsText } from "../../../i18n/operations";
 import { admissionError, uploadAdmissionDocument } from "../api";
 import type {
   AdmissionDocumentType,
@@ -199,7 +199,7 @@ export function TemporaryAdmissionForm({
                       <button
                         className="insurance-covered-remove"
                         type="button"
-                        aria-label={`Retirer ${entry?.asset_code ?? "l’équipement"}`}
+                        aria-label={localized(`Retirer ${entry?.asset_code ?? "l’équipement"}`, `إزالة ${entry?.asset_code ?? "المعدة"}`)}
                         title={operationPhrase("Retirer")}
                         onClick={() =>
                           setIds((all) => all.filter((value) => value !== id))
@@ -326,7 +326,7 @@ function SelectedFiles({
           <span>{file.name}</span>
           <button
             type="button"
-            aria-label={`Retirer ${file.name}`}
+            aria-label={localized(`Retirer ${file.name}`, `إزالة ${file.name}`)}
             onClick={() => onRemove(index)}
           >
             <ActionIcon name="delete" />

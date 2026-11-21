@@ -1,4 +1,5 @@
 import { fr, type Language } from "../../../i18n/fr";
+import { operationPhrase as t } from "../../../i18n/operations";
 import { formatMoney } from "../../../shared/format";
 import { assetCategory, assetFieldLabel } from "../assetCategories";
 import { catalogBadgeStyle, catalogLabel } from "../catalogs";
@@ -67,7 +68,7 @@ export function EquipmentIdentificationDetails({
         <dd>{equipment.usage_status === "in_use" ? fr.equipment.usageInUse : equipment.usage_status === "not_in_use" ? fr.equipment.usageNotInUse : fr.common.notProvided}</dd>
       </div>
       {categoryCode === "generator" && isSold && (
-        <div><dt>Acheteur</dt><dd>{equipment.generator_details?.sold_to ?? fr.common.notProvided}</dd></div>
+        <div><dt>{t("Acheteur")}</dt><dd>{equipment.generator_details?.sold_to ?? fr.common.notProvided}</dd></div>
       )}
     </dl>
   );

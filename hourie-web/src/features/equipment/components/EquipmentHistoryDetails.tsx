@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { fr, type Language } from "../../../i18n/fr";
 import { formatDateTime } from "../../../shared/format";
+import { operationPhrase as t } from "../../../i18n/operations";
 import { equipmentAuditLabel } from "../equipmentAudit";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { EmptyState } from "../../../shared/components/EmptyState";
@@ -28,7 +29,7 @@ export function GeneratorTransferHistory({
       <EmptyState
         compact
         icon="transfer"
-        title="Aucun transfert enregistré"
+        title={t("Aucun transfert enregistré")}
         description={fr.equipment.transferHistoryEmpty}
       />
     );
@@ -76,10 +77,10 @@ export function GeneratorTransferHistory({
         </article>
       ))}
       {pageCount > 1 && (
-        <nav className="transfer-history-pagination" aria-label="Pagination des transferts">
-          <button type="button" disabled={currentPage === 0} onClick={() => setPage(currentPage - 1)}>Précédent</button>
+        <nav className="transfer-history-pagination" aria-label={t("Pagination des transferts")}>
+          <button type="button" disabled={currentPage === 0} onClick={() => setPage(currentPage - 1)}>{t("Précédent")}</button>
           <span>{currentPage + 1} / {pageCount}</span>
-          <button type="button" disabled={currentPage === pageCount - 1} onClick={() => setPage(currentPage + 1)}>Suivant</button>
+          <button type="button" disabled={currentPage === pageCount - 1} onClick={() => setPage(currentPage + 1)}>{t("Suivant")}</button>
         </nav>
       )}
     </div>
@@ -101,7 +102,7 @@ export function EquipmentAuditHistory({
         compact
         icon="history"
         title={fr.audit.empty}
-        description="Les modifications de cet actif apparaîtront ici."
+        description={t("Les modifications de cet actif apparaîtront ici.")}
       />
     );
   }

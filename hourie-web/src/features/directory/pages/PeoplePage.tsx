@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { normalizeSearch } from "../../../shared/text";
 import { fr } from "../../../i18n/fr";
+import { operationPhrase } from "../../../i18n/operations";
 import { deleteEmployee, getEmployee, getEmployees } from "../api";
 import type { Employee, EmployeeDetails } from "../types";
 import { FilterToggleButton, ToolbarIconButton } from "../../../shared/components/ToolbarButtons";
@@ -377,9 +378,11 @@ export function PeoplePage({
               searchTerm ? fr.directory.noPeopleMatching : fr.directory.noPeople
             }
             description={
-              searchTerm
-                ? "Modifiez votre recherche pour afficher d’autres personnes."
-                : "Les personnes ajoutées apparaîtront ici."
+              operationPhrase(
+                searchTerm
+                  ? "Modifiez votre recherche pour afficher d’autres personnes."
+                  : "Les personnes ajoutées apparaîtront ici.",
+              )
             }
           />
         )}

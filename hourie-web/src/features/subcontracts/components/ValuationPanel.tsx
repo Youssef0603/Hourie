@@ -18,7 +18,8 @@ import {
   uploadValuationDocuments,
   type ValuationAction,
 } from "../api";
-import { money, quantity, valuationStatusLabels } from "../display";
+import { localized, operationPhrase } from "../../../i18n/operations";
+import { money, quantity, valuationStatusLabel } from "../display";
 import type { Subcontract, SubcontractValuation, ValuationPayload } from "../types";
 
 type Draft = Omit<ValuationPayload, "lines"> & { quantities: Record<number, string> };
@@ -68,7 +69,7 @@ export function ValuationPanel({ subcontract, valuationId, canManage, onClose, o
     if (valuationId === null) return;
     getValuation(valuationId)
       .then(applyValuation)
-      .catch(() => setError("Impossible de charger la situation."))
+      .catch(() => setError(operationPhrase("Impossible de charger la situation.")))
       .finally(() => setLoading(false));
   }, [valuationId, applyValuation]);
 
@@ -124,7 +125,7 @@ export function ValuationPanel({ subcontract, valuationId, canManage, onClose, o
       await uploadValuationDocuments(saved.id, pendingDocuments);
       setPendingDocuments([]);
       return getValuation(saved.id);
-    }, "Impossible d’enregistrer la situation.");
+    }, operationPhrase("Impossible d’enregistrer la situation."));
   }
 
   function action(name: ValuationAction, failure: string) {
@@ -136,11 +137,11 @@ export function ValuationPanel({ subcontract, valuationId, canManage, onClose, o
   }
 
   function remove() {
-    if (!valuation || !window.confirm(`Supprimer la situation ${valuation.reference} ?`)) return;
+    if (!valuation || !window.confirm(localized(`Supprimer la situation ${valuation.reference} ?`, `حذف كشف الأعمال ${valuation.reference}؟`))) return;
     void run(async () => {
       await deleteValuation(valuation.id);
       onClose();
-    }, "Impossible de supprimer la situation.");
+    }, operationPhrase("Impossible de supprimer la situation."));
   }
 
   const calculation = valuation?.calculation;
@@ -149,43 +150,45 @@ export function ValuationPanel({ subcontract, valuationId, canManage, onClose, o
   return (
     <EquipmentCreationPanel
       eyebrow={`${subcontract.reference} · ${subcontract.subcontractor.name}`}
-      title={valuation ? `Situation ${valuation.reference}` : "Nouvelle situation"}
-      subtitle={editable ? undefined : valuation?.status === "paid" ? "Situation payée : consultation uniquement." : "Situation verrouillée : consultation et suivi de l’approbation."}
-      action={editable ? <button className="primary-button" type="submit" form="valuation-form" disabled={busy}>{busy ? "Enregistrement…" : "Enregistrer"}</button> : undefined}
+      title={valuation ? localized(`Situation ${valuation.reference}`, `كشف الأعمال ${valuation.reference}`) : operationPhrase("Nouvelle situation")}
+      subtitle={editable ? undefined : operationPhrase(valuation?.status === "paid" ? "Situation payée : consultation uniquement." : "Situation verrouillée : consultation et suivi de l’approbation.")}
+      action={editable ? <button className="primary-button" type="submit" form="valuation-form" disabled={busy}>{operationPhrase(busy ? "Enregistrement…" : "Enregistrer")}</button> : undefined}
       onClose={onClose}
     >
-      {loading ? <LoadingSpinner label="Chargement de la situation…" /> : (
+      {loading ? <LoadingSpinner label={operationPhrase("Chargement de la situation…")} /> : (
         <form id="valuation-form" className="generator-create-form asset-form subcontract-editor valuation-editor" onSubmit={(event) => void save(event)}>
           {error && <div className="form-alert" role="alert">{error}</div>}
           {valuation && (
             <div className="sc-status-row">
-              <em className={`valuation-status ${valuation.status}`}>{valuationStatusLabels[valuation.status]}</em>
-              {valuation.approved_by && <span>Approuvée par {valuation.approved_by}{valuation.approved_at ? ` le ${formatDate(valuation.approved_at, { style: "medium" })}` : ""}</span>}
+              <em className={`valuation-status ${valuation.status}`}>{valuationStatusLabel(valuation.status)}</em>
+              {valuation.approved_by && <span>{valuation.approved_at
+                ? localized(`Approuvée par ${valuation.approved_by} le ${formatDate(valuation.approved_at, { style: "medium" })}`, `اعتمده ${valuation.approved_by} بتاريخ ${formatDate(valuation.approved_at, { style: "medium" })}`)
+                : localized(`Approuvée par ${valuation.approved_by}`, `اعتمده ${valuation.approved_by}`)}</span>}
             </div>
           )}
           <div className="asset-form-layout">
-            <InventoryFormSection title="Période" icon="identification">
+            <InventoryFormSection title={operationPhrase("Période")} icon="identification">
               <div className="maintenance-form-grid asset-form-grid-2">
-                <label><span>Date de la situation</span><input required type="date" disabled={!editable} value={draft.valuation_date} onChange={(event) => setDraft((current) => ({ ...current, valuation_date: event.target.value }))} /></label>
-                <label><span>Travaux exécutés jusqu’au</span><input required type="date" disabled={!editable} value={draft.period_end} onChange={(event) => setDraft((current) => ({ ...current, period_end: event.target.value }))} /></label>
+                <label><span>{operationPhrase("Date de la situation")}</span><input required type="date" disabled={!editable} value={draft.valuation_date} onChange={(event) => setDraft((current) => ({ ...current, valuation_date: event.target.value }))} /></label>
+                <label><span>{operationPhrase("Travaux exécutés jusqu’au")}</span><input required type="date" disabled={!editable} value={draft.period_end} onChange={(event) => setDraft((current) => ({ ...current, period_end: event.target.value }))} /></label>
               </div>
             </InventoryFormSection>
 
-            <InventoryFormSection title="Quantités exécutées (cumul)" icon="specifications">
+            <InventoryFormSection title={operationPhrase("Quantités exécutées (cumul)")} icon="specifications">
               <div className="sc-table-wrap">
                 <table className="sc-table">
-                  <thead><tr><th>Article</th><th className="num">Autorisé</th><th className="num">Précédent</th><th className="num">Cumul à ce jour</th><th className="num">Période</th><th className="num">Montant cumulé</th></tr></thead>
+                  <thead><tr><th>{operationPhrase("Article")}</th><th className="num">{operationPhrase("Autorisé")}</th><th className="num">{operationPhrase("Précédent")}</th><th className="num">{operationPhrase("Cumul à ce jour")}</th><th className="num">{operationPhrase("Période")}</th><th className="num">{operationPhrase("Montant cumulé")}</th></tr></thead>
                   <tbody>
                     {lines.map((line) => {
                       const cumulative = Number(draft.quantities[line.subcontract_item_id] ?? line.cumulative_quantity);
                       const isOver = cumulative > Number(line.authorized_quantity);
                       return (
                         <tr key={line.subcontract_item_id} className={isOver ? "over" : undefined}>
-                          <td><strong>{line.description}</strong><div className="muted">{line.code ?? "Sans code"} · {money(line.unit_price, currency)} / {line.unit}</div>{isOver && <div className="muted">Dépasse l’autorisé : un avenant est nécessaire.</div>}</td>
+                          <td><strong>{line.description}</strong><div className="muted">{line.code ?? operationPhrase("Sans code")} · {money(line.unit_price, currency)} / {line.unit}</div>{isOver && <div className="muted">{operationPhrase("Dépasse l’autorisé : un avenant est nécessaire.")}</div>}</td>
                           <td className="num">{quantity(line.authorized_quantity)}</td>
                           <td className="num">{quantity(line.previous_quantity)}</td>
                           <td className={editable ? undefined : "num"}>{editable
-                            ? <input type="number" min="0" step="0.001" aria-label={`Cumul pour ${line.description}`} value={draft.quantities[line.subcontract_item_id] ?? ""} onChange={(event) => setDraft((current) => ({ ...current, quantities: { ...current.quantities, [line.subcontract_item_id]: event.target.value } }))} />
+                            ? <input type="number" min="0" step="0.001" aria-label={localized(`Cumul pour ${line.description}`, `الكمية التراكمية لـ ${line.description}`)} value={draft.quantities[line.subcontract_item_id] ?? ""} onChange={(event) => setDraft((current) => ({ ...current, quantities: { ...current.quantities, [line.subcontract_item_id]: event.target.value } }))} />
                             : <strong>{quantity(cumulative)}</strong>}</td>
                           <td className="num">{quantity(cumulative - Number(line.previous_quantity))}</td>
                           <td className="num">{money(cumulative * Number(line.unit_price), currency)}</td>
@@ -197,45 +200,51 @@ export function ValuationPanel({ subcontract, valuationId, canManage, onClose, o
               </div>
             </InventoryFormSection>
 
-            <InventoryFormSection title="Déductions" icon="note">
+            <InventoryFormSection title={operationPhrase("Déductions")} icon="note">
               <div className="maintenance-form-grid asset-form-grid-2">
-                <label><span>Matériaux fournis par ARH (HT)</span><input type="number" min="0" step="1" disabled={!editable} value={draft.materials_deduction} onChange={(event) => setDraft((current) => ({ ...current, materials_deduction: event.target.value }))} /></label>
-                <label><span>Pénalités et retenues diverses</span><input type="number" min="0" step="1" disabled={!editable} value={draft.backcharges} onChange={(event) => setDraft((current) => ({ ...current, backcharges: event.target.value }))} /></label>
-                <label className="field-wide"><span>Commentaire</span><input disabled={!editable} value={draft.comment ?? ""} onChange={(event) => setDraft((current) => ({ ...current, comment: event.target.value }))} /></label>
+                <label><span>{operationPhrase("Matériaux fournis par ARH (HT)")}</span><input type="number" min="0" step="1" disabled={!editable} value={draft.materials_deduction} onChange={(event) => setDraft((current) => ({ ...current, materials_deduction: event.target.value }))} /></label>
+                <label><span>{operationPhrase("Pénalités et retenues diverses")}</span><input type="number" min="0" step="1" disabled={!editable} value={draft.backcharges} onChange={(event) => setDraft((current) => ({ ...current, backcharges: event.target.value }))} /></label>
+                <label className="field-wide"><span>{operationPhrase("Commentaire")}</span><input disabled={!editable} value={draft.comment ?? ""} onChange={(event) => setDraft((current) => ({ ...current, comment: event.target.value }))} /></label>
               </div>
             </InventoryFormSection>
 
-            <InventoryFormSection title="Calcul de la situation" icon="invoice">
-              {!calculation ? <div className="notice info">Enregistrez la situation pour calculer le net à payer.</div> : (
+            <InventoryFormSection title={operationPhrase("Calcul de la situation")} icon="invoice">
+              {!calculation ? <div className="notice info">{operationPhrase("Enregistrez la situation pour calculer le net à payer.")}</div> : (
                 <div className="sc-calculation">
-                  <div><span>01</span>Travaux exécutés (cumul)<b>{money(calculation.works_cumulative, currency)}</b></div>
-                  <div><span>02</span>Moins travaux des situations précédentes<b>− {money(calculation.works_previous, currency)}</b></div>
-                  <div className="subtotal"><span>03</span>Travaux de la période<b>{money(calculation.works_this_period, currency)}</b></div>
-                  <div><span>04</span>Récupération de l’avance ({Number(subcontract.advance_recovery_rate)} %, cumul)<b>− {money(calculation.advance_recovery_cumulative, currency)}</b></div>
-                  <div><span>05</span>Retenue de garantie ({Number(subcontract.retention_rate)} %, cumul)<b>− {money(calculation.retention_cumulative, currency)}</b></div>
-                  <div className="subtotal"><span>06</span>Montant certifié cumulé [01 − 04 − 05]<b>{money(calculation.certified_cumulative, currency)}</b></div>
-                  <div><span>07</span>Moins déjà certifié<b>− {money(calculation.previously_certified, currency)}</b></div>
-                  <div className="subtotal"><span>08</span>Montant de la situation HT [06 − 07]<b>{money(calculation.this_valuation_before_vat, currency)}</b></div>
-                  <div><span>09</span>TVA ({Number(subcontract.vat_rate)} %)<b>{money(calculation.vat_amount, currency)}</b></div>
-                  <div><span>10</span>Moins matériaux fournis<b>− {money(calculation.materials_deduction, currency)}</b></div>
-                  <div><span>11</span>Moins pénalités et retenues<b>− {money(calculation.backcharges, currency)}</b></div>
-                  <div className="total"><span>12</span>NET À PAYER [08 + 09 − 10 − 11]<b>{money(calculation.net_due, currency)}</b></div>
+                  <div><span>01</span>{operationPhrase("Travaux exécutés (cumul)")}<b>{money(calculation.works_cumulative, currency)}</b></div>
+                  <div><span>02</span>{operationPhrase("Moins travaux des situations précédentes")}<b>− {money(calculation.works_previous, currency)}</b></div>
+                  <div className="subtotal"><span>03</span>{operationPhrase("Travaux de la période")}<b>{money(calculation.works_this_period, currency)}</b></div>
+                  <div><span>04</span>{localized(`Récupération de l’avance (${Number(subcontract.advance_recovery_rate)} %, cumul)`, `استرداد الدفعة المقدمة (${Number(subcontract.advance_recovery_rate)} %، تراكميًا)`)}<b>− {money(calculation.advance_recovery_cumulative, currency)}</b></div>
+                  <div><span>05</span>{localized(`Retenue de garantie (${Number(subcontract.retention_rate)} %, cumul)`, `محتجز الضمان (${Number(subcontract.retention_rate)} %، تراكميًا)`)}<b>− {money(calculation.retention_cumulative, currency)}</b></div>
+                  <div className="subtotal"><span>06</span>{operationPhrase("Montant certifié cumulé [01 − 04 − 05]")}<b>{money(calculation.certified_cumulative, currency)}</b></div>
+                  <div><span>07</span>{operationPhrase("Moins déjà certifié")}<b>− {money(calculation.previously_certified, currency)}</b></div>
+                  <div className="subtotal"><span>08</span>{operationPhrase("Montant de la situation HT [06 − 07]")}<b>{money(calculation.this_valuation_before_vat, currency)}</b></div>
+                  <div><span>09</span>{localized(`TVA (${Number(subcontract.vat_rate)} %)`, `ضريبة القيمة المضافة (${Number(subcontract.vat_rate)} %)`)}<b>{money(calculation.vat_amount, currency)}</b></div>
+                  <div><span>10</span>{operationPhrase("Moins matériaux fournis")}<b>− {money(calculation.materials_deduction, currency)}</b></div>
+                  <div><span>11</span>{operationPhrase("Moins pénalités et retenues")}<b>− {money(calculation.backcharges, currency)}</b></div>
+                  <div className="total"><span>12</span>{operationPhrase("NET À PAYER [08 + 09 − 10 − 11]")}<b>{money(calculation.net_due, currency)}</b></div>
                 </div>
               )}
               {calculation && (
                 <div className="sc-calculation">
-                  <div><span /> Avance restant à récupérer<b>{money(calculation.advance_remaining, currency)}</b></div>
-                  <div><span /> Retenue de garantie détenue<b>{money(calculation.retention_cumulative, currency)}</b></div>
+                  <div><span /> {operationPhrase("Avance restant à récupérer")}<b>{money(calculation.advance_remaining, currency)}</b></div>
+                  <div><span /> {operationPhrase("Retenue de garantie détenue")}<b>{money(calculation.retention_cumulative, currency)}</b></div>
                 </div>
               )}
             </InventoryFormSection>
 
             {valuation && valuation.status !== "draft" && (
-              <InventoryFormSection title="Facture du sous-traitant" icon="invoice">
+              <InventoryFormSection title={operationPhrase("Facture du sous-traitant")} icon="invoice">
                 {valuation.invoice && (
                   valuation.invoice.matches
-                    ? <div className="notice ok">Facture {valuation.invoice.number} conforme : {money(valuation.invoice.amount, currency)} = net à payer.</div>
-                    : <div className="notice warning">Facture {valuation.invoice.number} : {money(valuation.invoice.amount, currency)}, écart de {money(valuation.invoice.difference, currency)} avec le net à payer.</div>
+                    ? <div className="notice ok">{localized(
+                      `Facture ${valuation.invoice.number} conforme : ${money(valuation.invoice.amount, currency)} = net à payer.`,
+                      `الفاتورة ${valuation.invoice.number} مطابقة: ${money(valuation.invoice.amount, currency)} = صافي المبلغ المستحق.`,
+                    )}</div>
+                    : <div className="notice warning">{localized(
+                      `Facture ${valuation.invoice.number} : ${money(valuation.invoice.amount, currency)}, écart de ${money(valuation.invoice.difference, currency)} avec le net à payer.`,
+                      `الفاتورة ${valuation.invoice.number}: ${money(valuation.invoice.amount, currency)}، بفرق قدره ${money(valuation.invoice.difference, currency)} عن صافي المبلغ المستحق.`,
+                    )}</div>
                 )}
                 {canManage && valuation.status !== "paid" && (
                   <InvoiceEntryForm
@@ -245,24 +254,24 @@ export function ValuationPanel({ subcontract, valuationId, canManage, onClose, o
                       date: valuation.invoice?.date,
                       amount: String(Number(valuation.invoice?.amount ?? valuation.calculation.net_due)),
                     }}
-                    amountLabel="Montant facturé (F CFA)"
+                    amountLabel={operationPhrase("Montant facturé (F CFA)")}
                     busy={busy}
-                    onSubmit={(invoice) => run(() => saveValuationInvoice(valuation.id, invoice), "Impossible d’enregistrer la facture.")}
+                    onSubmit={(invoice) => run(() => saveValuationInvoice(valuation.id, invoice), operationPhrase("Impossible d’enregistrer la facture."))}
                   />
                 )}
               </InventoryFormSection>
             )}
 
             {(valuation || editable) && (
-              <InventoryFormSection title="Documents" icon="photo">
+              <InventoryFormSection title={operationPhrase("Documents")} icon="photo">
                 {canManage && (
                   <DocumentUploadDropzone
                     compact
-                    title="Ajouter l’attachement signé"
-                    description={valuation ? "PDF uniquement · 10 Mo maximum" : "PDF uniquement · 10 Mo maximum · envoyé à l’enregistrement"}
+                    title={operationPhrase("Ajouter l’attachement signé")}
+                    description={operationPhrase(valuation ? "PDF uniquement · 10 Mo maximum" : "PDF uniquement · 10 Mo maximum · envoyé à l’enregistrement")}
                     disabled={busy}
                     onFiles={(files) => valuation
-                      ? void run(async () => { await uploadValuationDocuments(valuation.id, files); return getValuation(valuation.id); }, "Impossible d’ajouter le document.")
+                      ? void run(async () => { await uploadValuationDocuments(valuation.id, files); return getValuation(valuation.id); }, operationPhrase("Impossible d’ajouter le document."))
                       : setPendingDocuments((current) => [...current, ...files])}
                   />
                 )}
@@ -270,15 +279,15 @@ export function ValuationPanel({ subcontract, valuationId, canManage, onClose, o
                   <div className="pending-file" key={`${file.name}-${file.lastModified}-${index}`}>
                     <span className="invoice-pdf-badge">PDF</span>
                     <span>{file.name}</span>
-                    <button type="button" aria-label={`Retirer ${file.name}`} onClick={() => setPendingDocuments((current) => current.filter((_, candidate) => candidate !== index))}><ActionIcon name="close" /></button>
+                    <button type="button" aria-label={localized(`Retirer ${file.name}`, `إزالة ${file.name}`)} onClick={() => setPendingDocuments((current) => current.filter((_, candidate) => candidate !== index))}><ActionIcon name="close" /></button>
                   </div>
                 ))}
                 {valuation && valuation.documents.length > 0 && (
                   <PaginatedDocumentList
                     documents={valuation.documents}
-                    emptyMessage="Aucun document"
+                    emptyMessage={operationPhrase("Aucun document")}
                     renderDocument={(document) => (
-                      <DocumentRow key={document.id} url={document.url} name={document.original_name} meta={`${document.type === "invoice" ? "Facture" : "Attachement"} · ${formatFileSize(document.size_bytes)} · ${formatDate(document.created_at, { style: "medium" })}`} onError={setError} />
+                      <DocumentRow key={document.id} url={document.url} name={document.original_name} meta={`${operationPhrase(document.type === "invoice" ? "Facture" : "Attachement")} · ${formatFileSize(document.size_bytes)} · ${formatDate(document.created_at, { style: "medium" })}`} onError={setError} />
                     )}
                   />
                 )}
@@ -288,11 +297,11 @@ export function ValuationPanel({ subcontract, valuationId, canManage, onClose, o
 
           {canManage && valuation && (
             <div className="sc-actions">
-              {valuation.status === "draft" && <button className="primary-button" type="button" disabled={busy} onClick={() => void action("submit", "Impossible de soumettre la situation.")}>Soumettre pour approbation</button>}
-              {valuation.status === "draft" && <button className="danger-button" type="button" disabled={busy} onClick={remove}><ActionIcon name="delete" /> Supprimer</button>}
-              {valuation.status === "submitted" && <button className="primary-button" type="button" disabled={busy} onClick={() => void action("approve", "Impossible d’approuver la situation.")}>Approuver</button>}
-              {valuation.status === "submitted" && <button className="secondary-button" type="button" disabled={busy} onClick={() => void action("return-to-draft", "Impossible de renvoyer la situation.")}>Renvoyer en brouillon</button>}
-              {valuation.status === "approved" && <button className="primary-button" type="button" disabled={busy || !valuation.invoice?.matches} title={valuation.invoice?.matches ? undefined : "La facture doit être égale au net à payer"} onClick={() => void action("pay", "Impossible de marquer la situation comme payée.")}>Marquer comme payée</button>}
+              {valuation.status === "draft" && <button className="primary-button" type="button" disabled={busy} onClick={() => void action("submit", operationPhrase("Impossible de soumettre la situation."))}>{operationPhrase("Soumettre pour approbation")}</button>}
+              {valuation.status === "draft" && <button className="danger-button" type="button" disabled={busy} onClick={remove}><ActionIcon name="delete" /> {operationPhrase("Supprimer")}</button>}
+              {valuation.status === "submitted" && <button className="primary-button" type="button" disabled={busy} onClick={() => void action("approve", operationPhrase("Impossible d’approuver la situation."))}>{operationPhrase("Approuver")}</button>}
+              {valuation.status === "submitted" && <button className="secondary-button" type="button" disabled={busy} onClick={() => void action("return-to-draft", operationPhrase("Impossible de renvoyer la situation."))}>{operationPhrase("Renvoyer en brouillon")}</button>}
+              {valuation.status === "approved" && <button className="primary-button" type="button" disabled={busy || !valuation.invoice?.matches} title={valuation.invoice?.matches ? undefined : operationPhrase("La facture doit être égale au net à payer")} onClick={() => void action("pay", operationPhrase("Impossible de marquer la situation comme payée."))}>{operationPhrase("Marquer comme payée")}</button>}
             </div>
           )}
         </form>

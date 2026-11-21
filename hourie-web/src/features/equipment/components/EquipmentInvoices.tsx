@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { fr } from '../../../i18n/fr'
+import { operationPhrase as t } from '../../../i18n/operations'
 import { formatDate, formatFileSize } from '../../../shared/format'
 import { ApiError } from '../../../shared/api/http'
 import { DocumentUploadDropzone } from '../../../shared/components/DocumentUploadDropzone'
@@ -61,7 +62,7 @@ export function EquipmentInvoices({ equipment, canManage, onChanged, title = fr.
       </div>}
       {canManage && <DocumentUploadDropzone compact title={isUploading ? fr.invoices.uploading : fr.invoices.add} description={fr.invoices.formats} disabled={isUploading} onFiles={(files) => void uploadFiles(files)} />}
       {error && <div className="form-alert" role="alert">{error}</div>}
-      {equipment.invoices.length > 0 ? <PaginatedDocumentList documents={equipment.invoices} emptyMessage={fr.invoices.empty} renderDocument={(invoice) => <DocumentRow key={invoice.id} url={invoice.url} name={invoice.original_name} meta={`${formatFileSize(invoice.size_bytes)} · ${formatDate(invoice.created_at, { style: 'medium' })}${invoice.uploaded_by ? ` · ${fr.invoices.uploadedBy(invoice.uploaded_by.name)}` : ''}`} showDownload={showDownload} onError={setError} onDelete={canManage ? () => void remove(invoice) : undefined} deleting={deletingId === invoice.id} />} /> : <EmptyState compact icon="invoice" title={fr.invoices.empty} description="Les factures ajoutées à cet actif apparaîtront ici." />}
+      {equipment.invoices.length > 0 ? <PaginatedDocumentList documents={equipment.invoices} emptyMessage={fr.invoices.empty} renderDocument={(invoice) => <DocumentRow key={invoice.id} url={invoice.url} name={invoice.original_name} meta={`${formatFileSize(invoice.size_bytes)} · ${formatDate(invoice.created_at, { style: 'medium' })}${invoice.uploaded_by ? ` · ${fr.invoices.uploadedBy(invoice.uploaded_by.name)}` : ''}`} showDownload={showDownload} onError={setError} onDelete={canManage ? () => void remove(invoice) : undefined} deleting={deletingId === invoice.id} />} /> : <EmptyState compact icon="invoice" title={fr.invoices.empty} description={t('Les factures ajoutées à cet actif apparaîtront ici.')} />}
     </section>
   )
 }

@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { fr } from "../../../i18n/fr";
+import { operationPhrase } from "../../../i18n/operations";
 import { ApiError } from "../../../shared/api/http";
 import { LoadingSpinner } from "../../../shared/components/LoadingSpinner";
 import { SearchableSelect } from "../../../shared/components/SearchableSelect";
@@ -130,7 +131,7 @@ export function EditPersonForm({
               ariaLabel={fr.directory.jobTitle}
               value={jobTitle}
               onChange={setJobTitle}
-              placeholder="Sélectionner un poste"
+              placeholder={operationPhrase("Sélectionner un poste")}
               includeEmpty={false}
               options={[
                 ...(currentJobTitleIsUnavailable
@@ -153,7 +154,7 @@ export function EditPersonForm({
             />
           </label>
           <label>
-            <span>E-mail</span>
+            <span>{operationPhrase("E-mail")}</span>
             <input
               type="email"
               autoComplete="email"
@@ -178,7 +179,7 @@ export function EditPersonForm({
             />
           </label>
           <label>
-            <span>Date de naissance</span>
+            <span>{operationPhrase("Date de naissance")}</span>
             <input
               type="date"
               max={new Date().toISOString().slice(0, 10)}
@@ -189,18 +190,18 @@ export function EditPersonForm({
         </div>
       </section>
       <section className="people-form-section">
-        <h3>Affectation actuelle <small>(facultatif)</small></h3>
+        <h3>{operationPhrase("Affectation actuelle")} <small>{operationPhrase("(facultatif)")}</small></h3>
         <div className="people-form-fields">
           <label>
-            <span>Chantier actuel</span>
+            <span>{operationPhrase("Chantier actuel")}</span>
             <SearchableSelect
-              ariaLabel="Chantier actuel"
+              ariaLabel={operationPhrase("Chantier actuel")}
               value={projectId}
               onChange={(value) => {
                 setProjectId(value);
                 if (value) setCompanyLocationId("");
               }}
-              placeholder="Aucun chantier"
+              placeholder={operationPhrase("Aucun chantier")}
               options={[
                 ...(currentAssignment && !projects.some((project) => project.id === currentAssignment.project.id)
                   ? [{ value: String(currentAssignment.project.id), label: currentAssignment.project.name }]
@@ -210,29 +211,29 @@ export function EditPersonForm({
             />
           </label>
           <label>
-            <span>Localisation interne</span>
+            <span>{operationPhrase("Localisation interne")}</span>
             <SearchableSelect
-              ariaLabel="Localisation interne"
+              ariaLabel={operationPhrase("Localisation interne")}
               value={companyLocationId}
               onChange={(value) => {
                 setCompanyLocationId(value);
                 if (value) setProjectId("");
               }}
-              placeholder="Aucune localisation"
+              placeholder={operationPhrase("Aucune localisation")}
               options={companyLocations.map((location) => ({ value: String(location.id), label: location.name }))}
             />
           </label>
           {projectId && <>
             <label>
-              <span>Fonction sur le chantier</span>
+              <span>{operationPhrase("Fonction sur le chantier")}</span>
               <input required value={projectRole} onChange={(event) => setProjectRole(event.target.value)} />
             </label>
             <label>
-              <span>Début de l’affectation</span>
+              <span>{operationPhrase("Début de l’affectation")}</span>
               <input type="date" value={assignmentStartedOn} onChange={(event) => setAssignmentStartedOn(event.target.value)} />
             </label>
             <label>
-              <span>Fin de l’affectation</span>
+              <span>{operationPhrase("Fin de l’affectation")}</span>
               <input type="date" min={assignmentStartedOn || undefined} value={assignmentEndedOn} onChange={(event) => setAssignmentEndedOn(event.target.value)} />
             </label>
           </>}

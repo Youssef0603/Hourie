@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { fr, type Language } from '../../../i18n/fr'
+import { operationPhrase as t } from '../../../i18n/operations'
 import { LoadingSpinner } from '../../../shared/components/LoadingSpinner'
 import { EmptyState } from '../../../shared/components/EmptyState'
 import { Pagination } from '../../../shared/components/Pagination'
@@ -98,8 +99,8 @@ export function EquipmentInventoryTable({
         <EmptyState
           title={mixedCategories ? fr.assets.noResults : fr.equipment.empty}
           description={mixedCategories
-            ? 'Modifiez votre recherche ou vos filtres pour afficher d’autres actifs.'
-            : 'Modifiez votre recherche ou vos filtres pour afficher d’autres générateurs.'}
+            ? t('Modifiez votre recherche ou vos filtres pour afficher d’autres actifs.')
+            : t('Modifiez votre recherche ou vos filtres pour afficher d’autres générateurs.')}
         />
       )}
     </div>

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { fr, type Language } from '../../../i18n/fr'
+import { operationPhrase as t } from '../../../i18n/operations'
 import { ActionIcon } from '../../../shared/components/ActionIcon'
 import { Modal } from '../../../shared/components/Modal'
 import { Pagination } from '../../../shared/components/Pagination'
@@ -163,7 +164,7 @@ export function AssetInventoryView({ category, language, options, filters, searc
           </tr>)}</tbody>
         </table>
         {isLoading && <div className="table-state"><LoadingSpinner label={fr.common.loading} /></div>}
-        {!isLoading && result?.data.length === 0 && <EmptyState title={fr.assets.noResults} description="Modifiez votre recherche ou vos filtres pour afficher d’autres actifs." />}
+        {!isLoading && result?.data.length === 0 && <EmptyState title={fr.assets.noResults} description={t('Modifiez votre recherche ou vos filtres pour afficher d’autres actifs.')} />}
       </div>
       {result && <Pagination meta={result.meta} disabled={isLoading} onPageChange={onPageChange} />}
       </>}

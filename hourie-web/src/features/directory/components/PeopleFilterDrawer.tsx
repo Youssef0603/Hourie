@@ -1,4 +1,5 @@
 import { fr } from "../../../i18n/fr";
+import { localized, operationPhrase } from "../../../i18n/operations";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { SearchableSelect } from "../../../shared/components/SearchableSelect";
 import { catalogLabel, catalogOptions } from "../../equipment/catalogs";
@@ -57,7 +58,7 @@ export function PeopleFilterDrawer({
       >
         <header>
           <div>
-            <p className="section-label">PERSONNEL</p>
+            <p className="section-label">{operationPhrase("PERSONNEL")}</p>
             <h2>{fr.equipment.filters}</h2>
           </div>
           <button type="button" onClick={onClose} aria-label={fr.common.close}>
@@ -69,15 +70,15 @@ export function PeopleFilterDrawer({
             <legend>{fr.equipment.filters}</legend>
             <div className="advanced-filter-grid">
               <label>
-                <span>Accès au système</span>
+                <span>{operationPhrase("Accès au système")}</span>
                 <SearchableSelect
-                  ariaLabel="Accès au système"
+                  ariaLabel={operationPhrase("Accès au système")}
                   value={accessFilter}
                   onChange={(value) => onAccessChange(value as AccessFilter)}
                   placeholder={fr.common.all}
                   options={[
-                    { value: "with_access", label: "Avec accès" },
-                    { value: "without_access", label: "Sans accès" },
+                    { value: "with_access", label: operationPhrase("Avec accès") },
+                    { value: "without_access", label: operationPhrase("Sans accès") },
                   ]}
                 />
               </label>
@@ -134,17 +135,17 @@ export function PeopleFilterDrawer({
                 />
               </label>
               <label>
-                <span>État</span>
+                <span>{operationPhrase("État")}</span>
                 <SearchableSelect
-                  ariaLabel="État"
+                  ariaLabel={operationPhrase("État")}
                   value={activityFilter}
                   onChange={(value) =>
                     onActivityChange(value as ActivityFilter)
                   }
                   placeholder={fr.common.all}
                   options={[
-                    { value: "active", label: "Actif" },
-                    { value: "inactive", label: "Inactif" },
+                    { value: "active", label: localized("Actif", "نشط") },
+                    { value: "inactive", label: localized("Inactif", "غير نشط") },
                   ]}
                 />
               </label>

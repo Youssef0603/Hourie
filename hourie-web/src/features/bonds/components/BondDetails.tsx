@@ -89,7 +89,7 @@ export function BondDetails({
   async function remove() {
     if (
       !window.confirm(
-        activeLanguage === "ar" ? `هل تريد حذف الضمان المرتبط بالموقع ${bond.project.name}؟` : `Supprimer la caution liée au chantier ${bond.project.name} ?`,
+        activeLanguage === "ar" ? `هل تريد حذف الضمان المرتبط بورشة العمل ${bond.project.name}؟` : `Supprimer la caution liée au chantier ${bond.project.name} ?`,
       )
     )
       return;

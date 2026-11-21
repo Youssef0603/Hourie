@@ -130,7 +130,7 @@ class UpdateEquipmentRequest extends FormRequest
             return;
         }
 
-        $validator->errors()->add('generator_details.sold_to', 'Le nom de l’acheteur est requis lorsque l’état est « Vendu ».');
+        $validator->errors()->add('generator_details.sold_to', __('validation.generator_buyer_required'));
     }
 
     private function isSoldCondition(): bool

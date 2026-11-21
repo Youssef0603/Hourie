@@ -11,7 +11,7 @@ import { RecordHistory } from "../../../shared/components/RecordHistory";
 import { activeLanguage } from "../../../i18n/fr";
 import { formatDate as formatApiDate, formatMoney } from "../../../shared/format";
 import { normalizeSearch } from "../../../shared/text";
-import { operationPhrase, operationsText } from "../../../i18n/operations";
+import { localized, operationPhrase, operationsText } from "../../../i18n/operations";
 import {
   admissionError,
   fetchTemporaryAdmission,
@@ -602,7 +602,7 @@ export function TemporaryAdmissionDetails({
                           <span>{file.name}</span>
                           <button
                             type="button"
-                            aria-label={`Retirer ${file.name}`}
+                            aria-label={localized(`Retirer ${file.name}`, `إزالة ${file.name}`)}
                             onClick={() =>
                               setAdmissionDocuments((current) =>
                                 current.filter(

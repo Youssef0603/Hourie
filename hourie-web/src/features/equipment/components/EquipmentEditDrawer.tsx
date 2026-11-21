@@ -1,6 +1,6 @@
 import { fr, type Language } from "../../../i18n/fr";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
-import { isAssetCategoryCode } from "../assetCategories";
+import { categoryDisplayName, isAssetCategoryCode } from "../assetCategories";
 import type { Equipment, EquipmentFilterOptions } from "../types";
 import { AssetForm } from "./AssetForm";
 import { EquipmentEditForm } from "./EquipmentEditForm";
@@ -35,7 +35,7 @@ export function EquipmentEditDrawer({
       >
         <header className="detail-header creation-panel-header insurance-add-header">
           <div>
-            <p className="section-label">{equipment.category.name}</p>
+            <p className="section-label">{categoryDisplayName(equipment.category, language)}</p>
             <h2>{title}</h2>
             <p>{equipment.asset_code}</p>
           </div>

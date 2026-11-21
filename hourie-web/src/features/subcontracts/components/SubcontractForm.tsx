@@ -4,6 +4,7 @@ import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { SearchableSelect } from "../../../shared/components/SearchableSelect";
 import { InventoryFormSection } from "../../equipment/components/AssetForm";
 import { EquipmentCreationPanel } from "../../equipment/components/EquipmentCreationPanel";
+import { localized, operationPhrase } from "../../../i18n/operations";
 import { createSubcontractor, getNextItemCode, getSubcontractors, saveSubcontract } from "../api";
 import { money, newKey, previewCodes } from "../display";
 import type { MaterialInput, MaterialsSuppliedBy, Subcontract, SubcontractItemInput, SubcontractPayload, Subcontractor } from "../types";
@@ -94,7 +95,7 @@ export function SubcontractForm({ subcontract, projects, onClose, onSaved }: {
       update("subcontractor_id", created.id);
       setNewSubcontractor(null);
     } catch {
-      setError("Impossible d’ajouter le sous-traitant.");
+      setError(operationPhrase("Impossible d’ajouter le sous-traitant."));
     }
   }
 
@@ -112,7 +113,7 @@ export function SubcontractForm({ subcontract, projects, onClose, onSaved }: {
       }, subcontract?.id);
       onSaved(saved);
     } catch (exception) {
-      setError(apiErrorMessage(exception, "Impossible d’enregistrer le contrat."));
+      setError(apiErrorMessage(exception, operationPhrase("Impossible d’enregistrer le contrat.")));
     } finally {
       setSaving(false);
     }
@@ -120,96 +121,96 @@ export function SubcontractForm({ subcontract, projects, onClose, onSaved }: {
 
   return (
     <EquipmentCreationPanel
-      eyebrow="Sous-traitance"
-      title={subcontract ? `Modifier ${subcontract.reference}` : "Nouveau contrat de sous-traitance"}
-      action={<button className="primary-button" type="submit" form="subcontract-form" disabled={saving}>{saving ? "Enregistrement…" : "Enregistrer"}</button>}
+      eyebrow={operationPhrase("Sous-traitance")}
+      title={subcontract ? localized(`Modifier ${subcontract.reference}`, `تعديل ${subcontract.reference}`) : operationPhrase("Nouveau contrat de sous-traitance")}
+      action={<button className="primary-button" type="submit" form="subcontract-form" disabled={saving}>{operationPhrase(saving ? "Enregistrement…" : "Enregistrer")}</button>}
       onClose={onClose}
     >
       <form id="subcontract-form" className="generator-create-form asset-form subcontract-editor" onSubmit={submit}>
         {error && <div className="form-alert" role="alert">{error}</div>}
         <div className="asset-form-layout">
-          <InventoryFormSection title="Contrat" icon="identification">
+          <InventoryFormSection title={operationPhrase("Contrat")} icon="identification">
             <div className="maintenance-form-grid asset-form-grid-2">
               <div className="field-wide sc-subcontractor-field">
-                <span className="sc-field-label">Sous-traitant *</span>
+                <span className="sc-field-label">{operationPhrase("Sous-traitant *")}</span>
                   {newSubcontractor === null ? (
-                    <SearchableSelect ariaLabel="Sous-traitant" required value={form.subcontractor_id ? String(form.subcontractor_id) : ""} onChange={(value) => update("subcontractor_id", value ? Number(value) : null)} placeholder="Sélectionner un sous-traitant" options={subcontractors.map((item) => ({ value: String(item.id), label: item.name }))} />
+                    <SearchableSelect ariaLabel={operationPhrase("Sous-traitant")} required value={form.subcontractor_id ? String(form.subcontractor_id) : ""} onChange={(value) => update("subcontractor_id", value ? Number(value) : null)} placeholder={operationPhrase("Sélectionner un sous-traitant")} options={subcontractors.map((item) => ({ value: String(item.id), label: item.name }))} />
                   ) : (
-                    <input autoFocus aria-label="Nom du nouveau sous-traitant" placeholder="Nom de l’entreprise" value={newSubcontractor} onChange={(event) => setNewSubcontractor(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); void addSubcontractor(); } }} />
+                    <input autoFocus aria-label={operationPhrase("Nom du nouveau sous-traitant")} placeholder={operationPhrase("Nom de l’entreprise")} value={newSubcontractor} onChange={(event) => setNewSubcontractor(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); void addSubcontractor(); } }} />
                   )}
                   {newSubcontractor === null
-                    ? <button className="sc-link-button" type="button" onClick={() => setNewSubcontractor("")}><ActionIcon name="add" /> Nouveau sous-traitant</button>
-                    : <div className="sc-inline-actions"><button className="secondary-button" type="button" onClick={() => void addSubcontractor()}>Ajouter</button><button className="secondary-button" type="button" onClick={() => setNewSubcontractor(null)}>Annuler</button></div>}
+                    ? <button className="sc-link-button" type="button" onClick={() => setNewSubcontractor("")}><ActionIcon name="add" /> {operationPhrase("Nouveau sous-traitant")}</button>
+                    : <div className="sc-inline-actions"><button className="secondary-button" type="button" onClick={() => void addSubcontractor()}>{operationPhrase("Ajouter")}</button><button className="secondary-button" type="button" onClick={() => setNewSubcontractor(null)}>{operationPhrase("Annuler")}</button></div>}
               </div>
-              <label><span>Chantier *</span><SearchableSelect ariaLabel="Chantier" required value={form.project_id ? String(form.project_id) : ""} onChange={(value) => update("project_id", value ? Number(value) : null)} placeholder="Sélectionner un chantier" options={projects.map((project) => ({ value: String(project.id), label: project.code ? `${project.code} · ${project.name}` : `${project.name} (sans code analytique)` }))} /></label>
-              <label><span>Date de signature</span><input type="date" value={form.signed_on} onChange={(event) => update("signed_on", event.target.value)} /></label>
-              <label className="field-wide"><span>Objet des travaux</span><input required value={form.title} placeholder="Ex. Ferraillage des dalles" onChange={(event) => update("title", event.target.value)} /></label>
+              <label><span>{operationPhrase("Chantier *")}</span><SearchableSelect ariaLabel={operationPhrase("Chantier")} required value={form.project_id ? String(form.project_id) : ""} onChange={(value) => update("project_id", value ? Number(value) : null)} placeholder={operationPhrase("Sélectionner un chantier")} options={projects.map((project) => ({ value: String(project.id), label: project.code ? `${project.code} · ${project.name}` : localized(`${project.name} (sans code analytique)`, `${project.name} (بدون رمز تحليلي)`) }))} /></label>
+              <label><span>{operationPhrase("Date de signature")}</span><input type="date" value={form.signed_on} onChange={(event) => update("signed_on", event.target.value)} /></label>
+              <label className="field-wide"><span>{operationPhrase("Objet des travaux")}</span><input required value={form.title} placeholder={operationPhrase("Ex. Ferraillage des dalles")} onChange={(event) => update("title", event.target.value)} /></label>
             </div>
           </InventoryFormSection>
 
-          <InventoryFormSection title="Conditions de paiement" icon="specifications">
+          <InventoryFormSection title={operationPhrase("Conditions de paiement")} icon="specifications">
             <div className="maintenance-form-grid asset-form-grid-2">
-              <label><span>Retenue de garantie (%)</span><input required type="number" min="0" max="100" step="0.01" value={form.retention_rate} onChange={(event) => update("retention_rate", event.target.value)} /></label>
-              <label><span>TVA (%)</span><input required type="number" min="0" max="100" step="0.01" value={form.vat_rate} onChange={(event) => update("vat_rate", event.target.value)} /></label>
-              <label><span>Avance versée (F CFA)</span><input required type="number" min="0" step="1" value={form.advance_amount} onChange={(event) => update("advance_amount", event.target.value)} /></label>
-              <label><span>Récupération de l’avance (% par situation)</span><input required type="number" min="0" max="100" step="0.01" value={form.advance_recovery_rate} onChange={(event) => update("advance_recovery_rate", event.target.value)} /></label>
+              <label><span>{operationPhrase("Retenue de garantie (%)")}</span><input required type="number" min="0" max="100" step="0.01" value={form.retention_rate} onChange={(event) => update("retention_rate", event.target.value)} /></label>
+              <label><span>{operationPhrase("TVA (%)")}</span><input required type="number" min="0" max="100" step="0.01" value={form.vat_rate} onChange={(event) => update("vat_rate", event.target.value)} /></label>
+              <label><span>{operationPhrase("Avance versée (F CFA)")}</span><input required type="number" min="0" step="1" value={form.advance_amount} onChange={(event) => update("advance_amount", event.target.value)} /></label>
+              <label><span>{operationPhrase("Récupération de l’avance (% par situation)")}</span><input required type="number" min="0" max="100" step="0.01" value={form.advance_recovery_rate} onChange={(event) => update("advance_recovery_rate", event.target.value)} /></label>
             </div>
           </InventoryFormSection>
 
-          <InventoryFormSection title="Bordereau des prix" icon="invoice">
-            {itemsLocked && <div className="notice info">Le bordereau est verrouillé depuis la première situation ou le premier avenant. Utilisez un avenant pour ajouter des quantités ou des articles.</div>}
+          <InventoryFormSection title={operationPhrase("Bordereau des prix")} icon="invoice">
+            {itemsLocked && <div className="notice info">{operationPhrase("Le bordereau est verrouillé depuis la première situation ou le premier avenant. Utilisez un avenant pour ajouter des quantités ou des articles.")}</div>}
             <div className="sc-table-wrap">
               <table className="sc-table">
-                <thead><tr><th>Code</th><th>Désignation *</th><th>Unité *</th><th className="num">Quantité *</th><th className="num">Prix unitaire *</th><th /></tr></thead>
+                <thead><tr><th>{operationPhrase("Code")}</th><th>{operationPhrase("Désignation *")}</th><th>{operationPhrase("Unité *")}</th><th className="num">{operationPhrase("Quantité *")}</th><th className="num">{operationPhrase("Prix unitaire *")}</th><th /></tr></thead>
                 <tbody>
                   {form.items.map((item, index) => (
                     <tr key={item.key}>
                       <td className="sc-code">{codes[index]}</td>
-                      <td><input className="text" required aria-label={`Désignation ligne ${index + 1}`} disabled={itemsLocked} value={item.description} onChange={(event) => updateItem(item.key, "description", event.target.value)} /></td>
-                      <td><input className="text unit" required aria-label={`Unité ligne ${index + 1}`} placeholder="m³, t, m²…" disabled={itemsLocked} value={item.unit} onChange={(event) => updateItem(item.key, "unit", event.target.value)} /></td>
-                      <td><input required type="number" min="0.001" step="0.001" aria-label={`Quantité ligne ${index + 1}`} disabled={itemsLocked} value={item.quantity} onChange={(event) => updateItem(item.key, "quantity", event.target.value)} /></td>
-                      <td><input required type="number" min="0" step="0.01" aria-label={`Prix unitaire ligne ${index + 1}`} disabled={itemsLocked} value={item.unit_price} onChange={(event) => updateItem(item.key, "unit_price", event.target.value)} /></td>
-                      <td>{!itemsLocked && <button className="remove-line" type="button" aria-label={`Supprimer la ligne ${index + 1}`} disabled={form.items.length === 1} onClick={() => update("items", form.items.filter((candidate) => candidate.key !== item.key))}><ActionIcon name="delete" /></button>}</td>
+                      <td><input className="text" required aria-label={localized(`Désignation ligne ${index + 1}`, `وصف البند ${index + 1}`)} disabled={itemsLocked} value={item.description} onChange={(event) => updateItem(item.key, "description", event.target.value)} /></td>
+                      <td><input className="text unit" required aria-label={localized(`Unité ligne ${index + 1}`, `وحدة البند ${index + 1}`)} placeholder="m³, t, m²…" disabled={itemsLocked} value={item.unit} onChange={(event) => updateItem(item.key, "unit", event.target.value)} /></td>
+                      <td><input required type="number" min="0.001" step="0.001" aria-label={localized(`Quantité ligne ${index + 1}`, `كمية البند ${index + 1}`)} disabled={itemsLocked} value={item.quantity} onChange={(event) => updateItem(item.key, "quantity", event.target.value)} /></td>
+                      <td><input required type="number" min="0" step="0.01" aria-label={localized(`Prix unitaire ligne ${index + 1}`, `سعر الوحدة للبند ${index + 1}`)} disabled={itemsLocked} value={item.unit_price} onChange={(event) => updateItem(item.key, "unit_price", event.target.value)} /></td>
+                      <td>{!itemsLocked && <button className="remove-line" type="button" aria-label={localized(`Supprimer la ligne ${index + 1}`, `حذف البند ${index + 1}`)} disabled={form.items.length === 1} onClick={() => update("items", form.items.filter((candidate) => candidate.key !== item.key))}><ActionIcon name="delete" /></button>}</td>
                     </tr>
                   ))}
                 </tbody>
-                <tfoot><tr><td colSpan={3}>Montant du contrat (HT)</td><td className="num" colSpan={2}>{money(total)}</td><td /></tr></tfoot>
+                <tfoot><tr><td colSpan={3}>{operationPhrase("Montant du contrat (HT)")}</td><td className="num" colSpan={2}>{money(total)}</td><td /></tr></tfoot>
               </table>
             </div>
-            {!itemsLocked && <div className="sc-actions"><button className="secondary-button" type="button" onClick={() => update("items", [...form.items, emptyItem()])}><ActionIcon name="add" /> Ajouter une ligne</button></div>}
+            {!itemsLocked && <div className="sc-actions"><button className="secondary-button" type="button" onClick={() => update("items", [...form.items, emptyItem()])}><ActionIcon name="add" /> {operationPhrase("Ajouter une ligne")}</button></div>}
           </InventoryFormSection>
 
-          <InventoryFormSection title="Matériaux" icon="specifications">
-            <p className="sc-hint">Pour chaque ligne, indiquez qui achète les matériaux. Quand c’est ARH, le sous-traitant n’est payé que pour la main-d’œuvre, et Hourie compare les achats d’ARH (bons de commande) avec ce que les travaux ont réellement consommé.</p>
+          <InventoryFormSection title={operationPhrase("Matériaux")} icon="specifications">
+            <p className="sc-hint">{operationPhrase("Pour chaque ligne, indiquez qui achète les matériaux. Quand c’est ARH, le sous-traitant n’est payé que pour la main-d’œuvre, et Hourie compare les achats d’ARH (bons de commande) avec ce que les travaux ont réellement consommé.")}</p>
             <div className="sc-material-lines">
               {form.items.map((item, index) => (
                 <div className="sc-material-line" key={item.key}>
                   <div className="sc-material-line-header">
-                    <strong>{codes[index]} · {item.description || `Ligne ${index + 1}`}</strong>
-                    <select aria-label={`Matériaux fournis par, ligne ${index + 1}`} value={item.materials_supplied_by} onChange={(event) => setForm((current) => ({ ...current, items: current.items.map((candidate) => candidate.key === item.key ? { ...candidate, materials_supplied_by: event.target.value as MaterialsSuppliedBy, materials: event.target.value === "arh" && candidate.materials.length === 0 ? [emptyMaterial()] : candidate.materials } : candidate) }))}>
-                      <option value="subcontractor">Fournis par le sous-traitant (inclus dans son prix)</option>
-                      <option value="arh">Fournis par ARH (main-d’œuvre seule)</option>
+                    <strong>{codes[index]} · {item.description || localized(`Ligne ${index + 1}`, `البند ${index + 1}`)}</strong>
+                    <select aria-label={localized(`Matériaux fournis par, ligne ${index + 1}`, `جهة توفير المواد، البند ${index + 1}`)} value={item.materials_supplied_by} onChange={(event) => setForm((current) => ({ ...current, items: current.items.map((candidate) => candidate.key === item.key ? { ...candidate, materials_supplied_by: event.target.value as MaterialsSuppliedBy, materials: event.target.value === "arh" && candidate.materials.length === 0 ? [emptyMaterial()] : candidate.materials } : candidate) }))}>
+                      <option value="subcontractor">{operationPhrase("Fournis par le sous-traitant (inclus dans son prix)")}</option>
+                      <option value="arh">{operationPhrase("Fournis par ARH (main-d’œuvre seule)")}</option>
                     </select>
                   </div>
                   {item.materials_supplied_by === "arh" && (
                     <>
                       <div className="sc-table-wrap">
                       <table className="sc-table">
-                        <thead><tr><th>Matériau *</th><th>Unité *</th><th className="num">Qté par {item.unit || "unité"} *</th><th className="num">Perte %</th><th /></tr></thead>
+                        <thead><tr><th>{operationPhrase("Matériau *")}</th><th>{operationPhrase("Unité *")}</th><th className="num">{localized(`Qté par ${item.unit || "unité"} *`, `الكمية لكل ${item.unit || "وحدة"} *`)}</th><th className="num">{operationPhrase("Perte %")}</th><th /></tr></thead>
                         <tbody>
                           {item.materials.map((material, materialIndex) => (
                             <tr key={material.key}>
-                              <td><input className="text" required aria-label={`Matériau ${materialIndex + 1}, ligne ${index + 1}`} placeholder="Ex. Fer HA, Ciment" value={material.name} onChange={(event) => updateMaterials(item.key, (materials) => materials.map((candidate) => candidate.key === material.key ? { ...candidate, name: event.target.value } : candidate))} /></td>
-                              <td><input className="text unit" required aria-label={`Unité du matériau ${materialIndex + 1}, ligne ${index + 1}`} placeholder="kg, sac, m³" value={material.unit} onChange={(event) => updateMaterials(item.key, (materials) => materials.map((candidate) => candidate.key === material.key ? { ...candidate, unit: event.target.value } : candidate))} /></td>
-                              <td><input required type="number" min="0.0001" step="0.0001" aria-label={`Quantité par unité du matériau ${materialIndex + 1}, ligne ${index + 1}`} value={material.quantity_per_unit} onChange={(event) => updateMaterials(item.key, (materials) => materials.map((candidate) => candidate.key === material.key ? { ...candidate, quantity_per_unit: event.target.value } : candidate))} /></td>
-                              <td><input required type="number" min="0" max="100" step="0.1" aria-label={`Perte du matériau ${materialIndex + 1}, ligne ${index + 1}`} value={material.waste_percent} onChange={(event) => updateMaterials(item.key, (materials) => materials.map((candidate) => candidate.key === material.key ? { ...candidate, waste_percent: event.target.value } : candidate))} /></td>
-                              <td><button className="remove-line" type="button" aria-label={`Retirer le matériau ${materialIndex + 1}, ligne ${index + 1}`} onClick={() => updateMaterials(item.key, (materials) => materials.filter((candidate) => candidate.key !== material.key))}><ActionIcon name="delete" /></button></td>
+                              <td><input className="text" required aria-label={localized(`Matériau ${materialIndex + 1}, ligne ${index + 1}`, `المادة ${materialIndex + 1}، البند ${index + 1}`)} placeholder={operationPhrase("Ex. Fer HA, Ciment")} value={material.name} onChange={(event) => updateMaterials(item.key, (materials) => materials.map((candidate) => candidate.key === material.key ? { ...candidate, name: event.target.value } : candidate))} /></td>
+                              <td><input className="text unit" required aria-label={localized(`Unité du matériau ${materialIndex + 1}, ligne ${index + 1}`, `وحدة المادة ${materialIndex + 1}، البند ${index + 1}`)} placeholder={operationPhrase("kg, sac, m³")} value={material.unit} onChange={(event) => updateMaterials(item.key, (materials) => materials.map((candidate) => candidate.key === material.key ? { ...candidate, unit: event.target.value } : candidate))} /></td>
+                              <td><input required type="number" min="0.0001" step="0.0001" aria-label={localized(`Quantité par unité du matériau ${materialIndex + 1}, ligne ${index + 1}`, `الكمية لكل وحدة للمادة ${materialIndex + 1}، البند ${index + 1}`)} value={material.quantity_per_unit} onChange={(event) => updateMaterials(item.key, (materials) => materials.map((candidate) => candidate.key === material.key ? { ...candidate, quantity_per_unit: event.target.value } : candidate))} /></td>
+                              <td><input required type="number" min="0" max="100" step="0.1" aria-label={localized(`Perte du matériau ${materialIndex + 1}, ligne ${index + 1}`, `نسبة هدر المادة ${materialIndex + 1}، البند ${index + 1}`)} value={material.waste_percent} onChange={(event) => updateMaterials(item.key, (materials) => materials.map((candidate) => candidate.key === material.key ? { ...candidate, waste_percent: event.target.value } : candidate))} /></td>
+                              <td><button className="remove-line" type="button" aria-label={localized(`Retirer le matériau ${materialIndex + 1}, ligne ${index + 1}`, `إزالة المادة ${materialIndex + 1}، البند ${index + 1}`)} onClick={() => updateMaterials(item.key, (materials) => materials.filter((candidate) => candidate.key !== material.key))}><ActionIcon name="delete" /></button></td>
                             </tr>
                           ))}
                         </tbody>
                       </table>
                       </div>
-                      <div className="sc-actions"><button className="secondary-button" type="button" onClick={() => updateMaterials(item.key, (materials) => [...materials, emptyMaterial()])}><ActionIcon name="add" /> Ajouter un matériau</button></div>
+                      <div className="sc-actions"><button className="secondary-button" type="button" onClick={() => updateMaterials(item.key, (materials) => [...materials, emptyMaterial()])}><ActionIcon name="add" /> {operationPhrase("Ajouter un matériau")}</button></div>
                     </>
                   )}
                 </div>

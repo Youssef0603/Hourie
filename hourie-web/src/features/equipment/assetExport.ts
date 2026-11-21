@@ -1,4 +1,4 @@
-import type { Language } from '../../i18n/fr'
+import { activeLanguage, type Language } from '../../i18n/fr'
 import { strToU8, zipSync } from 'fflate'
 import { assetCategories, assetCategory, type AssetView } from './assetCategories'
 import { catalogColor, catalogLabel } from './catalogs'
@@ -31,8 +31,8 @@ const commonFields: AssetExportField[] = [
   { key: 'supplier', labelFr: 'Fournisseur', labelAr: 'المورّد', value: (item) => item.supplier },
   { key: 'origin', labelFr: 'Origine', labelAr: 'المنشأ', value: (item) => item.origin },
   { key: 'condition', labelFr: 'État', labelAr: 'الحالة', value: (item, catalogs) => catalogLabel(catalogs, 'equipment_condition', item.condition) },
-  { key: 'usage_status', labelFr: 'Utilisation actuelle', labelAr: 'الاستخدام الحالي', value: (item) => item.usage_status === 'in_use' ? 'En utilisation' : item.usage_status === 'not_in_use' ? 'Non utilisé' : '' },
-  { key: 'project', labelFr: 'Chantier', labelAr: 'الموقع / المشروع', value: (item) => item.current_project_assignment?.project.name },
+  { key: 'usage_status', labelFr: 'Utilisation actuelle', labelAr: 'الاستخدام الحالي', value: (item) => item.usage_status === 'in_use' ? (activeLanguage === 'ar' ? 'قيد الاستخدام' : 'En utilisation') : item.usage_status === 'not_in_use' ? (activeLanguage === 'ar' ? 'غير مستخدم' : 'Non utilisé') : '' },
+  { key: 'project', labelFr: 'Chantier', labelAr: 'ورشة العمل', value: (item) => item.current_project_assignment?.project.name },
   { key: 'location', labelFr: 'Localisation physique', labelAr: 'الموقع الفعلي', value: (item) => physicalLocation(item) },
   { key: 'custodian', labelFr: 'Responsable / conducteur', labelAr: 'المسؤول / السائق', value: (item) => item.custodian?.name },
 ]

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { fr } from '../../../i18n/fr'
+import { operationPhrase as t } from '../../../i18n/operations'
 import { ApiError } from '../../../shared/api/http'
 import { ActionIcon } from '../../../shared/components/ActionIcon'
 import { formatMoney } from '../../../shared/format'
@@ -246,7 +247,7 @@ export function MaintenanceSection({
           <div className="maintenance-form-grid">
             <label><span>{fr.maintenance.date}</span><input required type="date" value={form.maintenance_date} onChange={(event) => update('maintenance_date', event.target.value)} /></label>
             <label><span>{fr.equipment.engineHours}</span><input min="0" step="0.01" type="number" value={form.engine_hours} onChange={(event) => update('engine_hours', event.target.value)} placeholder="1250,50" /></label>
-            <label><span>Intervalle d’entretien (h)</span><input required={form.engine_hours !== ''} min="0.01" step="0.01" type="number" value={form.maintenance_interval_hours} onChange={(event) => update('maintenance_interval_hours', event.target.value)} placeholder="Selon le manuel" /></label>
+            <label><span>{t('Intervalle d’entretien (h)')}</span><input required={form.engine_hours !== ''} min="0.01" step="0.01" type="number" value={form.maintenance_interval_hours} onChange={(event) => update('maintenance_interval_hours', event.target.value)} placeholder={t('Selon le manuel')} /></label>
             <label className="field-wide"><span>{fr.maintenance.interventionType} <em>*</em></span><SearchableSelect required ariaLabel={fr.maintenance.interventionType} value={form.intervention_type} onChange={(value) => update('intervention_type', value)} placeholder={fr.common.toComplete} options={[...(currentTypeIsUnavailable ? [{ value: form.intervention_type, label: catalogLabel(catalogs, 'maintenance_type', form.intervention_type) }] : []), ...maintenanceTypes.map((option) => ({ value: option.code, label: catalogLabel(catalogs, 'maintenance_type', option.code) }))]} /></label>
             <fieldset className="maintenance-operations field-wide">
               <legend>{fr.maintenance.operations}</legend>
@@ -279,7 +280,7 @@ export function MaintenanceSection({
       )}
 
       {!showForm && (equipment.maintenances.length === 0 ? (
-        <EmptyState compact icon="maintenance" title={fr.maintenance.empty} description="Les interventions enregistrées apparaîtront ici." />
+        <EmptyState compact icon="maintenance" title={fr.maintenance.empty} description={t('Les interventions enregistrées apparaîtront ici.')} />
       ) : (
         <div className="maintenance-list">
           {equipment.maintenances.map((maintenance) => {
@@ -306,8 +307,8 @@ export function MaintenanceSection({
                   <div className="maintenance-card-body" id={`maintenance-details-${maintenance.id}`}>
                     <dl>
                       <div><dt>{fr.equipment.engineHours}</dt><dd>{value(maintenance.engine_hours)}</dd></div>
-                      <div><dt>Intervalle d’entretien</dt><dd>{maintenance.maintenance_interval_hours ? `${maintenance.maintenance_interval_hours} h` : fr.common.notProvided}</dd></div>
-                      <div><dt>Prochain entretien à</dt><dd>{maintenance.next_maintenance_engine_hours ? `${maintenance.next_maintenance_engine_hours} h` : fr.common.notProvided}</dd></div>
+                      <div><dt>{t('Intervalle d’entretien')}</dt><dd>{maintenance.maintenance_interval_hours ? `${maintenance.maintenance_interval_hours} h` : fr.common.notProvided}</dd></div>
+                      <div><dt>{t('Prochain entretien à')}</dt><dd>{maintenance.next_maintenance_engine_hours ? `${maintenance.next_maintenance_engine_hours} h` : fr.common.notProvided}</dd></div>
                       <div><dt>{fr.maintenance.oil_changed}</dt><dd>{answer(maintenance.oil_changed)}</dd></div>
                       <div><dt>{fr.maintenance.oilQuantity}</dt><dd>{maintenance.oil_quantity_litres ? `${maintenance.oil_quantity_litres} L` : fr.common.notProvided}</dd></div>
                       <div><dt>{fr.maintenance.oil_filter_changed}</dt><dd>{answer(maintenance.oil_filter_changed)}</dd></div>

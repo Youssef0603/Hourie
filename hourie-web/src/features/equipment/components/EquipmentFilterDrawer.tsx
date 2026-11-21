@@ -1,8 +1,9 @@
 import type { ChangeEvent, InputHTMLAttributes } from 'react'
-import { fr } from '../../../i18n/fr'
+import { activeLanguage, fr } from '../../../i18n/fr'
 import { ActionIcon } from '../../../shared/components/ActionIcon'
 import { SearchableSelect } from '../../../shared/components/SearchableSelect'
 import { locationOptionLabel } from '../locationLabel'
+import { categoryDisplayName } from '../assetCategories'
 import { catalogLabel, catalogOptions } from '../catalogs'
 import type { EquipmentFilterOptions, EquipmentFilters } from '../types'
 import { DataQualityFilterChips } from './DataQualityFilterChips'
@@ -23,7 +24,7 @@ export function EquipmentFilterDrawer({ filters, options, isSiteView, physicalLo
       <header><div><p className="section-label">{fr.assets.title}</p><h2>{fr.equipment.filters}</h2></div><button type="button" onClick={onClose} aria-label={fr.common.close}><ActionIcon name="close" /></button></header>
       <div className="filter-drawer-content">
         <fieldset className="drawer-basic-filters"><legend>{fr.equipment.filters}</legend><div className="advanced-filter-grid">
-          {isSiteView && <label><span>{fr.equipment.category}</span><SearchableSelect ariaLabel={fr.equipment.category} value={filters.category} onChange={(value) => onChange('category', value)} placeholder={fr.common.all} options={(options?.categories ?? []).map((category) => ({ value: category.code, label: category.name }))} /></label>}
+          {isSiteView && <label><span>{fr.equipment.category}</span><SearchableSelect ariaLabel={fr.equipment.category} value={filters.category} onChange={(value) => onChange('category', value)} placeholder={fr.common.all} options={(options?.categories ?? []).map((category) => ({ value: category.code, label: categoryDisplayName(category, activeLanguage) }))} /></label>}
           <label><span>{fr.equipment.condition}</span><SearchableSelect ariaLabel={fr.equipment.condition} value={filters.condition} onChange={(value) => onChange('condition', value)} placeholder={fr.common.all} options={catalogOptions(options?.catalogs, 'equipment_condition').map((option) => ({ value: option.code, label: catalogLabel(options?.catalogs, 'equipment_condition', option.code) }))} /></label>
           <label><span>{fr.equipment.usageStatus}</span><SearchableSelect ariaLabel={fr.equipment.usageStatus} value={filters.usage_status} onChange={(value) => onChange('usage_status', value)} placeholder={fr.common.all} options={[{ value: 'in_use', label: fr.equipment.usageInUse }, { value: 'not_in_use', label: fr.equipment.usageNotInUse }]} /></label>
           {!isSiteView && <label><span>{fr.equipment.project}</span><SearchableSelect ariaLabel={fr.equipment.project} value={filters.project_id} onChange={onProjectChange} placeholder={fr.common.all} options={(options?.projects ?? []).map((project) => ({ value: String(project.id), label: project.name }))} /></label>}

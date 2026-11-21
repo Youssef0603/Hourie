@@ -1,5 +1,6 @@
 import { useState, type FormEvent, type ReactNode } from 'react'
 import { fr, type Language } from '../../../i18n/fr'
+import { localized } from '../../../i18n/operations'
 import { ApiError } from '../../../shared/api/http'
 import { ActionIcon } from '../../../shared/components/ActionIcon'
 import { SearchableSelect } from '../../../shared/components/SearchableSelect'
@@ -75,7 +76,7 @@ export function AssetForm({ categoryCode, language, options, equipment, onSaved,
     : location.location_type === 'company_location' && location.project_id === null)
   const update = (key: keyof typeof form, value: string) => setForm((current) => ({ ...current, [key]: value }))
   const bungalowBooleanFields = new Set(['electrical_installation', 'air_conditioning'])
-  const renderDetailField = (field: AssetField) => <label key={field.key}><span>{assetFieldLabel(field, language)}</span>{field.key === 'purchase_price' || field.key === 'shipping_cost' ? <span className="price-input"><input type="number" min="0" step="any" value={details[field.key] ?? ''} onChange={(event) => setDetails((current) => ({ ...current, [field.key]: event.target.value }))} /><SearchableSelect ariaLabel={`${assetFieldLabel(field, language)} currency`} value={priceCurrencies[field.key]} onChange={(value) => setPriceCurrencies((current) => ({ ...current, [field.key]: value }))} placeholder="FCFA" includeEmpty={false} options={[{ value: 'XOF', label: 'FCFA' }, { value: 'EUR', label: 'EUR' }, { value: 'USD', label: 'USD' }]} /></span> : <input type={field.type} min={field.type === 'number' ? '0' : undefined} step={field.type === 'number' ? 'any' : undefined} placeholder={field.key === 'air_conditioning' ? fr.assets.airConditioningExample : undefined} value={details[field.key] ?? ''} onChange={(event) => setDetails((current) => ({ ...current, [field.key]: event.target.value }))} />}</label>
+  const renderDetailField = (field: AssetField) => <label key={field.key}><span>{assetFieldLabel(field, language)}</span>{field.key === 'purchase_price' || field.key === 'shipping_cost' ? <span className="price-input"><input type="number" min="0" step="any" value={details[field.key] ?? ''} onChange={(event) => setDetails((current) => ({ ...current, [field.key]: event.target.value }))} /><SearchableSelect ariaLabel={localized(`${assetFieldLabel(field, language)} currency`, `${assetFieldLabel(field, language)} — العملة`)} value={priceCurrencies[field.key]} onChange={(value) => setPriceCurrencies((current) => ({ ...current, [field.key]: value }))} placeholder="FCFA" includeEmpty={false} options={[{ value: 'XOF', label: 'FCFA' }, { value: 'EUR', label: 'EUR' }, { value: 'USD', label: 'USD' }]} /></span> : <input type={field.type} min={field.type === 'number' ? '0' : undefined} step={field.type === 'number' ? 'any' : undefined} placeholder={field.key === 'air_conditioning' ? fr.assets.airConditioningExample : undefined} value={details[field.key] ?? ''} onChange={(event) => setDetails((current) => ({ ...current, [field.key]: event.target.value }))} />}</label>
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setIsSaving(true)

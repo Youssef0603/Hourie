@@ -18,6 +18,8 @@ import { InventoryFormSection } from "../../equipment/components/AssetForm";
 import { EquipmentCreationPanel } from "../../equipment/components/EquipmentCreationPanel";
 import { deletePurchaseOrder, deletePurchaseOrderDeliveryNote, downloadPurchaseOrderPdf, getPurchaseOrders, getSiteMaterials, savePurchaseOrder, uploadPurchaseOrderDeliveryNotes, type SiteMaterial } from "../api";
 import type { PurchaseOrder, PurchaseOrderDeliveryNote, PurchaseOrderItem, PurchaseOrderPayload } from "../types";
+import { fr } from "../../../i18n/fr";
+import { localized, operationPhrase } from "../../../i18n/operations";
 import "./purchase-orders-page.css";
 
 type EditableItem = PurchaseOrderItem & { key: string };
@@ -102,7 +104,7 @@ function money(value: number | string, currency = "XOF") {
 }
 
 function dateLabel(value: string) {
-  return formatDate(value, { style: "medium", locale: "fr-FR" });
+  return formatDate(value, { style: "medium" });
 }
 
 
@@ -149,7 +151,7 @@ export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = []
       setOrders(response.data);
       setPagination(response.meta);
     } catch {
-      setError("Impossible de charger les bons de commande.");
+      setError(operationPhrase("Impossible de charger les bons de commande."));
     } finally {
       setLoading(false);
     }
@@ -229,7 +231,7 @@ export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = []
         } catch {
           setEditingId(savedOrder.id);
           setEditorDeliveryNotes(savedOrder.delivery_notes);
-          setError("Le bon de commande est enregistré, mais le bon de livraison n’a pas pu être ajouté. Réessayez l’envoi du document.");
+          setError(operationPhrase("Le bon de commande est enregistré, mais le bon de livraison n’a pas pu être ajouté. Réessayez l’envoi du document."));
           await refresh();
           return;
         }
@@ -241,14 +243,14 @@ export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = []
       setSelectedOrder(savedOrder);
       await refresh();
     } catch {
-      setError("Vérifiez les informations du bon de commande puis réessayez.");
+      setError(operationPhrase("Vérifiez les informations du bon de commande puis réessayez."));
     } finally {
       setSaving(false);
     }
   }
 
   async function remove(order: PurchaseOrder) {
-    if (!window.confirm(`Supprimer le bon de commande N° ${order.number} ?`)) return;
+    if (!window.confirm(localized(`Supprimer le bon de commande N° ${order.number} ?`, `هل تريد حذف أمر الشراء رقم ${order.number}؟`))) return;
     await deletePurchaseOrder(order.id);
     if (selectedOrder?.id === order.id) setSelectedOrder(null);
     if (preview?.id === order.id) setPreview(null);
@@ -260,12 +262,12 @@ export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = []
     try {
       await downloadPurchaseOrderPdf(order);
     } catch {
-      setError("Impossible de télécharger le PDF du bon de commande.");
+      setError(operationPhrase("Impossible de télécharger le PDF du bon de commande."));
     }
   }
 
   async function removeDeliveryNote(document: PurchaseOrderDeliveryNote) {
-    if (!editingId || !window.confirm(`Supprimer le bon de livraison « ${document.original_name} » ?`)) return;
+    if (!editingId || !window.confirm(localized(`Supprimer le bon de livraison « ${document.original_name} » ?`, `هل تريد حذف إشعار التسليم «${document.original_name}»؟`))) return;
     try {
       await deletePurchaseOrderDeliveryNote(editingId, document.id);
       setEditorDeliveryNotes((current) => current.filter((item) => item.id !== document.id));
@@ -273,44 +275,44 @@ export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = []
         ? { ...order, delivery_notes: order.delivery_notes.filter((item) => item.id !== document.id) }
         : order));
     } catch {
-      setError("Impossible de supprimer le bon de livraison.");
+      setError(operationPhrase("Impossible de supprimer le bon de livraison."));
     }
   }
 
 
   return (
     <main className="equipment-page purchase-orders-page">
-      {!activeTemplate && <section className="page-heading po-page-heading"><div><p className="section-label">Documents</p><h1>Créateur de documents</h1><p>Créez, modifiez et exportez les bons de commande A.B. Hourie.</p></div></section>}
+      {!activeTemplate && <section className="page-heading po-page-heading"><div><p className="section-label">{operationPhrase("Documents")}</p><h1>{operationPhrase("Créateur de documents")}</h1><p>{operationPhrase("Créez, modifiez et exportez les bons de commande A.B. Hourie.")}</p></div></section>}
 
       {error && <div className="form-alert" role="alert">{error}</div>}
 
       {!activeTemplate && (
         <section className="document-template-section">
-          <h2>Modèles</h2>
+          <h2>{operationPhrase("Modèles")}</h2>
           <div className="document-template-grid">
           <button className="document-template-card" type="button" onClick={() => navigateView("purchase-orders")}>
             <span className="document-template-icon"><NavigationDocumentIcon /></span>
-            <span><strong>Bon de commande</strong><small>Commandes fournisseurs</small></span>
+            <span><strong>{operationPhrase("Bon de commande")}</strong><small>{operationPhrase("Commandes fournisseurs")}</small></span>
           </button>
           </div>
         </section>
       )}
 
       {activeTemplate === "purchase-order" && <>
-        <nav className="breadcrumbs" aria-label="Fil d’Ariane">
-          <button type="button" onClick={() => navigateView("templates")}>Documents</button>
+        <nav className="breadcrumbs" aria-label={operationPhrase("Fil d’Ariane")}>
+          <button type="button" onClick={() => navigateView("templates")}>{operationPhrase("Documents")}</button>
           <span aria-hidden="true">/</span>
-          <strong aria-current="page">Bons de commande</strong>
+          <strong aria-current="page">{operationPhrase("Bons de commande")}</strong>
         </nav>
         <section className="page-heading po-workspace-heading">
           <div>
-            <h1>Bons de commande</h1>
-            <p>Consultez et gérez tous les bons de commande.</p>
+            <h1>{operationPhrase("Bons de commande")}</h1>
+            <p>{operationPhrase("Consultez et gérez tous les bons de commande.")}</p>
           </div>
-          {canManage && <button className="table-refresh-button table-add-button" type="button" aria-label="Créer un bon de commande" title="Créer un bon de commande" onClick={createOrder}><ActionIcon name="add" /></button>}
+          {canManage && <button className="table-refresh-button table-add-button" type="button" aria-label={operationPhrase("Créer un bon de commande")} title={operationPhrase("Créer un bon de commande")} onClick={createOrder}><ActionIcon name="add" /></button>}
         </section>
 
-        <section className="inventory-panel po-history"><div className="filter-bar"><SearchField id="po-search" label="Documents enregistrés" placeholder="Numéro, fournisseur ou projet" value={search} onChange={(value) => { setSearch(value); setPage(1); }} /><div className="filter-toolbar-actions"><ToolbarIconButton icon="refresh" label="Actualiser" disabled={loading} onClick={() => void refresh()} /></div></div>{loading ? <div className="table-state"><LoadingSpinner label="Chargement des bons de commande…" /></div> : orders.length === 0 ? <EmptyState title="Aucun bon de commande" description="Créez le premier bon de commande avec le bouton +." /> : <div className="equipment-table-wrap"><table className="equipment-table"><thead><tr><th>N°</th><th>Date</th><th>Fournisseur</th><th>Projet</th><th>Total TTC</th><th>Modifié</th></tr></thead><tbody>{orders.map((order) => <tr key={order.id} {...clickableRow(() => setSelectedOrder(order))}><td><strong>{order.number}</strong></td><td>{dateLabel(order.ordered_on)}</td><td>{order.supplier_name}</td><td>{order.project_name || "—"}</td><td>{money(order.total, order.currency)}</td><td>{dateLabel(order.updated_at.slice(0, 10))}</td></tr>)}</tbody></table></div>}{pagination && <Pagination meta={pagination} disabled={loading} label="Pagination des bons de commande" onPageChange={setPage} />}</section>
+        <section className="inventory-panel po-history"><div className="filter-bar"><SearchField id="po-search" label={operationPhrase("Documents enregistrés")} placeholder={operationPhrase("Numéro, fournisseur ou projet")} value={search} onChange={(value) => { setSearch(value); setPage(1); }} /><div className="filter-toolbar-actions"><ToolbarIconButton icon="refresh" label={fr.common.refresh} disabled={loading} onClick={() => void refresh()} /></div></div>{loading ? <div className="table-state"><LoadingSpinner label={operationPhrase("Chargement des bons de commande…")} /></div> : orders.length === 0 ? <EmptyState title={operationPhrase("Aucun bon de commande")} description={operationPhrase("Créez le premier bon de commande avec le bouton +.")} /> : <div className="equipment-table-wrap"><table className="equipment-table"><thead><tr><th>{operationPhrase("N°")}</th><th>{operationPhrase("Date")}</th><th>{operationPhrase("Fournisseur")}</th><th>{operationPhrase("Projet")}</th><th>{operationPhrase("Total TTC")}</th><th>{operationPhrase("Modifié")}</th></tr></thead><tbody>{orders.map((order) => <tr key={order.id} {...clickableRow(() => setSelectedOrder(order))}><td><strong>{order.number}</strong></td><td>{dateLabel(order.ordered_on)}</td><td>{order.supplier_name}</td><td>{order.project_name || "—"}</td><td>{money(order.total, order.currency)}</td><td>{dateLabel(order.updated_at.slice(0, 10))}</td></tr>)}</tbody></table></div>}{pagination && <Pagination meta={pagination} disabled={loading} label={operationPhrase("Pagination des bons de commande")} onPageChange={setPage} />}</section>
       </>}
 
       {selectedOrder && !editor && !preview && (
@@ -327,44 +329,44 @@ export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = []
 
       {editor && (
         <EquipmentCreationPanel
-          eyebrow="Bon de commande"
-          title={editingId ? "Modifier le document" : "Nouveau document"}
-          action={<button className="primary-button" type="submit" form="purchase-order-form" disabled={saving}>{saving ? "Enregistrement…" : "Enregistrer"}</button>}
+          eyebrow={operationPhrase("Bon de commande")}
+          title={editingId ? operationPhrase("Modifier le document") : operationPhrase("Nouveau document")}
+          action={<button className="primary-button" type="submit" form="purchase-order-form" disabled={saving}>{saving ? fr.common.saving : fr.common.save}</button>}
           onClose={closeEditor}
         >
         <form id="purchase-order-form" className="generator-create-form asset-form purchase-order-editor" onSubmit={submit}>
           <div className="asset-form-layout">
-            <InventoryFormSection title="Bon de livraison" icon="invoice">
+            <InventoryFormSection title={operationPhrase("Bon de livraison")} icon="invoice">
               <div className="po-delivery-notes-editor equipment-invoices-section">
-                <DocumentUploadDropzone compact title="Ajouter le bon de livraison" description="PDF uniquement · 10 Mo maximum" disabled={saving} onFiles={(files) => setDeliveryNoteFiles((current) => [...current, ...files])} />
-                {deliveryNoteFiles.length > 0 && <div className="po-pending-documents">{deliveryNoteFiles.map((file, index) => <div key={`${file.name}-${file.lastModified}-${index}`}><span>{file.name}</span><button type="button" aria-label={`Retirer ${file.name}`} onClick={() => setDeliveryNoteFiles((current) => current.filter((_, fileIndex) => fileIndex !== index))}><ActionIcon name="close" /></button></div>)}</div>}
-                {editorDeliveryNotes.length > 0 && <><div className="section-heading-row"><div><h3>Documents enregistrés</h3><p>{editorDeliveryNotes.length} bon{editorDeliveryNotes.length > 1 ? "s" : ""} de livraison</p></div></div><PaginatedDocumentList pageSize={3} documents={editorDeliveryNotes} emptyMessage="Aucun bon de livraison" renderDocument={(document) => <DocumentRow key={document.id} url={document.url} name={document.original_name} meta={`${formatFileSize(document.size_bytes)} · ${dateLabel(document.created_at.slice(0, 10))}${document.uploaded_by ? ` · Ajouté par ${document.uploaded_by.name}` : ""}`} onError={setError} onDelete={() => void removeDeliveryNote(document)} />} /></>}
+                <DocumentUploadDropzone compact title={operationPhrase("Ajouter le bon de livraison")} description={operationPhrase("PDF uniquement · 10 Mo maximum")} disabled={saving} onFiles={(files) => setDeliveryNoteFiles((current) => [...current, ...files])} />
+                {deliveryNoteFiles.length > 0 && <div className="po-pending-documents">{deliveryNoteFiles.map((file, index) => <div key={`${file.name}-${file.lastModified}-${index}`}><span>{file.name}</span><button type="button" aria-label={localized(`Retirer ${file.name}`, `إزالة ${file.name}`)} onClick={() => setDeliveryNoteFiles((current) => current.filter((_, fileIndex) => fileIndex !== index))}><ActionIcon name="close" /></button></div>)}</div>}
+                {editorDeliveryNotes.length > 0 && <><div className="section-heading-row"><div><h3>{operationPhrase("Documents enregistrés")}</h3><p>{localized(`${editorDeliveryNotes.length} bon${editorDeliveryNotes.length > 1 ? "s" : ""} de livraison`, editorDeliveryNotes.length > 1 ? `${editorDeliveryNotes.length} إشعارات تسليم` : "إشعار تسليم واحد")}</p></div></div><PaginatedDocumentList pageSize={3} documents={editorDeliveryNotes} emptyMessage={operationPhrase("Aucun bon de livraison")} renderDocument={(document) => <DocumentRow key={document.id} url={document.url} name={document.original_name} meta={`${formatFileSize(document.size_bytes)} · ${dateLabel(document.created_at.slice(0, 10))}${document.uploaded_by ? localized(` · Ajouté par ${document.uploaded_by.name}`, ` · أضافه ${document.uploaded_by.name}`) : ""}`} onError={setError} onDelete={() => void removeDeliveryNote(document)} />} /></>}
               </div>
             </InventoryFormSection>
-            <InventoryFormSection title="Informations" icon="identification">
+            <InventoryFormSection title={operationPhrase("Informations")} icon="identification">
               <div className="maintenance-form-grid asset-form-grid-2">
-                <label><span>Fournisseur</span><input required value={editor.supplier_name} onChange={(event) => updateField("supplier_name", event.target.value)} /></label>
-                <label><span>Date</span><input required type="date" value={editor.ordered_on} onChange={(event) => updateField("ordered_on", event.target.value)} /></label>
-                <label><span>Téléphone</span><input value={editor.supplier_phone ?? ""} onChange={(event) => updateField("supplier_phone", event.target.value)} /></label>
-                <label><span>Fax</span><input value={editor.supplier_fax ?? ""} onChange={(event) => updateField("supplier_fax", event.target.value)} /></label>
-                <label><span>Agent de suivi</span><input value={editor.follow_up_agent ?? ""} onChange={(event) => updateField("follow_up_agent", event.target.value)} /></label>
-                <label><span>Contact</span><input value={editor.contact_name ?? ""} onChange={(event) => updateField("contact_name", event.target.value)} /></label>
-                <label><span>Projet *</span><SearchableSelect ariaLabel="Projet" required value={editor.project_id ? String(editor.project_id) : ""} onChange={(value) => updateField("project_id", value ? Number(value) : null)} placeholder="Sélectionner un chantier" options={projects.map((project) => ({ value: String(project.id), label: project.code ? `${project.code} · ${project.name}` : `${project.name} (sans code analytique)` }))} /></label>
-                <label><span>Motif</span><input value={editor.reason ?? ""} onChange={(event) => updateField("reason", event.target.value)} /></label>
+                <label><span>{operationPhrase("Fournisseur")}</span><input required value={editor.supplier_name} onChange={(event) => updateField("supplier_name", event.target.value)} /></label>
+                <label><span>{operationPhrase("Date")}</span><input required type="date" value={editor.ordered_on} onChange={(event) => updateField("ordered_on", event.target.value)} /></label>
+                <label><span>{operationPhrase("Téléphone")}</span><input value={editor.supplier_phone ?? ""} onChange={(event) => updateField("supplier_phone", event.target.value)} /></label>
+                <label><span>{operationPhrase("Fax")}</span><input value={editor.supplier_fax ?? ""} onChange={(event) => updateField("supplier_fax", event.target.value)} /></label>
+                <label><span>{operationPhrase("Agent de suivi")}</span><input value={editor.follow_up_agent ?? ""} onChange={(event) => updateField("follow_up_agent", event.target.value)} /></label>
+                <label><span>{operationPhrase("Contact")}</span><input value={editor.contact_name ?? ""} onChange={(event) => updateField("contact_name", event.target.value)} /></label>
+                <label><span>{operationPhrase("Projet *")}</span><SearchableSelect ariaLabel={operationPhrase("Projet")} required value={editor.project_id ? String(editor.project_id) : ""} onChange={(value) => updateField("project_id", value ? Number(value) : null)} placeholder={operationPhrase("Sélectionner un chantier")} options={projects.map((project) => ({ value: String(project.id), label: project.code ? `${project.code} · ${project.name}` : localized(`${project.name} (sans code analytique)`, `${project.name} (بدون رمز تحليلي)`) }))} /></label>
+                <label><span>{operationPhrase("Motif")}</span><input value={editor.reason ?? ""} onChange={(event) => updateField("reason", event.target.value)} /></label>
               </div>
             </InventoryFormSection>
-            <InventoryFormSection title="Articles" icon="invoice">
+            <InventoryFormSection title={operationPhrase("Articles")} icon="invoice">
               <div className="po-lines-section">
-                <div className="po-lines-heading"><span>Articles commandés</span><button type="button" className="maintenance-add" onClick={() => updateField("items", [...editor.items, emptyItem()])}><ActionIcon name="add" /> Ajouter une ligne</button></div>
-            <div className="po-lines-table-wrap"><table className="po-lines-table"><thead><tr><th>N°</th><th>Code budget</th><th>Description *</th><th>Quantité *</th><th>Unité</th><th>Prix unitaire *</th><th>Total</th><th /></tr></thead><tbody>{editor.items.map((item, index) => <tr key={item.key}><td>{index + 1}</td><td>{materialsForEditor.length > 0
-                ? <SearchableSelect ariaLabel={`Code budget ligne ${index + 1}`} value={item.subcontract_item_material_id ? String(item.subcontract_item_material_id) : ""} onChange={(value) => linkMaterial(item.key, value ? Number(value) : null)} placeholder="Aucun (achat hors sous-traitance)" options={materialsForEditor.map((material) => ({ value: String(material.id), label: `${material.item_code} · ${material.name} (${material.unit}) — ${material.item_description}` }))} />
-                : <input aria-label={`Code budget ligne ${index + 1}`} value={item.budget_code ?? ""} onChange={(event) => updateItem(item.key, "budget_code", event.target.value)} />}</td><td><input aria-label="Description *" required value={item.description} onChange={(event) => updateItem(item.key, "description", event.target.value)} /></td><td><input aria-label="Quantité *" required min="1" step="1" inputMode="numeric" type="number" value={item.quantity} onChange={(event) => updateItem(item.key, "quantity", integerInput(event.target.value))} /></td><td><input aria-label={`Unité ligne ${index + 1}`} placeholder="t, sac, u…" title={item.subcontract_item_material_id ? "Unité du matériau de la sous-traitance" : undefined} disabled={Boolean(item.subcontract_item_material_id)} value={item.unit ?? ""} onChange={(event) => updateItem(item.key, "unit", event.target.value)} /></td><td><input aria-label="Prix unitaire *" required min="0" step="0.01" type="number" value={item.unit_price} onChange={(event) => updateItem(item.key, "unit_price", event.target.value)} /></td><td>{money(numeric(item.quantity) * numeric(item.unit_price), editor.currency)}</td><td><button aria-label={`Supprimer la ligne ${index + 1}`} type="button" className="po-remove-line" disabled={editor.items.length === 1} onClick={() => updateField("items", editor.items.filter((candidate) => candidate.key !== item.key))}><ActionIcon name="delete" /></button></td></tr>)}</tbody></table></div>
+                <div className="po-lines-heading"><span>{operationPhrase("Articles commandés")}</span><button type="button" className="maintenance-add" onClick={() => updateField("items", [...editor.items, emptyItem()])}><ActionIcon name="add" /> {operationPhrase("Ajouter une ligne")}</button></div>
+            <div className="po-lines-table-wrap"><table className="po-lines-table"><thead><tr><th>{operationPhrase("N°")}</th><th>{operationPhrase("Code budget")}</th><th>{operationPhrase("Description *")}</th><th>{operationPhrase("Quantité *")}</th><th>{operationPhrase("Unité")}</th><th>{operationPhrase("Prix unitaire *")}</th><th>{operationPhrase("Total")}</th><th /></tr></thead><tbody>{editor.items.map((item, index) => <tr key={item.key}><td>{index + 1}</td><td>{materialsForEditor.length > 0
+                ? <SearchableSelect ariaLabel={`Code budget ligne ${index + 1}`} value={item.subcontract_item_material_id ? String(item.subcontract_item_material_id) : ""} onChange={(value) => linkMaterial(item.key, value ? Number(value) : null)} placeholder={operationPhrase("Aucun (achat hors sous-traitance)")} options={materialsForEditor.map((material) => ({ value: String(material.id), label: `${material.item_code} · ${material.name} (${material.unit}) — ${material.item_description}` }))} />
+                : <input aria-label={`Code budget ligne ${index + 1}`} value={item.budget_code ?? ""} onChange={(event) => updateItem(item.key, "budget_code", event.target.value)} />}</td><td><input aria-label={operationPhrase("Description *")} required value={item.description} onChange={(event) => updateItem(item.key, "description", event.target.value)} /></td><td><input aria-label={operationPhrase("Quantité *")} required min="1" step="1" inputMode="numeric" type="number" value={item.quantity} onChange={(event) => updateItem(item.key, "quantity", integerInput(event.target.value))} /></td><td><input aria-label={localized(`Unité ligne ${index + 1}`, `الوحدة - السطر ${index + 1}`)} placeholder={operationPhrase("t, sac, u…")} title={item.subcontract_item_material_id ? operationPhrase("Unité du matériau de la sous-traitance") : undefined} disabled={Boolean(item.subcontract_item_material_id)} value={item.unit ?? ""} onChange={(event) => updateItem(item.key, "unit", event.target.value)} /></td><td><input aria-label={operationPhrase("Prix unitaire *")} required min="0" step="0.01" type="number" value={item.unit_price} onChange={(event) => updateItem(item.key, "unit_price", event.target.value)} /></td><td>{money(numeric(item.quantity) * numeric(item.unit_price), editor.currency)}</td><td><button aria-label={localized(`Supprimer la ligne ${index + 1}`, `حذف السطر ${index + 1}`)} type="button" className="po-remove-line" disabled={editor.items.length === 1} onClick={() => updateField("items", editor.items.filter((candidate) => candidate.key !== item.key))}><ActionIcon name="delete" /></button></td></tr>)}</tbody></table></div>
               </div>
             </InventoryFormSection>
-            <InventoryFormSection title="Validation et totaux" icon="specifications">
+            <InventoryFormSection title={operationPhrase("Validation et totaux")} icon="specifications">
               <div className="po-editor-bottom">
-                <div className="maintenance-form-grid asset-form-grid-2"><label><span>Préparé par</span><input value={editor.prepared_by ?? ""} onChange={(event) => updateField("prepared_by", event.target.value)} /></label><label><span>Commandé par</span><input value={editor.ordered_by ?? ""} onChange={(event) => updateField("ordered_by", event.target.value)} /></label><label><span>Validé par</span><input value={editor.approved_by ?? ""} onChange={(event) => updateField("approved_by", event.target.value)} /></label><label><span>TVA (%)</span><input min="0" max="100" step="0.01" type="number" value={editor.vat_rate} onChange={(event) => updateField("vat_rate", event.target.value)} /></label></div>
-                <dl className="po-live-totals"><div><dt>Total HT</dt><dd>{money(totals.subtotal, editor.currency)}</dd></div><div><dt>TVA</dt><dd>{money(totals.vat, editor.currency)}</dd></div><div><dt>Total TTC</dt><dd>{money(totals.total, editor.currency)}</dd></div></dl>
+                <div className="maintenance-form-grid asset-form-grid-2"><label><span>{operationPhrase("Préparé par")}</span><input value={editor.prepared_by ?? ""} onChange={(event) => updateField("prepared_by", event.target.value)} /></label><label><span>{operationPhrase("Commandé par")}</span><input value={editor.ordered_by ?? ""} onChange={(event) => updateField("ordered_by", event.target.value)} /></label><label><span>{operationPhrase("Validé par")}</span><input value={editor.approved_by ?? ""} onChange={(event) => updateField("approved_by", event.target.value)} /></label><label><span>{operationPhrase("TVA (%)")}</span><input min="0" max="100" step="0.01" type="number" value={editor.vat_rate} onChange={(event) => updateField("vat_rate", event.target.value)} /></label></div>
+                <dl className="po-live-totals"><div><dt>{operationPhrase("Total HT")}</dt><dd>{money(totals.subtotal, editor.currency)}</dd></div><div><dt>{operationPhrase("TVA")}</dt><dd>{money(totals.vat, editor.currency)}</dd></div><div><dt>{operationPhrase("Total TTC")}</dt><dd>{money(totals.total, editor.currency)}</dd></div></dl>
               </div>
             </InventoryFormSection>
           </div>
@@ -372,7 +374,7 @@ export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = []
         </EquipmentCreationPanel>
       )}
 
-      {preview && <div className="po-preview-backdrop" onMouseDown={() => setPreview(null)}><section className="po-preview-panel" role="dialog" aria-modal="true" aria-label={`Bon de commande ${preview.number}`} onMouseDown={(event) => event.stopPropagation()}><header><div><strong>Aperçu du bon N° {preview.number}</strong><small>Le PDF est enregistré dans le stockage sécurisé des documents.</small></div><div>{canManage && <button className="secondary-button" type="button" onClick={() => { editOrder(preview); setPreview(null); }}><ActionIcon name="edit" /> Modifier</button>}<button className="primary-button" type="button" onClick={() => void exportPdf(preview)}><ActionIcon name="download" /> Exporter en PDF</button><button className="po-preview-close" type="button" aria-label="Fermer l’aperçu" title="Fermer" onClick={() => setPreview(null)}><ActionIcon name="close" /></button></div></header>{preview.delivery_notes.length > 0 && <div className="po-preview-delivery-notes"><strong>Bon{preview.delivery_notes.length > 1 ? "s" : ""} de livraison :</strong>{preview.delivery_notes.map((document) => <button type="button" key={document.id} onClick={() => { if (!openDocument(document.url)) setError("Impossible d’ouvrir le bon de livraison."); }}><ActionIcon name="invoice" /> {document.original_name}</button>)}</div>}<div className="po-sheet-stage"><iframe className="po-pdf-frame" title={`Aperçu PDF du bon ${preview.number}`} src={`${preview.pdf_url}?preview=1#toolbar=0&navpanes=0&scrollbar=0`} /></div></section></div>}
+      {preview && <div className="po-preview-backdrop" onMouseDown={() => setPreview(null)}><section className="po-preview-panel" role="dialog" aria-modal="true" aria-label={localized(`Bon de commande ${preview.number}`, `أمر الشراء ${preview.number}`)} onMouseDown={(event) => event.stopPropagation()}><header><div><strong>{localized(`Aperçu du bon N° ${preview.number}`, `معاينة أمر الشراء رقم ${preview.number}`)}</strong><small>{operationPhrase("Le PDF est enregistré dans le stockage sécurisé des documents.")}</small></div><div>{canManage && <button className="secondary-button" type="button" onClick={() => { editOrder(preview); setPreview(null); }}><ActionIcon name="edit" /> {fr.common.edit}</button>}<button className="primary-button" type="button" onClick={() => void exportPdf(preview)}><ActionIcon name="download" /> {operationPhrase("Exporter en PDF")}</button><button className="po-preview-close" type="button" aria-label={operationPhrase("Fermer l’aperçu")} title={fr.common.close} onClick={() => setPreview(null)}><ActionIcon name="close" /></button></div></header>{preview.delivery_notes.length > 0 && <div className="po-preview-delivery-notes"><strong>{preview.delivery_notes.length > 1 ? operationPhrase("Bons de livraison :") : operationPhrase("Bon de livraison :")}</strong>{preview.delivery_notes.map((document) => <button type="button" key={document.id} onClick={() => { if (!openDocument(document.url)) setError(operationPhrase("Impossible d’ouvrir le bon de livraison.")); }}><ActionIcon name="invoice" /> {document.original_name}</button>)}</div>}<div className="po-sheet-stage"><iframe className="po-pdf-frame" title={localized(`Aperçu PDF du bon ${preview.number}`, `معاينة PDF لأمر الشراء ${preview.number}`)} src={`${preview.pdf_url}?preview=1#toolbar=0&navpanes=0&scrollbar=0`} /></div></section></div>}
     </main>
   );
 }
@@ -380,49 +382,49 @@ export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = []
 function PurchaseOrderDetails({ order, canManage, onClose, onPreview, onEdit, onDelete, onOrderChanged }: { order: PurchaseOrder; canManage: boolean; onClose: () => void; onPreview: () => void; onEdit: () => void; onDelete: () => void; onOrderChanged: (order: PurchaseOrder) => void }) {
   return (
     <div className="detail-backdrop" onMouseDown={onClose}>
-      <aside className="detail-panel insurance-side-panel purchase-order-detail-panel" role="dialog" aria-modal="true" aria-label={`Détail du bon de commande ${order.number}`} onMouseDown={(event) => event.stopPropagation()}>
+      <aside className="detail-panel insurance-side-panel purchase-order-detail-panel" role="dialog" aria-modal="true" aria-label={localized(`Détail du bon de commande ${order.number}`, `تفاصيل أمر الشراء ${order.number}`)} onMouseDown={(event) => event.stopPropagation()}>
         <header className="detail-header">
           <div>
-            <p className="section-label">Bon de commande</p>
-            <h2>N° {order.number}</h2>
+            <p className="section-label">{operationPhrase("Bon de commande")}</p>
+            <h2>{operationPhrase("N°")} {order.number}</h2>
             <p>{order.supplier_name}</p>
           </div>
-          <button type="button" aria-label="Fermer" onClick={onClose}><ActionIcon name="close" /></button>
+          <button type="button" aria-label={fr.common.close} onClick={onClose}><ActionIcon name="close" /></button>
         </header>
         <div className="detail-content insurance-side-content">
           <div className="detail-primary-actions purchase-order-detail-actions">
-            {canManage && <button className="equipment-edit-button detail-toolbar-button" type="button" onClick={onEdit}><ActionIcon name="edit" /> Modifier</button>}
-            <button className="equipment-history-button detail-toolbar-button" type="button" onClick={onPreview}><ActionIcon name="invoice" /> Aperçu</button>
-            {canManage && <button className="danger-button detail-delete-button" type="button" aria-label="Supprimer" title="Supprimer" onClick={onDelete}><ActionIcon name="delete" /></button>}
+            {canManage && <button className="equipment-edit-button detail-toolbar-button" type="button" onClick={onEdit}><ActionIcon name="edit" /> {fr.common.edit}</button>}
+            <button className="equipment-history-button detail-toolbar-button" type="button" onClick={onPreview}><ActionIcon name="invoice" /> {operationPhrase("Aperçu")}</button>
+            {canManage && <button className="danger-button detail-delete-button" type="button" aria-label={fr.common.delete} title={fr.common.delete} onClick={onDelete}><ActionIcon name="delete" /></button>}
           </div>
           <section>
-            <h3><ActionIcon name="identification" /> Informations principales</h3>
+            <h3><ActionIcon name="identification" /> {operationPhrase("Informations principales")}</h3>
             <dl>
-              <div><dt>Fournisseur</dt><dd>{order.supplier_name}</dd></div>
-              <div><dt>Date</dt><dd>{dateLabel(order.ordered_on)}</dd></div>
-              <div><dt>Projet</dt><dd>{order.project_name || "À compléter"}</dd></div>
-              <div><dt>Motif</dt><dd>{order.reason || "À compléter"}</dd></div>
-              <div><dt>Téléphone</dt><dd>{order.supplier_phone || "À compléter"}</dd></div>
-              <div><dt>Contact</dt><dd>{order.contact_name || "À compléter"}</dd></div>
+              <div><dt>{operationPhrase("Fournisseur")}</dt><dd>{order.supplier_name}</dd></div>
+              <div><dt>{operationPhrase("Date")}</dt><dd>{dateLabel(order.ordered_on)}</dd></div>
+              <div><dt>{operationPhrase("Projet")}</dt><dd>{order.project_name || fr.common.toComplete}</dd></div>
+              <div><dt>{operationPhrase("Motif")}</dt><dd>{order.reason || fr.common.toComplete}</dd></div>
+              <div><dt>{operationPhrase("Téléphone")}</dt><dd>{order.supplier_phone || fr.common.toComplete}</dd></div>
+              <div><dt>{operationPhrase("Contact")}</dt><dd>{order.contact_name || fr.common.toComplete}</dd></div>
             </dl>
           </section>
           <section>
-            <h3><ActionIcon name="invoice" /> Articles commandés</h3>
+            <h3><ActionIcon name="invoice" /> {operationPhrase("Articles commandés")}</h3>
             <div className="po-detail-items">
-              {order.items.map((item, index) => <article key={item.id ?? index}><span>{index + 1}</span><div><strong>{item.description}</strong><small>{item.material_label || item.budget_code || "Sans code budget"} · {item.quantity}{item.unit ? ` ${item.unit}` : ""} × {money(item.unit_price, order.currency)}</small></div><b>{money(item.total ?? numeric(item.quantity) * numeric(item.unit_price), order.currency)}</b></article>)}
+              {order.items.map((item, index) => <article key={item.id ?? index}><span>{index + 1}</span><div><strong>{item.description}</strong><small>{item.material_label || item.budget_code || operationPhrase("Sans code budget")} · {item.quantity}{item.unit ? ` ${item.unit}` : ""} × {money(item.unit_price, order.currency)}</small></div><b>{money(item.total ?? numeric(item.quantity) * numeric(item.unit_price), order.currency)}</b></article>)}
             </div>
           </section>
           <section>
-            <h3><ActionIcon name="specifications" /> Totaux</h3>
+            <h3><ActionIcon name="specifications" /> {operationPhrase("Totaux")}</h3>
             <dl>
-              <div><dt>Total HT</dt><dd>{money(order.subtotal, order.currency)}</dd></div>
-              <div><dt>TVA ({Number(order.vat_rate)} %)</dt><dd>{money(order.vat_amount, order.currency)}</dd></div>
-              <div><dt>Total TTC</dt><dd><strong>{money(order.total, order.currency)}</strong></dd></div>
+              <div><dt>{operationPhrase("Total HT")}</dt><dd>{money(order.subtotal, order.currency)}</dd></div>
+              <div><dt>{operationPhrase("TVA")} ({Number(order.vat_rate)} %)</dt><dd>{money(order.vat_amount, order.currency)}</dd></div>
+              <div><dt>{operationPhrase("Total TTC")}</dt><dd><strong>{money(order.total, order.currency)}</strong></dd></div>
             </dl>
           </section>
           <SupplierInvoices order={order} canManage={canManage} onChanged={onOrderChanged} />
           {order.delivery_notes.length > 0 && <section>
-            <h3><ActionIcon name="invoice" /> Bons de livraison</h3>
+            <h3><ActionIcon name="invoice" /> {operationPhrase("Bons de livraison")}</h3>
             <div className="po-detail-documents">{order.delivery_notes.map((document) => <DocumentRow key={document.id} url={document.url} name={document.original_name} meta={`${formatFileSize(document.size_bytes)} · ${dateLabel(document.created_at.slice(0, 10))}`} />)}</div>
           </section>}
         </div>

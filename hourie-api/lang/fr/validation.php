@@ -45,6 +45,13 @@ return [
     'unique' => 'La valeur du champ :attribute est déjà utilisée.',
     'uploaded' => 'Le téléversement du fichier :attribute a échoué. Vérifiez qu’il ne dépasse pas 10 Mo.',
 
+    'admission_already_cleared' => 'Cette admission est déjà clôturée.',
+    'admission_closed_no_document' => 'Une admission clôturée ne peut plus recevoir de nouvel AT.',
+    'admission_document_before_entry' => 'La date de l’AT doit être postérieure ou égale à la date d’entrée.',
+    'vehicle_documents_cars_only' => 'Les documents du véhicule sont disponibles uniquement pour les voitures.',
+    'generator_documents_only' => 'La documentation technique est disponible uniquement pour les générateurs.',
+    'bond_location_project_mismatch' => 'La localisation physique doit appartenir au chantier sélectionné.',
+    'generator_buyer_required' => 'Le nom de l’acheteur est requis lorsque l’état est « Vendu ».',
     'attributes' => [
         'email' => 'adresse e-mail',
         'login' => 'nom d’utilisateur ou adresse e-mail',
@@ -67,5 +74,7 @@ return [
         'responsible_employee_id' => 'responsable du chantier',
         'q' => 'recherche',
         'remember' => 'rester connecté',
+        'custodian_employee_id' => 'responsable',
+        'generator_details' => 'caractéristiques techniques',
     ],
 ];

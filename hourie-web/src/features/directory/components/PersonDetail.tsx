@@ -1,4 +1,5 @@
 import { fr } from "../../../i18n/fr";
+import { operationPhrase } from "../../../i18n/operations";
 import { formatDate } from "../../../shared/format";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { EmptyState } from "../../../shared/components/EmptyState";
@@ -92,7 +93,7 @@ export function PersonDetail({
             <dd>{date(person.employment_date)}</dd>
           </div>
           <div>
-            <dt>Date de naissance</dt>
+            <dt>{operationPhrase("Date de naissance")}</dt>
             <dd>{date(person.birth_date)}</dd>
           </div>
           <div>
@@ -109,7 +110,7 @@ export function PersonDetail({
           </div>
           {currentAssignment?.started_on && (
             <div>
-              <dt>Affecté depuis</dt>
+              <dt>{operationPhrase("Affecté depuis")}</dt>
               <dd>{date(currentAssignment.started_on)}</dd>
             </div>
           )}
@@ -152,15 +153,15 @@ export function PersonDetail({
         )}
       </section>
       <EquipmentDetailSection
-        title="Assurance"
+        title={operationPhrase("Assurance")}
         icon="invoice"
         defaultOpen={person.health_insurance_policies.length > 0}
       >
         <EquipmentInsuranceCoverage
           policies={person.health_insurance_policies}
           onOpenPolicy={onOpenInsurance}
-          emptyTitle="Aucune assurance santé liée"
-          emptyDescription="La police apparaîtra ici lorsque cette personne sera ajoutée à une assurance santé groupe."
+          emptyTitle={operationPhrase("Aucune assurance santé liée")}
+          emptyDescription={operationPhrase("La police apparaîtra ici lorsque cette personne sera ajoutée à une assurance santé groupe.")}
         />
       </EquipmentDetailSection>
     </div>

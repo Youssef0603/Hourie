@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { fr } from "../../../i18n/fr";
+import { operationPhrase } from "../../../i18n/operations";
 import { ApiError } from "../../../shared/api/http";
 import { SearchableSelect } from "../../../shared/components/SearchableSelect";
 import { catalogLabel, catalogOptions } from "../../equipment/catalogs";
@@ -122,7 +123,7 @@ export function AddPersonForm({
               ariaLabel={fr.directory.jobTitle}
               value={jobTitle}
               onChange={setJobTitle}
-              placeholder="Sélectionner un poste"
+              placeholder={operationPhrase("Sélectionner un poste")}
               includeEmpty={false}
               options={jobTitles.map((option) => ({
                 value: option.code,
@@ -141,7 +142,7 @@ export function AddPersonForm({
             />
           </label>
           <label>
-            <span>E-mail</span>
+            <span>{operationPhrase("E-mail")}</span>
             <input
               type="email"
               autoComplete="email"
@@ -167,7 +168,7 @@ export function AddPersonForm({
             />
           </label>
           <label>
-            <span>Date de naissance</span>
+            <span>{operationPhrase("Date de naissance")}</span>
             <input
               type="date"
               max={new Date().toISOString().slice(0, 10)}
@@ -178,45 +179,45 @@ export function AddPersonForm({
         </div>
       </section>
       <section className="people-form-section">
-        <h3>Affectation actuelle <small>(facultatif)</small></h3>
+        <h3>{operationPhrase("Affectation actuelle")} <small>{operationPhrase("(facultatif)")}</small></h3>
         <div className="people-form-fields">
           <label>
-            <span>Chantier</span>
+            <span>{operationPhrase("Chantier")}</span>
             <SearchableSelect
-              ariaLabel="Chantier"
+              ariaLabel={operationPhrase("Chantier")}
               value={projectId}
               onChange={(value) => {
                 setProjectId(value);
                 if (value) setCompanyLocationId("");
               }}
-              placeholder="Aucun chantier"
+              placeholder={operationPhrase("Aucun chantier")}
               options={projects.map((project) => ({ value: String(project.id), label: project.name }))}
             />
           </label>
           <label>
-            <span>Localisation interne</span>
+            <span>{operationPhrase("Localisation interne")}</span>
             <SearchableSelect
-              ariaLabel="Localisation interne"
+              ariaLabel={operationPhrase("Localisation interne")}
               value={companyLocationId}
               onChange={(value) => {
                 setCompanyLocationId(value);
                 if (value) setProjectId("");
               }}
-              placeholder="Aucune localisation"
+              placeholder={operationPhrase("Aucune localisation")}
               options={companyLocations.map((location) => ({ value: String(location.id), label: location.name }))}
             />
           </label>
           {projectId && <>
             <label>
-              <span>Fonction sur le chantier</span>
-              <input required value={projectRole} onChange={(event) => setProjectRole(event.target.value)} placeholder="Ex. Ingénieur de chantier" />
+              <span>{operationPhrase("Fonction sur le chantier")}</span>
+              <input required value={projectRole} onChange={(event) => setProjectRole(event.target.value)} placeholder={operationPhrase("Ex. Ingénieur de chantier")} />
             </label>
             <label>
-              <span>Début de l’affectation</span>
+              <span>{operationPhrase("Début de l’affectation")}</span>
               <input type="date" value={assignmentStartedOn} onChange={(event) => setAssignmentStartedOn(event.target.value)} />
             </label>
             <label>
-              <span>Fin de l’affectation</span>
+              <span>{operationPhrase("Fin de l’affectation")}</span>
               <input type="date" min={assignmentStartedOn || undefined} value={assignmentEndedOn} onChange={(event) => setAssignmentEndedOn(event.target.value)} />
             </label>
           </>}

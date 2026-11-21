@@ -1,5 +1,6 @@
 import { useRef, useState, type DragEvent, type KeyboardEvent } from "react";
 import { ActionIcon } from "./ActionIcon";
+import { localized, operationPhrase } from "../../i18n/operations";
 
 type DocumentUploadDropzoneProps = {
   title: string;
@@ -25,7 +26,7 @@ function FileUploadDropzone({ title, description, compact = false, disabled = fa
     const typeError = files.map(validateType).find((error) => error !== null);
     const oversized = files.find((file) => file.size > maxSizeMb * 1024 * 1024);
     if (typeError) setValidationError(typeError);
-    else if (oversized) setValidationError(`« ${oversized.name} » dépasse la limite de ${maxSizeMb} Mo.`);
+    else if (oversized) setValidationError(localized(`« ${oversized.name} » dépasse la limite de ${maxSizeMb} Mo.`, `«${oversized.name}» يتجاوز الحد المسموح به البالغ ${maxSizeMb} ميغابايت.`));
     else {
       setValidationError("");
       if (!disabled && files.length > 0) onFiles(files);
@@ -58,24 +59,24 @@ export function DocumentUploadDropzone(props: DocumentUploadDropzoneProps) {
 
   return <FileUploadDropzone
     {...dropzoneProps}
-    description={props.description ?? "PDF uniquement · 10 Mo maximum par fichier"}
+    description={props.description ?? operationPhrase("PDF uniquement · 10 Mo maximum par fichier")}
     accept="application/pdf,.pdf"
     maxSizeMb={maxSizeMb}
     validateType={(file) => file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")
       ? null
-      : `« ${file.name} » n’est pas un fichier PDF.`}
+      : localized(`« ${file.name} » n’est pas un fichier PDF.`, `«${file.name}» ليس ملف PDF.`)}
   />;
 }
 
 export function ImageUploadDropzone(props: DocumentUploadDropzoneProps) {
   return <FileUploadDropzone
     {...props}
-    description={props.description ?? "JPG, PNG ou WebP · 5 Mo maximum par photo"}
+    description={props.description ?? operationPhrase("JPG, PNG ou WebP · 5 Mo maximum par photo")}
     accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
     maxSizeMb={5}
     validateType={(file) => ["image/jpeg", "image/png", "image/webp"].includes(file.type)
       || /\.(jpe?g|png|webp)$/i.test(file.name)
       ? null
-      : `« ${file.name} » n’est pas une image JPG, PNG ou WebP.`}
+      : localized(`« ${file.name} » n’est pas une image JPG, PNG ou WebP.`, `«${file.name}» ليس صورة بصيغة JPG أو PNG أو WebP.`)}
   />;
 }

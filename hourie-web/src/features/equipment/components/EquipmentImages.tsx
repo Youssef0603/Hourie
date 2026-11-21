@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { fr } from '../../../i18n/fr'
+import { operationPhrase as t } from '../../../i18n/operations'
 import { ApiError } from '../../../shared/api/http'
 import { ActionIcon } from '../../../shared/components/ActionIcon'
 import { ImageUploadDropzone } from '../../../shared/components/DocumentUploadDropzone'
@@ -57,7 +58,7 @@ export function EquipmentImages({ equipment, canManage, onChanged, title = fr.im
     {!hideHeading && <div className="section-heading-row"><div><h3>{title}</h3><p>{fr.images.count(equipment.images.length)}</p></div></div>}
     {error && <div className="form-alert" role="alert">{error}</div>}
     {canManage && <ImageUploadDropzone compact title={isUploading ? fr.images.uploading : fr.images.add} description={fr.images.formats} disabled={isUploading} onFiles={(files) => void uploadFiles(files)} />}
-    {hideHeading && equipment.images.length === 0 ? <EmptyState compact icon="photo" title={fr.images.empty} description="Les photos ajoutées à cet actif apparaîtront ici." /> : <>
+    {hideHeading && equipment.images.length === 0 ? <EmptyState compact icon="photo" title={fr.images.empty} description={t('Les photos ajoutées à cet actif apparaîtront ici.')} /> : <>
       {equipment.images.length > 0 ? <div className="equipment-image-grid">{equipment.images.map((image) => <article key={image.id}><button className="equipment-image-preview" type="button" onClick={() => setPreview(image)}><img src={image.url} alt={image.original_name} loading="lazy" /></button>{canManage && <button className="equipment-image-delete" type="button" disabled={deletingId === image.id} onClick={() => remove(image)} aria-label={fr.common.delete}>{deletingId === image.id ? <LoadingSpinner compact label={fr.common.loading} /> : <ActionIcon name="close" />}</button>}</article>)}</div> : !canManage && <EmptyState compact icon="photo" title={fr.images.empty} />}
     </>}
     {preview && <Modal title={preview.original_name} size="wide" onClose={() => setPreview(null)}><img className="equipment-image-full" src={preview.url} alt={preview.original_name} /></Modal>}

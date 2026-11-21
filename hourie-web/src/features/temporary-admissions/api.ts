@@ -1,11 +1,12 @@
 import { ApiError, apiRequest } from "../../shared/api/http";
+import { operationPhrase } from "../../i18n/operations";
 import type { AdmissionDocumentType, TemporaryAdmission } from "./types";
 
 const basePath = "/api/v1/temporary-admissions";
 
 export function admissionError(
   caught: unknown,
-  fallback = "Une erreur est survenue.",
+  fallback = operationPhrase("Une erreur est survenue."),
 ) {
   return caught instanceof ApiError
     ? (Object.values(caught.errors)[0]?.[0] ?? caught.message)

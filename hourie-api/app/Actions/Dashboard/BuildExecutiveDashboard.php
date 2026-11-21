@@ -113,7 +113,7 @@ class BuildExecutiveDashboard
             ->map(fn (Bond $bond): array => $this->deadline(
                 'bond',
                 $bond->id,
-                ($bond->project?->name ?? 'Sans chantier').' · '.$bond->typeLabel(),
+                ($bond->project?->name ?? __('dashboard.no_site')).' · '.$bond->typeLabel(),
                 $bond->expires_on,
                 '/bonds',
                 $today,
@@ -133,7 +133,7 @@ class BuildExecutiveDashboard
                 return $this->deadline(
                     'temporary_admission',
                     $admission->id,
-                    'AT '.$admission->customs_reference,
+                    __('dashboard.temporary_admission', ['reference' => $admission->customs_reference]),
                     $expiresOn,
                     "/temporary-admissions/{$admission->id}",
                     $today,
@@ -202,10 +202,10 @@ class BuildExecutiveDashboard
             $outOfService = $repairRequired->where('condition', EquipmentCondition::OutOfService->value)->count();
             $actions->push([
                 'key' => 'repair',
-                'title' => $repairRequired->count().' équipements à réparer',
+                'title' => __('dashboard.repair_title', ['count' => $repairRequired->count()]),
                 'description' => $outOfService > 0
-                    ? $outOfService.' hors service et '.($repairRequired->count() - $outOfService).' défectueux'
-                    : 'Équipements signalés comme défectueux',
+                    ? __('dashboard.repair_description', ['out_of_service' => $outOfService, 'faulty' => $repairRequired->count() - $outOfService])
+                    : __('dashboard.repair_description_faulty'),
                 'severity' => 'critical',
                 'path' => '/assets/all',
             ]);
@@ -215,8 +215,8 @@ class BuildExecutiveDashboard
             $overdue = $maintenanceByHours->where('hours_remaining', '<=', 0)->count();
             $actions->push([
                 'key' => 'maintenance',
-                'title' => $maintenanceByHours->count().' maintenances à planifier',
-                'description' => $overdue.' dépassée(s), '.($maintenanceByHours->count() - $overdue).' à moins de 50 heures',
+                'title' => __('dashboard.maintenance_title', ['count' => $maintenanceByHours->count()]),
+                'description' => __('dashboard.maintenance_description', ['overdue' => $overdue, 'upcoming' => $maintenanceByHours->count() - $overdue]),
                 'severity' => $overdue > 0 ? 'critical' : 'warning',
                 'path' => '/assets/generator',
             ]);
@@ -226,8 +226,8 @@ class BuildExecutiveDashboard
             $overdue = $administrativeAttention->where('days_remaining', '<', 0)->count();
             $actions->push([
                 'key' => 'documents',
-                'title' => $administrativeAttention->count().' échéances administratives',
-                'description' => $overdue.' expirée(s), '.($administrativeAttention->count() - $overdue).' dans les 30 prochains jours',
+                'title' => __('dashboard.deadlines_title', ['count' => $administrativeAttention->count()]),
+                'description' => __('dashboard.deadlines_description', ['overdue' => $overdue, 'upcoming' => $administrativeAttention->count() - $overdue]),
                 'severity' => $overdue > 0 ? 'critical' : 'warning',
                 'path' => $administrativeAttention->first()['path'],
             ]);
@@ -306,15 +306,15 @@ class BuildExecutiveDashboard
     private function activityTitle(EquipmentChangeType $type, EquipmentChangeSource $source): string
     {
         return match ($type) {
-            EquipmentChangeType::InitialImport => 'Nouvel actif ajouté',
-            EquipmentChangeType::MaintenanceRecorded => 'Maintenance enregistrée',
-            EquipmentChangeType::MaintenanceUpdated => 'Maintenance mise à jour',
+            EquipmentChangeType::InitialImport => __('dashboard.activity.initial_import'),
+            EquipmentChangeType::MaintenanceRecorded => __('dashboard.activity.maintenance_recorded'),
+            EquipmentChangeType::MaintenanceUpdated => __('dashboard.activity.maintenance_updated'),
             EquipmentChangeType::ProjectAssignmentChanged, EquipmentChangeType::LocationChanged => $source === EquipmentChangeSource::Transfer
-                ? 'Transfert validé'
-                : 'Affectation mise à jour',
-            EquipmentChangeType::ConditionChanged => 'État de l’actif mis à jour',
-            EquipmentChangeType::InvoiceAdded, EquipmentChangeType::VehicleDocumentAdded, EquipmentChangeType::GeneratorDocumentAdded => 'Document ajouté',
-            default => 'Fiche équipement mise à jour',
+                ? __('dashboard.activity.transfer')
+                : __('dashboard.activity.assignment'),
+            EquipmentChangeType::ConditionChanged => __('dashboard.activity.condition'),
+            EquipmentChangeType::InvoiceAdded, EquipmentChangeType::VehicleDocumentAdded, EquipmentChangeType::GeneratorDocumentAdded => __('dashboard.activity.document'),
+            default => __('dashboard.activity.default'),
         };
     }
 
