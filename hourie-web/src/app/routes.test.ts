@@ -1,23 +1,18 @@
 import { describe, expect, it } from "vitest";
 import { parseWorkspaceRoute, workspacePath } from "./routes";
 
-describe("document workspace routes", () => {
-  it("keeps the purchase-order list route across refreshes", () => {
-    const route = parseWorkspaceRoute("/documents/purchase-orders");
+describe("purchase order routes", () => {
+  it("opens purchase orders from the sidebar route", () => {
+    const route = parseWorkspaceRoute("/purchase-orders");
 
-    expect(route).toEqual({
-      section: "documents",
-      documentView: "purchase-orders",
-      siteId: null,
-      equipmentId: null,
-    });
-    expect(workspacePath(route)).toBe("/documents/purchase-orders");
+    expect(route).toEqual({ section: "purchase-orders", siteId: null, equipmentId: null });
+    expect(workspacePath(route)).toBe("/purchase-orders");
   });
 
-  it("keeps the document template gallery at the base route", () => {
-    const route = parseWorkspaceRoute("/documents");
+  it.each(["/documents", "/documents/purchase-orders"])("redirects the old %s link to purchase orders", (path) => {
+    const route = parseWorkspaceRoute(path);
 
-    expect(route.section).toBe("documents");
-    expect(workspacePath(route)).toBe("/documents");
+    expect(route.section).toBe("purchase-orders");
+    expect(workspacePath(route)).toBe("/purchase-orders");
   });
 });

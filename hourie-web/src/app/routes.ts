@@ -55,8 +55,7 @@ export type WorkspaceRoute =
       siteId: null;
     }
   | {
-      section: "documents";
-      documentView: "templates" | "purchase-orders";
+      section: "purchase-orders";
       equipmentId: null;
       siteId: null;
     };
@@ -223,15 +222,12 @@ export function parseWorkspaceRoute(pathname: string): WorkspaceRoute {
   if (parts[0] === "settings" && parts.length === 1)
     return { section: "catalogs", siteId: null, equipmentId: null };
   if (
-    parts[0] === "documents" &&
-    (parts.length === 1 || (parts[1] === "purchase-orders" && parts.length === 2))
+    (parts[0] === "purchase-orders" && parts.length === 1) ||
+    // Purchase orders used to live under Documents; old links still open them.
+    (parts[0] === "documents" &&
+      (parts.length === 1 || (parts[1] === "purchase-orders" && parts.length === 2)))
   )
-    return {
-      section: "documents",
-      documentView: parts[1] === "purchase-orders" ? "purchase-orders" : "templates",
-      siteId: null,
-      equipmentId: null,
-    };
+    return { section: "purchase-orders", siteId: null, equipmentId: null };
 
   return { section: "dashboard", siteId: null, equipmentId: null };
 }
@@ -263,9 +259,5 @@ export function workspacePath(route: WorkspaceRoute): string {
       : "/people";
   if (route.section === "subcontracts")
     return `/subcontracts${route.subcontractId ? `/${route.subcontractId}` : ""}`;
-  if (route.section === "documents")
-    return route.documentView === "purchase-orders"
-      ? "/documents/purchase-orders"
-      : "/documents";
   return `/${route.section}`;
 }

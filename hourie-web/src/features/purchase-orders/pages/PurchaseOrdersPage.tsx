@@ -24,7 +24,6 @@ import "./purchase-orders-page.css";
 
 type EditableItem = PurchaseOrderItem & { key: string };
 type EditableOrder = Omit<PurchaseOrderPayload, "items"> & { items: EditableItem[] };
-type DocumentView = "templates" | "purchase-orders";
 
 const emptyItem = (): EditableItem => ({
   key: crypto.randomUUID(),
@@ -108,7 +107,7 @@ function dateLabel(value: string) {
 }
 
 
-export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = [], view, onNavigate }: { defaultPreparedBy: string; canManage: boolean; projects?: Array<{ id: number; name: string; code: string | null }>; view?: DocumentView; onNavigate?: (view: DocumentView) => void }) {
+export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = [] }: { defaultPreparedBy: string; canManage: boolean; projects?: Array<{ id: number; name: string; code: string | null }> }) {
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -135,14 +134,6 @@ export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = []
   const [preview, setPreview] = useState<PurchaseOrder | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [localView, setLocalView] = useState<DocumentView>("templates");
-  const currentView = view ?? localView;
-  const activeTemplate = currentView === "purchase-orders" ? "purchase-order" : null;
-
-  function navigateView(nextView: DocumentView) {
-    if (onNavigate) onNavigate(nextView);
-    else setLocalView(nextView);
-  }
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -158,10 +149,9 @@ export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = []
   }, [page, search]);
 
   useEffect(() => {
-    if (activeTemplate !== "purchase-order") return;
     const timer = window.setTimeout(() => void refresh(), 200);
     return () => window.clearTimeout(timer);
-  }, [activeTemplate, refresh]);
+  }, [refresh]);
 
   const totals = useMemo(() => {
     const subtotal = editor?.items.reduce((sum, item) => sum + numeric(item.quantity) * numeric(item.unit_price), 0) ?? 0;
@@ -282,30 +272,12 @@ export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = []
 
   return (
     <main className="equipment-page purchase-orders-page">
-      {!activeTemplate && <section className="page-heading po-page-heading"><div><p className="section-label">{operationPhrase("Documents")}</p><h1>{operationPhrase("Créateur de documents")}</h1><p>{operationPhrase("Créez, modifiez et exportez les bons de commande A.B. Hourie.")}</p></div></section>}
-
       {error && <div className="form-alert" role="alert">{error}</div>}
 
-      {!activeTemplate && (
-        <section className="document-template-section">
-          <h2>{operationPhrase("Modèles")}</h2>
-          <div className="document-template-grid">
-          <button className="document-template-card" type="button" onClick={() => navigateView("purchase-orders")}>
-            <span className="document-template-icon"><NavigationDocumentIcon /></span>
-            <span><strong>{operationPhrase("Bon de commande")}</strong><small>{operationPhrase("Commandes fournisseurs")}</small></span>
-          </button>
-          </div>
-        </section>
-      )}
-
-      {activeTemplate === "purchase-order" && <>
-        <nav className="breadcrumbs" aria-label={operationPhrase("Fil d’Ariane")}>
-          <button type="button" onClick={() => navigateView("templates")}>{operationPhrase("Documents")}</button>
-          <span aria-hidden="true">/</span>
-          <strong aria-current="page">{operationPhrase("Bons de commande")}</strong>
-        </nav>
+      <>
         <section className="page-heading po-workspace-heading">
           <div>
+            <p className="section-label">{operationPhrase("Gestion")}</p>
             <h1>{operationPhrase("Bons de commande")}</h1>
             <p>{operationPhrase("Consultez et gérez tous les bons de commande.")}</p>
           </div>
@@ -313,7 +285,7 @@ export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = []
         </section>
 
         <section className="inventory-panel po-history"><div className="filter-bar"><SearchField id="po-search" label={operationPhrase("Documents enregistrés")} placeholder={operationPhrase("Numéro, fournisseur ou projet")} value={search} onChange={(value) => { setSearch(value); setPage(1); }} /><div className="filter-toolbar-actions"><ToolbarIconButton icon="refresh" label={fr.common.refresh} disabled={loading} onClick={() => void refresh()} /></div></div>{loading ? <div className="table-state"><LoadingSpinner label={operationPhrase("Chargement des bons de commande…")} /></div> : orders.length === 0 ? <EmptyState title={operationPhrase("Aucun bon de commande")} description={operationPhrase("Créez le premier bon de commande avec le bouton +.")} /> : <div className="equipment-table-wrap"><table className="equipment-table"><thead><tr><th>{operationPhrase("N°")}</th><th>{operationPhrase("Date")}</th><th>{operationPhrase("Fournisseur")}</th><th>{operationPhrase("Projet")}</th><th>{operationPhrase("Total TTC")}</th><th>{operationPhrase("Modifié")}</th></tr></thead><tbody>{orders.map((order) => <tr key={order.id} {...clickableRow(() => setSelectedOrder(order))}><td><strong>{order.number}</strong></td><td>{dateLabel(order.ordered_on)}</td><td>{order.supplier_name}</td><td>{order.project_name || "—"}</td><td>{money(order.total, order.currency)}</td><td>{dateLabel(order.updated_at.slice(0, 10))}</td></tr>)}</tbody></table></div>}{pagination && <Pagination meta={pagination} disabled={loading} label={operationPhrase("Pagination des bons de commande")} onPageChange={setPage} />}</section>
-      </>}
+      </>
 
       {selectedOrder && !editor && !preview && (
         <PurchaseOrderDetails
@@ -431,8 +403,4 @@ function PurchaseOrderDetails({ order, canManage, onClose, onPreview, onEdit, on
       </aside>
     </div>
   );
-}
-
-function NavigationDocumentIcon() {
-  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h10l4 4v14H5Z" /><path d="M15 3v5h4M8 12h8M8 16h5" /></svg>;
 }

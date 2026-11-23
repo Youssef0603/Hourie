@@ -1103,14 +1103,12 @@ export function EquipmentPage({
               onSelect={(id) => navigate(id ? `/subcontracts/${id}` : "/subcontracts", true)}
             />
           </Suspense>
-        ) : activeSection === "documents" ? (
+        ) : activeSection === "purchase-orders" ? (
           <Suspense fallback={<FeaturePageLoading />}>
             <PurchaseOrdersPage
               defaultPreparedBy={user.name}
               canManage={user.permissions.manage_purchase_orders}
               projects={options?.projects ?? []}
-              view={route.documentView}
-              onNavigate={(view) => navigate(view === "purchase-orders" ? "/documents/purchase-orders" : "/documents")}
             />
           </Suspense>
         ) : activeSection === "sites" ? (

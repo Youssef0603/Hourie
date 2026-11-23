@@ -52,11 +52,10 @@ describe("PurchaseOrdersPage", () => {
     savePurchaseOrder.mockReset();
   });
 
-  it("opens the bon de commande template with automatic totals", async () => {
+  it("creates a bon de commande with automatic totals", async () => {
     const user = userEvent.setup();
     render(<PurchaseOrdersPage defaultPreparedBy="Youssef Yassine" canManage />);
 
-    await user.click(screen.getByRole("button", { name: /Bon de commande/i }));
     await user.click(screen.getByRole("button", { name: "Créer un bon de commande" }));
     await user.type(screen.getByLabelText("Fournisseur"), "Fournitures Abidjan");
     await user.type(screen.getByLabelText("Description *"), "Ciment");
@@ -77,7 +76,6 @@ describe("PurchaseOrdersPage", () => {
     const user = userEvent.setup();
     render(<PurchaseOrdersPage defaultPreparedBy="Viewer" canManage={false} />);
 
-    await user.click(screen.getByRole("button", { name: /Bon de commande/i }));
     await waitFor(() => expect(screen.getByText("0000813")).toBeInTheDocument());
     expect(screen.queryByRole("button", { name: "Créer un bon de commande" })).not.toBeInTheDocument();
     await user.click(screen.getByText("0000813"));
@@ -91,7 +89,6 @@ describe("PurchaseOrdersPage", () => {
     const user = userEvent.setup();
     render(<PurchaseOrdersPage defaultPreparedBy="Youssef Yassine" canManage />);
 
-    await user.click(screen.getByRole("button", { name: /Bon de commande/i }));
     await user.click(await screen.findByText("0000813"));
     const details = { name: "Détail du bon de commande 0000813" };
 
