@@ -181,7 +181,7 @@ class SubcontractController extends Controller
             $saved = $existing
                 ? tap($existing)->update($attributes)
                 : $subcontract->items()->create([...$attributes, 'code' => $codes->next()]);
-            $this->syncMaterials($saved, $item);
+            $saved->syncMaterials($item);
         }
     }
 
@@ -196,23 +196,8 @@ class SubcontractController extends Controller
         foreach ($items as $item) {
             $existing = isset($item['id']) ? $subcontract->items()->find($item['id']) : null;
             if ($existing) {
-                $this->syncMaterials($existing, $item);
+                $existing->syncMaterials($item);
             }
-        }
-    }
-
-    /** @param array<string, mixed> $input */
-    private function syncMaterials(SubcontractItem $item, array $input): void
-    {
-        $suppliedBy = $input['materials_supplied_by'] ?? $item->materials_supplied_by ?? SubcontractItem::SUPPLIED_BY_SUBCONTRACTOR;
-        $item->update(['materials_supplied_by' => $suppliedBy]);
-        $materials = $suppliedBy === SubcontractItem::SUPPLIED_BY_ARH ? ($input['materials'] ?? []) : [];
-
-        $item->materials()->whereNotIn('id', collect($materials)->pluck('id')->filter()->all())->delete();
-        foreach ($materials as $material) {
-            $attributes = collect($material)->only(['name', 'unit', 'quantity_per_unit', 'waste_percent'])->all();
-            $existing = isset($material['id']) ? $item->materials()->find($material['id']) : null;
-            $existing ? $existing->update($attributes) : $item->materials()->create($attributes);
         }
     }
 
@@ -222,11 +207,11 @@ class SubcontractController extends Controller
      */
     private function withSummaryRelations(Builder $query): Builder
     {
-        return $query->with(['subcontractor', 'project:id,code,name', 'items.variationLines', 'items.variation', 'valuations.lines']);
+        return $query->with(['subcontractor', 'project:id,code,name', 'items.variationLines', 'items.variation', 'valuations.lines', 'valuations.payments']);
     }
 
     private function loadDetails(Subcontract $subcontract): Subcontract
     {
-        return $subcontract->load(['subcontractor', 'project:id,code,name', 'items.variationLines', 'items.variation', 'items.materials', 'valuations.lines', 'variations.lines.item']);
+        return $subcontract->load(['subcontractor', 'project:id,code,name', 'items.variationLines', 'items.variation', 'items.materials', 'valuations.lines', 'valuations.payments', 'variations.lines.item']);
     }
 }

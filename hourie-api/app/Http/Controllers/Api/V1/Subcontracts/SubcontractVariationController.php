@@ -54,10 +54,11 @@ class SubcontractVariationController extends Controller
                     'unit_price' => $newItem['unit_price'],
                 ]);
                 $variation->lines()->create(['subcontract_item_id' => $item->id, 'quantity' => $newItem['quantity']]);
+                $item->syncMaterials($newItem);
             }
         });
 
-        $subcontract->load(['subcontractor', 'project:id,code,name', 'items.variationLines', 'items.variation', 'items.materials', 'valuations.lines', 'variations.lines.item']);
+        $subcontract->load(['subcontractor', 'project:id,code,name', 'items.variationLines', 'items.variation', 'items.materials', 'valuations.lines', 'valuations.payments', 'variations.lines.item']);
 
         return (new SubcontractResource($subcontract))->response()->setStatusCode(201);
     }

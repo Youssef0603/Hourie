@@ -69,7 +69,7 @@ export function SubcontractDetails({ subcontract, canManage, error, onClose, onE
               <div><dt>{operationPhrase("Montant révisé")}</dt><dd><strong>{money(summary.revised_amount, currency)}</strong></dd></div>
               <div><dt>{localized(`Exécuté (${summary.progress_percent} %)`, `المنفّذ (${summary.progress_percent} %)`)}</dt><dd>{money(summary.executed_amount, currency)}</dd></div>
               <div><dt>{operationPhrase("Payé")}</dt><dd>{money(summary.paid_amount, currency)}</dd></div>
-              <div><dt>{operationPhrase("Approuvé, à payer")}</dt><dd>{money(summary.to_pay_amount, currency)}</dd></div>
+              <div><dt>{operationPhrase("Reste à payer")}</dt><dd>{money(summary.to_pay_amount, currency)}</dd></div>
               <div><dt>{localized(`Retenue détenue (taux ${Number(subcontract.retention_rate)} %)`, `محتجز الضمان المحتفَظ به (بنسبة ${Number(subcontract.retention_rate)} %)`)}</dt><dd>{money(summary.retention_held, currency)}</dd></div>
               <div><dt>{operationPhrase("Avance à récupérer")}</dt><dd>{money(summary.advance_remaining, currency)}</dd></div>
             </dl>
@@ -160,7 +160,7 @@ export function SubcontractDetails({ subcontract, canManage, error, onClose, onE
                   <button className="sc-list-row" type="button" key={valuation.id} onClick={() => onOpenValuation(valuation.id)}>
                     <div>
                       <strong>{valuation.reference}</strong>
-                      <small>{localized(`Jusqu’au ${formatDate(valuation.period_end, { style: "medium" })}`, `حتى ${formatDate(valuation.period_end, { style: "medium" })}`)}{valuation.invoice_amount !== null ? ` · ${operationPhrase(valuation.invoice_matches ? "Facture conforme" : "Écart sur facture")}` : ""}</small>
+                      <small>{localized(`Jusqu’au ${formatDate(valuation.period_end, { style: "medium" })}`, `حتى ${formatDate(valuation.period_end, { style: "medium" })}`)}{valuation.invoice_amount !== null ? ` · ${operationPhrase(valuation.invoice_matches ? "Facture conforme" : "Écart sur facture")}` : ""}{valuation.status === "partially_paid" ? ` · ${localized(`Reste ${money(valuation.balance_due, currency)}`, `المتبقي ${money(valuation.balance_due, currency)}`)}` : ""}</small>
                     </div>
                     <b>{money(valuation.net_due, currency)}</b>
                     <em className={`valuation-status ${valuation.invoice_amount !== null && !valuation.invoice_matches ? "warning" : valuation.status}`}>{valuationStatusLabel(valuation.status)}</em>

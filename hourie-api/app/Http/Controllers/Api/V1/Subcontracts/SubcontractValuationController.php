@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Api\V1\Subcontracts;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Subcontracts\SaveSubcontractValuationRequest;
 use App\Http\Requests\Subcontracts\StoreValuationInvoiceRequest;
+use App\Http\Requests\Subcontracts\StoreValuationPaymentRequest;
 use App\Http\Resources\SubcontractValuationResource;
 use App\Models\Subcontract;
 use App\Models\SubcontractValuation;
 use App\Models\SubcontractValuationDocument;
+use App\Models\SubcontractValuationPayment;
 use App\Services\SubcontractValuationCalculator;
 use Brick\Math\BigDecimal;
 use Illuminate\Http\JsonResponse;
@@ -19,12 +21,12 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Valuation workflow: draft → submitted → approved → paid.
+ * Valuation workflow: draft → submitted → approved → partially paid → paid.
  *
  * Controls: only one valuation is open per subcontract at a time, cumulative
  * quantities can never exceed the authorised quantity (contract + variations),
- * and a valuation is only marked paid once the subcontractor's invoice equals
- * its net amount due.
+ * payments can only be recorded once the subcontractor's invoice equals the
+ * net amount due, and the payments of a valuation never exceed that amount.
  */
 class SubcontractValuationController extends Controller
 {
@@ -108,21 +110,54 @@ class SubcontractValuationController extends Controller
         ]);
     }
 
-    public function pay(Request $request, SubcontractValuation $valuation): JsonResponse
+    /**
+     * Records money actually paid to the subcontractor. A valuation can be
+     * paid in several transfers; it becomes "paid" once the payments reach
+     * its net due, and payments can never exceed it.
+     */
+    public function storePayment(StoreValuationPaymentRequest $request, SubcontractValuation $valuation): JsonResponse
+    {
+        DB::transaction(function () use ($request, $valuation): void {
+            $valuation = SubcontractValuation::query()->lockForUpdate()->findOrFail($valuation->id);
+            $this->ensureStatus($valuation, [SubcontractValuation::STATUS_APPROVED, SubcontractValuation::STATUS_PARTIALLY_PAID]);
+
+            if ($valuation->invoice_amount === null || ! BigDecimal::of((string) $valuation->invoice_amount)->isEqualTo((string) $valuation->net_due)) {
+                throw ValidationException::withMessages(['invoice_amount' => [__('validation.subcontract_invoice_mismatch', [
+                    'invoice' => $valuation->invoice_amount ?? '—',
+                    'net' => $valuation->net_due,
+                ])]]);
+            }
+
+            $balance = $valuation->balanceDue();
+            if (BigDecimal::of((string) $request->validated('amount'))->isGreaterThan($balance)) {
+                throw ValidationException::withMessages(['amount' => [__('validation.subcontract_payment_exceeds_balance', [
+                    'balance' => (string) $balance->toScale(2),
+                ])]]);
+            }
+
+            $valuation->payments()->create([
+                ...$request->validated(),
+                'recorded_by_user_id' => $request->user()->id,
+            ]);
+            $this->syncPaymentStatus($valuation);
+        });
+
+        return $this->respond($valuation->fresh());
+    }
+
+    /** Removes a payment recorded by mistake and reopens the balance it covered. */
+    public function destroyPayment(Request $request, SubcontractValuation $valuation, SubcontractValuationPayment $payment): JsonResponse
     {
         $this->authorizeManagement($request);
-        $this->ensureStatus($valuation, [SubcontractValuation::STATUS_APPROVED]);
+        abort_unless($payment->valuation_id === $valuation->id, 404);
+        $this->ensureStatus($valuation, [SubcontractValuation::STATUS_PARTIALLY_PAID, SubcontractValuation::STATUS_PAID]);
 
-        if ($valuation->invoice_amount === null || ! BigDecimal::of((string) $valuation->invoice_amount)->isEqualTo((string) $valuation->net_due)) {
-            throw ValidationException::withMessages(['invoice_amount' => [__('validation.subcontract_invoice_mismatch', [
-                'invoice' => $valuation->invoice_amount ?? '—',
-                'net' => $valuation->net_due,
-            ])]]);
-        }
+        DB::transaction(function () use ($valuation, $payment): void {
+            $payment->delete();
+            $this->syncPaymentStatus($valuation);
+        });
 
-        $valuation->update(['status' => SubcontractValuation::STATUS_PAID, 'paid_at' => now()]);
-
-        return $this->respond($valuation);
+        return $this->respond($valuation->fresh());
     }
 
     public function invoice(StoreValuationInvoiceRequest $request, SubcontractValuation $valuation): JsonResponse
@@ -190,6 +225,23 @@ class SubcontractValuationController extends Controller
         }
     }
 
+    private function syncPaymentStatus(SubcontractValuation $valuation): void
+    {
+        $valuation->unsetRelation('payments');
+        $paid = $valuation->paidAmount();
+
+        $status = match (true) {
+            $paid->isZero() => SubcontractValuation::STATUS_APPROVED,
+            $paid->isGreaterThanOrEqualTo((string) $valuation->net_due) => SubcontractValuation::STATUS_PAID,
+            default => SubcontractValuation::STATUS_PARTIALLY_PAID,
+        };
+
+        $valuation->update([
+            'status' => $status,
+            'paid_at' => $status === SubcontractValuation::STATUS_PAID ? now() : null,
+        ]);
+    }
+
     /**
      * @param  array<int, string>  $from
      * @param  array<string, mixed>  $attributes
@@ -218,7 +270,7 @@ class SubcontractValuationController extends Controller
 
     private function respond(SubcontractValuation $valuation): JsonResponse
     {
-        $valuation->load(['subcontract.subcontractor', 'subcontract.project:id,code,name', 'subcontract.items.variationLines', 'lines', 'documents', 'approver:id,name']);
+        $valuation->load(['subcontract.subcontractor', 'subcontract.project:id,code,name', 'subcontract.items.variationLines', 'lines', 'documents', 'payments.recorder:id,name', 'approver:id,name']);
 
         return (new SubcontractValuationResource($valuation))->response();
     }

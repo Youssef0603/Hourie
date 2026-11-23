@@ -7,8 +7,9 @@ import { localized, operationPhrase } from "../../../i18n/operations";
 import { createVariation, getNextItemCode } from "../api";
 import { money, newKey, previewCodes, quantity } from "../display";
 import type { Subcontract } from "../types";
+import { MaterialSupplyEditor, type MaterialSupply } from "./MaterialSupplyEditor";
 
-type NewItem = { key: string; description: string; unit: string; quantity: string; unit_price: string };
+type NewItem = MaterialSupply & { key: string; description: string; unit: string; quantity: string; unit_price: string };
 
 /**
  * An avenant either raises the authorised quantity of existing work items
@@ -55,7 +56,10 @@ export function VariationForm({ subcontract, onClose, onSaved }: {
     try {
       onSaved(await createVariation(subcontract.id, {
         title, reason, approved_on: approvedOn, lines,
-        new_items: newItems.map(({ key: _key, ...item }) => item),
+        new_items: newItems.map(({ key: _key, materials, ...item }) => ({
+          ...item,
+          materials: item.materials_supplied_by === "arh" ? materials.map(({ key: _materialKey, ...material }) => material) : [],
+        })),
       }));
     } catch (exception) {
       setError(apiErrorMessage(exception, operationPhrase("Impossible d’enregistrer l’avenant.")));
@@ -83,13 +87,23 @@ export function VariationForm({ subcontract, onClose, onSaved }: {
           </InventoryFormSection>
 
           <InventoryFormSection title={operationPhrase("Quantités supplémentaires")} icon="specifications">
+            <p className="sc-hint">{operationPhrase("Les quantités ajoutées gardent le fournisseur de matériaux de leur article.")}</p>
             <div className="sc-table-wrap">
               <table className="sc-table">
                 <thead><tr><th>{operationPhrase("Article")}</th><th className="num">{operationPhrase("Autorisé")}</th><th className="num">{operationPhrase("À ajouter")}</th><th className="num">{operationPhrase("Nouveau total")}</th></tr></thead>
                 <tbody>
                   {subcontract.items.map((item) => (
                     <tr key={item.id}>
-                      <td><strong>{item.description}</strong><div className="muted">{item.code ?? operationPhrase("Sans code")} · {money(item.unit_price, subcontract.currency)} / {item.unit}</div></td>
+                      <td>
+                        <strong>{item.description}</strong>
+                        <div className="muted">{item.code ?? operationPhrase("Sans code")} · {money(item.unit_price, subcontract.currency)} / {item.unit}</div>
+                        <div className="muted">{item.materials_supplied_by === "arh"
+                          ? localized(
+                            `Matériaux fournis par ARH${item.materials.length ? ` : ${item.materials.map((material) => material.name).join(", ")}` : ""}`,
+                            `المواد توفّرها ARH${item.materials.length ? `: ${item.materials.map((material) => material.name).join("، ")}` : ""}`,
+                          )
+                          : operationPhrase("Matériaux fournis par le sous-traitant")}</div>
+                      </td>
                       <td className="num">{quantity(item.authorized_quantity)} {item.unit}</td>
                       <td><input type="number" min="0" step="0.001" aria-label={localized(`Quantité à ajouter pour ${item.description}`, `الكمية المضافة إلى ${item.description}`)} value={additions[item.id] ?? ""} onChange={(event) => setAdditions((current) => ({ ...current, [item.id]: event.target.value }))} /></td>
                       <td className="num">{quantity(Number(item.authorized_quantity) + Number(additions[item.id] || 0))} {item.unit}</td>
@@ -120,7 +134,24 @@ export function VariationForm({ subcontract, onClose, onSaved }: {
                 </table>
               </div>
             )}
-            <div className="sc-actions"><button className="secondary-button" type="button" onClick={() => setNewItems((current) => [...current, { key: newKey(), description: "", unit: "", quantity: "", unit_price: "" }])}><ActionIcon name="add" /> {operationPhrase("Ajouter un article")}</button></div>
+            {newItems.length > 0 && (
+              <>
+                <p className="sc-hint">{operationPhrase("Pour chaque nouvel article, indiquez qui achète les matériaux. Quand c’est ARH, Hourie compare ses achats avec ce que les travaux consomment.")}</p>
+                <div className="sc-material-lines">
+                  {newItems.map((item, index) => (
+                    <MaterialSupplyEditor
+                      key={item.key}
+                      title={`${newItemCodes[index]} · ${item.description || localized(`Nouvel article ${index + 1}`, `البند الجديد ${index + 1}`)}`}
+                      unit={item.unit}
+                      lineNumber={index + 1}
+                      supply={item}
+                      onChange={(supply) => setNewItems((current) => current.map((candidate) => candidate.key === item.key ? { ...candidate, ...supply } : candidate))}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+            <div className="sc-actions"><button className="secondary-button" type="button" onClick={() => setNewItems((current) => [...current, { key: newKey(), description: "", unit: "", quantity: "", unit_price: "", materials_supplied_by: "subcontractor", materials: [] }])}><ActionIcon name="add" /> {operationPhrase("Ajouter un article")}</button></div>
             <div className="notice info">{operationPhrase("Montant de l’avenant :")} <strong>{money(amount, subcontract.currency)}</strong></div>
           </InventoryFormSection>
         </div>

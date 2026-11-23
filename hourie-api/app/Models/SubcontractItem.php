@@ -45,6 +45,26 @@ class SubcontractItem extends Model
         );
     }
 
+    /**
+     * Saves who buys the materials and, when ARH does, how much of each
+     * material one unit of work consumes.
+     *
+     * @param  array<string, mixed>  $input
+     */
+    public function syncMaterials(array $input): void
+    {
+        $suppliedBy = $input['materials_supplied_by'] ?? $this->materials_supplied_by ?? self::SUPPLIED_BY_SUBCONTRACTOR;
+        $this->update(['materials_supplied_by' => $suppliedBy]);
+        $materials = $suppliedBy === self::SUPPLIED_BY_ARH ? ($input['materials'] ?? []) : [];
+
+        $this->materials()->whereNotIn('id', collect($materials)->pluck('id')->filter()->all())->delete();
+        foreach ($materials as $material) {
+            $attributes = collect($material)->only(['name', 'unit', 'quantity_per_unit', 'waste_percent'])->all();
+            $existing = isset($material['id']) ? $this->materials()->find($material['id']) : null;
+            $existing ? $existing->update($attributes) : $this->materials()->create($attributes);
+        }
+    }
+
     protected function casts(): array
     {
         return [

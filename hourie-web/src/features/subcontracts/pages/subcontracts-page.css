@@ -24,6 +24,7 @@
 .valuation-status.draft { color: #475467; background: #f2f4f7; }
 .valuation-status.submitted { color: #b54708; background: #fffaeb; }
 .valuation-status.approved { color: #175cd3; background: #eff8ff; }
+.valuation-status.partially_paid { color: #6941c6; background: #f4f3ff; }
 .valuation-status.paid { color: #067647; background: #ecfdf3; }
 .valuation-status.warning { color: #b42318; background: #fef3f2; }
 
@@ -276,15 +277,22 @@ button.sc-list-row:hover { border-color: var(--color-border-strong); box-shadow:
 .sc-material-line { display: grid; gap: 0.6rem; border: 1px solid var(--color-border); border-radius: 0.6rem; padding: 0.75rem; background: #fff; }
 .sc-material-line-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.6rem; }
 .sc-material-line-header strong { color: var(--color-text-strong); font-size: 0.8125rem; }
-.sc-material-line-header select {
+.sc-material-line-header .searchable-select { width: min(100%, 22rem); }
+.sc-material-line-header .searchable-select-input {
   height: 2.1rem;
   border: 1px solid var(--color-border-strong);
   border-radius: 0.45rem;
-  padding: 0 0.5rem;
+  padding-block: 0;
+  padding-inline-start: 0.6rem;
   color: var(--color-text-strong);
   background: #fff;
   font: inherit;
   font-size: 0.8125rem;
+  outline: none;
+}
+.sc-material-line-header .searchable-select-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-soft);
 }
 .sc-material-line .sc-table { min-width: 0; }
 .sc-material-line .sc-table td:first-child { min-width: 9rem; }
@@ -332,3 +340,13 @@ button.sc-list-row:hover { border-color: var(--color-border-strong); box-shadow:
   text-decoration: underline;
 }
 .insurance-side-content .po-detail-documents { display: grid; gap: 0.45rem; margin-top: 0.6rem; }
+
+.valuation-editor .document-row small .valuation-status {
+  margin-inline-end: 0.35rem;
+  padding-block: 0.05rem;
+  vertical-align: middle;
+}
+
+.valuation-editor .sc-invoice-note { margin-top: 0.6rem; }
+
+.subcontract-editor .sc-table-wrap + .sc-hint { margin-top: 0.75rem; }

@@ -21,6 +21,7 @@ return [
     'subcontract_open_valuation_exists' => 'Une situation est déjà en cours pour ce contrat. Approuvez-la avant d’en créer une nouvelle.',
     'subcontract_items_locked' => 'Le bordereau ne peut plus être modifié après la première situation. Utilisez un avenant.',
     'subcontract_invoice_mismatch' => 'La facture (:invoice) ne correspond pas au net à payer de la situation (:net).',
+    'subcontract_payment_exceeds_balance' => 'Le paiement dépasse le reste à payer de la situation (:balance).',
     'subcontract_has_certified_valuations' => 'Ce contrat a des situations approuvées ou payées : il ne peut pas être supprimé.',
     'purchase_order_material_other_site' => 'Ce matériau appartient à un autre chantier que celui du bon de commande.',
     'subcontract_valuation_status' => 'Cette action n’est pas possible pour une situation au statut actuel.',

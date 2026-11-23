@@ -36,6 +36,7 @@ return [
     'subcontract_open_valuation_exists' => 'يوجد كشف قيد المعالجة لهذا العقد. اعتمده قبل إنشاء كشف جديد.',
     'subcontract_items_locked' => 'لا يمكن تعديل جدول الكميات بعد الكشف الأول. استخدم ملحق عقد.',
     'subcontract_invoice_mismatch' => 'الفاتورة (:invoice) لا تطابق صافي المبلغ المستحق للكشف (:net).',
+    'subcontract_payment_exceeds_balance' => 'الدفعة تتجاوز المبلغ المتبقي للكشف (:balance).',
     'subcontract_has_certified_valuations' => 'يحتوي هذا العقد على كشوف معتمدة أو مدفوعة: لا يمكن حذفه.',
     'purchase_order_material_other_site' => 'هذه المادة تابعة لمشروع آخر غير مشروع أمر الشراء.',
     'subcontract_valuation_status' => 'هذا الإجراء غير ممكن لهذا الكشف في حالته الحالية.',

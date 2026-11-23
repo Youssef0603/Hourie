@@ -30,6 +30,12 @@ class StoreSubcontractVariationRequest extends FormRequest
             'new_items.*.unit' => ['required', 'string', 'max:20'],
             'new_items.*.quantity' => ['required', 'numeric', 'gt:0', 'max:999999999999'],
             'new_items.*.unit_price' => ['required', 'numeric', 'min:0', 'max:9999999999999'],
+            'new_items.*.materials_supplied_by' => ['required', 'string', 'in:subcontractor,arh'],
+            'new_items.*.materials' => ['array', 'max:20'],
+            'new_items.*.materials.*.name' => ['required', 'string', 'max:255'],
+            'new_items.*.materials.*.unit' => ['required', 'string', 'max:20'],
+            'new_items.*.materials.*.quantity_per_unit' => ['required', 'numeric', 'gt:0', 'max:999999'],
+            'new_items.*.materials.*.waste_percent' => ['required', 'numeric', 'min:0', 'max:100'],
         ];
     }
 }

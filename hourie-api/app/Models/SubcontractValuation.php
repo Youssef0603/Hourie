@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Brick\Math\BigDecimal;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -23,10 +24,13 @@ class SubcontractValuation extends Model
 
     public const STATUS_APPROVED = 'approved';
 
+    /** Approved, and some but not all of the net due has been paid. */
+    public const STATUS_PARTIALLY_PAID = 'partially_paid';
+
     public const STATUS_PAID = 'paid';
 
     /** Statuses whose amounts are final and count as "previously certified". */
-    public const CERTIFIED_STATUSES = [self::STATUS_APPROVED, self::STATUS_PAID];
+    public const CERTIFIED_STATUSES = [self::STATUS_APPROVED, self::STATUS_PARTIALLY_PAID, self::STATUS_PAID];
 
     public function subcontract(): BelongsTo
     {
@@ -43,6 +47,11 @@ class SubcontractValuation extends Model
         return $this->hasMany(SubcontractValuationDocument::class, 'valuation_id')->latest();
     }
 
+    public function payments(): HasMany
+    {
+        return $this->hasMany(SubcontractValuationPayment::class, 'valuation_id')->orderBy('paid_on')->orderBy('id');
+    }
+
     public function approver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by_user_id');
@@ -56,6 +65,27 @@ class SubcontractValuation extends Model
     public function isCertified(): bool
     {
         return in_array($this->status, self::CERTIFIED_STATUSES, true);
+    }
+
+    /** Total of the payments recorded so far. */
+    public function paidAmount(): BigDecimal
+    {
+        return $this->payments->reduce(
+            fn (BigDecimal $total, SubcontractValuationPayment $payment) => $total->plus((string) $payment->amount),
+            BigDecimal::zero(),
+        );
+    }
+
+    /** What is still owed on this valuation once it is approved; zero before approval. */
+    public function balanceDue(): BigDecimal
+    {
+        if (! $this->isCertified()) {
+            return BigDecimal::zero();
+        }
+
+        $balance = BigDecimal::of((string) $this->net_due)->minus($this->paidAmount());
+
+        return $balance->isNegative() ? BigDecimal::zero() : $balance;
     }
 
     protected function casts(): array

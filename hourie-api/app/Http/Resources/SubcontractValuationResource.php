@@ -5,6 +5,7 @@ namespace App\Http\Resources;
 use App\Models\SubcontractItem;
 use App\Models\SubcontractValuation;
 use App\Models\SubcontractValuationDocument;
+use App\Models\SubcontractValuationPayment;
 use App\Services\SubcontractValuationCalculator;
 use Brick\Math\BigDecimal;
 use Brick\Math\RoundingMode;
@@ -97,6 +98,17 @@ class SubcontractValuationResource extends JsonResource
                 'matches' => BigDecimal::of((string) $this->invoice_amount)->isEqualTo((string) $this->net_due),
                 'difference' => (string) BigDecimal::of((string) $this->invoice_amount)->minus((string) $this->net_due),
             ],
+            'paid_amount' => (string) $this->paidAmount()->toScale(2),
+            'balance_due' => (string) $this->balanceDue()->toScale(2),
+            'payments' => $this->payments->map(fn (SubcontractValuationPayment $payment) => [
+                'id' => $payment->id,
+                'amount' => $payment->amount,
+                'paid_on' => $payment->paid_on?->format('Y-m-d'),
+                'method' => $payment->method,
+                'reference' => $payment->reference,
+                'notes' => $payment->notes,
+                'recorded_by' => $payment->recorder?->name,
+            ])->values(),
             'documents' => $this->documents->map(fn (SubcontractValuationDocument $document) => [
                 'id' => $document->id,
                 'type' => $document->type,

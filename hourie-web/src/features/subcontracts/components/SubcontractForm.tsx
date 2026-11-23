@@ -7,12 +7,12 @@ import { EquipmentCreationPanel } from "../../equipment/components/EquipmentCrea
 import { localized, operationPhrase } from "../../../i18n/operations";
 import { createSubcontractor, getNextItemCode, getSubcontractors, saveSubcontract } from "../api";
 import { money, newKey, previewCodes } from "../display";
-import type { MaterialInput, MaterialsSuppliedBy, Subcontract, SubcontractItemInput, SubcontractPayload, Subcontractor } from "../types";
+import { MaterialSupplyEditor } from "./MaterialSupplyEditor";
+import type { Subcontract, SubcontractItemInput, SubcontractPayload, Subcontractor } from "../types";
 
 type Project = { id: number; name: string; code: string | null };
 
 const emptyItem = (): SubcontractItemInput => ({ key: newKey(), code: "", description: "", unit: "", quantity: "", unit_price: "", materials_supplied_by: "subcontractor", materials: [] });
-const emptyMaterial = (): MaterialInput => ({ key: newKey(), name: "", unit: "", quantity_per_unit: "", waste_percent: "5" });
 
 function initialState(subcontract?: Subcontract): Omit<SubcontractPayload, "items"> & { items: SubcontractItemInput[] } {
   if (!subcontract) {
@@ -77,10 +77,6 @@ export function SubcontractForm({ subcontract, projects, onClose, onSaved }: {
 
   function update<K extends keyof typeof form>(field: K, value: (typeof form)[K]) {
     setForm((current) => ({ ...current, [field]: value }));
-  }
-
-  function updateMaterials(itemKey: string, change: (materials: MaterialInput[]) => MaterialInput[]) {
-    setForm((current) => ({ ...current, items: current.items.map((item) => (item.key === itemKey ? { ...item, materials: change(item.materials) } : item)) }));
   }
 
   function updateItem(key: string, field: keyof SubcontractItemInput, value: string) {
@@ -184,36 +180,14 @@ export function SubcontractForm({ subcontract, projects, onClose, onSaved }: {
             <p className="sc-hint">{operationPhrase("Pour chaque ligne, indiquez qui achète les matériaux. Quand c’est ARH, le sous-traitant n’est payé que pour la main-d’œuvre, et Hourie compare les achats d’ARH (bons de commande) avec ce que les travaux ont réellement consommé.")}</p>
             <div className="sc-material-lines">
               {form.items.map((item, index) => (
-                <div className="sc-material-line" key={item.key}>
-                  <div className="sc-material-line-header">
-                    <strong>{codes[index]} · {item.description || localized(`Ligne ${index + 1}`, `البند ${index + 1}`)}</strong>
-                    <select aria-label={localized(`Matériaux fournis par, ligne ${index + 1}`, `جهة توفير المواد، البند ${index + 1}`)} value={item.materials_supplied_by} onChange={(event) => setForm((current) => ({ ...current, items: current.items.map((candidate) => candidate.key === item.key ? { ...candidate, materials_supplied_by: event.target.value as MaterialsSuppliedBy, materials: event.target.value === "arh" && candidate.materials.length === 0 ? [emptyMaterial()] : candidate.materials } : candidate) }))}>
-                      <option value="subcontractor">{operationPhrase("Fournis par le sous-traitant (inclus dans son prix)")}</option>
-                      <option value="arh">{operationPhrase("Fournis par ARH (main-d’œuvre seule)")}</option>
-                    </select>
-                  </div>
-                  {item.materials_supplied_by === "arh" && (
-                    <>
-                      <div className="sc-table-wrap">
-                      <table className="sc-table">
-                        <thead><tr><th>{operationPhrase("Matériau *")}</th><th>{operationPhrase("Unité *")}</th><th className="num">{localized(`Qté par ${item.unit || "unité"} *`, `الكمية لكل ${item.unit || "وحدة"} *`)}</th><th className="num">{operationPhrase("Perte %")}</th><th /></tr></thead>
-                        <tbody>
-                          {item.materials.map((material, materialIndex) => (
-                            <tr key={material.key}>
-                              <td><input className="text" required aria-label={localized(`Matériau ${materialIndex + 1}, ligne ${index + 1}`, `المادة ${materialIndex + 1}، البند ${index + 1}`)} placeholder={operationPhrase("Ex. Fer HA, Ciment")} value={material.name} onChange={(event) => updateMaterials(item.key, (materials) => materials.map((candidate) => candidate.key === material.key ? { ...candidate, name: event.target.value } : candidate))} /></td>
-                              <td><input className="text unit" required aria-label={localized(`Unité du matériau ${materialIndex + 1}, ligne ${index + 1}`, `وحدة المادة ${materialIndex + 1}، البند ${index + 1}`)} placeholder={operationPhrase("kg, sac, m³")} value={material.unit} onChange={(event) => updateMaterials(item.key, (materials) => materials.map((candidate) => candidate.key === material.key ? { ...candidate, unit: event.target.value } : candidate))} /></td>
-                              <td><input required type="number" min="0.0001" step="0.0001" aria-label={localized(`Quantité par unité du matériau ${materialIndex + 1}, ligne ${index + 1}`, `الكمية لكل وحدة للمادة ${materialIndex + 1}، البند ${index + 1}`)} value={material.quantity_per_unit} onChange={(event) => updateMaterials(item.key, (materials) => materials.map((candidate) => candidate.key === material.key ? { ...candidate, quantity_per_unit: event.target.value } : candidate))} /></td>
-                              <td><input required type="number" min="0" max="100" step="0.1" aria-label={localized(`Perte du matériau ${materialIndex + 1}, ligne ${index + 1}`, `نسبة هدر المادة ${materialIndex + 1}، البند ${index + 1}`)} value={material.waste_percent} onChange={(event) => updateMaterials(item.key, (materials) => materials.map((candidate) => candidate.key === material.key ? { ...candidate, waste_percent: event.target.value } : candidate))} /></td>
-                              <td><button className="remove-line" type="button" aria-label={localized(`Retirer le matériau ${materialIndex + 1}, ligne ${index + 1}`, `إزالة المادة ${materialIndex + 1}، البند ${index + 1}`)} onClick={() => updateMaterials(item.key, (materials) => materials.filter((candidate) => candidate.key !== material.key))}><ActionIcon name="delete" /></button></td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                      </div>
-                      <div className="sc-actions"><button className="secondary-button" type="button" onClick={() => updateMaterials(item.key, (materials) => [...materials, emptyMaterial()])}><ActionIcon name="add" /> {operationPhrase("Ajouter un matériau")}</button></div>
-                    </>
-                  )}
-                </div>
+                <MaterialSupplyEditor
+                  key={item.key}
+                  title={`${codes[index]} · ${item.description || localized(`Ligne ${index + 1}`, `البند ${index + 1}`)}`}
+                  unit={item.unit}
+                  lineNumber={index + 1}
+                  supply={item}
+                  onChange={(supply) => setForm((current) => ({ ...current, items: current.items.map((candidate) => candidate.key === item.key ? { ...candidate, ...supply } : candidate) }))}
+                />
               ))}
             </div>
           </InventoryFormSection>

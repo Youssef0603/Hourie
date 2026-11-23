@@ -54,7 +54,17 @@ export async function saveValuation(payload: ValuationPayload, target: { subcont
   return (await send<{ data: SubcontractValuation }>(path, "valuationId" in target ? "PUT" : "POST", payload)).data;
 }
 
-export type ValuationAction = "submit" | "return-to-draft" | "approve" | "pay";
+export type ValuationAction = "submit" | "return-to-draft" | "approve";
+
+export type PaymentPayload = { amount: string; paid_on: string; method: string; reference: string };
+
+export async function recordValuationPayment(id: number, payment: PaymentPayload) {
+  return (await send<{ data: SubcontractValuation }>(`/api/v1/subcontract-valuations/${id}/payments`, "POST", payment)).data;
+}
+
+export async function deleteValuationPayment(id: number, paymentId: number) {
+  return (await send<{ data: SubcontractValuation }>(`/api/v1/subcontract-valuations/${id}/payments/${paymentId}`, "DELETE")).data;
+}
 
 export async function runValuationAction(id: number, action: ValuationAction) {
   return (await send<{ data: SubcontractValuation }>(`/api/v1/subcontract-valuations/${id}/${action}`, "POST")).data;

@@ -70,7 +70,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', EnsureUserIsActive::class, Ensu
     Route::post('subcontract-valuations/{valuation}/submit', [SubcontractValuationController::class, 'submit']);
     Route::post('subcontract-valuations/{valuation}/return-to-draft', [SubcontractValuationController::class, 'returnToDraft']);
     Route::post('subcontract-valuations/{valuation}/approve', [SubcontractValuationController::class, 'approve']);
-    Route::post('subcontract-valuations/{valuation}/pay', [SubcontractValuationController::class, 'pay']);
+    Route::post('subcontract-valuations/{valuation}/payments', [SubcontractValuationController::class, 'storePayment']);
+    Route::delete('subcontract-valuations/{valuation}/payments/{payment}', [SubcontractValuationController::class, 'destroyPayment']);
     Route::post('subcontract-valuations/{valuation}/invoice', [SubcontractValuationController::class, 'invoice']);
     Route::post('subcontract-valuations/{valuation}/documents', [SubcontractValuationDocumentController::class, 'store']);
     Route::get('subcontract-valuations/{valuation}/documents/{document}/file', [SubcontractValuationDocumentController::class, 'show'])

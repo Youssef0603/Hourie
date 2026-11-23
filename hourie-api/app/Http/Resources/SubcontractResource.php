@@ -29,8 +29,8 @@ class SubcontractResource extends JsonResource
         $original = $this->sum($items, fn (SubcontractItem $item) => BigDecimal::of((string) $item->quantity)->multipliedBy((string) $item->unit_price));
         $revised = $this->sum($items, fn (SubcontractItem $item) => $item->authorizedQuantity()->multipliedBy((string) $item->unit_price));
         $executed = BigDecimal::of((string) ($lastCertified?->works_cumulative ?? '0'));
-        $paid = $this->sum($valuations->where('status', SubcontractValuation::STATUS_PAID), fn ($valuation) => BigDecimal::of((string) $valuation->net_due));
-        $toPay = $this->sum($valuations->where('status', SubcontractValuation::STATUS_APPROVED), fn ($valuation) => BigDecimal::of((string) $valuation->net_due));
+        $paid = $this->sum($valuations, fn (SubcontractValuation $valuation) => $valuation->paidAmount());
+        $toPay = $this->sum($valuations, fn (SubcontractValuation $valuation) => $valuation->balanceDue());
         $openValuation = $valuations->first(fn (SubcontractValuation $valuation) => ! $valuation->isCertified());
 
         return [
@@ -103,6 +103,8 @@ class SubcontractResource extends JsonResource
                 'valuation_date' => $valuation->valuation_date?->format('Y-m-d'),
                 'period_end' => $valuation->period_end?->format('Y-m-d'),
                 'net_due' => $valuation->net_due,
+                'paid_amount' => $this->money($valuation->paidAmount()),
+                'balance_due' => $this->money($valuation->balanceDue()),
                 'invoice_amount' => $valuation->invoice_amount,
                 'invoice_matches' => $valuation->invoice_amount !== null && BigDecimal::of((string) $valuation->invoice_amount)->isEqualTo((string) $valuation->net_due),
             ])->values(),

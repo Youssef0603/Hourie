@@ -20,6 +20,7 @@ import {
 } from "../api";
 import { localized, operationPhrase } from "../../../i18n/operations";
 import { money, quantity, valuationStatusLabel } from "../display";
+import { ValuationPayments } from "./ValuationPayments";
 import type { Subcontract, SubcontractValuation, ValuationPayload } from "../types";
 
 type Draft = Omit<ValuationPayload, "lines"> & { quantities: Record<number, string> };
@@ -145,6 +146,9 @@ export function ValuationPanel({ subcontract, valuationId, canManage, onClose, o
   }
 
   const calculation = valuation?.calculation;
+  /** The latest invoice PDF belongs to the invoice card; older ones stay in Documents. */
+  const invoicePdf = valuation?.documents.find((document) => document.type === "invoice") ?? null;
+  const statementDocuments = valuation?.documents.filter((document) => document !== invoicePdf) ?? [];
   const currency = subcontract.currency;
 
   return (
@@ -235,18 +239,23 @@ export function ValuationPanel({ subcontract, valuationId, canManage, onClose, o
 
             {valuation && valuation.status !== "draft" && (
               <InventoryFormSection title={operationPhrase("Facture du sous-traitant")} icon="invoice">
-                {valuation.invoice && (
-                  valuation.invoice.matches
-                    ? <div className="notice ok">{localized(
-                      `Facture ${valuation.invoice.number} conforme : ${money(valuation.invoice.amount, currency)} = net à payer.`,
-                      `الفاتورة ${valuation.invoice.number} مطابقة: ${money(valuation.invoice.amount, currency)} = صافي المبلغ المستحق.`,
-                    )}</div>
-                    : <div className="notice warning">{localized(
-                      `Facture ${valuation.invoice.number} : ${money(valuation.invoice.amount, currency)}, écart de ${money(valuation.invoice.difference, currency)} avec le net à payer.`,
-                      `الفاتورة ${valuation.invoice.number}: ${money(valuation.invoice.amount, currency)}، بفرق قدره ${money(valuation.invoice.difference, currency)} عن صافي المبلغ المستحق.`,
-                    )}</div>
-                )}
-                {canManage && valuation.status !== "paid" && (
+                {valuation.invoice && (() => {
+                  const invoice = valuation.invoice;
+                  const badge = invoice.matches
+                    ? <em className="valuation-status paid">{operationPhrase("Conforme")}</em>
+                    : <em className="valuation-status warning">{localized(`Écart de ${money(invoice.difference, currency)}`, `فرق ${money(invoice.difference, currency)}`)}</em>;
+                  const details = <>{badge} {money(invoice.amount, currency)} · {formatDate(invoice.date, { style: "medium" })}{invoicePdf ? ` · ${invoicePdf.original_name}` : ""}</>;
+                  const title = localized(`Facture n° ${invoice.number}`, `الفاتورة رقم ${invoice.number}`);
+                  return (
+                    <>
+                      {invoicePdf
+                        ? <DocumentRow url={invoicePdf.url} name={title} fileName={invoicePdf.original_name} meta={details} onError={setError} />
+                        : <article className="document-row"><span className="document-row-open"><span className="document-row-text"><strong>{title}</strong><small>{details}</small></span></span></article>}
+                      {!invoice.matches && <div className="notice warning sc-invoice-note">{operationPhrase("Le montant facturé doit être égal au net à payer : demandez une facture corrigée au sous-traitant.")}</div>}
+                    </>
+                  );
+                })()}
+                {canManage && (valuation.status === "submitted" || valuation.status === "approved") && valuation.payments.length === 0 && (
                   <InvoiceEntryForm
                     key={valuation.invoice?.number ?? "new"}
                     initial={{
@@ -259,6 +268,16 @@ export function ValuationPanel({ subcontract, valuationId, canManage, onClose, o
                     onSubmit={(invoice) => run(() => saveValuationInvoice(valuation.id, invoice), operationPhrase("Impossible d’enregistrer la facture."))}
                   />
                 )}
+              </InventoryFormSection>
+            )}
+
+            {valuation && (
+              <InventoryFormSection title={operationPhrase("Paiements")} icon="invoice">
+                {["approved", "partially_paid", "paid"].includes(valuation.status)
+                  ? <ValuationPayments key={`${valuation.id}-${valuation.payments.length}`} valuation={valuation} currency={currency} canManage={canManage} busy={busy} run={run} />
+                  : <div className="notice info">{operationPhrase(valuation.status === "draft"
+                    ? "Les paiements se saisissent après l’approbation : soumettez la situation, faites-la approuver, puis enregistrez la facture du sous-traitant."
+                    : "Les paiements se saisissent après l’approbation de la situation et l’enregistrement de la facture.")}</div>}
               </InventoryFormSection>
             )}
 
@@ -282,9 +301,9 @@ export function ValuationPanel({ subcontract, valuationId, canManage, onClose, o
                     <button type="button" aria-label={localized(`Retirer ${file.name}`, `إزالة ${file.name}`)} onClick={() => setPendingDocuments((current) => current.filter((_, candidate) => candidate !== index))}><ActionIcon name="close" /></button>
                   </div>
                 ))}
-                {valuation && valuation.documents.length > 0 && (
+                {statementDocuments.length > 0 && (
                   <PaginatedDocumentList
-                    documents={valuation.documents}
+                    documents={statementDocuments}
                     emptyMessage={operationPhrase("Aucun document")}
                     renderDocument={(document) => (
                       <DocumentRow key={document.id} url={document.url} name={document.original_name} meta={`${operationPhrase(document.type === "invoice" ? "Facture" : "Attachement")} · ${formatFileSize(document.size_bytes)} · ${formatDate(document.created_at, { style: "medium" })}`} onError={setError} />
@@ -301,7 +320,6 @@ export function ValuationPanel({ subcontract, valuationId, canManage, onClose, o
               {valuation.status === "draft" && <button className="danger-button" type="button" disabled={busy} onClick={remove}><ActionIcon name="delete" /> {operationPhrase("Supprimer")}</button>}
               {valuation.status === "submitted" && <button className="primary-button" type="button" disabled={busy} onClick={() => void action("approve", operationPhrase("Impossible d’approuver la situation."))}>{operationPhrase("Approuver")}</button>}
               {valuation.status === "submitted" && <button className="secondary-button" type="button" disabled={busy} onClick={() => void action("return-to-draft", operationPhrase("Impossible de renvoyer la situation."))}>{operationPhrase("Renvoyer en brouillon")}</button>}
-              {valuation.status === "approved" && <button className="primary-button" type="button" disabled={busy || !valuation.invoice?.matches} title={valuation.invoice?.matches ? undefined : operationPhrase("La facture doit être égale au net à payer")} onClick={() => void action("pay", operationPhrase("Impossible de marquer la situation comme payée."))}>{operationPhrase("Marquer comme payée")}</button>}
             </div>
           )}
         </form>

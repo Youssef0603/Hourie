@@ -1,12 +1,19 @@
 import { operationPhrase } from "../../i18n/operations";
 import { formatMoney } from "../../shared/format";
-import type { ValuationStatus } from "./types";
+import type { MaterialInput, PaymentMethod, ValuationStatus } from "./types";
 
 export const valuationStatusLabels: Record<ValuationStatus, string> = {
   draft: "Brouillon",
   submitted: "Soumise",
   approved: "Approuvée",
+  partially_paid: "Partiellement payée",
   paid: "Payée",
+};
+
+export const paymentMethodLabels: Record<PaymentMethod, string> = {
+  transfer: "Virement",
+  cheque: "Chèque",
+  cash: "Espèces",
 };
 
 /** Status label in the active language, evaluated at render time. */
@@ -47,3 +54,5 @@ export function previewCodes(lines: Array<{ code?: string | null }>, next: { sit
   let sequence = next?.next_sequence ?? 0;
   return lines.map((line) => line.code || (next ? itemCode(next.site_code, sequence++) : "—"));
 }
+
+export const emptyMaterial = (): MaterialInput => ({ key: newKey(), name: "", unit: "", quantity_per_unit: "", waste_percent: "5" });

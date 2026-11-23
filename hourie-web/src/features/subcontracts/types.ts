@@ -74,7 +74,19 @@ export type SubcontractVariation = {
   lines: Array<{ subcontract_item_id: number; description: string; unit: string; quantity: string }>;
 };
 
-export type ValuationStatus = "draft" | "submitted" | "approved" | "paid";
+export type ValuationStatus = "draft" | "submitted" | "approved" | "partially_paid" | "paid";
+
+export type PaymentMethod = "transfer" | "cheque" | "cash";
+
+export type ValuationPayment = {
+  id: number;
+  amount: string;
+  paid_on: string;
+  method: PaymentMethod | null;
+  reference: string | null;
+  notes: string | null;
+  recorded_by: string | null;
+};
 
 export type SubcontractValuationSummary = {
   id: number;
@@ -83,6 +95,8 @@ export type SubcontractValuationSummary = {
   valuation_date: string;
   period_end: string;
   net_due: string;
+  paid_amount: string;
+  balance_due: string;
   invoice_amount: string | null;
   invoice_matches: boolean;
 };
@@ -158,7 +172,14 @@ export type VariationPayload = {
   reason: string;
   approved_on: string;
   lines: Array<{ subcontract_item_id: number; quantity: string }>;
-  new_items: Array<{ description: string; unit: string; quantity: string; unit_price: string }>;
+  new_items: Array<{
+    description: string;
+    unit: string;
+    quantity: string;
+    unit_price: string;
+    materials_supplied_by: MaterialsSuppliedBy;
+    materials: Array<Omit<MaterialInput, "key" | "id">>;
+  }>;
 };
 
 export type ValuationLine = {
@@ -215,6 +236,9 @@ export type SubcontractValuation = {
     advance_remaining: string;
   };
   invoice: { number: string; date: string; amount: string; matches: boolean; difference: string } | null;
+  paid_amount: string;
+  balance_due: string;
+  payments: ValuationPayment[];
   documents: Array<{ id: number; type: "statement" | "invoice"; url: string; original_name: string; size_bytes: number; created_at: string }>;
   approved_by: string | null;
   approved_at: string | null;

@@ -96,7 +96,7 @@ it('numbers work items per site across subcontracts and variations', function ()
     $withVariation = $this->postJson("/api/v1/subcontracts/{$first['id']}/variations", [
         'title' => 'Dallage extérieur',
         'approved_on' => '2026-11-20',
-        'new_items' => [['description' => 'Dallage', 'unit' => 'm²', 'quantity' => 60, 'unit_price' => 15000]],
+        'new_items' => [['description' => 'Dallage', 'unit' => 'm²', 'quantity' => 60, 'unit_price' => 15000, 'materials_supplied_by' => 'subcontractor']],
     ])->assertCreated()->json('data');
 
     expect(collect($withVariation['items'])->pluck('code')->all())->toBe(['821-01', '821-02', '821-03', '821-05']);
@@ -164,16 +164,35 @@ it('blocks quantities above the contract until a variation authorises them', fun
     saveValuation($subcontract['id'], $itemId, 1044)->assertCreated();
 });
 
+it('asks who buys the materials of new work added by a variation', function () {
+    $subcontract = createSteelSubcontract();
+
+    $this->postJson("/api/v1/subcontracts/{$subcontract['id']}/variations", [
+        'title' => 'Ajout de treillis soudés',
+        'approved_on' => '2026-11-12',
+        'new_items' => [['description' => 'Treillis soudé', 'unit' => 'm²', 'quantity' => 300, 'unit_price' => 1500]],
+    ])->assertUnprocessable()->assertJsonValidationErrors('new_items.0.materials_supplied_by');
+});
+
 it('adds new priced items through a variation', function () {
     $subcontract = createSteelSubcontract();
 
     $updated = $this->postJson("/api/v1/subcontracts/{$subcontract['id']}/variations", [
         'title' => 'Ajout de treillis soudés',
         'approved_on' => '2026-11-12',
-        'new_items' => [['description' => 'Treillis soudé', 'unit' => 'm²', 'quantity' => 300, 'unit_price' => 1500]],
+        'new_items' => [[
+            'description' => 'Treillis soudé',
+            'unit' => 'm²',
+            'quantity' => 300,
+            'unit_price' => 1500,
+            'materials_supplied_by' => 'arh',
+            'materials' => [['name' => 'Treillis ST25', 'unit' => 'm²', 'quantity_per_unit' => 1, 'waste_percent' => 5]],
+        ]],
     ])->assertCreated()->json('data');
 
     expect($updated['items'])->toHaveCount(2)
+        ->and($updated['items'][1]['materials_supplied_by'])->toBe('arh')
+        ->and($updated['items'][1]['materials'][0]['name'])->toBe('Treillis ST25')
         ->and($updated['items'][1]['quantity'])->toBe('0.000')
         ->and($updated['items'][1]['authorized_quantity'])->toBe('300.000')
         ->and($updated['items'][1]['variation'])->toBe('AV-01')
@@ -188,31 +207,107 @@ it('allows only one open valuation at a time', function () {
     saveValuation($subcontract['id'], $itemId, 150)->assertUnprocessable()->assertJsonValidationErrors('valuation');
 });
 
-it('only marks a valuation paid when the subcontractor invoice equals the net due', function () {
-    $subcontract = createSteelSubcontract();
+/** Approved valuation of 200 t: net due 32 000 000 once advance and retention are deducted. */
+function approvedValuationWithInvoice(array $subcontract, int $invoiceAmount = 32000000): array
+{
     $valuation = saveValuation($subcontract['id'], $subcontract['items'][0]['id'], 200)->json('data');
     certify($valuation['id']);
-
-    $this->post("/api/v1/subcontract-valuations/{$valuation['id']}/invoice", [
+    test()->post("/api/v1/subcontract-valuations/{$valuation['id']}/invoice", [
         'invoice_number' => 'FAC-2026-118',
         'invoice_date' => '2026-10-05',
-        'invoice_amount' => 33000000,
-    ], ['Accept' => 'application/json'])->assertOk()->assertJsonPath('data.invoice.matches', false);
-    $this->postJson("/api/v1/subcontract-valuations/{$valuation['id']}/pay")->assertUnprocessable();
-
-    $this->post("/api/v1/subcontract-valuations/{$valuation['id']}/invoice", [
-        'invoice_number' => 'FAC-2026-118',
-        'invoice_date' => '2026-10-05',
-        'invoice_amount' => 32000000,
+        'invoice_amount' => $invoiceAmount,
         'invoice_file' => UploadedFile::fake()->create('facture.pdf', 80, 'application/pdf'),
-    ], ['Accept' => 'application/json'])->assertOk()->assertJsonPath('data.invoice.matches', true);
-    $this->postJson("/api/v1/subcontract-valuations/{$valuation['id']}/pay")
+    ], ['Accept' => 'application/json'])->assertOk();
+
+    return $valuation;
+}
+
+function recordPayment(int $valuationId, int|float $amount, array $overrides = []): TestResponse
+{
+    return test()->postJson("/api/v1/subcontract-valuations/{$valuationId}/payments", array_replace([
+        'amount' => $amount,
+        'paid_on' => '2026-10-10',
+        'method' => 'transfer',
+        'reference' => 'VIR-0001',
+    ], $overrides));
+}
+
+it('only records payments once the subcontractor invoice equals the net due', function () {
+    $subcontract = createSteelSubcontract();
+    $valuation = approvedValuationWithInvoice($subcontract, 33000000);
+
+    $this->getJson("/api/v1/subcontract-valuations/{$valuation['id']}")
+        ->assertJsonPath('data.invoice.matches', false)
+        ->assertJsonPath('data.balance_due', '32000000.00');
+    recordPayment($valuation['id'], 1000000)->assertUnprocessable()->assertJsonValidationErrors('invoice_amount');
+});
+
+it('pays a valuation in several transfers and tracks what is still owed', function () {
+    $subcontract = createSteelSubcontract();
+    $valuation = approvedValuationWithInvoice($subcontract);
+
+    recordPayment($valuation['id'], 20000000)
         ->assertOk()
-        ->assertJsonPath('data.status', 'paid');
+        ->assertJsonPath('data.status', 'partially_paid')
+        ->assertJsonPath('data.paid_amount', '20000000.00')
+        ->assertJsonPath('data.balance_due', '12000000.00')
+        ->assertJsonPath('data.payments.0.reference', 'VIR-0001');
+
+    $summary = $this->getJson("/api/v1/subcontracts/{$subcontract['id']}")->json('data');
+    expect($summary['summary']['paid_amount'])->toBe('20000000.00')
+        ->and($summary['summary']['to_pay_amount'])->toBe('12000000.00')
+        ->and($summary['valuations'][0]['balance_due'])->toBe('12000000.00');
+
+    recordPayment($valuation['id'], 12000001, ['reference' => 'VIR-0002'])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('amount');
+
+    recordPayment($valuation['id'], 12000000, ['reference' => 'VIR-0002', 'method' => 'cheque'])
+        ->assertOk()
+        ->assertJsonPath('data.status', 'paid')
+        ->assertJsonPath('data.balance_due', '0.00')
+        ->assertJsonCount(2, 'data.payments');
 
     $summary = $this->getJson("/api/v1/subcontracts/{$subcontract['id']}")->json('data.summary');
     expect($summary['paid_amount'])->toBe('32000000.00')
+        ->and($summary['to_pay_amount'])->toBe('0.00')
         ->and($summary['retention_held'])->toBe('4000000.00');
+});
+
+it('reopens the balance when a payment recorded by mistake is removed', function () {
+    $subcontract = createSteelSubcontract();
+    $valuation = approvedValuationWithInvoice($subcontract);
+    $first = recordPayment($valuation['id'], 20000000)->json('data.payments.0.id');
+    $second = recordPayment($valuation['id'], 12000000)->assertJsonPath('data.status', 'paid')->json('data.payments.1.id');
+
+    $this->deleteJson("/api/v1/subcontract-valuations/{$valuation['id']}/payments/{$second}")
+        ->assertOk()
+        ->assertJsonPath('data.status', 'partially_paid')
+        ->assertJsonPath('data.paid_at', null)
+        ->assertJsonPath('data.balance_due', '12000000.00');
+
+    $this->deleteJson("/api/v1/subcontract-valuations/{$valuation['id']}/payments/{$first}")
+        ->assertOk()
+        ->assertJsonPath('data.status', 'approved')
+        ->assertJsonCount(0, 'data.payments');
+});
+
+it('refuses payments on valuations that are not approved or that belong elsewhere', function () {
+    $subcontract = createSteelSubcontract();
+    $draft = saveValuation($subcontract['id'], $subcontract['items'][0]['id'], 100)->json('data');
+    recordPayment($draft['id'], 1000)->assertUnprocessable()->assertJsonValidationErrors('status');
+
+    recordPayment($draft['id'], 0)->assertUnprocessable()->assertJsonValidationErrors('amount');
+    recordPayment($draft['id'], 1000, ['paid_on' => now()->addDay()->format('Y-m-d')])->assertUnprocessable()->assertJsonValidationErrors('paid_on');
+
+    $other = createSteelSubcontract(['title' => 'Autre lot']);
+    $paid = approvedValuationWithInvoice($other);
+    $paymentId = recordPayment($paid['id'], 1000)->json('data.payments.0.id');
+    $this->deleteJson("/api/v1/subcontract-valuations/{$draft['id']}/payments/{$paymentId}")->assertNotFound();
+
+    $viewer = User::factory()->create(['role' => UserRole::Viewer]);
+    app('auth')->forgetGuards();
+    $this->actingAs($viewer, 'web')->postJson("/api/v1/subcontract-valuations/{$paid['id']}/payments", ['amount' => 1, 'paid_on' => '2026-10-10'])->assertForbidden();
 });
 
 it('locks the bill of quantities once a valuation exists', function () {
