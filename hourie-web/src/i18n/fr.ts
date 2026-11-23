@@ -741,7 +741,7 @@ const arabic = {
     bonds: 'الضمانات',
     temporaryAdmissions: 'الإدخالات المؤقتة',
     documents: 'المستندات',
-    subcontracts: 'المقاولون من الباطن',
+    subcontracts: 'المقاولون الفرعيون',
     sites: 'ورش العمل',
     people: 'الموظفون',
     settings: 'الإعدادات',
