@@ -7,5 +7,6 @@ return [
     'retention_count' => (int) env('BACKUP_RETENTION_COUNT', 60),
     'minimum_free_bytes' => (int) env('BACKUP_MINIMUM_FREE_BYTES', 1073741824),
     'mysqldump_binary' => env('MYSQLDUMP_BINARY', 'mysqldump'),
+    'mysql_binary' => env('MYSQL_BINARY', 'mysql'),
     'diskutil_binary' => env('DISKUTIL_BINARY', '/usr/sbin/diskutil'),
 ];

@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Mail\Transport\MicrosoftGraphTransport;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Client\Factory as HttpFactory;
+use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
@@ -26,6 +27,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $trustedProxies = trim((string) config('app.trusted_proxies'));
+        if ($trustedProxies !== '') {
+            TrustProxies::at($trustedProxies === '*' ? '*' : array_map('trim', explode(',', $trustedProxies)));
+        }
+
         Mail::extend('microsoft-graph', function (array $config): MicrosoftGraphTransport {
             return new MicrosoftGraphTransport(
                 http: $this->app->make(HttpFactory::class),

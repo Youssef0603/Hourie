@@ -30,6 +30,7 @@ try {
     & $PhpExecutable artisan config:cache
     & $PhpExecutable artisan route:cache
     & $PhpExecutable artisan view:cache
+    & $PhpExecutable artisan queue:restart
 } finally {
     Pop-Location
 }

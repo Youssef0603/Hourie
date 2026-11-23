@@ -95,6 +95,19 @@ return [
     |
     */
 
+    /*
+    |--------------------------------------------------------------------------
+    | Trusted Proxies
+    |--------------------------------------------------------------------------
+    |
+    | Comma-separated addresses (or "*") of a reverse proxy in front of the
+    | app, such as an Azure Application Gateway that terminates HTTPS, so the
+    | real client IP and scheme are read from its forwarded headers.
+    |
+    */
+
+    'trusted_proxies' => env('TRUSTED_PROXIES'),
+
     'cipher' => 'AES-256-CBC',
 
     'key' => env('APP_KEY'),

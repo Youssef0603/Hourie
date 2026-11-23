@@ -1,5 +1,7 @@
 # Hourie production deployment
 
+> **The company server is Windows Server + IIS on Azure.** Follow [deploy/windows/README.md](deploy/windows/README.md). The Ubuntu/Nginx steps below are kept for a Linux host.
+
 Use one HTTPS origin such as `https://inventory.company-domain.com`. Nginx serves the React build and sends `/api`, `/sanctum`, and `/up` to Laravel. This avoids cross-origin session and CSRF problems.
 
 ## Server requirements
@@ -17,7 +19,7 @@ Use one HTTPS origin such as `https://inventory.company-domain.com`. Nginx serve
 3. Point `EQUIPMENT_IMAGES_ROOT` at a directory outside the release folder and grant the PHP-FPM user read/write access.
 4. Update the paths, domain, certificate, and PHP socket in `deploy/nginx/hourie.conf`, install it under `/etc/nginx/sites-enabled/`, and validate with `nginx -t`.
 5. Run `HOURIE_APP_ROOT=/var/www/hourie/current deploy/scripts/deploy.sh`.
-6. Create the first manager with `php artisan user:create`.
+6. Create the first manager with `php artisan users:create --role=manager`.
 7. Run `HOURIE_BASE_URL=https://inventory.company-domain.com deploy/scripts/smoke-test.sh` from any machine with `curl`.
 
 The deployment script installs optimized PHP dependencies, builds and lints React, runs database migrations, moves legacy public photos into private storage, caches Laravel configuration, and reloads PHP-FPM and Nginx.
