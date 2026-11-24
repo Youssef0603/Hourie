@@ -9,7 +9,7 @@
         body { margin: 0; color: #10284c; font-family: "Times New Roman", serif; font-size: 10px; }
         .page { position: relative; width: 186mm; padding: 11mm 12mm; background: #fff; }
         .header { position: relative; height: 28mm; margin-bottom: 2mm; }
-        .logo { position: absolute; left: 0; top: 0; width: 42mm; height: 19mm; object-fit: contain; object-position: left top; }
+        .logo { position: absolute; left: 0; top: 0; width: 42mm; height: 18.1mm; }
         .title { position: absolute; left: 57mm; top: 20mm; width: 72mm; margin: 0; color: #14508c; font-size: 17px; line-height: 1; text-align: center; white-space: nowrap; }
         .number { position: absolute; right: 0; top: 19.5mm; color: #a62522; font-size: 16px; font-weight: bold; letter-spacing: 1px; }
         .parties { width: 100%; margin-bottom: 3mm; border-collapse: collapse; table-layout: fixed; }

@@ -23,7 +23,7 @@ class PurchaseOrderPdfService
         $dompdf = new Dompdf($options);
         $dompdf->loadHtml(view('purchase-orders.pdf', [
             'purchaseOrder' => $purchaseOrder,
-            'logoDataUri' => $this->dataUri(resource_path('images/logo-hourie.svg'), 'image/svg+xml'),
+            'logoDataUri' => $this->dataUri(resource_path('images/logo-hourie.jpg'), 'image/jpeg'),
             'stampDataUri' => $this->dataUri(resource_path('images/hourie-stamp-transparent.png'), 'image/png'),
         ])->render());
         $dompdf->setPaper('a4', 'portrait');
