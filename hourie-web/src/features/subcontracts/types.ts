@@ -78,9 +78,19 @@ export type ValuationStatus = "draft" | "submitted" | "approved" | "partially_pa
 
 export type PaymentMethod = "transfer" | "cheque" | "cash";
 
+/** "advance": the start advance; "opening": everything certified before Hourie. */
+export type ValuationKind = "regular" | "advance" | "opening";
+
+/** Payment channels followed separately: cash, cheque or transfer before VAT, and VAT. */
+export type PaymentChannel = "cash" | "cheque" | "vat";
+
+export type ChannelAmounts = { due: string; paid: string; balance: string };
+
 export type ValuationPayment = {
   id: number;
   amount: string;
+  /** Part of a cheque or transfer that pays VAT. */
+  vat_amount: string;
   paid_on: string;
   method: PaymentMethod | null;
   reference: string | null;
@@ -91,6 +101,7 @@ export type ValuationPayment = {
 export type SubcontractValuationSummary = {
   id: number;
   reference: string;
+  kind: ValuationKind;
   status: ValuationStatus;
   valuation_date: string;
   period_end: string;
@@ -113,6 +124,13 @@ export type Subcontract = {
   retention_rate: string;
   advance_amount: string;
   advance_recovery_rate: string;
+  /** Share of every amount paid in cash, without VAT. */
+  cash_percent: string;
+  /** Fixed amount taken off every situation, e.g. "Coupe pavé". */
+  recurring_deduction_label: string | null;
+  recurring_deduction_amount: string;
+  /** Works certified before Hourie without a breakdown by work item. */
+  historical_works_amount: string;
   currency: string;
   notes: string | null;
   summary: {
@@ -125,6 +143,9 @@ export type Subcontract = {
     to_pay_amount: string;
     retention_held: string;
     advance_remaining: string;
+    channels: Record<PaymentChannel, ChannelAmounts>;
+    /** True once a situation or an opening balance exists (the advance does not count). */
+    has_work_valuations: boolean;
     valuations_count: number;
     open_valuation: { id: number; reference: string; status: ValuationStatus } | null;
   };
@@ -162,6 +183,9 @@ export type SubcontractPayload = {
   retention_rate: string;
   advance_amount: string;
   advance_recovery_rate: string;
+  cash_percent: string;
+  recurring_deduction_label: string;
+  recurring_deduction_amount: string;
   currency: string;
   notes: string;
   items: Array<Omit<SubcontractItemInput, "key" | "code" | "materials"> & { materials: Array<Omit<MaterialInput, "key">> }>;
@@ -192,6 +216,9 @@ export type ValuationLine = {
   previous_quantity: string;
   cumulative_quantity: string;
   period_quantity: string;
+  /** Where the work of the period was done, e.g. "P40 - P59". */
+  location: string | null;
+  period_amount: string;
   cumulative_amount: string;
 };
 
@@ -199,12 +226,14 @@ export type SubcontractValuation = {
   id: number;
   reference: string;
   sequence: number;
+  kind: ValuationKind;
   status: ValuationStatus;
   valuation_date: string;
   period_end: string;
   comment: string | null;
   materials_deduction: string;
   backcharges: string;
+  cash_percent: string;
   subcontract: {
     id: number;
     reference: string;
@@ -216,10 +245,13 @@ export type SubcontractValuation = {
     advance_amount: string;
     advance_recovery_rate: string;
     vat_rate: string;
+    cash_percent: string;
   };
   lines: ValuationLine[];
   calculation: {
     works_cumulative: string;
+    /** Part of the cumulative works certified before Hourie without a breakdown. */
+    historical_works: string;
     works_previous: string;
     works_this_period: string;
     advance_recovery_cumulative: string;
@@ -229,13 +261,21 @@ export type SubcontractValuation = {
     certified_cumulative: string;
     previously_certified: string;
     this_valuation_before_vat: string;
-    vat_amount: string;
     materials_deduction: string;
     backcharges: string;
+    net_before_vat: string;
+    cash_amount: string;
+    cheque_amount: string;
+    vat_amount: string;
     net_due: string;
     advance_remaining: string;
   };
+  /** Only regular situations with a cheque part need the subcontractor's invoice. */
+  requires_invoice: boolean;
+  /** Amount the invoice must show: cheque part plus VAT. */
+  invoice_expected: string;
   invoice: { number: string; date: string; amount: string; matches: boolean; difference: string } | null;
+  channels: Record<PaymentChannel, ChannelAmounts>;
   paid_amount: string;
   balance_due: string;
   payments: ValuationPayment[];
@@ -250,6 +290,17 @@ export type ValuationPayload = {
   period_end: string;
   materials_deduction: string;
   backcharges: string;
+  cash_percent: string;
+  comment: string;
+  lines: Array<{ subcontract_item_id: number; cumulative_quantity: string; location?: string }>;
+};
+
+export type OpeningPayload = {
+  last_sequence: string;
+  valuation_date: string;
+  period_end: string;
+  historical_works_amount: string;
+  cash_percent: string;
   comment: string;
   lines: Array<{ subcontract_item_id: number; cumulative_quantity: string }>;
 };

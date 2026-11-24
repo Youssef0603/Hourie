@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['valuation_id', 'subcontract_item_id', 'cumulative_quantity'])]
+#[Fillable(['valuation_id', 'subcontract_item_id', 'cumulative_quantity', 'location'])]
 class SubcontractValuationLine extends Model
 {
     public function valuation(): BelongsTo

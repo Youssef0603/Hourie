@@ -158,6 +158,8 @@
 .sc-calculation .subtotal { background: #f9fafb; }
 .sc-calculation .total { color: #fff; background: #14508c; }
 .sc-calculation .total span { color: rgb(255 255 255 / 75%); }
+.sc-calculation .muted { color: var(--color-text-muted); font-size: 0.8125rem; }
+.sc-table .sc-total-row td { background: #f9fafb; }
 
 .sc-list {
   display: grid;
@@ -322,6 +324,7 @@ button.sc-list-row:hover { border-color: var(--color-border-strong); box-shadow:
 .subcontract-editor:not(.valuation-editor) .sc-table td { padding-inline: 0.45rem; }
 .subcontract-editor:not(.valuation-editor) .sc-table input { min-width: 0; }
 .subcontract-editor:not(.valuation-editor) .sc-table input[type="number"] { width: 5.75rem; }
+.subcontract-editor .sc-table input[inputmode="decimal"] { width: 8.5rem; }
 .subcontract-editor:not(.valuation-editor) .sc-table td:has(> input.text:not(.unit)) { min-width: 8rem; }
 .sc-table input.unit { width: 3.75rem; }
 .sc-table td:has(> input.unit) { width: 4.25rem; min-width: 0; }
@@ -350,3 +353,10 @@ button.sc-list-row:hover { border-color: var(--color-border-strong); box-shadow:
 .valuation-editor .sc-invoice-note { margin-top: 0.6rem; }
 
 .subcontract-editor .sc-table-wrap + .sc-hint { margin-top: 0.75rem; }
+
+.sc-compact-table th, .sc-compact-table td { padding-inline: 0.5rem; font-size: 0.8125rem; }
+.sc-compact-table td.num { white-space: nowrap; }
+.sc-quantity-table input { width: 100%; min-width: 5.5rem; }
+.sc-quantity-table input.text { min-width: 8rem; }
+.sc-quantity-table tfoot td { background: #f9fafb; }
+.sc-sheet-action { justify-content: flex-start; margin: 0 0 0.75rem; }

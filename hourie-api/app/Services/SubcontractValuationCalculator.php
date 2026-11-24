@@ -15,12 +15,15 @@ use Illuminate\Support\Collection;
  * cumulative certified amount minus what earlier valuations certified.
  *
  *   works (cumulative)            = Σ cumulative quantity × unit price
+ *                                   + works certified before Hourie without a breakdown
  *   advance recovery (cumulative) = min(works × recovery %, advance received)
  *   retention (cumulative)        = works × retention %
  *   certified (cumulative)        = works − advance recovery − retention
- *   this valuation (before VAT)   = certified − previously certified
- *   VAT                           = VAT % × change in (works − advance recovery)
- *   net due                       = this valuation + VAT − materials − backcharges
+ *   net before VAT                = certified − previously certified − materials − backcharges
+ *   cash part                     = net before VAT × cash %
+ *   cheque part                   = net before VAT − cash part
+ *   VAT                           = VAT % × cheque part (cash carries no VAT)
+ *   net due                       = net before VAT + VAT
  */
 class SubcontractValuationCalculator
 {
@@ -53,7 +56,7 @@ class SubcontractValuationCalculator
                 BigDecimal::of((string) ($quantities[$item->id] ?? '0'))->multipliedBy((string) $item->unit_price),
             ),
             BigDecimal::zero(),
-        )->toScale(2, RoundingMode::HalfUp);
+        )->plus((string) $subcontract->historical_works_amount)->toScale(2, RoundingMode::HalfUp);
 
         $advanceRecovery = BigDecimal::min(
             $this->percentOf($works, $subcontract->advance_recovery_rate),
@@ -67,14 +70,10 @@ class SubcontractValuationCalculator
         $previouslyCertified = $previousWorks->minus($previousRecovery)->minus($previousRetention);
 
         $certified = $works->minus($advanceRecovery)->minus($retention);
-        $vat = $this->percentOf(
-            $works->minus($advanceRecovery)->minus($previousWorks->minus($previousRecovery)),
-            $subcontract->vat_rate,
-        );
-        $netDue = $certified->minus($previouslyCertified)
-            ->plus($vat)
+        $netBeforeVat = $certified->minus($previouslyCertified)
             ->minus((string) $valuation->materials_deduction)
             ->minus((string) $valuation->backcharges);
+        $split = SubcontractValuation::splitAmount($netBeforeVat, $valuation->cash_percent, $subcontract->vat_rate);
 
         $valuation->update([
             'works_cumulative' => (string) $works,
@@ -84,8 +83,10 @@ class SubcontractValuationCalculator
             'retention_cumulative' => (string) $retention,
             'retention_previous' => (string) $previousRetention,
             'previously_certified' => (string) $previouslyCertified->toScale(2, RoundingMode::HalfUp),
-            'vat_amount' => (string) $vat,
-            'net_due' => (string) $netDue->toScale(2, RoundingMode::HalfUp),
+            'cash_amount' => (string) $split['cash'],
+            'cheque_amount' => (string) $split['cheque'],
+            'vat_amount' => (string) $split['vat'],
+            'net_due' => (string) $split['net_due'],
         ]);
 
         return $valuation;

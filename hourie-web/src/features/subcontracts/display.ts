@@ -1,6 +1,6 @@
 import { operationPhrase } from "../../i18n/operations";
 import { formatMoney } from "../../shared/format";
-import type { MaterialInput, PaymentMethod, ValuationStatus } from "./types";
+import type { MaterialInput, PaymentChannel, PaymentMethod, ValuationKind, ValuationStatus } from "./types";
 
 export const valuationStatusLabels: Record<ValuationStatus, string> = {
   draft: "Brouillon",
@@ -16,6 +16,19 @@ export const paymentMethodLabels: Record<PaymentMethod, string> = {
   cash: "Espèces",
 };
 
+export const paymentChannelLabels: Record<PaymentChannel, string> = {
+  cash: "Espèces",
+  cheque: "Chèque / virement (HT)",
+  vat: "TVA",
+};
+
+/** Name of an entry in the list of situations: the advance and the opening balance read differently. */
+export function valuationTitle(valuation: { kind: ValuationKind; reference: string }) {
+  if (valuation.kind === "advance") return operationPhrase("Avance de démarrage");
+  if (valuation.kind === "opening") return operationPhrase("Reprise de l’historique");
+  return valuation.reference;
+}
+
 /** Status label in the active language, evaluated at render time. */
 export function valuationStatusLabel(status: ValuationStatus) {
   return operationPhrase(valuationStatusLabels[status]);
@@ -23,6 +36,13 @@ export function valuationStatusLabel(status: ValuationStatus) {
 
 export function money(value: string | number | null | undefined, currency = "XOF") {
   return formatMoney(value ?? 0, currency);
+}
+
+const amountFormatter = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
+
+/** Amount without the currency, for narrow tables whose header states it. */
+export function amount(value: string | number | null | undefined) {
+  return amountFormatter.format(Number(value ?? 0));
 }
 
 const quantityFormatter = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 3 });

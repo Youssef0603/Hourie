@@ -23,7 +23,7 @@ class SubcontractResource extends JsonResource
     {
         $items = $this->items;
         $valuations = $this->valuations;
-        $lastCertified = $valuations->filter(fn (SubcontractValuation $valuation) => $valuation->isCertified())->last();
+        $lastCertified = $valuations->filter(fn (SubcontractValuation $valuation) => $valuation->isCertified() && ! $valuation->isAdvance())->last();
         $executedQuantities = $lastCertified?->lines->pluck('cumulative_quantity', 'subcontract_item_id') ?? collect();
 
         $original = $this->sum($items, fn (SubcontractItem $item) => BigDecimal::of((string) $item->quantity)->multipliedBy((string) $item->unit_price));
@@ -32,6 +32,7 @@ class SubcontractResource extends JsonResource
         $paid = $this->sum($valuations, fn (SubcontractValuation $valuation) => $valuation->paidAmount());
         $toPay = $this->sum($valuations, fn (SubcontractValuation $valuation) => $valuation->balanceDue());
         $openValuation = $valuations->first(fn (SubcontractValuation $valuation) => ! $valuation->isCertified());
+        $channels = collect($this->resource->channelTotals())->map(fn (array $amounts) => array_map(fn (BigDecimal $amount) => $this->money($amount), $amounts))->all();
 
         return [
             'id' => $this->id,
@@ -45,6 +46,10 @@ class SubcontractResource extends JsonResource
             'retention_rate' => $this->retention_rate,
             'advance_amount' => $this->advance_amount,
             'advance_recovery_rate' => $this->advance_recovery_rate,
+            'cash_percent' => $this->cash_percent,
+            'recurring_deduction_label' => $this->recurring_deduction_label,
+            'recurring_deduction_amount' => $this->recurring_deduction_amount,
+            'historical_works_amount' => $this->historical_works_amount,
             'currency' => $this->currency,
             'notes' => $this->notes,
             'summary' => [
@@ -57,6 +62,8 @@ class SubcontractResource extends JsonResource
                 'to_pay_amount' => $this->money($toPay),
                 'retention_held' => (string) ($lastCertified?->retention_cumulative ?? '0.00'),
                 'advance_remaining' => $this->money(BigDecimal::of((string) $this->advance_amount)->minus((string) ($lastCertified?->advance_recovery_cumulative ?? '0'))),
+                'channels' => $channels,
+                'has_work_valuations' => $valuations->contains(fn (SubcontractValuation $valuation) => ! $valuation->isAdvance()),
                 'valuations_count' => $valuations->count(),
                 'open_valuation' => $openValuation?->only(['id', 'reference', 'status']),
             ],
@@ -99,6 +106,7 @@ class SubcontractResource extends JsonResource
             'valuations' => $valuations->map(fn (SubcontractValuation $valuation) => [
                 'id' => $valuation->id,
                 'reference' => $valuation->reference,
+                'kind' => $valuation->kind,
                 'status' => $valuation->status,
                 'valuation_date' => $valuation->valuation_date?->format('Y-m-d'),
                 'period_end' => $valuation->period_end?->format('Y-m-d'),
@@ -106,7 +114,7 @@ class SubcontractResource extends JsonResource
                 'paid_amount' => $this->money($valuation->paidAmount()),
                 'balance_due' => $this->money($valuation->balanceDue()),
                 'invoice_amount' => $valuation->invoice_amount,
-                'invoice_matches' => $valuation->invoice_amount !== null && BigDecimal::of((string) $valuation->invoice_amount)->isEqualTo((string) $valuation->net_due),
+                'invoice_matches' => $valuation->invoice_amount !== null && $valuation->invoiceExpectedAmount()->isEqualTo((string) $valuation->invoice_amount),
             ])->values(),
             'created_at' => $this->created_at?->toISOString(),
         ];

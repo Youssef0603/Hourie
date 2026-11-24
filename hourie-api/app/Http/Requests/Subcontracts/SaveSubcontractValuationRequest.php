@@ -21,10 +21,12 @@ class SaveSubcontractValuationRequest extends FormRequest
             'period_end' => ['required', 'date_format:Y-m-d'],
             'materials_deduction' => ['required', 'numeric', 'min:0', 'max:9999999999999'],
             'backcharges' => ['required', 'numeric', 'min:0', 'max:9999999999999'],
+            'cash_percent' => ['sometimes', 'numeric', 'min:0', 'max:100'],
             'comment' => ['nullable', 'string', 'max:5000'],
             'lines' => ['present', 'array', 'max:200'],
             'lines.*.subcontract_item_id' => ['required', 'integer'],
             'lines.*.cumulative_quantity' => ['required', 'numeric', 'min:0', 'max:999999999999'],
+            'lines.*.location' => ['nullable', 'string', 'max:255'],
         ];
     }
 }

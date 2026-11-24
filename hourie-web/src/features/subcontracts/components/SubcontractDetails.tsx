@@ -3,8 +3,9 @@ import { DocumentRow } from "../../../shared/components/DocumentRow";
 import { openDocument } from "../../../shared/documents";
 import { formatDate } from "../../../shared/format";
 import { localized, operationPhrase } from "../../../i18n/operations";
-import { money, percent, quantity, valuationStatusLabel } from "../display";
-import type { MaterialCheckStatus, Subcontract } from "../types";
+import { amount, money, paymentChannelLabels, percent, quantity, valuationStatusLabel, valuationTitle } from "../display";
+import { valuationSheetUrl } from "../api";
+import type { MaterialCheckStatus, PaymentChannel, Subcontract } from "../types";
 
 const materialStatusLabels: Record<MaterialCheckStatus, string> = {
   ok: "Conforme",
@@ -12,7 +13,7 @@ const materialStatusLabels: Record<MaterialCheckStatus, string> = {
   shortfall: "Achats insuffisants",
 };
 
-export function SubcontractDetails({ subcontract, canManage, error, onClose, onEdit, onDelete, onNewVariation, onOpenValuation }: {
+export function SubcontractDetails({ subcontract, canManage, error, onClose, onEdit, onDelete, onNewVariation, onOpenValuation, onOpening }: {
   subcontract: Subcontract;
   canManage: boolean;
   /** Message to show at the top of the panel, e.g. a refused deletion. */
@@ -23,9 +24,12 @@ export function SubcontractDetails({ subcontract, canManage, error, onClose, onE
   onNewVariation: () => void;
   /** null opens a new valuation. */
   onOpenValuation: (valuationId: number | null) => void;
+  /** Opens the opening balance form of a contract that started before Hourie. */
+  onOpening: () => void;
 }) {
   const { summary, currency } = { summary: subcontract.summary, currency: subcontract.currency };
   const openValuation = summary.open_valuation;
+  const channels = (["cash", "cheque", "vat"] as PaymentChannel[]).filter((channel) => Number(summary.channels[channel].due) > 0);
 
   return (
     <div className="detail-backdrop" onMouseDown={onClose}>
@@ -45,6 +49,7 @@ export function SubcontractDetails({ subcontract, canManage, error, onClose, onE
               {openValuation
                 ? <button className="equipment-edit-button detail-toolbar-button" type="button" onClick={() => onOpenValuation(openValuation.id)}><ActionIcon name="edit" /> {operationPhrase("Situation en cours")}</button>
                 : <button className="equipment-edit-button detail-toolbar-button" type="button" onClick={() => onOpenValuation(null)}><ActionIcon name="add" /> {operationPhrase("Nouvelle situation")}</button>}
+              {!summary.has_work_valuations && <button className="detail-toolbar-button" type="button" title={operationPhrase("Pour un contrat commencé avant Hourie")} onClick={onOpening}><ActionIcon name="history" /> {operationPhrase("Reprise de l’historique")}</button>}
               <button className="detail-toolbar-button" type="button" onClick={onNewVariation}><ActionIcon name="note" /> {operationPhrase("Avenant")}</button>
               <button className="detail-toolbar-button" type="button" onClick={onEdit}><ActionIcon name="edit" /> {operationPhrase("Modifier")}</button>
               <button className="danger-button detail-delete-button" type="button" aria-label={operationPhrase("Supprimer le contrat")} title={operationPhrase("Supprimer le contrat")} onClick={onDelete}><ActionIcon name="delete" /></button>
@@ -72,8 +77,38 @@ export function SubcontractDetails({ subcontract, canManage, error, onClose, onE
               <div><dt>{operationPhrase("Reste à payer")}</dt><dd>{money(summary.to_pay_amount, currency)}</dd></div>
               <div><dt>{localized(`Retenue détenue (taux ${Number(subcontract.retention_rate)} %)`, `محتجز الضمان المحتفَظ به (بنسبة ${Number(subcontract.retention_rate)} %)`)}</dt><dd>{money(summary.retention_held, currency)}</dd></div>
               <div><dt>{operationPhrase("Avance à récupérer")}</dt><dd>{money(summary.advance_remaining, currency)}</dd></div>
+              {Number(subcontract.cash_percent) > 0 && <div><dt>{operationPhrase("Part payée en espèces")}</dt><dd>{Number(subcontract.cash_percent)} %</dd></div>}
             </dl>
           </section>
+
+          {channels.length > 1 && (
+            <section>
+              <h3><ActionIcon name="invoice" /> {operationPhrase("Suivi des règlements")}</h3>
+              <p className="sc-hint">{operationPhrase("Avance, reprise et situations approuvées, par mode de règlement.")}</p>
+              <div className="sc-table-wrap">
+                <table className="sc-table sc-compact-table">
+                  <thead><tr><th>{operationPhrase("Mode")}</th><th className="num">{operationPhrase("À payer")}</th><th className="num">{operationPhrase("Payé")}</th><th className="num">{operationPhrase("Reste")}</th></tr></thead>
+                  <tbody>
+                    {channels.map((channel) => (
+                      <tr key={channel}>
+                        <td>{operationPhrase(paymentChannelLabels[channel])}</td>
+                        <td className="num">{amount(summary.channels[channel].due)}</td>
+                        <td className="num">{amount(summary.channels[channel].paid)}</td>
+                        <td className="num"><strong>{amount(summary.channels[channel].balance)}</strong></td>
+                      </tr>
+                    ))}
+                    <tr className="sc-total-row">
+                      <td><strong>{operationPhrase("Total")}</strong></td>
+                      <td className="num"><strong>{amount(channels.reduce((total, channel) => total + Number(summary.channels[channel].due), 0))}</strong></td>
+                      <td className="num"><strong>{amount(summary.paid_amount)}</strong></td>
+                      <td className="num"><strong>{amount(summary.to_pay_amount)}</strong></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <p className="sc-hint">{localized(`Montants en ${currency === "XOF" ? "F CFA" : currency}.`, `المبالغ بـ ${currency === "XOF" ? "فرنك CFA" : currency}.`)}</p>
+            </section>
+          )}
 
           <section>
             <h3><ActionIcon name="invoice" /> {operationPhrase("Bordereau")}</h3>
@@ -154,13 +189,20 @@ export function SubcontractDetails({ subcontract, canManage, error, onClose, onE
 
           <section>
             <h3><ActionIcon name="history" /> {operationPhrase("Situations")}</h3>
+            <div className="sc-actions sc-sheet-action">
+              <button className="secondary-button" type="button" title={operationPhrase("La prochaine situation à remplir sur chantier, avec tout l’historique du contrat")} onClick={() => openDocument(valuationSheetUrl(subcontract.id))}><ActionIcon name="download" /> {operationPhrase("Fiche de situation (PDF)")}</button>
+            </div>
             {subcontract.valuations.length === 0 ? <p className="muted">{operationPhrase("Aucune situation pour l’instant.")}</p> : (
               <div className="sc-list">
                 {[...subcontract.valuations].reverse().map((valuation) => (
                   <button className="sc-list-row" type="button" key={valuation.id} onClick={() => onOpenValuation(valuation.id)}>
                     <div>
-                      <strong>{valuation.reference}</strong>
-                      <small>{localized(`Jusqu’au ${formatDate(valuation.period_end, { style: "medium" })}`, `حتى ${formatDate(valuation.period_end, { style: "medium" })}`)}{valuation.invoice_amount !== null ? ` · ${operationPhrase(valuation.invoice_matches ? "Facture conforme" : "Écart sur facture")}` : ""}{valuation.status === "partially_paid" ? ` · ${localized(`Reste ${money(valuation.balance_due, currency)}`, `المتبقي ${money(valuation.balance_due, currency)}`)}` : ""}</small>
+                      <strong>{valuationTitle(valuation)}</strong>
+                      <small>{valuation.kind === "advance"
+                        ? formatDate(valuation.valuation_date, { style: "medium" })
+                        : valuation.kind === "opening"
+                          ? localized(`Situations papier jusqu’au ${formatDate(valuation.period_end, { style: "medium" })}`, `الكشوف الورقية حتى ${formatDate(valuation.period_end, { style: "medium" })}`)
+                          : localized(`Jusqu’au ${formatDate(valuation.period_end, { style: "medium" })}`, `حتى ${formatDate(valuation.period_end, { style: "medium" })}`)}{valuation.invoice_amount !== null ? ` · ${operationPhrase(valuation.invoice_matches ? "Facture conforme" : "Écart sur facture")}` : ""}{valuation.status === "partially_paid" ? ` · ${localized(`Reste ${money(valuation.balance_due, currency)}`, `المتبقي ${money(valuation.balance_due, currency)}`)}` : ""}</small>
                     </div>
                     <b>{money(valuation.net_due, currency)}</b>
                     <em className={`valuation-status ${valuation.invoice_amount !== null && !valuation.invoice_matches ? "warning" : valuation.status}`}>{valuationStatusLabel(valuation.status)}</em>

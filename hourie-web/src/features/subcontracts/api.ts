@@ -1,6 +1,7 @@
 import { apiRequest, initializeCsrfProtection } from "../../shared/api/http";
 import type { PaginatedResponse } from "../../shared/api/pagination";
 import type {
+  OpeningPayload,
   Subcontract,
   SubcontractPayload,
   SubcontractValuation,
@@ -56,7 +57,12 @@ export async function saveValuation(payload: ValuationPayload, target: { subcont
 
 export type ValuationAction = "submit" | "return-to-draft" | "approve";
 
-export type PaymentPayload = { amount: string; paid_on: string; method: string; reference: string };
+export type PaymentPayload = { amount: string; vat_amount: string; paid_on: string; method: string; reference: string };
+
+/** Opening balance of a contract that started before Hourie. */
+export async function saveOpening(subcontractId: number, payload: OpeningPayload) {
+  return (await send<{ data: SubcontractValuation }>(`/api/v1/subcontracts/${subcontractId}/opening`, "POST", payload)).data;
+}
 
 export async function recordValuationPayment(id: number, payment: PaymentPayload) {
   return (await send<{ data: SubcontractValuation }>(`/api/v1/subcontract-valuations/${id}/payments`, "POST", payment)).data;
@@ -64,6 +70,16 @@ export async function recordValuationPayment(id: number, payment: PaymentPayload
 
 export async function deleteValuationPayment(id: number, paymentId: number) {
   return (await send<{ data: SubcontractValuation }>(`/api/v1/subcontract-valuations/${id}/payments/${paymentId}`, "DELETE")).data;
+}
+
+/** Sheet for the next situation, pre-filled with the contract history, to fill in on site. */
+export function valuationSheetUrl(subcontractId: number) {
+  return `/api/v1/subcontracts/${subcontractId}/valuation-sheet`;
+}
+
+/** The company's standard situation document (PDF). */
+export function valuationPdfUrl(id: number) {
+  return `/api/v1/subcontract-valuations/${id}/pdf`;
 }
 
 export async function runValuationAction(id: number, action: ValuationAction) {

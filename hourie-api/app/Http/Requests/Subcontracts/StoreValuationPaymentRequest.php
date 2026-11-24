@@ -21,7 +21,8 @@ class StoreValuationPaymentRequest extends FormRequest
         return [
             'amount' => ['required', 'numeric', 'gt:0', 'max:9999999999999', 'decimal:0,2'],
             'paid_on' => ['required', 'date_format:Y-m-d', 'before_or_equal:today'],
-            'method' => ['nullable', 'string', Rule::in(SubcontractValuationPayment::METHODS)],
+            'vat_amount' => ['nullable', 'numeric', 'min:0', 'lte:amount', 'decimal:0,2'],
+            'method' => ['required', 'string', Rule::in(SubcontractValuationPayment::METHODS)],
             'reference' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string', 'max:500'],
         ];

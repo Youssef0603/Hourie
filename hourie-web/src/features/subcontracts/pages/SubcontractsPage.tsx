@@ -12,6 +12,7 @@ import { deleteSubcontract, getSubcontract, getSubcontracts } from "../api";
 import { apiErrorMessage } from "../../../shared/api/errors";
 import { SubcontractDetails } from "../components/SubcontractDetails";
 import { SubcontractForm } from "../components/SubcontractForm";
+import { OpeningForm } from "../components/OpeningForm";
 import { ValuationPanel } from "../components/ValuationPanel";
 import { VariationForm } from "../components/VariationForm";
 import { money, valuationStatusLabel } from "../display";
@@ -22,6 +23,7 @@ import "./subcontracts-page.css";
 type Editor =
   | { kind: "subcontract"; subcontract?: Subcontract }
   | { kind: "variation" }
+  | { kind: "opening" }
   | { kind: "valuation"; valuationId: number | null };
 
 export function SubcontractsPage({ canManage, projects, initialSubcontractId = null, onSelect }: {
@@ -168,6 +170,7 @@ export function SubcontractsPage({ canManage, projects, initialSubcontractId = n
           onDelete={() => void remove(selected)}
           onNewVariation={() => setEditor({ kind: "variation" })}
           onOpenValuation={(valuationId) => setEditor({ kind: "valuation", valuationId })}
+          onOpening={() => setEditor({ kind: "opening" })}
         />
       )}
 
@@ -184,6 +187,13 @@ export function SubcontractsPage({ canManage, projects, initialSubcontractId = n
           subcontract={selected}
           onClose={() => setEditor(null)}
           onSaved={(subcontract) => { setEditor(null); afterChange(subcontract); }}
+        />
+      )}
+      {editor?.kind === "opening" && selected && (
+        <OpeningForm
+          subcontract={selected}
+          onClose={() => setEditor(null)}
+          onSaved={(opening) => { setEditor({ kind: "valuation", valuationId: opening.id }); afterChange(); }}
         />
       )}
       {editor?.kind === "valuation" && selected && (

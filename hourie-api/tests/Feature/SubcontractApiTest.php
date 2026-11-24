@@ -253,10 +253,12 @@ it('pays a valuation in several transfers and tracks what is still owed', functi
         ->assertJsonPath('data.balance_due', '12000000.00')
         ->assertJsonPath('data.payments.0.reference', 'VIR-0001');
 
+    // What is still owed on the contract includes the 13 500 000 advance, not paid yet.
     $summary = $this->getJson("/api/v1/subcontracts/{$subcontract['id']}")->json('data');
     expect($summary['summary']['paid_amount'])->toBe('20000000.00')
-        ->and($summary['summary']['to_pay_amount'])->toBe('12000000.00')
-        ->and($summary['valuations'][0]['balance_due'])->toBe('12000000.00');
+        ->and($summary['summary']['to_pay_amount'])->toBe('25500000.00')
+        ->and($summary['valuations'][0]['kind'])->toBe('advance')
+        ->and($summary['valuations'][1]['balance_due'])->toBe('12000000.00');
 
     recordPayment($valuation['id'], 12000001, ['reference' => 'VIR-0002'])
         ->assertUnprocessable()
@@ -270,7 +272,7 @@ it('pays a valuation in several transfers and tracks what is still owed', functi
 
     $summary = $this->getJson("/api/v1/subcontracts/{$subcontract['id']}")->json('data.summary');
     expect($summary['paid_amount'])->toBe('32000000.00')
-        ->and($summary['to_pay_amount'])->toBe('0.00')
+        ->and($summary['to_pay_amount'])->toBe('13500000.00')
         ->and($summary['retention_held'])->toBe('4000000.00');
 });
 
@@ -411,4 +413,23 @@ it('compares the materials ARH bought with what the executed work needed', funct
 
     $otherSite = Project::factory()->create(['code' => '815', 'name' => 'Bassam']);
     $this->postJson('/api/v1/purchase-orders', steelPurchaseOrder($otherSite->id, $materialId, 10))->assertUnprocessable()->assertJsonValidationErrors('items.0.subcontract_item_material_id');
+});
+
+it('prints the standard situation PDF with where the work was done', function () {
+    $subcontract = createSteelSubcontract(['recurring_deduction_label' => 'Coupe pavé', 'recurring_deduction_amount' => 25000]);
+    expect($subcontract['recurring_deduction_label'])->toBe('Coupe pavé')
+        ->and($subcontract['recurring_deduction_amount'])->toBe('25000.00');
+
+    $valuation = saveValuation($subcontract['id'], $subcontract['items'][0]['id'], 200, [
+        'backcharges' => 25000,
+        'lines' => [['subcontract_item_id' => $subcontract['items'][0]['id'], 'cumulative_quantity' => 200, 'location' => 'Dalles R+1']],
+    ])->assertCreated()->json('data');
+
+    expect($valuation['lines'][0]['location'])->toBe('Dalles R+1')
+        ->and($valuation['lines'][0]['period_amount'])->toBe('40000000.00');
+
+    $response = $this->get("/api/v1/subcontract-valuations/{$valuation['id']}/pdf?preview=1")->assertOk();
+    expect($response->headers->get('Content-Type'))->toBe('application/pdf')
+        ->and($response->headers->get('Content-Disposition'))->toContain('inline; filename="Situation_SC-821-26-01-SIT-01_FERRAILLAGE_ABIDJAN.pdf"')
+        ->and(substr((string) $response->getContent(), 0, 4))->toBe('%PDF');
 });

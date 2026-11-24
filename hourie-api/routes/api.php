@@ -64,7 +64,11 @@ Route::prefix('v1')->middleware(['auth:sanctum', EnsureUserIsActive::class, Ensu
     Route::apiResource('subcontracts', SubcontractController::class)->only(['index', 'store', 'show', 'update', 'destroy']);
     Route::post('subcontracts/{subcontract}/variations', [SubcontractVariationController::class, 'store']);
     Route::post('subcontracts/{subcontract}/valuations', [SubcontractValuationController::class, 'store']);
+    Route::get('subcontracts/{subcontract}/valuation-sheet', [SubcontractController::class, 'valuationSheet']);
+    Route::post('subcontracts/{subcontract}/opening', [SubcontractValuationController::class, 'storeOpening']);
     Route::get('subcontract-valuations/{valuation}', [SubcontractValuationController::class, 'show']);
+    Route::get('subcontract-valuations/{valuation}/pdf', [SubcontractValuationController::class, 'pdf'])
+        ->name('subcontract-valuations.pdf');
     Route::put('subcontract-valuations/{valuation}', [SubcontractValuationController::class, 'update']);
     Route::delete('subcontract-valuations/{valuation}', [SubcontractValuationController::class, 'destroy']);
     Route::post('subcontract-valuations/{valuation}/submit', [SubcontractValuationController::class, 'submit']);

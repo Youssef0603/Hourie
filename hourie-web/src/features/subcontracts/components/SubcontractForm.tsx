@@ -1,3 +1,4 @@
+import { AmountInput } from "../../../shared/components/AmountInput";
 import { useEffect, useState, type FormEvent } from "react";
 import { apiErrorMessage } from "../../../shared/api/errors";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
@@ -18,7 +19,7 @@ function initialState(subcontract?: Subcontract): Omit<SubcontractPayload, "item
   if (!subcontract) {
     return {
       subcontractor_id: null, project_id: null, title: "", signed_on: new Date().toISOString().slice(0, 10),
-      vat_rate: "0", retention_rate: "10", advance_amount: "0", advance_recovery_rate: "0", currency: "XOF", notes: "",
+      vat_rate: "0", retention_rate: "10", advance_amount: "0", advance_recovery_rate: "0", cash_percent: "0", recurring_deduction_label: "", recurring_deduction_amount: "0", currency: "XOF", notes: "",
       items: [emptyItem()],
     };
   }
@@ -31,6 +32,9 @@ function initialState(subcontract?: Subcontract): Omit<SubcontractPayload, "item
     retention_rate: String(Number(subcontract.retention_rate)),
     advance_amount: String(Number(subcontract.advance_amount)),
     advance_recovery_rate: String(Number(subcontract.advance_recovery_rate)),
+    cash_percent: String(Number(subcontract.cash_percent)),
+    recurring_deduction_label: subcontract.recurring_deduction_label ?? "",
+    recurring_deduction_amount: String(Number(subcontract.recurring_deduction_amount)),
     currency: subcontract.currency,
     notes: subcontract.notes ?? "",
     items: subcontract.items.map((item) => ({
@@ -57,7 +61,7 @@ export function SubcontractForm({ subcontract, projects, onClose, onSaved }: {
   const [saving, setSaving] = useState(false);
   const [nextCode, setNextCode] = useState<{ site_code: string; next_sequence: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const itemsLocked = Boolean(subcontract && (subcontract.valuations.length > 0 || (subcontract.variations?.length ?? 0) > 0));
+  const itemsLocked = Boolean(subcontract && (subcontract.summary.has_work_valuations || (subcontract.variations?.length ?? 0) > 0));
   const total = form.items.reduce((sum, item) => sum + Number(item.quantity || 0) * Number(item.unit_price || 0), 0);
 
   useEffect(() => {
@@ -102,6 +106,7 @@ export function SubcontractForm({ subcontract, projects, onClose, onSaved }: {
     try {
       const saved = await saveSubcontract({
         ...form,
+        recurring_deduction_amount: form.recurring_deduction_amount || "0",
         items: form.items.map(({ key: _key, code: _code, materials, ...item }) => ({
           ...item,
           materials: materials.map(({ key: _materialKey, ...material }) => material),
@@ -148,9 +153,13 @@ export function SubcontractForm({ subcontract, projects, onClose, onSaved }: {
             <div className="maintenance-form-grid asset-form-grid-2">
               <label><span>{operationPhrase("Retenue de garantie (%)")}</span><input required type="number" min="0" max="100" step="0.01" value={form.retention_rate} onChange={(event) => update("retention_rate", event.target.value)} /></label>
               <label><span>{operationPhrase("TVA (%)")}</span><input required type="number" min="0" max="100" step="0.01" value={form.vat_rate} onChange={(event) => update("vat_rate", event.target.value)} /></label>
-              <label><span>{operationPhrase("Avance versée (F CFA)")}</span><input required type="number" min="0" step="1" value={form.advance_amount} onChange={(event) => update("advance_amount", event.target.value)} /></label>
+              <label><span>{operationPhrase("Avance versée (F CFA)")}</span><AmountInput required value={form.advance_amount} onChange={(amount) => update("advance_amount", amount)} /></label>
               <label><span>{operationPhrase("Récupération de l’avance (% par situation)")}</span><input required type="number" min="0" max="100" step="0.01" value={form.advance_recovery_rate} onChange={(event) => update("advance_recovery_rate", event.target.value)} /></label>
+              <label><span>{operationPhrase("Part payée en espèces (%)")}</span><input required type="number" min="0" max="100" step="0.01" value={form.cash_percent} onChange={(event) => update("cash_percent", event.target.value)} /></label>
+              <label><span>{operationPhrase("Retenue fixe à chaque situation (F CFA)")}</span><AmountInput value={form.recurring_deduction_amount} onChange={(amount) => update("recurring_deduction_amount", amount)} /></label>
+              <label><span>{operationPhrase("Motif de la retenue fixe")}</span><input value={form.recurring_deduction_label} placeholder={operationPhrase("Ex. Coupe pavé")} onChange={(event) => update("recurring_deduction_label", event.target.value)} /></label>
             </div>
+            <p className="sc-hint">{operationPhrase("La TVA ne s’applique qu’à la part payée par chèque ou virement. Laissez 0 % si tout est payé par chèque ou virement.")}</p>
           </InventoryFormSection>
 
           <InventoryFormSection title={operationPhrase("Bordereau des prix")} icon="invoice">
@@ -165,7 +174,7 @@ export function SubcontractForm({ subcontract, projects, onClose, onSaved }: {
                       <td><input className="text" required aria-label={localized(`Désignation ligne ${index + 1}`, `وصف البند ${index + 1}`)} disabled={itemsLocked} value={item.description} onChange={(event) => updateItem(item.key, "description", event.target.value)} /></td>
                       <td><input className="text unit" required aria-label={localized(`Unité ligne ${index + 1}`, `وحدة البند ${index + 1}`)} placeholder="m³, t, m²…" disabled={itemsLocked} value={item.unit} onChange={(event) => updateItem(item.key, "unit", event.target.value)} /></td>
                       <td><input required type="number" min="0.001" step="0.001" aria-label={localized(`Quantité ligne ${index + 1}`, `كمية البند ${index + 1}`)} disabled={itemsLocked} value={item.quantity} onChange={(event) => updateItem(item.key, "quantity", event.target.value)} /></td>
-                      <td><input required type="number" min="0" step="0.01" aria-label={localized(`Prix unitaire ligne ${index + 1}`, `سعر الوحدة للبند ${index + 1}`)} disabled={itemsLocked} value={item.unit_price} onChange={(event) => updateItem(item.key, "unit_price", event.target.value)} /></td>
+                      <td><AmountInput required aria-label={localized(`Prix unitaire ligne ${index + 1}`, `سعر الوحدة للبند ${index + 1}`)} disabled={itemsLocked} value={item.unit_price} onChange={(amount) => updateItem(item.key, "unit_price", amount)} /></td>
                       <td>{!itemsLocked && <button className="remove-line" type="button" aria-label={localized(`Supprimer la ligne ${index + 1}`, `حذف البند ${index + 1}`)} disabled={form.items.length === 1} onClick={() => update("items", form.items.filter((candidate) => candidate.key !== item.key))}><ActionIcon name="delete" /></button>}</td>
                     </tr>
                   ))}

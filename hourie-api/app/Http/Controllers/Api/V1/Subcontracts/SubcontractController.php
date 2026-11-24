@@ -12,6 +12,7 @@ use App\Models\SubcontractItemMaterial;
 use App\Models\SubcontractValuation;
 use App\Services\SubcontractItemCodeGenerator;
 use App\Services\SubcontractReferenceGenerator;
+use App\Services\SubcontractValuationPdfService;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -58,6 +59,7 @@ class SubcontractController extends Controller
                 'created_by_user_id' => $request->user()->id,
             ]);
             $this->syncItems($subcontract, $items);
+            $subcontract->syncAdvanceEntry($request->user()->id);
 
             return $subcontract;
         });
@@ -103,6 +105,20 @@ class SubcontractController extends Controller
         return response()->json(['data' => $materials]);
     }
 
+    /** Sheet for the next situation, pre-filled with the contract's history, to fill in on site. */
+    public function valuationSheet(Request $request, Subcontract $subcontract, SubcontractValuationPdfService $pdfService): Response
+    {
+        $filename = $pdfService->blankFilename($subcontract);
+        $disposition = $request->boolean('preview') ? 'inline' : 'attachment';
+
+        return response($pdfService->renderBlank($subcontract), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => "{$disposition}; filename=\"{$filename}\"",
+            'Cache-Control' => 'private, no-store',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+    }
+
     public function show(Subcontract $subcontract): SubcontractResource
     {
         return new SubcontractResource($this->loadDetails($subcontract));
@@ -126,6 +142,7 @@ class SubcontractController extends Controller
             } else {
                 $this->syncMaterialSettings($subcontract, $items);
             }
+            $subcontract->syncAdvanceEntry($request->user()->id);
         });
 
         return new SubcontractResource($this->loadDetails($subcontract->fresh()));
@@ -133,13 +150,16 @@ class SubcontractController extends Controller
 
     /**
      * A contract can be removed while it only has drafts; once a valuation is
-     * approved or paid it is part of the financial record and must be kept.
+     * approved or anything has been paid it is part of the financial record.
      */
     public function destroy(Request $request, Subcontract $subcontract): Response
     {
         abort_unless($request->user()?->role->canManageSubcontracts(), 403);
 
-        if ($subcontract->valuations()->whereIn('status', SubcontractValuation::CERTIFIED_STATUSES)->exists()) {
+        $hasCertifiedWork = $subcontract->workValuations()->whereIn('status', SubcontractValuation::CERTIFIED_STATUSES)->exists();
+        $hasPayments = $subcontract->valuations()->whereHas('payments')->exists();
+
+        if ($hasCertifiedWork || $hasPayments) {
             throw ValidationException::withMessages(['subcontract' => [__('validation.subcontract_has_certified_valuations')]]);
         }
 
@@ -155,7 +175,7 @@ class SubcontractController extends Controller
 
     private function itemsAreLocked(Subcontract $subcontract): bool
     {
-        return $subcontract->variations()->exists() || $subcontract->valuations()->exists();
+        return $subcontract->variations()->exists() || $subcontract->workValuations()->exists();
     }
 
     /**

@@ -1,3 +1,4 @@
+import { AmountInput } from "../../../shared/components/AmountInput";
 import { useEffect, useState, type FormEvent } from "react";
 import { apiErrorMessage } from "../../../shared/api/errors";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
@@ -126,7 +127,7 @@ export function VariationForm({ subcontract, onClose, onSaved }: {
                         <td><input className="text" required aria-label={localized(`Désignation nouvel article ${index + 1}`, `وصف البند الجديد ${index + 1}`)} value={item.description} onChange={(event) => updateNewItem(item.key, "description", event.target.value)} /></td>
                         <td><input className="text unit" required aria-label={localized(`Unité nouvel article ${index + 1}`, `وحدة البند الجديد ${index + 1}`)} value={item.unit} onChange={(event) => updateNewItem(item.key, "unit", event.target.value)} /></td>
                         <td><input required type="number" min="0.001" step="0.001" aria-label={localized(`Quantité nouvel article ${index + 1}`, `كمية البند الجديد ${index + 1}`)} value={item.quantity} onChange={(event) => updateNewItem(item.key, "quantity", event.target.value)} /></td>
-                        <td><input required type="number" min="0" step="0.01" aria-label={localized(`Prix nouvel article ${index + 1}`, `سعر البند الجديد ${index + 1}`)} value={item.unit_price} onChange={(event) => updateNewItem(item.key, "unit_price", event.target.value)} /></td>
+                        <td><AmountInput required aria-label={localized(`Prix nouvel article ${index + 1}`, `سعر البند الجديد ${index + 1}`)} value={item.unit_price} onChange={(amount) => updateNewItem(item.key, "unit_price", amount)} /></td>
                         <td><button className="remove-line" type="button" aria-label={localized(`Retirer le nouvel article ${index + 1}`, `إزالة البند الجديد ${index + 1}`)} onClick={() => setNewItems((current) => current.filter((candidate) => candidate.key !== item.key))}><ActionIcon name="delete" /></button></td>
                       </tr>
                     ))}
