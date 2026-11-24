@@ -1,3 +1,4 @@
+import { AmountInput } from "./AmountInput";
 import { useRef, useState } from "react";
 import { ActionIcon } from "./ActionIcon";
 import { DocumentUploadDropzone } from "./DocumentUploadDropzone";
@@ -70,7 +71,7 @@ export function InvoiceEntryForm({ initial, amountLabel = operationPhrase("Monta
       <div className="invoice-entry-fields">
         <label><span>{operationPhrase("N° de facture *")}</span><input ref={numberInput} aria-invalid={missing.includes("number")} value={invoice.number} onChange={(event) => change({ number: event.target.value })} /></label>
         <label><span>{operationPhrase("Date")}</span><input type="date" value={invoice.date} onChange={(event) => change({ date: event.target.value })} /></label>
-        <label><span>{amountLabel} *</span><input ref={amountInput} aria-invalid={missing.includes("amount")} type="number" min="0" step="1" value={invoice.amount} onChange={(event) => change({ amount: event.target.value })} /></label>
+        <label><span>{amountLabel} *</span><AmountInput ref={amountInput} aria-invalid={missing.includes("amount")} value={invoice.amount} onChange={(amount) => change({ amount })} /></label>
       </div>
       {invoice.file ? (
         <div className="pending-file">
