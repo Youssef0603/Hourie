@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
-#[Signature('users:create {--role=viewer : Internal role: manager, cms_manager, generator_manager, or viewer}')]
+#[Signature('users:create {--role=viewer : Internal role: manager, cms_manager, or viewer}')]
 #[Description('Create an internal Hourie user account')]
 class CreateUserCommand extends Command
 {
@@ -33,7 +33,7 @@ class CreateUserCommand extends Command
             'username' => ['required', 'string', 'min:3', 'max:50', 'regex:/^[a-z0-9._-]+$/', 'unique:users,username'],
             'email' => ['nullable', 'string', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:12', 'confirmed'],
-            'role' => ['required', Rule::enum(UserRole::class)],
+            'role' => ['required', Rule::enum(UserRole::class)->except(UserRole::GeneratorManager)],
         ]);
 
         if ($validator->fails()) {

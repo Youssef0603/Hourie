@@ -1,12 +1,11 @@
 import { fr } from "../../../i18n/fr";
-import { localized, operationPhrase } from "../../../i18n/operations";
+import { operationPhrase } from "../../../i18n/operations";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
 import { SearchableSelect } from "../../../shared/components/SearchableSelect";
 import { catalogLabel, catalogOptions } from "../../equipment/catalogs";
 import type { CatalogOption, NamedReference } from "../../equipment/types";
 
 export type AccessFilter = "" | "with_access" | "without_access";
-export type ActivityFilter = "" | "active" | "inactive";
 export type RoleFilter =
   "" | "manager" | "cms_manager" | "generator_manager" | "viewer";
 
@@ -14,18 +13,13 @@ type PeopleFilterDrawerProps = {
   accessFilter: AccessFilter;
   roleFilter: RoleFilter;
   jobTitleFilter: string;
-  activityFilter: ActivityFilter;
   projectFilter: string;
-  companyLocationFilter: string;
   catalogs?: CatalogOption[];
   projects?: NamedReference[];
-  companyLocations?: NamedReference[];
   onAccessChange: (value: AccessFilter) => void;
   onRoleChange: (value: RoleFilter) => void;
   onJobTitleChange: (value: string) => void;
-  onActivityChange: (value: ActivityFilter) => void;
   onProjectChange: (value: string) => void;
-  onCompanyLocationChange: (value: string) => void;
   onClose: () => void;
 };
 
@@ -33,18 +27,13 @@ export function PeopleFilterDrawer({
   accessFilter,
   roleFilter,
   jobTitleFilter,
-  activityFilter,
   projectFilter,
-  companyLocationFilter,
   catalogs,
   projects,
-  companyLocations,
   onAccessChange,
   onRoleChange,
   onJobTitleChange,
-  onActivityChange,
   onProjectChange,
-  onCompanyLocationChange,
   onClose,
 }: PeopleFilterDrawerProps) {
   return (
@@ -89,7 +78,7 @@ export function PeopleFilterDrawer({
                   value={roleFilter}
                   onChange={(value) => onRoleChange(value as RoleFilter)}
                   placeholder={fr.common.all}
-                  options={Object.entries(fr.roles).map(([value, label]) => ({
+                  options={Object.entries(fr.roles).filter(([value]) => value !== "generator_manager").map(([value, label]) => ({
                     value,
                     label,
                   }))}
@@ -119,34 +108,6 @@ export function PeopleFilterDrawer({
                     value: String(project.id),
                     label: project.name,
                   }))}
-                />
-              </label>
-              <label>
-                <span>{fr.equipment.location}</span>
-                <SearchableSelect
-                  ariaLabel={fr.equipment.location}
-                  value={companyLocationFilter}
-                  onChange={onCompanyLocationChange}
-                  placeholder={fr.common.all}
-                  options={(companyLocations ?? []).map((location) => ({
-                    value: String(location.id),
-                    label: location.name,
-                  }))}
-                />
-              </label>
-              <label>
-                <span>{operationPhrase("État")}</span>
-                <SearchableSelect
-                  ariaLabel={operationPhrase("État")}
-                  value={activityFilter}
-                  onChange={(value) =>
-                    onActivityChange(value as ActivityFilter)
-                  }
-                  placeholder={fr.common.all}
-                  options={[
-                    { value: "active", label: localized("Actif", "نشط") },
-                    { value: "inactive", label: localized("Inactif", "غير نشط") },
-                  ]}
                 />
               </label>
             </div>

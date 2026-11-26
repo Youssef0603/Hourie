@@ -12,4 +12,5 @@ return [
         'role' => 'rôle',
     ],
     'cannot_delete_self' => 'Vous ne pouvez pas supprimer votre propre compte.',
+    'cannot_disable_self' => 'Vous ne pouvez pas couper votre propre accès.',
 ];

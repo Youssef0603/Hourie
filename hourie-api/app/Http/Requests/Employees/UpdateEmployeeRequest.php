@@ -36,7 +36,9 @@ class UpdateEmployeeRequest extends FormRequest
     {
         /** @var Employee|null $employee */
         $employee = $this->route('employee');
-        $hasAccount = $employee?->user_id !== null;
+        $hasAccess = $this->boolean('has_access', true);
+        $hasAccount = $employee?->user_id !== null && $hasAccess;
+        $isSelf = $employee?->user_id !== null && $employee->user_id === $this->user()?->id;
 
         return [
             'name' => ['required', 'string', 'max:255'],
@@ -55,8 +57,9 @@ class UpdateEmployeeRequest extends FormRequest
             'project_role' => ['nullable', 'required_with:project_id', 'string', 'max:255'],
             'assignment_started_on' => ['nullable', 'date_format:Y-m-d'],
             'assignment_ended_on' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:assignment_started_on'],
+            'has_access' => ['sometimes', 'boolean', Rule::when($isSelf, ['accepted'])],
             'username' => [
-                $hasAccount ? 'required' : 'nullable',
+                'nullable',
                 'string',
                 'min:3',
                 'max:50',
@@ -70,15 +73,22 @@ class UpdateEmployeeRequest extends FormRequest
                 'max:255',
                 Rule::unique('users', 'email')->ignore($employee?->user_id),
             ],
-            'role' => [$hasAccount ? 'required' : 'required_with:username', Rule::enum(UserRole::class)],
+            'role' => [$hasAccount ? 'required' : ($hasAccess ? 'required_with:password' : 'nullable'), Rule::enum(UserRole::class)->except(UserRole::GeneratorManager)],
             'password' => [
-                Rule::requiredIf(! $hasAccount && $this->filled('username')),
+                // A new account (switch turned on for someone without one) needs a password.
+                Rule::requiredIf($employee?->user_id === null && (($this->has('has_access') && $hasAccess) || $this->filled('username'))),
                 'nullable',
                 'string',
                 Password::min(12),
                 'confirmed',
             ],
         ];
+    }
+
+    /** @return array<string, string> */
+    public function messages(): array
+    {
+        return ['has_access.accepted' => __('users.cannot_disable_self')];
     }
 
     protected function prepareForValidation(): void

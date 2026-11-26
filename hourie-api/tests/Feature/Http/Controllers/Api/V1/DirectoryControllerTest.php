@@ -8,6 +8,7 @@ use App\Models\Location;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 uses(LazilyRefreshDatabase::class);
@@ -135,16 +136,16 @@ it('gives system managers the same account-management permissions as managers', 
         'name' => 'Awa Koné',
         'phone_number' => '+225 07 08 09 10 11',
         'email' => null,
-        'role' => 'generator_manager',
+        'role' => 'viewer',
         'password' => 'Temporary-2026',
         'password_confirmation' => 'Temporary-2026',
     ])->assertCreated()
         ->assertJsonPath('data.user.username', 'awa.kone')
-        ->assertJsonPath('data.user.role', 'generator_manager');
+        ->assertJsonPath('data.user.role', 'viewer');
 
     $this->assertDatabaseHas('users', [
         'username' => 'awa.kone',
-        'role' => 'generator_manager',
+        'role' => 'viewer',
     ]);
 
     $this->actingAs($cmsManager, 'web')->getJson('/api/v1/auth/user')
@@ -323,12 +324,12 @@ it('allows CMS managers to edit and remove non-manager personnel accounts', func
         'phone_number' => null,
         'username' => $account->username,
         'email' => $account->email,
-        'role' => 'generator_manager',
+        'role' => 'viewer',
         'password' => null,
         'password_confirmation' => null,
     ])->assertOk()
         ->assertJsonPath('data.name', 'Nouveau nom')
-        ->assertJsonPath('data.user.role', 'generator_manager');
+        ->assertJsonPath('data.user.role', 'viewer');
 
     $this->actingAs($cmsManager, 'web')
         ->deleteJson("/api/v1/employees/{$employee->id}")
@@ -442,14 +443,14 @@ it('allows managers to update personnel and their login account', function () {
         'phone_number' => '+225 05 06 07 08 09',
         'username' => 'nouveau.nom',
         'email' => 'nouveau@hourie.ci',
-        'role' => 'generator_manager',
+        'role' => 'viewer',
         'password' => null,
         'password_confirmation' => null,
     ])->assertOk()
         ->assertJsonPath('data.name', 'Nouveau nom')
         ->assertJsonPath('data.user.username', 'nouveau.nom')
         ->assertJsonPath('data.user.email', 'nouveau@hourie.ci')
-        ->assertJsonPath('data.user.role', 'generator_manager');
+        ->assertJsonPath('data.user.role', 'viewer');
 
     $account->refresh();
     expect($account->password)->toBe($originalPassword);
@@ -506,7 +507,7 @@ it('allows managers to add sites and personnel', function () {
         'name' => 'Awa Koné',
         'phone_number' => '+225 07 08 09 10 11',
         'email' => null,
-        'role' => 'generator_manager',
+        'role' => 'viewer',
         'password' => 'Temporary-2026',
         'password_confirmation' => 'Temporary-2026',
     ])->assertCreated()
@@ -514,7 +515,7 @@ it('allows managers to add sites and personnel', function () {
         ->assertJsonPath('data.phone_number', '+225 07 08 09 10 11')
         ->assertJsonPath('data.user.username', 'awa.kone')
         ->assertJsonPath('data.user.email', null)
-        ->assertJsonPath('data.user.role', 'generator_manager')
+        ->assertJsonPath('data.user.role', 'viewer')
         ->assertJsonPath('data.equipment_in_custody_count', 0);
 
     $account = User::query()->where('username', 'awa.kone')->firstOrFail();
@@ -532,7 +533,7 @@ it('allows managers to add sites and personnel', function () {
         ])
         ->assertOk()
         ->assertJsonPath('data.id', $account->id)
-        ->assertJsonPath('data.role', 'generator_manager');
+        ->assertJsonPath('data.role', 'viewer');
 });
 
 it('adds a numeric suffix when the generated username already exists', function () {
@@ -689,4 +690,77 @@ it('requires an active employee as the site responsible', function () {
     ])->assertUnprocessable()
         ->assertJsonValidationErrors(['responsible_employee_id'])
         ->assertJsonPath('errors.responsible_employee_id.0', 'La valeur sélectionnée pour responsable du chantier est invalide.');
+});
+
+it('cuts a person’s access from the edit form and restores it, logging them out at once', function () {
+    $manager = User::factory()->create(['role' => UserRole::Manager]);
+    $user = User::factory()->create(['role' => UserRole::Viewer, 'username' => 'awa.kone', 'is_active' => true]);
+    $employee = Employee::factory()->for($user)->create(['name' => 'Awa Koné']);
+    DB::table('sessions')->insert(['id' => 'open-session', 'user_id' => $user->id, 'payload' => '', 'last_activity' => now()->timestamp]);
+
+    $this->actingAs($manager, 'web')->patchJson("/api/v1/employees/{$employee->id}", ['name' => 'Awa Koné', 'has_access' => false])
+        ->assertOk()
+        ->assertJsonPath('data.user.is_active', false)
+        ->assertJsonPath('data.user.username', 'awa.kone');
+
+    expect($user->fresh()->is_active)->toBeFalse()
+        ->and(DB::table('sessions')->where('user_id', $user->id)->exists())->toBeFalse();
+
+    $this->actingAs($manager, 'web')->patchJson("/api/v1/employees/{$employee->id}", ['name' => 'Awa Koné', 'has_access' => true, 'username' => 'awa.kone', 'role' => 'viewer'])
+        ->assertOk()
+        ->assertJsonPath('data.user.is_active', true);
+    expect($user->fresh()->is_active)->toBeTrue();
+});
+
+it('refuses to cut one’s own access', function () {
+    $cmsManager = User::factory()->create(['role' => UserRole::CmsManager]);
+    $self = Employee::factory()->for($cmsManager)->create(['name' => 'Moi']);
+
+    $this->actingAs($cmsManager, 'web')->patchJson("/api/v1/employees/{$self->id}", ['name' => 'Moi', 'has_access' => false])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('has_access');
+    expect($cmsManager->fresh()->is_active)->toBeTrue();
+});
+
+it('blocks an account whose access was cut', function () {
+    $user = User::factory()->create(['role' => UserRole::Viewer, 'is_active' => false]);
+
+    $this->actingAs($user, 'web')->getJson('/api/v1/employees')->assertUnauthorized();
+});
+
+it('generates the username when access is turned on from the edit form', function () {
+    $manager = User::factory()->create(['role' => UserRole::Manager]);
+    $employee = Employee::factory()->create(['name' => 'Awa Koné', 'user_id' => null]);
+
+    $this->actingAs($manager, 'web')->patchJson("/api/v1/employees/{$employee->id}", ['name' => 'Awa Koné', 'has_access' => true, 'role' => 'viewer'])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('password');
+
+    $this->actingAs($manager, 'web')->patchJson("/api/v1/employees/{$employee->id}", [
+        'name' => 'Awa Koné',
+        'has_access' => true,
+        'role' => 'viewer',
+        'password' => 'Very-Secure-Pass-2026',
+        'password_confirmation' => 'Very-Secure-Pass-2026',
+    ])
+        ->assertOk()
+        ->assertJsonPath('data.user.username', 'awa.kone')
+        ->assertJsonPath('data.user.is_active', true);
+
+    $this->actingAs($manager, 'web')->patchJson("/api/v1/employees/{$employee->id}", ['name' => 'Awa Koné Traoré', 'has_access' => true, 'role' => 'viewer'])
+        ->assertOk()
+        ->assertJsonPath('data.user.username', 'awa.kone');
+});
+
+it('no longer accepts the generator manager role for an account', function () {
+    $manager = User::factory()->create(['role' => UserRole::Manager]);
+
+    $this->actingAs($manager, 'web')->postJson('/api/v1/employees', [
+        'name' => 'Jean Groupes',
+        'job_title' => 'not_specified',
+        'create_account' => true,
+        'role' => 'generator_manager',
+        'password' => 'Very-Secure-Pass-2026',
+        'password_confirmation' => 'Very-Secure-Pass-2026',
+    ])->assertUnprocessable()->assertJsonValidationErrors('role');
 });

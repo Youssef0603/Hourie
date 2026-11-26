@@ -27,8 +27,8 @@ it('creates an internal user with a securely hashed password', function () {
     expect($user->employee->name)->toBe('Marie Koné');
 });
 
-it('creates a linked employee profile for a generator manager', function () {
-    $this->artisan('users:create --role=generator_manager')
+it('creates a linked employee profile for a system manager', function () {
+    $this->artisan('users:create --role=cms_manager')
         ->expectsQuestion('Nom complet', 'Jean Responsable')
         ->expectsQuestion('Nom d’utilisateur', 'jean.responsable')
         ->expectsQuestion('Adresse e-mail (facultative)', 'jean@hourie.test')
@@ -38,7 +38,7 @@ it('creates a linked employee profile for a generator manager', function () {
 
     $user = User::query()->where('email', 'jean@hourie.test')->firstOrFail();
 
-    expect($user->role)->toBe(UserRole::GeneratorManager);
+    expect($user->role)->toBe(UserRole::CmsManager);
     expect($user->employee)->not->toBeNull();
     expect($user->employee->name)->toBe('Jean Responsable');
 });

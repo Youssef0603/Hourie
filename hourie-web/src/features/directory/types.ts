@@ -63,7 +63,7 @@ export type Employee = {
   equipment_in_custody_count: number
   current_project: { id: number; name: string } | null
   current_company_location: { id: number; name: string } | null
-  user: { id: number; username: string; email: string | null; role: 'manager' | 'cms_manager' | 'generator_manager' | 'viewer' } | null
+  user: { id: number; username: string; email: string | null; role: 'manager' | 'cms_manager' | 'generator_manager' | 'viewer'; is_active: boolean } | null
 }
 
 export type EmployeeDetails = Employee & {
@@ -117,7 +117,10 @@ export type UpdateEmployeePayload = {
   project_role: string | null
   assignment_started_on: string | null
   assignment_ended_on: string | null
-  username: string | null
+  /** Off: the account is kept but can no longer log in. */
+  has_access: boolean
+  /** Only to rename an existing account; a new account gets one generated from the name. */
+  username?: string | null
   email: string | null
   role: 'manager' | 'cms_manager' | 'generator_manager' | 'viewer'
   password: string | null

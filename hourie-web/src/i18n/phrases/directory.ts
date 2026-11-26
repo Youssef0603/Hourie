@@ -1,5 +1,11 @@
 /** Arabic for French phrases of: Chantiers, personnel, assurances, cautions et admissions temporaires. Keys are the exact French text passed to operationPhrase(). */
 export const directoryPhrases: Record<string, string> = {
+  "Accès coupé : ne peut plus se connecter": "الوصول موقوف: لا يمكنه تسجيل الدخول",
+  "Vous ne pouvez pas couper votre propre accès.": "لا يمكنك إيقاف وصولك الخاص.",
+  "Cette personne peut se connecter à Hourie.": "يمكن لهذا الشخص تسجيل الدخول إلى Hourie.",
+  "Cette personne pourra se connecter à Hourie.": "سيتمكن هذا الشخص من تسجيل الدخول إلى Hourie.",
+  "Accès coupé : le compte est conservé mais ne peut plus se connecter.": "الوصول موقوف: الحساب محفوظ لكن لا يمكنه تسجيل الدخول.",
+  "Aucun accès au système.": "لا يوجد وصول إلى النظام.",
   // Chantiers
   "Planification": "التخطيط",
   "Rechercher un chantier, un code, une adresse ou un responsable": "ابحث عن ورشة عمل أو رمز أو عنوان أو مسؤول",

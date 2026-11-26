@@ -1133,6 +1133,7 @@ export function EquipmentPage({
               canAdd={user.permissions.manage_users}
               initialProjectId={route.section === "people" ? route.peopleProjectId : null}
               canManageManagerAccounts={user.permissions.manage_manager_accounts}
+              currentUserId={user.id}
               catalogs={options?.catalogs}
               projects={options?.projects}
               companyLocations={options?.locations.filter(

@@ -12,4 +12,5 @@ return [
         'role' => 'الدور',
     ],
     'cannot_delete_self' => 'لا يمكنك حذف حسابك الخاص.',
+    'cannot_disable_self' => 'لا يمكنك إيقاف وصولك الخاص.',
 ];

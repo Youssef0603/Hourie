@@ -31,6 +31,7 @@ class EmployeeResource extends JsonResource
                 'username' => $this->user->username,
                 'email' => $this->user->email,
                 'role' => $this->user->role->value,
+                'is_active' => (bool) $this->user->is_active,
             ]),
             'current_project' => $this->whenLoaded('currentProjectAssignment', fn () => $this->currentProjectAssignment === null ? null : [
                 'id' => $this->currentProjectAssignment->project->id,

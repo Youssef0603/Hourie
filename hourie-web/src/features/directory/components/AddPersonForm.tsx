@@ -3,9 +3,11 @@ import { fr } from "../../../i18n/fr";
 import { operationPhrase } from "../../../i18n/operations";
 import { ApiError } from "../../../shared/api/http";
 import { SearchableSelect } from "../../../shared/components/SearchableSelect";
+import { ToggleSwitch } from "../../../shared/components/ToggleSwitch";
 import { catalogLabel, catalogOptions } from "../../equipment/catalogs";
 import type { CatalogOption, NamedReference } from "../../equipment/types";
 import { createEmployee } from "../api";
+import { generatedUsername } from "../username";
 
 type AddPersonFormProps = {
   canManageManagerAccounts: boolean;
@@ -14,16 +16,6 @@ type AddPersonFormProps = {
   companyLocations?: NamedReference[];
   onSaved: () => Promise<void> | void;
 };
-
-function generatedUsername(name: string) {
-  return name
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, ".")
-    .replace(/^\.+|\.+$/g, "");
-}
 
 export function AddPersonForm({
   canManageManagerAccounts,
@@ -51,8 +43,9 @@ export function AddPersonForm({
   const [password, setPassword] = useState("");
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
+  // "Responsable des groupes" (generator_manager) is no longer offered.
   const roleEntries = Object.entries(fr.roles).filter(
-    ([value]) => canManageManagerAccounts || value !== "manager",
+    ([value]) => value !== "generator_manager" && (canManageManagerAccounts || value !== "manager"),
   );
   const jobTitles = catalogOptions(catalogs, "employee_job_title").filter(
     (option) => option.code !== "not_specified",
@@ -226,15 +219,12 @@ export function AddPersonForm({
       <section
         className={`people-form-section account-access-section${createAccount ? " has-account" : ""}`}
       >
-        {createAccount && <h3>{fr.directory.accountAccess}</h3>}
-        <label className="account-access-toggle">
-          <input
-            type="checkbox"
-            checked={createAccount}
-            onChange={(event) => setCreateAccount(event.target.checked)}
-          />
-          <span>{fr.directory.createAccount}</span>
-        </label>
+        <ToggleSwitch
+          checked={createAccount}
+          onChange={setCreateAccount}
+          label={fr.directory.accountAccess}
+          description={createAccount ? operationPhrase("Cette personne pourra se connecter à Hourie.") : operationPhrase("Aucun accès au système.")}
+        />
         {createAccount && (
           <>
             <p className="account-form-hint">{fr.directory.credentialsHint}</p>
@@ -275,7 +265,7 @@ export function AddPersonForm({
                   onChange={(event) => setPassword(event.target.value)}
                 />
               </label>
-              <label className="field-wide">
+              <label>
                 <span>{fr.directory.confirmPassword}</span>
                 <input
                   required

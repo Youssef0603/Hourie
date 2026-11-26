@@ -134,7 +134,7 @@ describe('PeoplePage', () => {
     expect(getEmployee).toHaveBeenCalledWith(1)
   })
 
-  it('filters people by site and company location', async () => {
+  it('filters people by site, without location or status filters', async () => {
     const user = userEvent.setup()
     render(
       <PeoplePage
@@ -152,10 +152,8 @@ describe('PeoplePage', () => {
 
     await waitFor(() => expect(getEmployees).toHaveBeenLastCalledWith(1, { project_id: '1' }))
 
-    await user.click(screen.getByLabelText('Localisation physique'))
-    await user.click(screen.getByRole('option', { name: 'BUREAU' }))
-
-    await waitFor(() => expect(getEmployees).toHaveBeenLastCalledWith(1, { company_location_id: '16' }))
+    expect(screen.queryByLabelText('Localisation physique')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('État')).not.toBeInTheDocument()
   })
 
   it('returns to person details when editing is cancelled', async () => {

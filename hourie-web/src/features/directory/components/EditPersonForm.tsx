@@ -4,9 +4,11 @@ import { operationPhrase } from "../../../i18n/operations";
 import { ApiError } from "../../../shared/api/http";
 import { LoadingSpinner } from "../../../shared/components/LoadingSpinner";
 import { SearchableSelect } from "../../../shared/components/SearchableSelect";
+import { ToggleSwitch } from "../../../shared/components/ToggleSwitch";
 import { catalogLabel, catalogOptions } from "../../equipment/catalogs";
 import type { CatalogOption, NamedReference } from "../../equipment/types";
 import { updateEmployee } from "../api";
+import { generatedUsername } from "../username";
 import type { EmployeeDetails } from "../types";
 
 type EditPersonFormProps = {
@@ -15,6 +17,8 @@ type EditPersonFormProps = {
   projects?: NamedReference[];
   companyLocations?: NamedReference[];
   canManageManagerAccounts: boolean;
+  /** The person being edited is the signed-in user, who cannot cut their own access. */
+  isSelf?: boolean;
   formId?: string;
   hideSubmit?: boolean;
   onSaved: (person: EmployeeDetails) => void;
@@ -26,6 +30,7 @@ export function EditPersonForm({
   projects = [],
   companyLocations = [],
   canManageManagerAccounts,
+  isSelf = false,
   formId,
   hideSubmit = false,
   onSaved,
@@ -46,7 +51,7 @@ export function EditPersonForm({
   const [projectRole, setProjectRole] = useState(currentAssignment?.project_role ?? "");
   const [assignmentStartedOn, setAssignmentStartedOn] = useState(currentAssignment?.started_on ?? "");
   const [assignmentEndedOn, setAssignmentEndedOn] = useState(currentAssignment?.ended_on ?? "");
-  const [username, setUsername] = useState(person.user?.username ?? "");
+  const [hasAccess, setHasAccess] = useState(person.user?.is_active ?? false);
   const [email, setEmail] = useState(person.email ?? "");
   const [role, setRole] = useState<
     "manager" | "cms_manager" | "generator_manager" | "viewer"
@@ -55,8 +60,9 @@ export function EditPersonForm({
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  // "Responsable des groupes" (generator_manager) is no longer offered.
   const roleEntries = Object.entries(fr.roles).filter(
-    ([value]) => canManageManagerAccounts || value !== "manager",
+    ([value]) => value !== "generator_manager" && (canManageManagerAccounts || value !== "manager"),
   );
   const jobTitles = catalogOptions(catalogs, "employee_job_title").filter(
     (option) => option.code !== "not_specified",
@@ -83,11 +89,11 @@ export function EditPersonForm({
           project_role: projectId ? projectRole.trim() : null,
           assignment_started_on: projectId && assignmentStartedOn ? assignmentStartedOn : null,
           assignment_ended_on: projectId && assignmentEndedOn ? assignmentEndedOn : null,
-          username: username.trim() || null,
+          has_access: hasAccess,
           email: email.trim() || null,
           role,
-          password: password || null,
-          password_confirmation: password ? passwordConfirmation : null,
+          password: hasAccess ? password || null : null,
+          password_confirmation: hasAccess && password ? passwordConfirmation : null,
         }),
       );
     } catch (caught) {
@@ -239,56 +245,73 @@ export function EditPersonForm({
           </>}
         </div>
       </section>
-      <section className="people-form-section">
-        <h3>{fr.directory.accountAccess}</h3>
-        <p className="account-form-hint">{fr.directory.editCredentialsHint}</p>
-        <div className="people-form-fields">
-          <label>
-            <span>{fr.directory.username}</span>
-            <input
-              required={person.user !== null}
-              minLength={3}
-              autoComplete="username"
-              value={username}
-              onChange={(event) =>
-                setUsername(event.target.value.toLowerCase())
-              }
-            />
-          </label>
-          <label>
-            <span>{fr.directory.accountRole}</span>
-            <SearchableSelect
-              ariaLabel={fr.directory.accountRole}
-              value={role}
-              onChange={(value) => setRole(value as typeof role)}
-              placeholder={fr.directory.accountRole}
-              includeEmpty={false}
-              options={roleEntries.map(([value, label]) => ({ value, label }))}
-            />
-          </label>
-          <label>
-            <span>{fr.directory.newPassword}</span>
-            <input
-              minLength={12}
-              required={!person.user && username !== ""}
-              type="password"
-              autoComplete="new-password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-            />
-          </label>
-          <label className="field-wide">
-            <span>{fr.directory.confirmNewPassword}</span>
-            <input
-              minLength={12}
-              required={password !== ""}
-              type="password"
-              autoComplete="new-password"
-              value={passwordConfirmation}
-              onChange={(event) => setPasswordConfirmation(event.target.value)}
-            />
-          </label>
-        </div>
+      <section className="people-form-section account-access-section">
+        <ToggleSwitch
+          checked={hasAccess}
+          onChange={setHasAccess}
+          disabled={isSelf}
+          label={fr.directory.accountAccess}
+          description={
+            isSelf
+              ? operationPhrase("Vous ne pouvez pas couper votre propre accès.")
+              : hasAccess
+                ? operationPhrase("Cette personne peut se connecter à Hourie.")
+                : person.user
+                  ? operationPhrase("Accès coupé : le compte est conservé mais ne peut plus se connecter.")
+                  : operationPhrase("Aucun accès au système.")
+          }
+        />
+        {hasAccess && (
+          <>
+            <p className="account-form-hint">{person.user ? fr.directory.editCredentialsHint : fr.directory.credentialsHint}</p>
+            <div className="people-form-fields">
+              <label>
+                <span>{fr.directory.username}</span>
+                <input
+                  className="generated-username"
+                  readOnly
+                  tabIndex={-1}
+                  value={person.user?.username ?? generatedUsername(name)}
+                  placeholder={fr.directory.usernameGeneratedPlaceholder}
+                />
+                {!person.user && <small>{fr.directory.usernameGeneratedHint}</small>}
+              </label>
+              <label>
+                <span>{fr.directory.accountRole}</span>
+                <SearchableSelect
+                  ariaLabel={fr.directory.accountRole}
+                  value={role}
+                  onChange={(value) => setRole(value as typeof role)}
+                  placeholder={fr.directory.accountRole}
+                  includeEmpty={false}
+                  options={roleEntries.map(([value, label]) => ({ value, label }))}
+                />
+              </label>
+              <label>
+                <span>{fr.directory.newPassword}</span>
+                <input
+                  minLength={12}
+                  required={hasAccess && !person.user}
+                  type="password"
+                  autoComplete="new-password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                />
+              </label>
+              <label>
+                <span>{fr.directory.confirmNewPassword}</span>
+                <input
+                  minLength={12}
+                  required={password !== ""}
+                  type="password"
+                  autoComplete="new-password"
+                  value={passwordConfirmation}
+                  onChange={(event) => setPasswordConfirmation(event.target.value)}
+                />
+              </label>
+            </div>
+          </>
+        )}
       </section>
       {!hideSubmit && (
         <div className="maintenance-form-actions">

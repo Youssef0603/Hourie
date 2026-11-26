@@ -61,7 +61,7 @@ class EmployeeController extends Controller
                 $request->integer('company_location_id'),
             ))
             ->with([
-                'user:id,username,email,role',
+                'user:id,username,email,role,is_active',
                 'currentProjectAssignment.project:id,name',
                 'companyLocation:id,name',
             ])
@@ -129,7 +129,7 @@ class EmployeeController extends Controller
         });
 
         $employee->load([
-            'user:id,username,email,role',
+            'user:id,username,email,role,is_active',
             'currentProjectAssignment.project:id,name',
             'companyLocation:id,name',
             'projectAssignments.project:id,name,is_active',
@@ -141,7 +141,7 @@ class EmployeeController extends Controller
     public function show(Employee $employee): EmployeeResource
     {
         $employee->load([
-            'user:id,username,email,role',
+            'user:id,username,email,role,is_active',
             'currentProjectAssignment.project:id,name',
             'companyLocation:id,name',
             'responsibleProjects:id,name,responsible_employee_id,is_active',
@@ -194,11 +194,26 @@ class EmployeeController extends Controller
 
             $employee->update($employeeData);
 
+            // Access switched off: the account stays as it is but can no longer
+            // log in, and its open sessions end at once.
+            if (! ($data['has_access'] ?? true)) {
+                if ($employee->user !== null) {
+                    $employee->user->update(['is_active' => false]);
+                    DB::table('sessions')->where('user_id', $employee->user_id)->delete();
+                }
+                $this->syncProjectAssignment($employee, $data);
+
+                return;
+            }
+
+            // The username is generated from the name when the account is
+            // created, and kept as it is afterwards unless one is given.
             $accountData = [
                 'name' => $data['name'],
-                'username' => $data['username'] ?? null,
+                'username' => $data['username'] ?? $employee->user?->username ?? $this->generateUsername($data['name']),
                 'email' => $data['email'] ?? null,
                 'role' => $data['role'] ?? UserRole::Viewer,
+                'is_active' => true,
             ];
 
             if (filled($data['password'] ?? null)) {
@@ -208,7 +223,7 @@ class EmployeeController extends Controller
 
             if ($employee->user_id !== null) {
                 $employee->user->update($accountData);
-            } elseif (filled($data['username'] ?? null)) {
+            } elseif (filled($data['password'] ?? null)) {
                 $accountData['password'] = $data['password'];
                 $accountData['must_change_password'] = true;
                 $user = User::query()->create($accountData);

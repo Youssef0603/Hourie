@@ -75,6 +75,7 @@ export function PersonDetail({
             <h3>{person.name}</h3>
             <p>{catalogLabel(catalogs, "employee_job_title", person.job_title)}</p>
             <small>{person.user ? `@${person.user.username} · ${fr.roles[person.user.role]}` : fr.directory.noSystemAccess}</small>
+            {person.user && !person.user.is_active && <span className="person-access-cut">{operationPhrase("Accès coupé : ne peut plus se connecter")}</span>}
           </div>
         </div>
         <dl className="person-profile-facts">

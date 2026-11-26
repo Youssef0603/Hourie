@@ -42,7 +42,7 @@ class StoreEmployeeRequest extends FormRequest
             'assignment_ended_on' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:assignment_started_on'],
             'create_account' => ['required', 'boolean'],
             'email' => ['nullable', 'string', 'email', 'max:255', 'unique:users,email'],
-            'role' => [Rule::requiredIf($this->boolean('create_account')), 'nullable', Rule::enum(UserRole::class)],
+            'role' => [Rule::requiredIf($this->boolean('create_account')), 'nullable', Rule::enum(UserRole::class)->except(UserRole::GeneratorManager)],
             'password' => [Rule::requiredIf($this->boolean('create_account')), 'nullable', 'string', Password::min(12), 'confirmed'],
         ];
     }
