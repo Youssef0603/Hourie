@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'subcontract_id', 'sequence', 'kind', 'reference', 'valuation_date', 'period_end', 'status',
-    'materials_deduction', 'backcharges', 'cash_percent', 'comment',
+    'materials_on_site', 'claims', 'materials_deduction', 'backcharges', 'cash_percent', 'comment',
     'works_cumulative', 'works_previous', 'advance_recovery_cumulative', 'advance_recovery_previous',
     'retention_cumulative', 'retention_previous', 'previously_certified', 'cash_amount', 'cheque_amount', 'vat_amount', 'net_due',
     'invoice_number', 'invoice_date', 'invoice_amount',
@@ -175,6 +175,8 @@ class SubcontractValuation extends Model
             'valuation_date' => 'date:Y-m-d',
             'period_end' => 'date:Y-m-d',
             'invoice_date' => 'date:Y-m-d',
+            'materials_on_site' => 'decimal:2',
+            'claims' => 'decimal:2',
             'materials_deduction' => 'decimal:2',
             'backcharges' => 'decimal:2',
             'cash_percent' => 'decimal:2',

@@ -44,8 +44,12 @@ class SubcontractValuationController extends Controller
 
         $valuation = DB::transaction(function () use ($request, $subcontract): SubcontractValuation {
             $sequence = ((int) $subcontract->valuations()->max('sequence')) + 1;
+            $previous = $subcontract->lastCertifiedValuation();
             $valuation = $subcontract->valuations()->create([
                 'cash_percent' => $subcontract->cash_percent,
+                // Cumulative amounts carry over unless the engineer enters new ones.
+                'materials_on_site' => $previous?->materials_on_site ?? 0,
+                'claims' => $previous?->claims ?? 0,
                 ...$request->safe()->except('lines'),
                 'sequence' => $sequence,
                 'kind' => SubcontractValuation::KIND_REGULAR,

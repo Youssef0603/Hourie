@@ -16,6 +16,7 @@ use Illuminate\Support\Collection;
  *
  *   works (cumulative)            = Σ cumulative quantity × unit price
  *                                   + works certified before Hourie without a breakdown
+ *                                   + materials on site + claims (both cumulative)
  *   advance recovery (cumulative) = min(works × recovery %, advance received)
  *   retention (cumulative)        = works × retention %
  *   certified (cumulative)        = works − advance recovery − retention
@@ -56,7 +57,10 @@ class SubcontractValuationCalculator
                 BigDecimal::of((string) ($quantities[$item->id] ?? '0'))->multipliedBy((string) $item->unit_price),
             ),
             BigDecimal::zero(),
-        )->plus((string) $subcontract->historical_works_amount)->toScale(2, RoundingMode::HalfUp);
+        )->plus((string) $subcontract->historical_works_amount)
+            ->plus((string) ($valuation->materials_on_site ?? '0'))
+            ->plus((string) ($valuation->claims ?? '0'))
+            ->toScale(2, RoundingMode::HalfUp);
 
         $advanceRecovery = BigDecimal::min(
             $this->percentOf($works, $subcontract->advance_recovery_rate),

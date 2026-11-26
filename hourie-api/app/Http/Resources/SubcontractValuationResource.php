@@ -46,6 +46,8 @@ class SubcontractValuationResource extends JsonResource
             'valuation_date' => $this->valuation_date?->format('Y-m-d'),
             'period_end' => $this->period_end?->format('Y-m-d'),
             'comment' => $this->comment,
+            'materials_on_site' => $this->materials_on_site,
+            'claims' => $this->claims,
             'materials_deduction' => $this->materials_deduction,
             'backcharges' => $this->backcharges,
             'cash_percent' => $this->cash_percent,

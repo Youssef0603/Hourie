@@ -26,6 +26,8 @@ class SaveSubcontractRequest extends FormRequest
             'retention_rate' => ['required', 'numeric', 'min:0', 'max:100'],
             'advance_amount' => ['required', 'numeric', 'min:0', 'max:9999999999999'],
             'advance_recovery_rate' => ['required', 'numeric', 'min:0', 'max:100'],
+            'employer_name' => ['nullable', 'string', 'max:255'],
+            'engineer_name' => ['nullable', 'string', 'max:255'],
             'cash_percent' => ['sometimes', 'numeric', 'min:0', 'max:100'],
             'recurring_deduction_label' => ['nullable', 'string', 'max:255'],
             'recurring_deduction_amount' => ['sometimes', 'numeric', 'min:0', 'max:9999999999999'],

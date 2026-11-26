@@ -118,6 +118,10 @@ export type Subcontract = {
   title: string;
   status: string;
   signed_on: string | null;
+  /** Client (maître d'ouvrage) named in the valuation header. */
+  employer_name: string | null;
+  /** Supervising engineer (bureau de contrôle) named in the valuation header. */
+  engineer_name: string | null;
   subcontractor: Subcontractor;
   project: { id: number; code: string | null; name: string };
   vat_rate: string;
@@ -178,6 +182,8 @@ export type SubcontractPayload = {
   subcontractor_id: number | null;
   project_id: number | null;
   title: string;
+  employer_name: string;
+  engineer_name: string;
   signed_on: string;
   vat_rate: string;
   retention_rate: string;
@@ -231,6 +237,10 @@ export type SubcontractValuation = {
   valuation_date: string;
   period_end: string;
   comment: string | null;
+  /** Line 03 of the PM's valuation: materials on site, cumulative. */
+  materials_on_site: string;
+  /** Line 05 of the PM's valuation: claims and other works, cumulative. */
+  claims: string;
   materials_deduction: string;
   backcharges: string;
   cash_percent: string;
@@ -288,6 +298,9 @@ export type SubcontractValuation = {
 export type ValuationPayload = {
   valuation_date: string;
   period_end: string;
+  /** Left out on a new situation to carry over the previous cumulative amount. */
+  materials_on_site?: string;
+  claims?: string;
   materials_deduction: string;
   backcharges: string;
   cash_percent: string;

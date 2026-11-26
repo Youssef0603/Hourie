@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[Fillable(['reference', 'subcontractor_id', 'project_id', 'created_by_user_id', 'title', 'signed_on', 'vat_rate', 'retention_rate', 'advance_amount', 'advance_recovery_rate', 'cash_percent', 'recurring_deduction_label', 'recurring_deduction_amount', 'historical_works_amount', 'currency', 'status', 'notes'])]
+#[Fillable(['reference', 'subcontractor_id', 'project_id', 'created_by_user_id', 'title', 'employer_name', 'engineer_name', 'signed_on', 'vat_rate', 'retention_rate', 'advance_amount', 'advance_recovery_rate', 'cash_percent', 'recurring_deduction_label', 'recurring_deduction_amount', 'historical_works_amount', 'currency', 'status', 'notes'])]
 class Subcontract extends Model
 {
     /** @use HasFactory<SubcontractFactory> */

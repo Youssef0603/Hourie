@@ -38,6 +38,8 @@ function draftFrom(valuation: SubcontractValuation | null, subcontract: Subcontr
   return {
     valuation_date: valuation?.valuation_date ?? today,
     period_end: valuation?.period_end ?? today,
+    materials_on_site: valuation ? String(Number(valuation.materials_on_site)) : "",
+    claims: valuation ? String(Number(valuation.claims)) : "",
     materials_deduction: String(Number(valuation?.materials_deduction ?? 0)),
     // A new situation starts with the contract's fixed deduction (e.g. "Coupe pavé").
     backcharges: String(Number(valuation?.backcharges ?? subcontract.recurring_deduction_amount ?? 0)),
@@ -135,6 +137,8 @@ export function ValuationPanel({ subcontract, valuationId, canManage, onClose, o
     return {
       valuation_date: draft.valuation_date,
       period_end: draft.period_end,
+      materials_on_site: draft.materials_on_site || undefined,
+      claims: draft.claims || undefined,
       materials_deduction: draft.materials_deduction || "0",
       backcharges: draft.backcharges || "0",
       cash_percent: draft.cash_percent || "0",
@@ -277,6 +281,8 @@ export function ValuationPanel({ subcontract, valuationId, canManage, onClose, o
 
             {isRegular && <InventoryFormSection title={operationPhrase("Déductions et règlement")} icon="note">
               <div className="maintenance-form-grid asset-form-grid-2">
+                <label><span>{operationPhrase("Matériaux sur chantier, cumul (HT)")}</span><AmountInput disabled={!editable} placeholder={operationPhrase("Comme la situation précédente")} value={draft.materials_on_site ?? ""} onChange={(amount) => setDraft((current) => ({ ...current, materials_on_site: amount }))} /></label>
+                <label><span>{operationPhrase("Réclamations et autres travaux, cumul (HT)")}</span><AmountInput disabled={!editable} placeholder={operationPhrase("Comme la situation précédente")} value={draft.claims ?? ""} onChange={(amount) => setDraft((current) => ({ ...current, claims: amount }))} /></label>
                 <label><span>{operationPhrase("Matériaux fournis par ARH (HT)")}</span><AmountInput disabled={!editable} value={draft.materials_deduction} onChange={(amount) => setDraft((current) => ({ ...current, materials_deduction: amount }))} /></label>
                 <label><span>{operationPhrase("Pénalités et retenues diverses")}</span><AmountInput disabled={!editable} value={draft.backcharges} onChange={(amount) => setDraft((current) => ({ ...current, backcharges: amount }))} /></label>
                 <label><span>{operationPhrase("Part payée en espèces (%)")}</span><input type="number" min="0" max="100" step="0.01" disabled={!editable} value={draft.cash_percent} onChange={(event) => setDraft((current) => ({ ...current, cash_percent: event.target.value }))} /></label>

@@ -46,6 +46,8 @@ class SubcontractResource extends JsonResource
             'retention_rate' => $this->retention_rate,
             'advance_amount' => $this->advance_amount,
             'advance_recovery_rate' => $this->advance_recovery_rate,
+            'employer_name' => $this->employer_name,
+            'engineer_name' => $this->engineer_name,
             'cash_percent' => $this->cash_percent,
             'recurring_deduction_label' => $this->recurring_deduction_label,
             'recurring_deduction_amount' => $this->recurring_deduction_amount,

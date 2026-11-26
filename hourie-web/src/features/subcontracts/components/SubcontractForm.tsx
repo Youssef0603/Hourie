@@ -18,7 +18,7 @@ const emptyItem = (): SubcontractItemInput => ({ key: newKey(), code: "", descri
 function initialState(subcontract?: Subcontract): Omit<SubcontractPayload, "items"> & { items: SubcontractItemInput[] } {
   if (!subcontract) {
     return {
-      subcontractor_id: null, project_id: null, title: "", signed_on: new Date().toISOString().slice(0, 10),
+      subcontractor_id: null, project_id: null, title: "", employer_name: "", engineer_name: "", signed_on: new Date().toISOString().slice(0, 10),
       vat_rate: "0", retention_rate: "10", advance_amount: "0", advance_recovery_rate: "0", cash_percent: "0", recurring_deduction_label: "", recurring_deduction_amount: "0", currency: "XOF", notes: "",
       items: [emptyItem()],
     };
@@ -27,6 +27,8 @@ function initialState(subcontract?: Subcontract): Omit<SubcontractPayload, "item
     subcontractor_id: subcontract.subcontractor.id,
     project_id: subcontract.project.id,
     title: subcontract.title,
+    employer_name: subcontract.employer_name ?? "",
+    engineer_name: subcontract.engineer_name ?? "",
     signed_on: subcontract.signed_on ?? "",
     vat_rate: String(Number(subcontract.vat_rate)),
     retention_rate: String(Number(subcontract.retention_rate)),
@@ -146,6 +148,8 @@ export function SubcontractForm({ subcontract, projects, onClose, onSaved }: {
               <label><span>{operationPhrase("Chantier *")}</span><SearchableSelect ariaLabel={operationPhrase("Chantier")} required value={form.project_id ? String(form.project_id) : ""} onChange={(value) => update("project_id", value ? Number(value) : null)} placeholder={operationPhrase("Sélectionner un chantier")} options={projects.map((project) => ({ value: String(project.id), label: project.code ? `${project.code} · ${project.name}` : localized(`${project.name} (sans code analytique)`, `${project.name} (بدون رمز تحليلي)`) }))} /></label>
               <label><span>{operationPhrase("Date de signature")}</span><input type="date" value={form.signed_on} onChange={(event) => update("signed_on", event.target.value)} /></label>
               <label className="field-wide"><span>{operationPhrase("Objet des travaux")}</span><input required value={form.title} placeholder={operationPhrase("Ex. Ferraillage des dalles")} onChange={(event) => update("title", event.target.value)} /></label>
+              <label><span>{operationPhrase("Maître d’ouvrage (employer)")}</span><input value={form.employer_name} placeholder={operationPhrase("Ex. SCI HASA")} onChange={(event) => update("employer_name", event.target.value)} /></label>
+              <label><span>{operationPhrase("Bureau de contrôle (engineer)")}</span><input value={form.engineer_name} placeholder={operationPhrase("Ex. LUSEO")} onChange={(event) => update("engineer_name", event.target.value)} /></label>
             </div>
           </InventoryFormSection>
 

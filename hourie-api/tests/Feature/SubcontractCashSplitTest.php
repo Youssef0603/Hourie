@@ -3,7 +3,10 @@
 use App\Enums\UserRole;
 use App\Models\Project;
 use App\Models\Subcontractor;
+use App\Models\SubcontractValuation;
 use App\Models\User;
+use App\Services\SubcontractValuationStatement;
+use Brick\Math\RoundingMode;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -189,5 +192,86 @@ it('prints the sheet of the next situation with the contract history', function 
 
     expect($response->headers->get('Content-Type'))->toBe('application/pdf')
         ->and($response->headers->get('Content-Disposition'))->toContain('inline; filename="Fiche_situation_SC-117-25-01.pdf"')
-        ->and(substr((string) $response->getContent(), 0, 4))->toBe('%PDF');
+        ->and(substr((string) $response->getContent(), 0, 4))->toBe('%PDF')
+        ->and(preg_match_all('#/Type /Page[^s]#', (string) $response->getContent()))->toBe(3);
+});
+
+/** SOLID n°5 as the PM printed it: the opening balance, the payments made so far, then the fifth valuation. */
+function solidFifthValuation(): array
+{
+    $contract = solidContract();
+    $advance = $contract['valuations'][0];
+    $opening = solidOpening($contract)->assertCreated()->json('data');
+    pay($advance['id'], 120000000, 'cash')->assertOk();
+    pay($advance['id'], 141600000, 'cheque', 21600000)->assertOk();
+    pay($opening['id'], 274050000, 'cash')->assertOk();
+    pay($opening['id'], 323379000, 'cheque', 49329000)->assertOk();
+
+    return test()->postJson("/api/v1/subcontracts/{$contract['id']}/valuations", [
+        'valuation_date' => '2026-09-29',
+        'period_end' => '2026-09-29',
+        'materials_deduction' => 0,
+        'backcharges' => 0,
+        'lines' => [['subcontract_item_id' => $contract['items'][0]['id'], 'cumulative_quantity' => 326304]],
+    ])->assertCreated()->json('data');
+}
+
+it('fills every line of the PM valuation and DG synthesis for SOLID n°5', function () {
+    $valuation = solidFifthValuation();
+    test()->postJson("/api/v1/subcontract-valuations/{$valuation['id']}/submit")->assertOk();
+    test()->postJson("/api/v1/subcontract-valuations/{$valuation['id']}/approve")->assertOk();
+
+    $model = SubcontractValuation::with(['subcontract.items.variationLines', 'subcontract.valuations.payments', 'lines', 'payments', 'documents'])->findOrFail($valuation['id']);
+    $statement = app(SubcontractValuationStatement::class)->build($model);
+    $lines = collect($statement['lines'])->map(fn ($amount) => (string) $amount->toScale(0, RoundingMode::HalfUp));
+
+    expect($lines->only(['01', '03A', '04', '06', '07', '08', '09', '10', '11', '13', '18'])->all())->toBe([
+        '01' => '326304000', '03A' => '661008000', '04' => '987312000', '06' => '987312000', '07' => '967008000',
+        '08' => '20304000', '09' => '4060800', '10' => '16243200', '11' => '1015200', '13' => '15228000', '18' => '15228000',
+    ])
+        ->and($lines->only(['20', '21', '22', '23', '26'])->all())->toBe(['20' => '193401600', '21' => '197462400', '22' => '42537600', '23' => '48350400', '26' => '49365600'])
+        ->and($lines->only(['29', '30', '36', '37', '40'])->all())->toBe(['29' => '7614000', '30' => '7614000', '36' => '15228000', '37' => '1370520', '40' => '16598520'])
+        ->and($lines->only(['41', '42', '43', '44', '45', '46', '47', '48'])->all())->toBe([
+            '41' => '740484000', '42' => '980484000', '43' => '394050000', '44' => '394050000',
+            '45' => '192384000', '46' => '88243560', '47' => '70929000', '48' => '17314560',
+        ])
+        ->and($statement['passes'])->toBeTrue()
+        ->and((string) $statement['history']['prior']['outstanding'])->toBe('177156000.00')
+        ->and((string) $statement['prior']['total']['balance'])->toBe('193100040.00')
+        ->and((string) $statement['cumulative']['total']['balance'])->toBe('209698560.00');
+
+    $response = test()->get("/api/v1/subcontract-valuations/{$valuation['id']}/pdf")->assertOk();
+    expect($response->headers->get('Content-Type'))->toBe('application/pdf')
+        ->and(substr_count($response->getContent(), '/Type /Page'))->toBeGreaterThanOrEqual(3);
+});
+
+it('counts materials on site and claims in the gross works and carries them to the next situation', function () {
+    $valuation = solidFifthValuation();
+    $updated = test()->putJson("/api/v1/subcontract-valuations/{$valuation['id']}", [
+        'valuation_date' => '2026-09-29',
+        'period_end' => '2026-09-29',
+        'materials_on_site' => 1000000,
+        'claims' => 500000,
+        'materials_deduction' => 0,
+        'backcharges' => 0,
+        'lines' => [['subcontract_item_id' => $valuation['lines'][0]['subcontract_item_id'], 'cumulative_quantity' => 326304]],
+    ])->assertOk()->json('data');
+
+    expect($updated['materials_on_site'])->toBe('1000000.00')
+        ->and($updated['calculation']['works_this_period'])->toBe('21804000.00');
+
+    test()->postJson("/api/v1/subcontract-valuations/{$valuation['id']}/submit")->assertOk();
+    test()->postJson("/api/v1/subcontract-valuations/{$valuation['id']}/approve")->assertOk();
+
+    $next = test()->postJson("/api/v1/subcontracts/{$valuation['subcontract']['id']}/valuations", [
+        'valuation_date' => '2026-10-31',
+        'period_end' => '2026-10-31',
+        'materials_deduction' => 0,
+        'backcharges' => 0,
+        'lines' => [['subcontract_item_id' => $valuation['lines'][0]['subcontract_item_id'], 'cumulative_quantity' => 326304]],
+    ])->assertCreated()->json('data');
+
+    expect($next['materials_on_site'])->toBe('1000000.00')
+        ->and($next['claims'])->toBe('500000.00')
+        ->and($next['calculation']['works_this_period'])->toBe('0.00');
 });

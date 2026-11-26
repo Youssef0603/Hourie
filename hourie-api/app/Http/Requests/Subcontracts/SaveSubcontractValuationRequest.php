@@ -19,6 +19,8 @@ class SaveSubcontractValuationRequest extends FormRequest
         return [
             'valuation_date' => ['required', 'date_format:Y-m-d'],
             'period_end' => ['required', 'date_format:Y-m-d'],
+            'materials_on_site' => ['sometimes', 'numeric', 'min:0', 'max:9999999999999'],
+            'claims' => ['sometimes', 'numeric', 'min:0', 'max:9999999999999'],
             'materials_deduction' => ['required', 'numeric', 'min:0', 'max:9999999999999'],
             'backcharges' => ['required', 'numeric', 'min:0', 'max:9999999999999'],
             'cash_percent' => ['sometimes', 'numeric', 'min:0', 'max:100'],
