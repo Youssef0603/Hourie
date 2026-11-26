@@ -1,12 +1,14 @@
 <?php
 
 use App\Actions\Insurance\SendInsuranceExpiryReminders;
+use App\Enums\UserRole;
 use App\Jobs\SendInsuranceExpiryReminderJob;
 use App\Mail\InsuranceExpiryReminder;
 use App\Models\ApplicationSetting;
 use App\Models\Employee;
 use App\Models\InsurancePolicy;
 use App\Models\InsurancePolicyReminder;
+use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Mail;
@@ -79,7 +81,7 @@ it('records a terminal reminder delivery failure without marking it sent', funct
         ->and($reminder->attempts)->toBe(1);
 });
 
-it('adds the configured escalation manager starting with the fourth reminder', function () {
+it('adds the Directeur général starting with the fourth reminder', function () {
     Mail::fake();
     $recipient = Employee::factory()->create([
         'email' => 'reminders@example.test',
@@ -87,15 +89,12 @@ it('adds the configured escalation manager starting with the fourth reminder', f
     ]);
     $manager = Employee::factory()->create([
         'email' => 'manager@example.test',
+        'job_title' => 'general_manager',
         'is_active' => true,
     ]);
     ApplicationSetting::query()->create([
         'key' => 'reminder_recipient_employee_ids',
         'value' => [$recipient->id],
-    ]);
-    ApplicationSetting::query()->create([
-        'key' => 'reminder_escalation_employee_id',
-        'value' => [$manager->id],
     ]);
     $policy = InsurancePolicy::query()->create([
         'insurance_type' => 'equipment',
@@ -146,4 +145,17 @@ it('adds the configured escalation manager starting with the fourth reminder', f
     Mail::assertSent(InsuranceExpiryReminder::class, function (InsuranceExpiryReminder $mail) use ($recipient, $manager): bool {
         return $mail->hasTo($recipient->email) && $mail->hasTo($manager->email);
     });
+});
+
+it('shows the Directeur général as the automatic escalation recipient', function () {
+    $this->actingAs(User::factory()->create(['role' => UserRole::Manager]), 'web');
+    $director = Employee::factory()->create(['name' => 'Mahdi Nassar', 'email' => 'dg@example.test', 'job_title' => 'general_manager', 'is_active' => true]);
+    Employee::factory()->create(['email' => 'engineer@example.test', 'job_title' => 'civil_engineer', 'is_active' => true]);
+    Employee::factory()->create(['email' => null, 'job_title' => 'general_manager', 'is_active' => true]);
+
+    $this->getJson('/api/v1/notification-settings')
+        ->assertOk()
+        ->assertJsonCount(1, 'data.escalation_recipients')
+        ->assertJsonPath('data.escalation_recipients.0.employee_id', $director->id)
+        ->assertJsonPath('data.escalation_recipients.0.email', 'dg@example.test');
 });

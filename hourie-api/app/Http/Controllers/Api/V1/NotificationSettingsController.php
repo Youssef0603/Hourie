@@ -12,19 +12,18 @@ class NotificationSettingsController extends Controller
 {
     public function show(): JsonResponse
     {
-        $escalationEmployee = ApplicationSetting::reminderEscalationEmployee();
-
         return response()->json(['data' => [
             'recipients' => ApplicationSetting::reminderRecipientEmployees()->map(fn ($employee) => [
                 'employee_id' => $employee->id,
                 'name' => $employee->name,
                 'email' => $employee->email,
             ])->values(),
-            'escalation_recipient' => $escalationEmployee ? [
-                'employee_id' => $escalationEmployee->id,
-                'name' => $escalationEmployee->name,
-                'email' => $escalationEmployee->email,
-            ] : null,
+            // Automatic: every active Directeur général with an e-mail address.
+            'escalation_recipients' => ApplicationSetting::reminderEscalationEmployees()->map(fn ($employee) => [
+                'employee_id' => $employee->id,
+                'name' => $employee->name,
+                'email' => $employee->email,
+            ])->values(),
         ]]);
     }
 
@@ -40,21 +39,10 @@ class NotificationSettingsController extends Controller
                     ->where('is_active', true)
                     ->whereNotNull('email')),
             ],
-            'escalation_employee_id' => [
-                'nullable',
-                'integer',
-                Rule::exists('employees', 'id')->where(fn ($query) => $query
-                    ->where('is_active', true)
-                    ->whereNotNull('email')),
-            ],
         ]);
         ApplicationSetting::query()->updateOrCreate(
             ['key' => 'reminder_recipient_employee_ids'],
             ['value' => array_values($data['employee_ids'] ?? [])],
-        );
-        ApplicationSetting::query()->updateOrCreate(
-            ['key' => 'reminder_escalation_employee_id'],
-            ['value' => isset($data['escalation_employee_id']) ? [(int) $data['escalation_employee_id']] : []],
         );
 
         return $this->show();

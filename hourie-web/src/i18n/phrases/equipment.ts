@@ -58,6 +58,7 @@ export const equipmentPhrases: Record<string, string> = {
   "Impossible d’enregistrer les destinataires.": "تعذّر حفظ المستلمين.",
   "Escalade des rappels": "تصعيد التذكيرات",
   "Rappels 1 à 3 : liste standard. Dès le 4e : liste standard + manager.": "التذكيرات من 1 إلى 3: القائمة الأساسية. ابتداءً من التذكير الرابع: القائمة الأساسية + المدير.",
+  "Rappels 1 à 3 : liste standard. Dès le 4e : liste standard + directeur général, automatiquement.": "التذكيرات 1 إلى 3: القائمة العادية. ابتداءً من الرابع: القائمة العادية + المدير العام، تلقائيًا.",
   "Manager à ajouter": "المدير المضاف",
   "Responsable d’escalade": "مسؤول التصعيد",
   "Destinataires standards": "المستلمون الأساسيون",

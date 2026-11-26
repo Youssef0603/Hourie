@@ -69,29 +69,31 @@ class ApplicationSetting extends Model
             return $recipients;
         }
 
-        $escalationEmail = static::reminderEscalationEmployee()?->email;
-
-        return collect([...$recipients, $escalationEmail])
+        return collect([...$recipients, ...static::reminderEscalationEmployees()->pluck('email')->all()])
             ->filter(fn ($email) => is_string($email) && filter_var($email, FILTER_VALIDATE_EMAIL))
             ->unique()
             ->values()
             ->all();
     }
 
-    public static function reminderEscalationEmployee(): ?Employee
+    /** Job title of the people added to the reminders from the 4th one on. */
+    public const ESCALATION_JOB_TITLE = 'general_manager';
+
+    /**
+     * People who receive the reminders from the 4th one on, on top of the
+     * standard list: every active Directeur général with an e-mail address.
+     *
+     * @return Collection<int, Employee>
+     */
+    public static function reminderEscalationEmployees(): Collection
     {
-        $value = static::query()->where('key', 'reminder_escalation_employee_id')->value('value');
-        $employeeId = collect(is_array($value) ? $value : [])->first();
-
-        if (! is_int($employeeId) && ! ctype_digit((string) $employeeId)) {
-            return null;
-        }
-
         return Employee::query()
-            ->whereKey((int) $employeeId)
+            ->where('job_title', self::ESCALATION_JOB_TITLE)
             ->where('is_active', true)
             ->whereNotNull('email')
-            ->first(['id', 'name', 'email']);
+            ->where('email', '!=', '')
+            ->orderBy('name')
+            ->get(['id', 'name', 'email']);
     }
 
     /** @return array<int, string> */

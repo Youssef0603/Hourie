@@ -17,11 +17,8 @@ export function ReminderRecipientSettings({
   type ReminderRecipient = { employee_id: number; name: string; email: string };
   type NotificationSettings = {
     recipients: ReminderRecipient[];
-    escalation_recipient: ReminderRecipient | null;
   };
   const [recipients, setRecipients] = useState<ReminderRecipient[]>([]);
-  const [escalationRecipient, setEscalationRecipient] =
-    useState<ReminderRecipient | null>(null);
   const [people, setPeople] = useState<
     Array<{ id: number; name: string; email: string | null }>
   >([]);
@@ -34,7 +31,6 @@ export function ReminderRecipientSettings({
     )
       .then((value) => {
         setRecipients(value.data.recipients);
-        setEscalationRecipient(value.data.escalation_recipient);
       })
       .catch(() => setError(t("Impossible de charger les destinataires.")));
   }, []);
@@ -45,11 +41,7 @@ export function ReminderRecipientSettings({
       .then((value) => setPeople(value.data))
       .catch(() => undefined);
   }, []);
-  async function persist(
-    nextIds: number[],
-    escalationEmployeeId = escalationRecipient?.employee_id ?? null,
-    closeAdd = true,
-  ) {
+  async function persist(nextIds: number[], closeAdd = true) {
     setSaving(true);
     setError(null);
     try {
@@ -57,13 +49,9 @@ export function ReminderRecipientSettings({
         data: NotificationSettings;
       }>("/api/v1/notification-settings", {
         method: "PUT",
-        body: JSON.stringify({
-          employee_ids: nextIds,
-          escalation_employee_id: escalationEmployeeId,
-        }),
+        body: JSON.stringify({ employee_ids: nextIds }),
       });
       setRecipients(response.data.recipients);
-      setEscalationRecipient(response.data.escalation_recipient);
       setEmployeeId("");
       if (closeAdd) onCloseAdd();
     } catch (caught) {
@@ -87,34 +75,9 @@ export function ReminderRecipientSettings({
           <div className="reminder-escalation-copy">
             <h2>{t("Escalade des rappels")}</h2>
             <p>
-              {t("Rappels 1 à 3 : liste standard. Dès le 4e : liste standard + manager.")}
+              {t("Rappels 1 à 3 : liste standard. Dès le 4e : liste standard + directeur général, automatiquement.")}
             </p>
           </div>
-          <label className="reminder-escalation-control">
-            <span>{t("Manager à ajouter")}</span>
-            <SearchableSelect
-              ariaLabel={t("Responsable d’escalade")}
-              value={
-                escalationRecipient
-                  ? String(escalationRecipient.employee_id)
-                  : ""
-              }
-              onChange={(value) =>
-                void persist(
-                  recipients.map((recipient) => recipient.employee_id),
-                  value ? Number(value) : null,
-                  false,
-                )
-              }
-              placeholder={t("Sélectionner une personne")}
-              options={people
-                .filter((person) => person.email)
-                .map((person) => ({
-                  value: String(person.id),
-                  label: `${person.name} — ${person.email}`,
-                }))}
-            />
-          </label>
         </section>
 
         <div className="reminder-recipient-heading">
