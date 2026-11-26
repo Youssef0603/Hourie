@@ -12,15 +12,18 @@ class EmployeeResource extends JsonResource
     /** @return array<string, mixed> */
     public function toArray(Request $request): array
     {
+        $canSeePersonalData = (bool) $request->user()?->role->canManageUsers();
+
         return [
             'id' => $this->id,
             'name' => $this->name,
             'job_title' => $this->job_title,
             'phone_number' => PhoneNumber::format($this->phone_number),
             'email' => $this->email,
-            'passport_number' => $this->passport_number,
+            // Personal data, shown only to those who manage accounts.
+            'passport_number' => $this->when($canSeePersonalData, $this->passport_number),
             'employment_date' => $this->employment_date?->format('Y-m-d'),
-            'birth_date' => $this->birth_date?->format('Y-m-d'),
+            'birth_date' => $this->when($canSeePersonalData, fn () => $this->birth_date?->format('Y-m-d')),
             'is_active' => $this->is_active,
             'equipment_in_custody_count' => $this->when(
                 array_key_exists('equipment_in_custody_count', $this->resource->getAttributes()),

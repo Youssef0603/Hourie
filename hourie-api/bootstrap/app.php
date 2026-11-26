@@ -14,6 +14,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Outside local and tests, answer only requests addressed to APP_URL's
+        // host (assets.hourie.com and its subdomains): a forged Host or
+        // X-Forwarded-Host header cannot make Hourie build links or redirects
+        // to another site.
+        $middleware->trustHosts();
         $middleware->redirectGuestsTo(null);
         $middleware->statefulApi();
         $middleware->append(SetLocale::class);

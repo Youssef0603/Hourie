@@ -46,11 +46,17 @@ class AppServiceProvider extends ServiceProvider
             );
         });
 
-        RateLimiter::for('login', function (Request $request): Limit {
+        // Two limits on login attempts: per username whatever the address (a
+        // faked forwarding header cannot reset it), and per address across all
+        // usernames (one source cannot try many accounts).
+        RateLimiter::for('login', function (Request $request): array {
             $login = $request->string('login')->toString() ?: $request->string('email')->toString();
             $login = Str::transliterate(Str::lower($login));
 
-            return Limit::perMinute(5)->by($login.'|'.$request->ip());
+            return [
+                Limit::perMinute(5)->by('login:'.$login),
+                Limit::perMinute(20)->by('ip:'.$request->ip()),
+            ];
         });
     }
 }

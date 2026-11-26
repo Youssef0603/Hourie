@@ -193,3 +193,31 @@ it('does not expose a public registration endpoint', function () {
         ])
         ->assertNotFound();
 });
+
+it('keeps blocking a username after five attempts even from another address', function () {
+    foreach (range(1, 5) as $attempt) {
+        $this->withServerVariables(['REMOTE_ADDR' => "10.0.0.{$attempt}"])
+            ->withHeader('Origin', 'http://localhost:5173')
+            ->postJson('/api/v1/auth/login', ['login' => 'target.user', 'password' => 'incorrect-password'])
+            ->assertUnprocessable();
+    }
+
+    $this->withServerVariables(['REMOTE_ADDR' => '10.0.0.99'])
+        ->withHeader('Origin', 'http://localhost:5173')
+        ->postJson('/api/v1/auth/login', ['login' => 'target.user', 'password' => 'incorrect-password'])
+        ->assertTooManyRequests();
+});
+
+it('limits one address trying many usernames', function () {
+    foreach (range(1, 20) as $attempt) {
+        $this->withServerVariables(['REMOTE_ADDR' => '10.0.1.1'])
+            ->withHeader('Origin', 'http://localhost:5173')
+            ->postJson('/api/v1/auth/login', ['login' => "user{$attempt}", 'password' => 'incorrect-password'])
+            ->assertUnprocessable();
+    }
+
+    $this->withServerVariables(['REMOTE_ADDR' => '10.0.1.1'])
+        ->withHeader('Origin', 'http://localhost:5173')
+        ->postJson('/api/v1/auth/login', ['login' => 'user21', 'password' => 'incorrect-password'])
+        ->assertTooManyRequests();
+});

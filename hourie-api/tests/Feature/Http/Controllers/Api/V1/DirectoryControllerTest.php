@@ -764,3 +764,66 @@ it('no longer accepts the generator manager role for an account', function () {
         'password_confirmation' => 'Very-Secure-Pass-2026',
     ])->assertUnprocessable()->assertJsonValidationErrors('role');
 });
+
+it('leaves a cut access off when an edit does not send the switch', function () {
+    $manager = User::factory()->create(['role' => UserRole::Manager]);
+    $user = User::factory()->create(['role' => UserRole::Viewer, 'username' => 'cut.user', 'is_active' => false]);
+    $employee = Employee::factory()->for($user)->create(['name' => 'Cut User']);
+
+    $this->actingAs($manager, 'web')->patchJson("/api/v1/employees/{$employee->id}", ['name' => 'Cut User Renamed', 'username' => 'cut.user', 'role' => 'viewer'])
+        ->assertOk();
+
+    expect($user->fresh()->is_active)->toBeFalse();
+});
+
+it('never turns access back on for someone removed from Personnel', function () {
+    $manager = User::factory()->create(['role' => UserRole::Manager]);
+    $user = User::factory()->create(['role' => UserRole::Viewer, 'username' => 'gone.user', 'is_active' => false]);
+    $employee = Employee::factory()->for($user)->create(['name' => 'Gone User', 'is_active' => false]);
+
+    $this->actingAs($manager, 'web')->patchJson("/api/v1/employees/{$employee->id}", ['name' => 'Gone User', 'has_access' => true, 'username' => 'gone.user', 'role' => 'viewer'])
+        ->assertOk();
+
+    expect($user->fresh()->is_active)->toBeFalse();
+});
+
+it('logs a person out everywhere when an admin resets their password', function () {
+    $manager = User::factory()->create(['role' => UserRole::Manager]);
+    $user = User::factory()->create(['role' => UserRole::Viewer, 'username' => 'reset.user', 'remember_token' => 'old-remember-token']);
+    $employee = Employee::factory()->for($user)->create(['name' => 'Reset User']);
+    DB::table('sessions')->insert(['id' => 'stolen-session', 'user_id' => $user->id, 'payload' => '', 'last_activity' => now()->timestamp]);
+
+    $this->actingAs($manager, 'web')->patchJson("/api/v1/employees/{$employee->id}", [
+        'name' => 'Reset User',
+        'has_access' => true,
+        'username' => 'reset.user',
+        'role' => 'viewer',
+        'password' => 'Brand-New-Password-2026',
+        'password_confirmation' => 'Brand-New-Password-2026',
+    ])->assertOk();
+
+    expect(DB::table('sessions')->where('user_id', $user->id)->exists())->toBeFalse()
+        ->and($user->fresh()->remember_token)->not->toBe('old-remember-token');
+});
+
+it('hides passport numbers and birth dates from viewers', function () {
+    $employee = Employee::factory()->create(['name' => 'Private Person', 'passport_number' => 'P1234567', 'birth_date' => '1990-05-01']);
+
+    $this->actingAs(User::factory()->create(['role' => UserRole::Viewer]), 'web')
+        ->getJson("/api/v1/employees/{$employee->id}")
+        ->assertOk()
+        ->assertJsonMissingPath('data.passport_number')
+        ->assertJsonMissingPath('data.birth_date');
+
+    $this->getJson('/api/v1/employees?search=P1234567')->assertOk()->assertJsonCount(0, 'data');
+});
+
+it('shows passport numbers and birth dates to account managers', function () {
+    $employee = Employee::factory()->create(['name' => 'Private Person', 'passport_number' => 'P1234567', 'birth_date' => '1990-05-01']);
+
+    $this->actingAs(User::factory()->create(['role' => UserRole::Manager]), 'web')
+        ->getJson("/api/v1/employees/{$employee->id}")
+        ->assertOk()
+        ->assertJsonPath('data.passport_number', 'P1234567')
+        ->assertJsonPath('data.birth_date', '1990-05-01');
+});

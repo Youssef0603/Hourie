@@ -45,7 +45,7 @@ class EmployeeController extends Controller
                     ->orWhere('email', 'like', $term)
                     ->orWhere('phone_number', 'like', $term)
                     ->when(strlen($phoneDigits) >= 3, fn ($phone) => $phone->orWhere('phone_number', 'like', '%'.$phoneDigits.'%'))
-                    ->orWhere('passport_number', 'like', $term)
+                    ->when($request->user()?->role->canManageUsers(), fn ($builder) => $builder->orWhere('passport_number', 'like', $term))
                     ->orWhereHas('user', fn ($user) => $user->where('username', 'like', $term)->orWhere('email', 'like', $term)));
             })
             ->when($request->string('access')->toString() === 'with_access', fn ($query) => $query->whereNotNull('user_id'))
@@ -173,7 +173,9 @@ class EmployeeController extends Controller
     {
         $data = $request->validated();
 
-        DB::transaction(function () use ($data, $employee): void {
+        $currentSessionId = $request->hasSession() ? $request->session()->getId() : '';
+
+        DB::transaction(function () use ($data, $employee, $currentSessionId): void {
             $employeeData = [
                 'name' => $data['name'],
                 'job_title' => $data['job_title'] ?? $employee->job_title,
@@ -213,8 +215,14 @@ class EmployeeController extends Controller
                 'username' => $data['username'] ?? $employee->user?->username ?? $this->generateUsername($data['name']),
                 'email' => $data['email'] ?? null,
                 'role' => $data['role'] ?? UserRole::Viewer,
-                'is_active' => true,
             ];
+
+            // Access is only turned back on when the switch says so, and never
+            // for someone removed from Personnel: an edit that leaves the
+            // switch out keeps the account as it is.
+            if (($data['has_access'] ?? null) === true && $employee->is_active) {
+                $accountData['is_active'] = true;
+            }
 
             if (filled($data['password'] ?? null)) {
                 $accountData['password'] = $data['password'];
@@ -223,6 +231,17 @@ class EmployeeController extends Controller
 
             if ($employee->user_id !== null) {
                 $employee->user->update($accountData);
+
+                // A password reset by an admin must lock out whoever still holds
+                // the old one: end the person's sessions (except the admin's own
+                // when editing themselves) and invalidate "remember me".
+                if (filled($data['password'] ?? null)) {
+                    DB::table('sessions')
+                        ->where('user_id', $employee->user_id)
+                        ->where('id', '!=', $currentSessionId)
+                        ->delete();
+                    $employee->user->forceFill(['remember_token' => Str::random(60)])->save();
+                }
             } elseif (filled($data['password'] ?? null)) {
                 $accountData['password'] = $data['password'];
                 $accountData['must_change_password'] = true;
