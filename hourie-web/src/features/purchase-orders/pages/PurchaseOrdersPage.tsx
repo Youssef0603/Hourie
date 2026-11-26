@@ -13,7 +13,7 @@ import { LoadingSpinner } from "../../../shared/components/LoadingSpinner";
 import { PaginatedDocumentList } from "../../../shared/components/PaginatedDocumentList";
 import { SearchableSelect } from "../../../shared/components/SearchableSelect";
 import { DocumentUploadDropzone } from "../../../shared/components/DocumentUploadDropzone";
-import type { PaginationMeta } from "../../../shared/api/pagination";
+import { usePaginatedList } from "../../../shared/usePaginatedList";
 import { InventoryFormSection } from "../../equipment/components/AssetForm";
 import { EquipmentCreationPanel } from "../../equipment/components/EquipmentCreationPanel";
 import { deletePurchaseOrder, deletePurchaseOrderDeliveryNote, downloadPurchaseOrderPdf, getPurchaseOrders, getSiteMaterials, savePurchaseOrder, uploadPurchaseOrderDeliveryNotes, type SiteMaterial } from "../api";
@@ -108,11 +108,13 @@ function dateLabel(value: string) {
 
 
 export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = [] }: { defaultPreparedBy: string; canManage: boolean; projects?: Array<{ id: number; name: string; code: string | null }> }) {
-  const [orders, setOrders] = useState<PurchaseOrder[]>([]);
   const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const [pagination, setPagination] = useState<PaginationMeta | null>(null);
-  const [loading, setLoading] = useState(true);
+  const loadOrders = useCallback((page: number) => getPurchaseOrders(search, page), [search]);
+  const [error, setError] = useState<string | null>(null);
+  const { items: orders, setItems: setOrders, meta: pagination, setPage, loading, error: listError, reload: refresh } = usePaginatedList<PurchaseOrder>(
+    loadOrders,
+    operationPhrase("Impossible de charger les bons de commande."),
+  );
   const [editor, setEditor] = useState<EditableOrder | null>(null);
   const [siteMaterials, setSiteMaterials] = useState<SiteMaterial[]>([]);
   const editorProjectId = editor?.project_id ?? null;
@@ -133,25 +135,6 @@ export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = []
   const [selectedOrder, setSelectedOrder] = useState<PurchaseOrder | null>(null);
   const [preview, setPreview] = useState<PurchaseOrder | null>(null);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await getPurchaseOrders(search, page);
-      setOrders(response.data);
-      setPagination(response.meta);
-    } catch {
-      setError(operationPhrase("Impossible de charger les bons de commande."));
-    } finally {
-      setLoading(false);
-    }
-  }, [page, search]);
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => void refresh(), 200);
-    return () => window.clearTimeout(timer);
-  }, [refresh]);
 
   const totals = useMemo(() => {
     const subtotal = editor?.items.reduce((sum, item) => sum + numeric(item.quantity) * numeric(item.unit_price), 0) ?? 0;
@@ -272,7 +255,7 @@ export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = []
 
   return (
     <main className="equipment-page purchase-orders-page">
-      {error && <div className="form-alert" role="alert">{error}</div>}
+      {(error ?? listError) && <div className="form-alert" role="alert">{error ?? listError}</div>}
 
       <>
         <section className="page-heading po-workspace-heading">

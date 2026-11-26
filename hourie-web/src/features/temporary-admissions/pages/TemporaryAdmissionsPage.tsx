@@ -16,7 +16,8 @@ import { operationPhrase, operationsText } from "../../../i18n/operations";
 import { formatDate as formatApiDate } from "../../../shared/format";
 import type { EquipmentFilterOptions } from "../../equipment/types";
 import type { AdmissionEquipment, TemporaryAdmission } from "../types";
-import type { PaginatedResponse, PaginationMeta } from "../../../shared/api/pagination";
+import type { PaginatedResponse } from "../../../shared/api/pagination";
+import { usePaginatedList } from "../../../shared/usePaginatedList";
 import { TotalCount } from "../../../shared/components/TotalCount";
 
 export function TemporaryAdmissionsPage({
@@ -33,12 +34,8 @@ export function TemporaryAdmissionsPage({
   };
 }) {
   const text = operationsText().admissions;
-  const [items, setItems] = useState<TemporaryAdmission[]>([]);
-  const [pagination, setPagination] = useState<PaginationMeta | null>(null);
   const [equipment, setEquipment] = useState<AdmissionEquipment[]>([]);
   const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [formItem, setFormItem] = useState<
     TemporaryAdmission | null | undefined
@@ -49,24 +46,16 @@ export function TemporaryAdmissionsPage({
   const [selected, setSelected] = useState<TemporaryAdmission | null>(null);
   const [relatedEquipmentId, setRelatedEquipmentId] = useState<number | null>(null);
 
-  const loadItems = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const fetchAdmissions = useCallback((page: number) => {
     const params = new URLSearchParams({ page: String(page) });
     if (search.trim()) params.set("search", search.trim());
-    try {
-      const admissions = await apiRequest<PaginatedResponse<TemporaryAdmission>>(`/api/v1/temporary-admissions?${params}`);
-      setItems(admissions.data ?? []);
-      setPagination(admissions.meta ?? null);
-    } catch (caught) {
-      setError(admissionError(caught, text.loadError));
-    } finally { setLoading(false); }
-  }, [page, search, text.loadError]);
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => void loadItems(), 200);
-    return () => window.clearTimeout(timer);
-  }, [loadItems]);
+    return apiRequest<PaginatedResponse<TemporaryAdmission>>(`/api/v1/temporary-admissions?${params}`);
+  }, [search]);
+  const loadErrorMessage = useCallback((caught: unknown) => admissionError(caught, text.loadError), [text.loadError]);
+  const { items, setItems, meta: pagination, setPage, loading, error: listError, reload: loadItems } = usePaginatedList<TemporaryAdmission>(
+    fetchAdmissions,
+    loadErrorMessage,
+  );
 
   useEffect(() => {
     Promise.all([
@@ -124,9 +113,9 @@ export function TemporaryAdmissionsPage({
           loading={loading}
         />
       </section>
-      {error && (
+      {(error ?? listError) && (
         <div className="form-alert" role="alert">
-          {error}
+          {error ?? listError}
         </div>
       )}
       <section className="inventory-panel">

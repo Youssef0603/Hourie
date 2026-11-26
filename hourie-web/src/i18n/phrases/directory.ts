@@ -1,5 +1,7 @@
 /** Arabic for French phrases of: Chantiers, personnel, assurances, cautions et admissions temporaires. Keys are the exact French text passed to operationPhrase(). */
 export const directoryPhrases: Record<string, string> = {
+  "Impossible de charger les cautions.": "تعذّر تحميل الضمانات.",
+  "Impossible de charger les assurances.": "تعذّر تحميل التأمينات.",
   "Accès coupé : ne peut plus se connecter": "الوصول موقوف: لا يمكنه تسجيل الدخول",
   "Vous ne pouvez pas couper votre propre accès.": "لا يمكنك إيقاف وصولك الخاص.",
   "Cette personne peut se connecter à Hourie.": "يمكن لهذا الشخص تسجيل الدخول إلى Hourie.",

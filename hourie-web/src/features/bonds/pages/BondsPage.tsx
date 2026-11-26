@@ -17,7 +17,8 @@ import type { Bond, BondSite as Site, BondStatus, BondType } from "../types";
 import { BondDetails } from "../components/BondDetails";
 import { BondFilters } from "../components/BondFilters";
 import { BondForm } from "../components/BondForm";
-import type { PaginatedResponse, PaginationMeta } from "../../../shared/api/pagination";
+import type { PaginatedResponse } from "../../../shared/api/pagination";
+import { usePaginatedList } from "../../../shared/usePaginatedList";
 import { operationPhrase } from "../../../i18n/operations";
 import { TotalCount } from "../../../shared/components/TotalCount";
 
@@ -26,44 +27,34 @@ type BondsPageProps = {
 };
 
 export function BondsPage({ initialSiteId = null }: BondsPageProps) {
-  const [bonds, setBonds] = useState<Bond[]>([]);
-  const [pagination, setPagination] = useState<PaginationMeta | null>(null);
   const [sites, setSites] = useState<Site[]>([]);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<BondStatus | "all">("all");
   const [type, setType] = useState<BondType | "all">("all");
   const [siteId, setSiteId] = useState(initialSiteId ? String(initialSiteId) : "");
-  const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [editing, setEditing] = useState<Bond | null>(null);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [selected, setSelected] = useState<Bond | null>(null);
 
-  useEffect(() => {
-    setSiteId(initialSiteId ? String(initialSiteId) : "");
-    setPage(1);
-  }, [initialSiteId]);
-
-  const refresh = useCallback(async () => {
-    setLoading(true);
+  const fetchBonds = useCallback((page: number) => {
     const params = new URLSearchParams({ page: String(page) });
     if (search.trim()) params.set("search", search.trim());
     if (status !== "all") params.set("status", status);
     if (type !== "all") params.set("bond_type", type);
     if (siteId) params.set("project_id", siteId);
-    try {
-      const response = await apiRequest<PaginatedResponse<Bond>>(`/api/v1/bonds?${params}`);
-      setBonds(response.data ?? []);
-      setPagination(response.meta ?? null);
-    } finally { setLoading(false); }
-  }, [page, search, siteId, status, type]);
+    return apiRequest<PaginatedResponse<Bond>>(`/api/v1/bonds?${params}`);
+  }, [search, siteId, status, type]);
+  const { items: bonds, setItems: setBonds, meta: pagination, setPage, loading, error: listError, reload: refresh } = usePaginatedList<Bond>(
+    fetchBonds,
+    operationPhrase("Impossible de charger les cautions."),
+  );
 
   useEffect(() => {
-    const timer = window.setTimeout(() => void refresh(), 200);
-    return () => window.clearTimeout(timer);
-  }, [refresh]);
+    setSiteId(initialSiteId ? String(initialSiteId) : "");
+    setPage(1);
+  }, [initialSiteId, setPage]);
 
   useEffect(() => {
     apiRequest<PaginatedResponse<Site>>("/api/v1/sites?per_page=100")
@@ -106,6 +97,7 @@ export function BondsPage({ initialSiteId = null }: BondsPageProps) {
           loading={loading}
         />
       </section>
+      {listError && <div className="form-alert" role="alert">{listError}</div>}
       <section className="insurance-list-area inventory-panel">
         <div className="filter-bar">
           <SearchField

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { useCallback, useState, type FormEvent } from 'react'
 import { fr } from '../../../i18n/fr'
 import { operationPhrase } from '../../../i18n/operations'
 import { createSite, getSite, getSites } from '../api'
@@ -21,7 +21,7 @@ import { ToolbarIconButton } from '../../../shared/components/ToolbarButtons'
 import { clickableRow } from '../../../shared/clickableRow'
 import { formatDate } from '../../../shared/format'
 import { normalizeSearch } from '../../../shared/text'
-import type { PaginationMeta } from '../../../shared/api/pagination'
+import { usePaginatedList } from '../../../shared/usePaginatedList'
 import { DirectoryDetailPanel } from '../components/DirectoryDetailPanel'
 
 type SitesPageProps = {
@@ -35,11 +35,7 @@ type SitesPageProps = {
 }
 
 export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, onOpenBonds, onOpenPeople, catalogs, employees = [] }: SitesPageProps) {
-  const [sites, setSites] = useState<Site[]>([])
   const [search, setSearch] = useState('')
-  const [currentPage, setCurrentPage] = useState(1)
-  const [pagination, setPagination] = useState<PaginationMeta | null>(null)
-  const [isRefreshing, setIsRefreshing] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [name, setName] = useState('')
   const [code, setCode] = useState('')
@@ -56,29 +52,11 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, onOpenBonds, on
   const [detailsError, setDetailsError] = useState<string | null>(null)
   const [isEditingSite, setIsEditingSite] = useState(false)
 
-  const loadSites = useCallback(async (page: number) => {
-    setError(null)
-    setIsRefreshing(true)
-    try {
-      const response = await getSites(page, search)
-      setSites(response.data ?? [])
-      setPagination(response.meta ?? null)
-      if (response.meta) setCurrentPage(response.meta.current_page)
-    } catch {
-      setError(fr.directory.loadError)
-    } finally {
-      setIsRefreshing(false)
-    }
-  }, [search])
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => void loadSites(1), 200)
-    return () => window.clearTimeout(timer)
-  }, [loadSites])
-
-  async function refreshSites(page = currentPage) {
-    await loadSites(page)
-  }
+  const fetchSites = useCallback((page: number) => getSites(page, search), [search])
+  const { items: sites, setItems: setSites, meta: pagination, setPage: setCurrentPage, loading: isRefreshing, error: listError, reload: refreshSites } = usePaginatedList<Site>(
+    fetchSites,
+    fr.directory.loadError,
+  )
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -152,7 +130,7 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, onOpenBonds, on
   return (
     <main className="directory-page">
       <DirectoryHeading title={fr.directory.sites} subtitle={fr.directory.sitesSubtitle} canAdd={false} showForm={showForm} onToggle={() => setShowForm((value) => !value)} addLabel={fr.directory.addSite} />
-      {error && <div className="form-alert" role="alert">{error}</div>}
+      {listError && <div className="form-alert" role="alert">{listError}</div>}
       {showForm && (
         <Modal title={fr.directory.addSite} size="wide" onClose={() => setShowForm(false)}>
           <form className="site-form" onSubmit={submit}>
@@ -287,7 +265,7 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, onOpenBonds, on
                 <td><span className={`project-status project-status-${site.status}`} style={catalogBadgeStyle(catalogs, 'project_status', site.status)}>{catalogLabel(catalogs, 'project_status', site.status)}</span></td>
               </tr>)}</tbody>
           </DataTable>
-          {pagination && <Pagination meta={pagination} disabled={isRefreshing} hideWhenSinglePage={false} onPageChange={(nextPage) => void refreshSites(nextPage)} />}
+          {pagination && <Pagination meta={pagination} disabled={isRefreshing} hideWhenSinglePage={false} onPageChange={setCurrentPage} />}
         </>}
         {!isRefreshing && visibleSites.length === 0 && <EmptyState icon="location" title={operationPhrase(searchTerm ? 'Aucun chantier trouvé' : 'Aucun chantier enregistré')} description={operationPhrase(searchTerm ? 'Modifiez votre recherche pour afficher d’autres chantiers.' : 'Les chantiers ajoutés apparaîtront ici.')} />}
         {isRefreshing && <div className="table-state"><LoadingSpinner label={fr.common.loading} /></div>}

@@ -27,8 +27,9 @@ import { RelatedEquipmentDetailPanel } from "../../equipment/components/RelatedE
 import type { AuthenticatedUser } from "../../auth/types";
 import type { Language } from "../../../i18n/fr";
 import type { EquipmentFilterOptions } from "../../equipment/types";
-import type { PaginatedResponse, PaginationMeta } from "../../../shared/api/pagination";
-import { operationsText } from "../../../i18n/operations";
+import type { PaginatedResponse } from "../../../shared/api/pagination";
+import { usePaginatedList } from "../../../shared/usePaginatedList";
+import { operationsText, operationPhrase } from "../../../i18n/operations";
 import { TotalCount } from "../../../shared/components/TotalCount";
 
 export function InsurancePage({
@@ -45,10 +46,6 @@ export function InsurancePage({
   };
 }) {
   const text = operationsText().insurance;
-  const [policies, setPolicies] = useState<Policy[]>([]);
-  const [pagination, setPagination] = useState<PaginationMeta | null>(null);
-  const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
-  const [page, setPage] = useState(1);
   const [activeType, setActiveType] = useState<Kind | "all">(
     initialSiteId ? "trc_rc" : "all",
   );
@@ -76,34 +73,20 @@ export function InsurancePage({
   const [selectedId, setSelectedId] = useState<number | null>(initialPolicyId);
   const [selected, setSelected] = useState<Policy | null>(null);
   const [relatedEquipmentId, setRelatedEquipmentId] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  const loadPolicies = useCallback(async () => {
-    setLoading(true);
+  const fetchPolicies = useCallback((page: number) => {
     const params = new URLSearchParams({ page: String(page) });
     if (activeType !== "all") params.set("insurance_type", activeType);
     if (search.trim()) params.set("search", search.trim());
     if (status !== "all") params.set("status", status);
     if (projectId) params.set("project_id", projectId);
-    try {
-      const response = await apiRequest<PaginatedResponse<Policy> & { category_counts: Record<string, number> }>(`/api/v1/insurance-policies?${params}`);
-      setPolicies(response.data ?? []);
-      setPagination(response.meta ?? null);
-      setCategoryCounts(response.category_counts ?? {});
-    } finally {
-      setLoading(false);
-    }
-  }, [activeType, page, projectId, search, status]);
-
-  function refreshPolicies() {
-    setLoading(true);
-    loadPolicies();
-  }
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => void loadPolicies(), 200);
-    return () => window.clearTimeout(timer);
-  }, [loadPolicies]);
+    return apiRequest<PaginatedResponse<Policy> & { category_counts: Record<string, number> }>(`/api/v1/insurance-policies?${params}`);
+  }, [activeType, projectId, search, status]);
+  const { items: policies, setItems: setPolicies, meta: pagination, response, setPage, loading, error: listError, reload: refreshPolicies } = usePaginatedList<Policy, PaginatedResponse<Policy> & { category_counts: Record<string, number> }>(
+    fetchPolicies,
+    operationPhrase("Impossible de charger les assurances."),
+  );
+  const categoryCounts = response?.category_counts ?? {};
 
   useEffect(() => {
     apiRequest<PaginatedResponse<{
@@ -160,6 +143,7 @@ export function InsurancePage({
           loading={loading}
         />
       </section>
+      {listError && <div className="form-alert" role="alert">{listError}</div>}
       <section className="asset-category-section insurance-category-section">
         <h2>{text.categories}</h2>
         <nav className="asset-categories" aria-label={text.categoryAria}>
@@ -209,7 +193,7 @@ export function InsurancePage({
               onClick={() => setShowFilters((value) => !value)}
             />
             <ToolbarIconButton icon="add" label={text.addPolicy} onClick={() => setShowAdd(true)} />
-            <ToolbarIconButton icon="refresh" label={text.refresh} onClick={() => refreshPolicies()} />
+            <ToolbarIconButton icon="refresh" label={text.refresh} disabled={loading} onClick={() => void refreshPolicies()} />
           </div>
         </div>
         <div className="equipment-table-wrap">

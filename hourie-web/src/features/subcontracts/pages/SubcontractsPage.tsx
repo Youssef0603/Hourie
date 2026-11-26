@@ -7,7 +7,7 @@ import { Pagination } from "../../../shared/components/Pagination";
 import { SearchField } from "../../../shared/components/SearchField";
 import { ToolbarIconButton } from "../../../shared/components/ToolbarButtons";
 import { TotalCount } from "../../../shared/components/TotalCount";
-import type { PaginationMeta } from "../../../shared/api/pagination";
+import { usePaginatedList } from "../../../shared/usePaginatedList";
 import { deleteSubcontract, getSubcontract, getSubcontracts } from "../api";
 import { apiErrorMessage } from "../../../shared/api/errors";
 import { SubcontractDetails } from "../components/SubcontractDetails";
@@ -32,36 +32,17 @@ export function SubcontractsPage({ canManage, projects, initialSubcontractId = n
   initialSubcontractId?: number | null;
   onSelect?: (subcontractId: number | null) => void;
 }) {
-  const [subcontracts, setSubcontracts] = useState<Subcontract[]>([]);
-  const [pagination, setPagination] = useState<PaginationMeta | null>(null);
   const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const loadSubcontracts = useCallback((page: number) => getSubcontracts(search, page), [search]);
+  const { items: subcontracts, meta: pagination, setPage, loading, error, reload: refresh } = usePaginatedList<Subcontract>(
+    loadSubcontracts,
+    operationPhrase("Impossible de charger les contrats de sous-traitance."),
+  );
   const [selectedId, setSelectedId] = useState<number | null>(initialSubcontractId);
   const [loadedSelection, setSelected] = useState<Subcontract | null>(null);
   const selected = selectedId === null ? null : loadedSelection;
   const [editor, setEditor] = useState<Editor | null>(null);
   const [detailError, setDetailError] = useState<string | null>(null);
-
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await getSubcontracts(search, page);
-      setSubcontracts(response.data);
-      setPagination(response.meta);
-      setError(null);
-    } catch {
-      setError(operationPhrase("Impossible de charger les contrats de sous-traitance."));
-    } finally {
-      setLoading(false);
-    }
-  }, [search, page]);
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => void refresh(), 200);
-    return () => window.clearTimeout(timer);
-  }, [refresh]);
 
   const reloadSelected = useCallback(async (id: number) => {
     try {

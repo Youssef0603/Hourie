@@ -25,7 +25,7 @@ import {
 } from "../components/PeopleFilterDrawer";
 import { PersonDetail } from "../components/PersonDetail";
 import { DirectoryDetailPanel } from "../components/DirectoryDetailPanel";
-import type { PaginationMeta } from "../../../shared/api/pagination";
+import { usePaginatedList } from "../../../shared/usePaginatedList";
 import type { AuthenticatedUser } from "../../auth/types";
 import type { Language } from "../../../i18n/fr";
 import type { EquipmentFilterOptions } from "../../equipment/types";
@@ -62,16 +62,12 @@ export function PeoplePage({
   companyLocations,
   relatedEquipmentContext,
 }: PeoplePageProps) {
-  const [people, setPeople] = useState<Employee[]>([]);
   const [search, setSearch] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pagination, setPagination] = useState<PaginationMeta | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [accessFilter, setAccessFilter] = useState<AccessFilter>("");
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("");
   const [jobTitleFilter, setJobTitleFilter] = useState("");
   const [projectFilter, setProjectFilter] = useState(initialProjectId ? String(initialProjectId) : "");
-  const [isRefreshing, setIsRefreshing] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedPerson, setSelectedPerson] = useState<EmployeeDetails | null>(
@@ -82,11 +78,22 @@ export function PeoplePage({
   const [relatedEquipmentId, setRelatedEquipmentId] = useState<number | null>(null);
   const [relatedRecord, setRelatedRecord] = useState<RelatedRecordReference | null>(null);
   const personRequest = useRef(0);
+  const fetchPeople = useCallback((page: number) => getEmployees(page, {
+    ...(search.trim() ? { search: search.trim() } : {}),
+    ...(accessFilter ? { access: accessFilter } : {}),
+    ...(roleFilter ? { role: roleFilter } : {}),
+    ...(jobTitleFilter ? { job_title: jobTitleFilter } : {}),
+    ...(projectFilter ? { project_id: projectFilter } : {}),
+  }), [accessFilter, jobTitleFilter, projectFilter, roleFilter, search]);
+  const { items: people, meta: pagination, setPage: setCurrentPage, loading: isRefreshing, error: listError, reload: refreshPeople } = usePaginatedList<Employee>(
+    fetchPeople,
+    fr.directory.loadError,
+  );
 
   useEffect(() => {
     setProjectFilter(initialProjectId ? String(initialProjectId) : "");
     setCurrentPage(1);
-  }, [initialProjectId]);
+  }, [initialProjectId, setCurrentPage]);
 
   const searchTerm = normalizeSearch(search.trim());
   const searchedPeople = searchTerm
@@ -122,36 +129,6 @@ export function PeoplePage({
   const personEditFormId = selectedPerson
     ? `person-edit-form-${selectedPerson.id}`
     : "person-edit-form";
-
-  const loadPeople = useCallback(async (pageToLoad: number) => {
-    setError(null);
-    setIsRefreshing(true);
-    try {
-      const response = await getEmployees(pageToLoad, {
-        ...(search.trim() ? { search: search.trim() } : {}),
-        ...(accessFilter ? { access: accessFilter } : {}),
-        ...(roleFilter ? { role: roleFilter } : {}),
-        ...(jobTitleFilter ? { job_title: jobTitleFilter } : {}),
-        ...(projectFilter ? { project_id: projectFilter } : {}),
-      });
-      setPeople(response.data ?? []);
-      setPagination(response.meta ?? null);
-      if (response.meta) setCurrentPage(response.meta.current_page);
-    } catch {
-      setError(fr.directory.loadError);
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, [accessFilter, jobTitleFilter, projectFilter, roleFilter, search]);
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => void loadPeople(1), 200);
-    return () => window.clearTimeout(timer);
-  }, [loadPeople]);
-
-  async function refreshPeople(pageToLoad = currentPage) {
-    await loadPeople(pageToLoad);
-  }
 
   async function openPerson(id: number) {
     const requestId = ++personRequest.current;
@@ -213,9 +190,9 @@ export function PeoplePage({
           loading={isRefreshing}
         />
       </section>
-      {error && (
+      {(error ?? listError) && (
         <div className="form-alert" role="alert">
-          {error}
+          {error ?? listError}
         </div>
       )}
       {showForm && (
@@ -346,7 +323,7 @@ export function PeoplePage({
                 meta={pagination}
                 disabled={isRefreshing}
                 hideWhenSinglePage={false}
-                onPageChange={(nextPage) => void refreshPeople(nextPage)}
+                onPageChange={setCurrentPage}
               />
             )}
           </>
