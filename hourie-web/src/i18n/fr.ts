@@ -444,7 +444,7 @@ const french = {
   generatorDocuments: {
     title: 'Documentation technique',
     add: 'Ajouter des documents techniques',
-    formats: 'PDF uniquement · 25 Mo maximum par fichier',
+    formats: 'PDF uniquement · 10 Mo maximum par fichier',
     empty: 'Aucun document technique enregistré.',
     emptyDescription: 'Les manuels et programmes d’entretien officiels de ce générateur apparaîtront ici.',
     uploading: 'Importation des documents…',
@@ -1001,7 +1001,7 @@ const arabic = {
   generatorDocuments: {
     title: 'الوثائق الفنية',
     add: 'إضافة وثائق فنية',
-    formats: 'PDF فقط · 25 ميغابايت كحد أقصى لكل ملف',
+    formats: 'PDF فقط · 10 ميغابايت كحد أقصى لكل ملف',
     empty: 'لا توجد وثائق فنية مسجلة.',
     emptyDescription: 'ستظهر هنا الأدلة الرسمية وبرامج صيانة هذا المولد.',
     uploading: 'جارٍ رفع الوثائق…',

@@ -7,6 +7,7 @@ use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 
 uses(LazilyRefreshDatabase::class);
@@ -166,4 +167,24 @@ it('prevents viewers from changing bonds', function () {
     ])->assertForbidden();
 
     $this->actingAs($viewer, 'web')->deleteJson("/api/v1/bonds/{$bond->id}")->assertForbidden();
+});
+
+it('records nothing and reports the error when the storage refuses an uploaded file', function () {
+    $readOnly = sys_get_temp_dir().'/hourie-readonly-'.uniqid();
+    mkdir($readOnly, 0555);
+    config(['filesystems.disks.equipment-documents' => ['driver' => 'local', 'root' => $readOnly, 'throw' => false, 'report' => false]]);
+    Storage::forgetDisk('equipment-documents');
+    $manager = User::factory()->create(['role' => UserRole::CmsManager]);
+    $bond = Bond::query()->create(['project_id' => Project::factory()->create()->id, 'bond_type' => 'performance', 'amount' => 1000, 'currency' => 'XOF']);
+
+    try {
+        $this->actingAs($manager, 'web')->postJson("/api/v1/bonds/{$bond->id}/documents", [
+            'documents' => [UploadedFile::fake()->createWithContent('garantie.pdf', "%PDF-1.4\n%%EOF")],
+        ])->assertServiceUnavailable()->assertJsonPath('message', __('validation.file_upload_failed'));
+    } finally {
+        chmod($readOnly, 0755);
+        File::deleteDirectory($readOnly);
+    }
+
+    expect($bond->documents()->count())->toBe(0);
 });

@@ -10,6 +10,7 @@ use App\Http\Requests\Bonds\UpdateBondRequest;
 use App\Http\Resources\BondResource;
 use App\Models\Bond;
 use App\Models\BondDocument;
+use App\Support\UploadedFileStorage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -120,7 +121,7 @@ class BondController extends Controller
     {
         $disk = (string) config('filesystems.equipment_documents_disk');
         $documents = collect($request->file('documents', []))->map(function ($file) use ($bond, $request, $disk): BondDocument {
-            $path = $file->store("bonds/{$bond->id}/documents", $disk);
+            $path = UploadedFileStorage::store($file, "bonds/{$bond->id}/documents", $disk);
 
             $document = BondDocument::query()->create([
                 'uploaded_by_user_id' => $request->user()->id,

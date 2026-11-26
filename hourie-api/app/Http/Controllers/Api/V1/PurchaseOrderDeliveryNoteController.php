@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\PurchaseOrders\StorePurchaseOrderDeliveryNotesRequest;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderDeliveryNote;
+use App\Support\UploadedFileStorage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -17,7 +18,7 @@ class PurchaseOrderDeliveryNoteController extends Controller
     {
         $documents = collect($request->file('delivery_notes', []))->map(function ($file) use ($purchaseOrder, $request): PurchaseOrderDeliveryNote {
             $disk = (string) config('filesystems.equipment_documents_disk');
-            $path = $file->store("purchase-orders/{$purchaseOrder->id}/delivery-notes", $disk);
+            $path = UploadedFileStorage::store($file, "purchase-orders/{$purchaseOrder->id}/delivery-notes", $disk);
 
             return $purchaseOrder->deliveryNotes()->create([
                 'uploaded_by_user_id' => $request->user()->id,

@@ -7,6 +7,7 @@ use App\Http\Requests\PurchaseOrders\StorePurchaseOrderInvoiceRequest;
 use App\Http\Resources\PurchaseOrderResource;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderInvoice;
+use App\Support\UploadedFileStorage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -27,7 +28,7 @@ class PurchaseOrderInvoiceController extends Controller
             ...$request->safe()->only(['invoice_number', 'invoiced_on', 'amount']),
             'uploaded_by_user_id' => $request->user()->id,
             'disk' => $disk,
-            'path' => $file->store("purchase-orders/{$purchaseOrder->id}/invoices", $disk),
+            'path' => UploadedFileStorage::store($file, "purchase-orders/{$purchaseOrder->id}/invoices", $disk),
             'original_name' => $file->getClientOriginalName(),
             'mime_type' => $file->getMimeType() ?? 'application/pdf',
             'size_bytes' => $file->getSize(),

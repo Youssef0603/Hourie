@@ -14,6 +14,7 @@ use App\Models\SubcontractValuationDocument;
 use App\Models\SubcontractValuationPayment;
 use App\Services\SubcontractValuationCalculator;
 use App\Services\SubcontractValuationPdfService;
+use App\Support\UploadedFileStorage;
 use Brick\Math\BigDecimal;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -258,7 +259,7 @@ class SubcontractValuationController extends Controller
                     'type' => SubcontractValuationDocument::TYPE_INVOICE,
                     'uploaded_by_user_id' => $request->user()->id,
                     'disk' => $disk,
-                    'path' => $file->store("subcontract-valuations/{$valuation->id}", $disk),
+                    'path' => UploadedFileStorage::store($file, "subcontract-valuations/{$valuation->id}", $disk),
                     'original_name' => $file->getClientOriginalName(),
                     'mime_type' => $file->getMimeType() ?? 'application/pdf',
                     'size_bytes' => $file->getSize(),

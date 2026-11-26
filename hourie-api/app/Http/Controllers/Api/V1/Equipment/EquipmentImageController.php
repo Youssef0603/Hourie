@@ -9,6 +9,7 @@ use App\Http\Requests\Equipment\StoreEquipmentImagesRequest;
 use App\Models\Equipment;
 use App\Models\EquipmentChange;
 use App\Models\EquipmentImage;
+use App\Support\UploadedFileStorage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
@@ -20,7 +21,7 @@ class EquipmentImageController extends Controller
     {
         $images = collect($request->file('images', []))->map(function ($file, int $index) use ($equipment, $request): EquipmentImage {
             $disk = (string) config('filesystems.equipment_images_disk');
-            $path = $file->store("equipment/{$equipment->id}", $disk);
+            $path = UploadedFileStorage::store($file, "equipment/{$equipment->id}", $disk);
 
             $image = $equipment->images()->create([
                 'uploaded_by_user_id' => $request->user()->id,

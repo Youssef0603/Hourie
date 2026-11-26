@@ -9,6 +9,7 @@ use App\Http\Requests\Equipment\StoreEquipmentInvoicesRequest;
 use App\Models\Equipment;
 use App\Models\EquipmentChange;
 use App\Models\EquipmentInvoice;
+use App\Support\UploadedFileStorage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -21,7 +22,7 @@ class EquipmentInvoiceController extends Controller
     {
         $invoices = collect($request->file('invoices', []))->map(function ($file) use ($equipment, $request): EquipmentInvoice {
             $disk = (string) config('filesystems.equipment_documents_disk');
-            $path = $file->store("equipment/{$equipment->id}/invoices", $disk);
+            $path = UploadedFileStorage::store($file, "equipment/{$equipment->id}/invoices", $disk);
 
             $invoice = $equipment->invoices()->create([
                 'uploaded_by_user_id' => $request->user()->id,

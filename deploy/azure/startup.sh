@@ -17,8 +17,18 @@ service nginx reload
 
 mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
 
-php artisan migrate --force --isolated
-php artisan optimize
+# Stops the start (the app is not served) when a required step fails, so a
+# missing or half-updated database never runs behind a working-looking site.
+# The reason is written to the App Service log stream.
+fail() {
+    echo "[hourie] startup stopped: $1" >&2
+    exit 1
+}
+
+# No --isolated: its lock lives in a database table that does not exist yet on
+# an empty database, and Hourie runs a single instance on this plan.
+php artisan migrate --force || fail "database migration failed"
+php artisan optimize || fail "configuration cache failed"
 
 # Keeps a long-running Artisan command alive: if it stops, it starts again.
 keep_running() {

@@ -9,6 +9,7 @@ use App\Http\Requests\Equipment\StoreEquipmentGeneratorDocumentsRequest;
 use App\Models\Equipment;
 use App\Models\EquipmentChange;
 use App\Models\EquipmentGeneratorDocument;
+use App\Support\UploadedFileStorage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -21,7 +22,7 @@ class EquipmentGeneratorDocumentController extends Controller
     {
         $documents = collect($request->file('documents', []))->map(function ($file) use ($equipment, $request): EquipmentGeneratorDocument {
             $disk = (string) config('filesystems.equipment_documents_disk');
-            $path = $file->store("equipment/{$equipment->id}/generator-documents", $disk);
+            $path = UploadedFileStorage::store($file, "equipment/{$equipment->id}/generator-documents", $disk);
 
             $document = $equipment->generatorDocuments()->create([
                 'uploaded_by_user_id' => $request->user()->id,

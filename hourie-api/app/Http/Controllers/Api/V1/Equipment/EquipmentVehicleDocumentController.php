@@ -10,6 +10,7 @@ use App\Http\Requests\Equipment\StoreEquipmentVehicleDocumentRequest;
 use App\Models\Equipment;
 use App\Models\EquipmentChange;
 use App\Models\EquipmentVehicleDocument;
+use App\Support\UploadedFileStorage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -22,7 +23,7 @@ class EquipmentVehicleDocumentController extends Controller
     {
         $file = $request->file('document');
         $disk = (string) config('filesystems.equipment_documents_disk');
-        $path = $file->store("equipment/{$equipment->id}/vehicle-documents", $disk);
+        $path = UploadedFileStorage::store($file, "equipment/{$equipment->id}/vehicle-documents", $disk);
 
         $document = $equipment->vehicleDocuments()->create([
             'uploaded_by_user_id' => $request->user()->id,

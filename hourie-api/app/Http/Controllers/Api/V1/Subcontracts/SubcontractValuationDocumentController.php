@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Subcontracts\StoreValuationDocumentsRequest;
 use App\Models\SubcontractValuation;
 use App\Models\SubcontractValuationDocument;
+use App\Support\UploadedFileStorage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -26,7 +27,7 @@ class SubcontractValuationDocumentController extends Controller
                 'type' => SubcontractValuationDocument::TYPE_STATEMENT,
                 'uploaded_by_user_id' => $request->user()->id,
                 'disk' => $disk,
-                'path' => $file->store("subcontract-valuations/{$valuation->id}", $disk),
+                'path' => UploadedFileStorage::store($file, "subcontract-valuations/{$valuation->id}", $disk),
                 'original_name' => $file->getClientOriginalName(),
                 'mime_type' => $file->getMimeType() ?? 'application/pdf',
                 'size_bytes' => $file->getSize(),

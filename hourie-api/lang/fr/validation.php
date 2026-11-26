@@ -28,6 +28,7 @@ return [
     'subcontract_payment_cash_without_vat' => 'Un paiement en espèces ne comprend pas de TVA.',
     'subcontract_opening_not_allowed' => 'La reprise de l’historique se fait sur un contrat sans situation.',
     'toll_badge_exists' => 'Ce badge est déjà enregistré pour cet opérateur.',
+    'file_upload_failed' => 'Le fichier n’a pas pu être enregistré. Réessayez dans un instant ; si le problème continue, prévenez l’administrateur.',
     'subcontract_has_certified_valuations' => 'Ce contrat a des situations approuvées ou payées : il ne peut pas être supprimé.',
     'purchase_order_material_other_site' => 'Ce matériau appartient à un autre chantier que celui du bon de commande.',
     'subcontract_valuation_status' => 'Cette action n’est pas possible pour une situation au statut actuel.',

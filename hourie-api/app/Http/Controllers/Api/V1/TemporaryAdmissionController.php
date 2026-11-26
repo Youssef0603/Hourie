@@ -9,6 +9,7 @@ use App\Http\Resources\TemporaryAdmissionResource;
 use App\Models\Equipment;
 use App\Models\TemporaryAdmission;
 use App\Models\TemporaryAdmissionDocument;
+use App\Support\UploadedFileStorage;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -159,7 +160,7 @@ class TemporaryAdmissionController extends Controller
         }
         $file = $request->file('document');
         $disk = (string) config('filesystems.equipment_documents_disk');
-        $path = $file->store("temporary-admissions/{$temporaryAdmission->id}", $disk);
+        $path = UploadedFileStorage::store($file, "temporary-admissions/{$temporaryAdmission->id}", $disk);
         $document = $temporaryAdmission->documents()->create(['uploaded_by_user_id' => $request->user()->id, 'document_type' => $validated['document_type'], 'document_date' => $validated['document_date'] ?? null, 'validity_months' => $validated['validity_months'] ?? null, 'disk' => $disk, 'path' => $path, 'original_name' => $file->getClientOriginalName(), 'mime_type' => $file->getMimeType() ?? 'application/pdf', 'size_bytes' => $file->getSize()]);
         $temporaryAdmission->changes()->create(['actor_user_id' => $request->user()->id, 'action' => 'document_added', 'new_values' => ['document_id' => $document->id, 'document_type' => $document->document_type, 'name' => $document->original_name, 'document_date' => $document->document_date?->format('Y-m-d'), 'validity_months' => $document->validity_months], 'occurred_at' => now()]);
 

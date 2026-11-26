@@ -11,6 +11,7 @@ use App\Http\Resources\InsurancePolicyResource;
 use App\Models\Equipment;
 use App\Models\InsurancePolicy;
 use App\Models\InsurancePolicyDocument;
+use App\Support\UploadedFileStorage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -147,7 +148,7 @@ class InsurancePolicyController extends Controller
     {
         $disk = (string) config('filesystems.equipment_documents_disk');
         $documents = collect($request->file('documents', []))->map(function ($file) use ($insurancePolicy, $request, $disk): InsurancePolicyDocument {
-            $path = $file->store("insurance/{$insurancePolicy->id}/documents", $disk);
+            $path = UploadedFileStorage::store($file, "insurance/{$insurancePolicy->id}/documents", $disk);
 
             $document = $insurancePolicy->documents()->create([
                 'uploaded_by_user_id' => $request->user()->id,

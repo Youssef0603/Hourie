@@ -20,7 +20,7 @@ class StoreEquipmentGeneratorDocumentsRequest extends FormRequest
     {
         return [
             'documents' => ['required', 'array', 'min:1', 'max:10'],
-            'documents.*' => ['required', 'file', 'mimes:pdf', 'extensions:pdf', 'max:25600'],
+            'documents.*' => ['required', 'file', 'mimes:pdf', 'extensions:pdf', 'max:10240'],
         ];
     }
 
