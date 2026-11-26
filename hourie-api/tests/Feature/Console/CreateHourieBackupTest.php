@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 
@@ -67,4 +68,17 @@ SH);
     } finally {
         File::deleteDirectory($testRoot);
     }
+});
+
+it('skips the scheduled backup when backups are turned off', function () {
+    config(['hourie-backup.enabled' => false]);
+
+    $event = collect(app(Schedule::class)->events())
+        ->first(fn ($event) => str_contains((string) $event->command, 'hourie:backup'));
+
+    expect($event)->not->toBeNull()
+        ->and($event->filtersPass(app()))->toBeFalse();
+
+    config(['hourie-backup.enabled' => true]);
+    expect($event->filtersPass(app()))->toBeTrue();
 });

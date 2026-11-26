@@ -1,5 +1,31 @@
 <?php
 
+/*
+ * Uploaded files (equipment images, documents, invoices, PDFs) live on two
+ * disks. They stay on the local disk by default; with
+ * FILES_STORAGE=azure-blob they go to one Azure Blob Storage container,
+ * each disk under its own folder, signed in with the web app's managed
+ * identity. The disk names never change, so the stored records keep working.
+ */
+$uploadDisk = fn (string $name, string $localRoot): array => env('FILES_STORAGE', 'local') === 'azure-blob'
+    ? [
+        'driver' => 'azure-storage-blob',
+        'credential' => env('AZURE_STORAGE_CREDENTIAL', 'managed_identity'),
+        'account_name' => env('AZURE_STORAGE_ACCOUNT'),
+        'account_key' => env('AZURE_STORAGE_KEY'),
+        'client_id' => env('AZURE_STORAGE_CLIENT_ID'),
+        'container' => env('AZURE_STORAGE_CONTAINER', 'hourie-files'),
+        'prefix' => $name,
+        'throw' => false,
+        'report' => false,
+    ]
+    : [
+        'driver' => 'local',
+        'root' => $localRoot,
+        'throw' => false,
+        'report' => false,
+    ];
+
 return [
 
     /*
@@ -50,19 +76,9 @@ return [
             'report' => false,
         ],
 
-        'equipment-images' => [
-            'driver' => 'local',
-            'root' => env('EQUIPMENT_IMAGES_ROOT', storage_path('app/equipment-images')),
-            'throw' => false,
-            'report' => false,
-        ],
+        'equipment-images' => $uploadDisk('equipment-images', env('EQUIPMENT_IMAGES_ROOT', storage_path('app/equipment-images'))),
 
-        'equipment-documents' => [
-            'driver' => 'local',
-            'root' => env('EQUIPMENT_DOCUMENTS_ROOT', storage_path('app/equipment-documents')),
-            'throw' => false,
-            'report' => false,
-        ],
+        'equipment-documents' => $uploadDisk('equipment-documents', env('EQUIPMENT_DOCUMENTS_ROOT', storage_path('app/equipment-documents'))),
 
         's3' => [
             'driver' => 's3',

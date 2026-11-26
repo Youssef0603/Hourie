@@ -31,6 +31,7 @@ Schedule::command('temporary-admissions:send-expiry-reminders')
     ->onOneServer();
 
 Schedule::command('hourie:backup')
+    ->when(fn (): bool => (bool) config('hourie-backup.enabled'))
     ->cron('30 12,17 * * *')
     ->withoutOverlapping(180)
     ->onOneServer();

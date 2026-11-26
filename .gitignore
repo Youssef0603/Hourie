@@ -6,6 +6,7 @@
 !.env.example
 !.env.production.example
 !.env.windows.example
+!.env.azure.example
 auth.json
 
 # Installed dependencies and generated frontend output
@@ -28,3 +29,6 @@ storage/pail/
 .idea/
 .vscode/
 .zed/
+
+# Deployment packages
+/build/
