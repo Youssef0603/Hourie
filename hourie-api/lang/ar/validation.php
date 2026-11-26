@@ -42,6 +42,7 @@ return [
     'subcontract_payment_exceeds_vat' => 'الضريبة المدفوعة تتجاوز الضريبة المتبقية (:balance).',
     'subcontract_payment_cash_without_vat' => 'الدفعة النقدية لا تتضمن ضريبة القيمة المضافة.',
     'subcontract_opening_not_allowed' => 'يتم إدخال الرصيد السابق على عقد لا يحتوي على أي كشف.',
+    'toll_badge_exists' => 'هذه الشارة مسجّلة مسبقًا لدى هذا المشغّل.',
     'subcontract_has_certified_valuations' => 'يحتوي هذا العقد على كشوف معتمدة أو مدفوعة: لا يمكن حذفه.',
     'purchase_order_material_other_site' => 'هذه المادة تابعة لمشروع آخر غير مشروع أمر الشراء.',
     'subcontract_valuation_status' => 'هذا الإجراء غير ممكن لهذا الكشف في حالته الحالية.',

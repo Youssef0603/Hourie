@@ -30,6 +30,7 @@ use App\Http\Controllers\Api\V1\Subcontracts\SubcontractValuationController;
 use App\Http\Controllers\Api\V1\Subcontracts\SubcontractValuationDocumentController;
 use App\Http\Controllers\Api\V1\Subcontracts\SubcontractVariationController;
 use App\Http\Controllers\Api\V1\TemporaryAdmissionController;
+use App\Http\Controllers\Api\V1\TollBadgeController;
 use App\Http\Middleware\EnsurePasswordWasChanged;
 use App\Http\Middleware\EnsureUserIsActive;
 use Illuminate\Support\Facades\Route;
@@ -85,6 +86,9 @@ Route::prefix('v1')->middleware(['auth:sanctum', EnsureUserIsActive::class, Ensu
     Route::get('purchase-orders/{purchaseOrder}/pdf', [PurchaseOrderController::class, 'pdf'])
         ->name('purchase-orders.pdf');
     Route::apiResource('purchase-orders', PurchaseOrderController::class);
+    Route::apiResource('equipment.toll-badges', TollBadgeController::class)
+        ->parameters(['toll-badges' => 'tollBadge'])
+        ->only(['index', 'store', 'update', 'destroy']);
     Route::get('dashboard', DashboardController::class)->name('dashboard');
     Route::apiResource('catalog-options', CatalogOptionController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::get('notification-settings', [NotificationSettingsController::class, 'show']);
