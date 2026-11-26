@@ -15,7 +15,7 @@ const operatorLabels: Record<TollBadgeOperator, string> = { hkb: "Pont HKB (BIP 
 const statusLabels: Record<TollBadgeStatus, string> = { active: "En service", inactive: "Hors service", lost: "Perdu" };
 
 function emptyBadge(): TollBadgePayload {
-  return { operator: "hkb", badge_number: "", serial_number: "", subscription_number: "", registered_phone: "", status: "active", balance: "", balance_checked_on: "", notes: "" };
+  return { operator: "hkb", badge_number: "", serial_number: "", registered_phone: "", status: "active", balance: "", balance_checked_on: "", notes: "" };
 }
 
 function payloadFrom(badge: TollBadge): TollBadgePayload {
@@ -23,7 +23,6 @@ function payloadFrom(badge: TollBadge): TollBadgePayload {
     operator: badge.operator,
     badge_number: badge.badge_number,
     serial_number: badge.serial_number ?? "",
-    subscription_number: badge.subscription_number ?? "",
     registered_phone: badge.registered_phone ?? "",
     status: badge.status,
     balance: badge.balance === null ? "" : String(Number(badge.balance)),
@@ -117,7 +116,6 @@ export function VehicleTollBadges({ equipmentId, canManage }: { equipmentId: num
             <label><span>{operationPhrase("Statut")} <em>*</em></span><SearchableSelect ariaLabel={operationPhrase("Statut")} required searchable={false} includeEmpty={false} placeholder={operationPhrase("Statut")} value={form.status} onChange={(value) => update("status", (value || "active") as TollBadgeStatus)} options={(Object.keys(statusLabels) as TollBadgeStatus[]).map((value) => ({ value, label: operationPhrase(statusLabels[value]) }))} /></label>
             <label className="field-wide"><span>{operationPhrase("Numéro du badge")} <em>*</em></span><input required inputMode="numeric" placeholder={operationPhrase("Numéro sous le code-barres")} value={form.badge_number} onChange={(event) => update("badge_number", event.target.value)} /></label>
             <label><span>{operationPhrase("NS (numéro de série)")}</span><input placeholder="50 - 0000000000" value={form.serial_number} onChange={(event) => update("serial_number", event.target.value)} /></label>
-            <label><span>{operationPhrase("Numéro d’abonnement")}</span><input inputMode="numeric" value={form.subscription_number} onChange={(event) => update("subscription_number", event.target.value)} /></label>
             <label><span>{operationPhrase("Téléphone enregistré")}</span><input type="tel" placeholder={operationPhrase("Numéro donné à la souscription")} value={form.registered_phone} onChange={(event) => update("registered_phone", event.target.value)} /></label>
             <label><span>{operationPhrase("Solde (F CFA)")}</span><AmountInput placeholder={operationPhrase("Non vérifié")} value={form.balance} onChange={(amount) => update("balance", amount)} /></label>
             <label><span>{operationPhrase("Solde vérifié le")}</span><input type="date" max={new Date().toISOString().slice(0, 10)} value={form.balance_checked_on} onChange={(event) => update("balance_checked_on", event.target.value)} /></label>
@@ -140,9 +138,7 @@ export function VehicleTollBadges({ equipmentId, canManage }: { equipmentId: num
               <div className="vtb-main">
                 <strong>{badge.badge_number}</strong>
                 <span>{operationPhrase(operatorLabels[badge.operator])}{badge.serial_number ? ` · NS ${badge.serial_number}` : ""}</span>
-                {(badge.subscription_number || badge.registered_phone) && (
-                  <span>{[badge.subscription_number && localized(`Abonnement ${badge.subscription_number}`, `الاشتراك ${badge.subscription_number}`), badge.registered_phone && localized(`Tél. ${badge.registered_phone}`, `الهاتف ${badge.registered_phone}`)].filter(Boolean).join(" · ")}</span>
-                )}
+                {badge.registered_phone && <span>{localized(`Tél. ${badge.registered_phone}`, `الهاتف ${badge.registered_phone}`)}</span>}
                 {badge.notes && <span className="vtb-notes">{badge.notes}</span>}
               </div>
               <div className="vtb-side">

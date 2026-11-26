@@ -21,7 +21,6 @@ export type TollBadgePayload = {
   operator: TollBadgeOperator;
   badge_number: string;
   serial_number: string;
-  subscription_number: string;
   registered_phone: string;
   status: TollBadgeStatus;
   balance: string;

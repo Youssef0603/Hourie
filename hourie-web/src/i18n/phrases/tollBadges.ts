@@ -9,7 +9,6 @@ export const tollBadgesPhrases: Record<string, string> = {
   "Numéro du badge": "رقم الشارة",
   "Numéro sous le code-barres": "الرقم تحت الرمز الشريطي",
   "NS (numéro de série)": "NS (الرقم التسلسلي)",
-  "Numéro d’abonnement": "رقم الاشتراك",
   "Téléphone enregistré": "الهاتف المسجّل",
   "Numéro donné à la souscription": "الرقم المقدَّم عند الاشتراك",
   "Solde (F CFA)": "الرصيد (فرنك CFA)",

@@ -12,7 +12,6 @@ function body(payload: TollBadgePayload) {
     ...payload,
     badge_number: payload.badge_number.trim(),
     serial_number: blankToNull(payload.serial_number),
-    subscription_number: blankToNull(payload.subscription_number),
     registered_phone: blankToNull(payload.registered_phone),
     balance: blankToNull(payload.balance),
     balance_checked_on: blankToNull(payload.balance_checked_on),
