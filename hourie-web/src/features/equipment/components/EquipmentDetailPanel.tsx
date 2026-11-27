@@ -18,8 +18,6 @@ import { EquipmentImages } from "./EquipmentImages";
 import { EquipmentGeneratorDocuments } from "./EquipmentGeneratorDocuments";
 import { EquipmentInvoices } from "./EquipmentInvoices";
 import { EquipmentVehicleDocuments } from "./EquipmentVehicleDocuments";
-import { VehicleTollBadges } from "../../toll-badges/components/VehicleTollBadges";
-import { operationPhrase } from "../../../i18n/operations";
 import {
   AssetSpecificationDetails,
   EquipmentAssignmentDetails,
@@ -193,12 +191,6 @@ export function EquipmentDetailPanel({
                       canManage={canManageEquipment}
                       onChanged={onRefreshSelected}
                     />
-                  </EquipmentDetailSection>
-                )}
-
-                {(categoryCode === "car" || categoryCode === "truck_dumper") && (
-                  <EquipmentDetailSection title={operationPhrase("Badges de péage")} icon="invoice" defaultOpen={false}>
-                    <VehicleTollBadges equipmentId={selected.id} canManage={canManageEquipment} />
                   </EquipmentDetailSection>
                 )}
 

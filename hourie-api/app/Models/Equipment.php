@@ -55,12 +55,6 @@ class Equipment extends Model
         return $this->hasOne(GeneratorDetail::class);
     }
 
-    /** Toll badges (Pont HKB, FER…) stuck on this car or truck. */
-    public function tollBadges(): HasMany
-    {
-        return $this->hasMany(TollBadge::class);
-    }
-
     public function projectAssignments(): HasMany
     {
         return $this->hasMany(EquipmentProjectAssignment::class);

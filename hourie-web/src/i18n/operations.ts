@@ -3,7 +3,6 @@ import { dashboardPhrases } from "./phrases/dashboard";
 import { directoryPhrases } from "./phrases/directory";
 import { equipmentPhrases } from "./phrases/equipment";
 import { purchaseOrdersPhrases } from "./phrases/purchaseOrders";
-import { tollBadgesPhrases } from "./phrases/tollBadges";
 import { sharedPhrases } from "./phrases/shared";
 import { subcontractsPhrases } from "./phrases/subcontracts";
 
@@ -609,7 +608,6 @@ const arabicPhrases: Record<string, string> = {
   ...arabicOperationPhrases,
   ...subcontractsPhrases,
   ...purchaseOrdersPhrases,
-  ...tollBadgesPhrases,
   ...dashboardPhrases,
   ...equipmentPhrases,
   ...directoryPhrases,
