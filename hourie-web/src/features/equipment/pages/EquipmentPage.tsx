@@ -249,6 +249,11 @@ export function EquipmentPage({
       navigate("/dashboard", true);
       return;
     }
+    // A Chef de chantier only works with the equipment of his site.
+    if (user.site_scope && currentRoute.section !== "assets" && currentRoute.section !== "generators") {
+      navigate("/assets/all", true);
+      return;
+    }
     const wasSiteId = previousSiteId.current;
     previousSiteId.current = currentRoute.siteId;
     const currentCategory =
@@ -346,7 +351,7 @@ export function EquipmentPage({
     return () => {
       cancelled = true;
     };
-  }, [filterQuery, pathname, user.permissions.manage_sites, user.features.subcontracts]);
+  }, [filterQuery, pathname, user.permissions.manage_sites, user.features.subcontracts, user.site_scope]);
 
   function navigate(path: string, replace = false) {
     const nextUrl = new URL(path, window.location.origin);
@@ -670,6 +675,7 @@ export function EquipmentPage({
         onClose={() => setIsSidebarOpen(false)}
         onNavigate={(path) => navigate(path)}
         showSubcontracts={user.features.subcontracts}
+        onlyAssets={user.site_scope !== null}
       />
 
       <div className="app-main">
@@ -768,7 +774,7 @@ export function EquipmentPage({
                     <span>{fr.directory.deleteSite}</span>
                   </button>
                 )}
-                {!isSiteView && user.permissions.manage_equipment && (
+                {!isSiteView && user.permissions.create_equipment && (
                   <button
                     className="table-refresh-button import-excel-action"
                     type="button"
@@ -899,7 +905,7 @@ export function EquipmentPage({
                       <span>{fr.equipment.exportWithoutInvoices}</span>
                     </button>
                   )}
-                  {user.permissions.manage_equipment && (
+                  {user.permissions.create_equipment && (
                     <ToolbarIconButton
                       icon="add"
                       label={fr.equipment.addGenerator}
@@ -989,7 +995,7 @@ export function EquipmentPage({
             result={result}
             isLoading={isLoading}
             error={error}
-            canManage={user.permissions.manage_equipment}
+            canManage={user.permissions.create_equipment}
             fixedProject
             categoryCounts={filteredCategoryCounts ?? undefined}
             onSearchChange={setSearch}
@@ -1032,7 +1038,7 @@ export function EquipmentPage({
             result={result}
             isLoading={isLoading}
             error={error}
-            canManage={user.permissions.manage_equipment}
+            canManage={user.permissions.create_equipment}
             categoryCounts={filteredCategoryCounts ?? undefined}
             onSearchChange={setSearch}
             onFilterChange={updateFilter}
@@ -1081,16 +1087,20 @@ export function EquipmentPage({
                 route.section === "insurance" ? route.insurancePolicyId : null
               }
               relatedEquipmentContext={{ user, language, options }}
+              canManage={user.permissions.manage_sites}
             />
           </Suspense>
         ) : activeSection === "bonds" ? (
           <Suspense fallback={<FeaturePageLoading />}>
-            <BondsPage initialSiteId={route.section === "bonds" ? route.bondProjectId : null} />
+            <BondsPage
+              initialSiteId={route.section === "bonds" ? route.bondProjectId : null}
+              canManage={user.permissions.manage_sites}
+            />
           </Suspense>
         ) : activeSection === "temporary-admissions" ? (
           <Suspense fallback={<FeaturePageLoading />}>
             <TemporaryAdmissionsPage
-              canManage={user.permissions.manage_equipment}
+              canManage={user.permissions.manage_temporary_admissions}
               initialAdmissionId={route.temporaryAdmissionId}
               relatedEquipmentContext={{ user, language, options }}
             />

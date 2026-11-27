@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import type { UserRoleCode } from "../../auth/types";
 import { fr } from "../../../i18n/fr";
 import { operationPhrase } from "../../../i18n/operations";
 import { ApiError } from "../../../shared/api/http";
@@ -54,7 +55,7 @@ export function EditPersonForm({
   const [hasAccess, setHasAccess] = useState(person.user?.is_active ?? false);
   const [email, setEmail] = useState(person.email ?? "");
   const [role, setRole] = useState<
-    "manager" | "cms_manager" | "generator_manager" | "viewer"
+    UserRoleCode
   >(person.user?.role ?? "viewer");
   const [password, setPassword] = useState("");
   const [passwordConfirmation, setPasswordConfirmation] = useState("");

@@ -1,4 +1,5 @@
 import { fr } from "../../../i18n/fr";
+import type { UserRoleCode } from "../../auth/types";
 import { operationPhrase } from "../../../i18n/operations";
 import { FilterDrawer, FilterGroup } from "../../../shared/components/FilterDrawer";
 import { SearchableSelect } from "../../../shared/components/SearchableSelect";
@@ -7,7 +8,7 @@ import type { CatalogOption, NamedReference } from "../../equipment/types";
 
 export type AccessFilter = "" | "with_access" | "without_access";
 export type RoleFilter =
-  "" | "manager" | "cms_manager" | "generator_manager" | "viewer";
+  "" | UserRoleCode;
 
 type PeopleFilterDrawerProps = {
   accessFilter: AccessFilter;

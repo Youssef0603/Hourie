@@ -57,6 +57,7 @@ export function WorkspaceSidebar({
   onClose,
   onNavigate,
   showSubcontracts = true,
+  onlyAssets = false,
 }: {
   activeSection: Section;
   isOpen: boolean;
@@ -64,8 +65,12 @@ export function WorkspaceSidebar({
   onNavigate: (path: string) => void;
   /** False when the subcontracts module is switched off for this deployment. */
   showSubcontracts?: boolean;
+  /** Chef de chantier: only the equipment of his site, no company-wide module. */
+  onlyAssets?: boolean;
 }) {
-  const modules = workspaceModules().filter((module) => showSubcontracts || module.section !== "subcontracts");
+  const modules = workspaceModules()
+    .filter((module) => showSubcontracts || module.section !== "subcontracts")
+    .filter((module) => !onlyAssets || module.section === "assets");
   const groups = [
     { key: null, label: null },
     { key: "operations", label: fr.navigation.operationsGroup },

@@ -15,6 +15,9 @@ const user: AuthenticatedUser = {
   employee: null,
   permissions: {
     manage_equipment: false,
+    create_equipment: false,
+    transfer_equipment: false,
+    manage_temporary_admissions: false,
     manage_maintenance: false,
     delete_maintenance: false,
     delete_equipment: false,
@@ -24,6 +27,7 @@ const user: AuthenticatedUser = {
     manage_users: false,
     manage_manager_accounts: false,
   },
+  site_scope: null,
   features: { subcontracts: true },
 };
 

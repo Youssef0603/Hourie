@@ -38,7 +38,10 @@ export function InsurancePage({
   initialSiteId = null,
   initialPolicyId = null,
   relatedEquipmentContext,
+  canManage = true,
 }: {
+  /** False for read-only roles: no add, edit, renew or delete, and no editing options loaded. */
+  canManage?: boolean;
   initialSiteId?: number | null;
   initialPolicyId?: number | null;
   relatedEquipmentContext?: {
@@ -105,6 +108,8 @@ export function InsurancePage({
     }>>("/api/v1/sites?per_page=100")
       .then((value) => setSites(value.data))
       .catch(() => setSites([]));
+    // The pickers of the policy form are only needed by those who can edit.
+    if (!canManage) return;
     apiRequest<{ data: InsuranceEquipmentOption[] }>(
       "/api/v1/insurance-equipment-options",
     )
@@ -113,7 +118,7 @@ export function InsurancePage({
     apiRequest<PaginatedResponse<{ id: number; name: string; birth_date: string | null }>>("/api/v1/employees?per_page=100")
       .then((value) => setEmployeeOptions(value.data))
       .catch(() => setEmployeeOptions([]));
-  }, []);
+  }, [canManage]);
 
   useEffect(() => {
     if (selectedId === null) {
@@ -201,7 +206,7 @@ export function InsurancePage({
               count={filterCount}
               onClick={() => setShowFilters((value) => !value)}
             />
-            <ToolbarIconButton icon="add" label={text.addPolicy} onClick={() => setShowAdd(true)} />
+            {canManage && <ToolbarIconButton icon="add" label={text.addPolicy} onClick={() => setShowAdd(true)} />}
             <ToolbarIconButton icon="refresh" label={text.refresh} disabled={loading} onClick={() => void refreshPolicies()} />
             <ClearFiltersButton count={filterCount} onClear={clearFilters} />
           </div>
@@ -335,6 +340,7 @@ export function InsurancePage({
             setEditingPolicy(selected);
           }}
           onRenew={() => setRenewingPolicy(selected)}
+          readOnly={!canManage}
           onDocumentsChanged={(documents) => {
             setSelected((current) => current ? { ...current, documents } : current);
             setPolicies((current) =>

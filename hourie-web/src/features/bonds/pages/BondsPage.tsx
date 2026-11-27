@@ -26,9 +26,11 @@ import { TotalCount } from "../../../shared/components/TotalCount";
 
 type BondsPageProps = {
   initialSiteId?: number | null;
+  /** False for read-only roles: no add, edit, renew, delete or upload. */
+  canManage?: boolean;
 };
 
-export function BondsPage({ initialSiteId = null }: BondsPageProps) {
+export function BondsPage({ initialSiteId = null, canManage = true }: BondsPageProps) {
   const [sites, setSites] = useState<Site[]>([]);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<BondStatus | "all">("all");
@@ -127,7 +129,7 @@ export function BondsPage({ initialSiteId = null }: BondsPageProps) {
               count={filterCount}
               onClick={() => setShowFilters(true)}
             />
-            <ToolbarIconButton icon="add" label={operationPhrase("Ajouter une caution")} onClick={() => setShowAdd(true)} />
+            {canManage && <ToolbarIconButton icon="add" label={operationPhrase("Ajouter une caution")} onClick={() => setShowAdd(true)} />}
             <ToolbarIconButton icon="refresh" label={operationPhrase("Actualiser")} onClick={() => void refresh()} />
             <ClearFiltersButton count={filterCount} onClear={clearFilters} />
           </div>
@@ -257,6 +259,7 @@ export function BondsPage({ initialSiteId = null }: BondsPageProps) {
             setEditing(selected);
           }}
           onRenew={() => setRenewing(selected)}
+          readOnly={!canManage}
           onChanged={updateBond}
           onDeleted={() => {
             setBonds((current) =>

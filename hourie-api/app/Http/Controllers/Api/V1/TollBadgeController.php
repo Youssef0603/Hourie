@@ -19,7 +19,7 @@ class TollBadgeController extends Controller
 {
     public function index(Request $request, Equipment $equipment): AnonymousResourceCollection
     {
-        abort_unless($request->user()?->can('viewAny', Equipment::class), 403);
+        abort_unless($request->user()?->can('view', $equipment), 403);
 
         return TollBadgeResource::collection(
             $equipment->tollBadges()->orderBy('operator')->orderBy('badge_number')->get(),
@@ -46,7 +46,7 @@ class TollBadgeController extends Controller
 
     public function destroy(Request $request, Equipment $equipment, TollBadge $tollBadge): Response
     {
-        abort_unless($request->user()?->role->canManageEquipment(), 403);
+        abort_unless($request->user()?->can('update', $equipment), 403);
         abort_unless($tollBadge->equipment_id === $equipment->id, 404);
         $tollBadge->delete();
 

@@ -86,4 +86,5 @@ return [
         'custodian_employee_id' => 'responsable',
         'generator_details' => 'caractéristiques techniques',
     ],
+    'equipment_site_locked' => 'Vous ne pouvez pas changer le chantier de ce matériel : demandez un transfert au responsable matériel.',
 ];

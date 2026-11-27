@@ -25,6 +25,27 @@ class User extends Authenticatable
     }
 
     /**
+     * The site a Chef de chantier works on: his current assignment in
+     * Personnel. Null when he has none (he then sees no equipment).
+     */
+    public function assignedProjectId(): ?int
+    {
+        $projectId = $this->employee?->currentProjectAssignment?->project_id;
+
+        return $projectId === null ? null : (int) $projectId;
+    }
+
+    /** Whether this account may see and act on equipment of the given site. */
+    public function canReachProject(?int $projectId): bool
+    {
+        if (! $this->role->isSiteScoped()) {
+            return true;
+        }
+
+        return $projectId !== null && $projectId === $this->assignedProjectId();
+    }
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>

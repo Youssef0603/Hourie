@@ -72,6 +72,14 @@ class Equipment extends Model
             ->ofMany(['id' => 'max'], fn ($query) => $query->whereNull('ended_at'));
     }
 
+    /** The site the equipment is on now, from its open project assignment. */
+    public function currentProjectId(): ?int
+    {
+        $projectId = $this->currentProjectAssignment?->project_id;
+
+        return $projectId === null ? null : (int) $projectId;
+    }
+
     public function changes(): HasMany
     {
         return $this->hasMany(EquipmentChange::class);

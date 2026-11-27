@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Equipment;
 
-use App\Models\EquipmentMaintenance;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -12,7 +11,7 @@ class StoreEquipmentMaintenanceRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->can('create', EquipmentMaintenance::class) ?? false;
+        return $this->user()?->can('maintain', $this->route('equipment')) ?? false;
     }
 
     /** @return array<string, ValidationRule|array<mixed>|string> */

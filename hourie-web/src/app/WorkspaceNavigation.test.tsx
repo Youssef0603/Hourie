@@ -14,6 +14,9 @@ const user: AuthenticatedUser = {
   employee: null,
   permissions: {
     manage_equipment: true,
+    create_equipment: true,
+    transfer_equipment: true,
+    manage_temporary_admissions: true,
     manage_maintenance: true,
     delete_maintenance: true,
     delete_equipment: true,
@@ -23,6 +26,7 @@ const user: AuthenticatedUser = {
     manage_users: true,
     manage_manager_accounts: true,
   },
+  site_scope: null,
   features: { subcontracts: true },
 };
 
@@ -60,6 +64,17 @@ describe("WorkspaceSidebar", () => {
     );
 
     expect(screen.getByRole("button", { name: "Actifs" })).toHaveAttribute("aria-current", "page");
+  });
+
+  it("shows a Chef de chantier only the assets of his site", () => {
+    render(
+      <WorkspaceSidebar activeSection="assets" isOpen onClose={vi.fn()} onNavigate={vi.fn()} onlyAssets />,
+    );
+    const navigation = screen.getByRole("complementary", { name: "Accès aux espaces" });
+    expect(within(navigation).getByRole("button", { name: "Actifs" })).toBeInTheDocument();
+    for (const hidden of ["Tableau de bord", "Personnel", "Assurances", "Bons de commande"]) {
+      expect(within(navigation).queryByRole("button", { name: hidden })).not.toBeInTheDocument();
+    }
   });
 
   it("hides the subcontracts module when it is switched off", () => {

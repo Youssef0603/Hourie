@@ -13,13 +13,15 @@ class ListMaintenanceWarnings
     private const int WARNING_HORIZON_DAYS = 14;
 
     /** @return array{warnings: LengthAwarePaginator<int, Equipment>, summary: array{overdue: int, due_soon: int, total: int, horizon_days: int}} */
-    public function handle(int $perPage = 20): array
+    /** @param  int|null  $projectId  only this site's equipment (a Chef de chantier) */
+    public function handle(int $perPage = 20, ?int $projectId = null): array
     {
         $today = CarbonImmutable::today();
         $warningLimit = $today->addDays(self::WARNING_HORIZON_DAYS);
 
         $query = Equipment::query()
             ->where('is_active', true)
+            ->when($projectId !== null, fn (Builder $query) => $query->whereHas('currentProjectAssignment', fn (Builder $assignment) => $assignment->where('project_id', $projectId)))
             ->whereHas('latestMaintenance', function (Builder $query) use ($warningLimit): void {
                 $query
                     ->whereNotNull('next_maintenance_date')

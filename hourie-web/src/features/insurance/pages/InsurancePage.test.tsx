@@ -81,6 +81,19 @@ describe('InsurancePage', () => {
     expect(await screen.findByText('Aucune police trouvée')).toBeVisible()
   })
 
+  it('gives a read-only account no way to change a policy and loads no editing options', async () => {
+    apiRequest.mockClear()
+    const user = userEvent.setup()
+    render(<InsurancePage canManage={false} />)
+
+    await user.click(await screen.findByText('TRC-2027'))
+
+    expect(screen.queryByRole('button', { name: 'Ajouter une police' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Renouveler' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Modifier' })).not.toBeInTheDocument()
+    expect(apiRequest).not.toHaveBeenCalledWith('/api/v1/insurance-equipment-options')
+  })
+
   it('shows the physical location in the TRC / RC table', async () => {
     const user = userEvent.setup()
     render(<InsurancePage />)

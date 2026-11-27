@@ -93,6 +93,7 @@ export function EquipmentDetailPanel({
   ).trim().toLocaleLowerCase("fr-FR") === "vendu";
   const canManageEquipment = !readOnly && user.permissions.manage_equipment;
   const canDeleteEquipment = !readOnly && user.permissions.delete_equipment;
+  const canTransferEquipment = !readOnly && user.permissions.transfer_equipment;
   const canManageMaintenance = !readOnly && user.permissions.manage_maintenance;
   const canDeleteMaintenance = !readOnly && user.permissions.delete_maintenance;
   const transferChanges = selected?.changes.filter((change) => change.source === "transfer") ?? [];
@@ -156,6 +157,7 @@ export function EquipmentDetailPanel({
                   canDelete={canDeleteEquipment}
                   onEdit={() => onEditingChange(true)}
                   onDelete={onDelete}
+                  canTransfer={canTransferEquipment}
                   onTransfer={() => setShowTransfer(true)}
                 />
 
@@ -312,6 +314,7 @@ function DetailActions({
   canDelete,
   onEdit,
   onDelete,
+  canTransfer,
   onTransfer,
 }: {
   isOtherAsset: boolean;
@@ -319,13 +322,14 @@ function DetailActions({
   canDelete: boolean;
   onEdit: () => void;
   onDelete: () => void;
+  canTransfer: boolean;
   onTransfer: () => void;
 }) {
   return (
     <div className="detail-primary-actions">
       {canManage && <DetailIconButton icon="edit" label={fr.common.edit} onClick={onEdit} />}
       {canDelete && <button className="danger-button detail-delete-button" type="button" onClick={onDelete}><ActionIcon name="delete" />{isOtherAsset ? fr.assets.delete : fr.equipment.deleteGenerator}</button>}
-      {canManage && <button className="equipment-transfer-button detail-toolbar-button" type="button" onClick={onTransfer}><ActionIcon name="transfer" />{fr.equipment.transfer}</button>}
+      {canTransfer && <button className="equipment-transfer-button detail-toolbar-button" type="button" onClick={onTransfer}><ActionIcon name="transfer" />{fr.equipment.transfer}</button>}
     </div>
   );
 }

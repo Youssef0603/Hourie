@@ -16,7 +16,7 @@ class TransferEquipmentRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()?->can('update', $this->route('equipment')) ?? false;
+        return $this->user()?->can('transfer', $this->route('equipment')) ?? false;
     }
 
     /**

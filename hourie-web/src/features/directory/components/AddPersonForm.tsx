@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import type { UserRoleCode } from "../../auth/types";
 import { fr } from "../../../i18n/fr";
 import { operationPhrase } from "../../../i18n/operations";
 import { ApiError } from "../../../shared/api/http";
@@ -38,7 +39,7 @@ export function AddPersonForm({
   const [createAccount, setCreateAccount] = useState(false);
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<
-    "manager" | "cms_manager" | "generator_manager" | "viewer"
+    UserRoleCode
   >("viewer");
   const [password, setPassword] = useState("");
   const [passwordConfirmation, setPasswordConfirmation] = useState("");

@@ -10,13 +10,16 @@ use App\Models\EquipmentCategory;
 use App\Models\Location;
 use App\Models\Project;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
 class EquipmentFilterOptionsController extends Controller
 {
-    public function __invoke(): JsonResponse
+    public function __invoke(Request $request): JsonResponse
     {
         Gate::authorize('viewAny', Equipment::class);
+        // A Chef de chantier only gets his own site and its locations to pick from.
+        $onlyProjectId = $request->user()->role->isSiteScoped() ? ($request->user()->assignedProjectId() ?? -1) : null;
 
         $assetFilterFields = [
             ...array_fill_keys(EquipmentCategory::GENERAL_EQUIPMENT_CATEGORY_CODES, ['equipment_type', 'sub_category', 'brand']),
@@ -65,11 +68,13 @@ class EquipmentFilterOptionsController extends Controller
                 'projects' => Project::query()
                     ->with('responsible:id,name')
                     ->where('is_active', true)
+                    ->when($onlyProjectId !== null, fn ($query) => $query->whereKey($onlyProjectId))
                     ->orderBy('name')
                     ->get(['id', 'code', 'name', 'responsible_employee_id']),
                 'locations' => Location::query()
                     ->with('project:id,name')
                     ->where('is_active', true)
+                    ->when($onlyProjectId !== null, fn ($query) => $query->where('project_id', $onlyProjectId))
                     ->orderBy('name')
                     ->get(['id', 'project_id', 'parent_id', 'name', 'location_type']),
                 'employees' => Employee::query()

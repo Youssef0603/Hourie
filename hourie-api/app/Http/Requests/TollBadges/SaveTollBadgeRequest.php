@@ -10,7 +10,7 @@ class SaveTollBadgeRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->role->canManageEquipment() ?? false;
+        return $this->user()?->can('update', $this->route('equipment')) ?? false;
     }
 
     /**

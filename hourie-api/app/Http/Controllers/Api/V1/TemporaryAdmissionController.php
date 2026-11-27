@@ -110,7 +110,7 @@ class TemporaryAdmissionController extends Controller
 
     public function return(Request $request, TemporaryAdmission $temporaryAdmission)
     {
-        abort_unless($request->user()?->role->canManageEquipment(), 403);
+        abort_unless($request->user()?->role->canManageTemporaryAdmissions(), 403);
         $returnedOnRules = ['required', 'date'];
         if ($temporaryAdmission->entered_on !== null) {
             $returnedOnRules[] = 'after_or_equal:'.$temporaryAdmission->entered_on->format('Y-m-d');
@@ -124,7 +124,7 @@ class TemporaryAdmissionController extends Controller
 
     public function clearCustoms(Request $request, TemporaryAdmission $temporaryAdmission)
     {
-        abort_unless($request->user()?->role->canManageEquipment(), 403);
+        abort_unless($request->user()?->role->canManageTemporaryAdmissions(), 403);
         if (in_array($temporaryAdmission->status, ['returned', 'cleared'], true)) {
             throw ValidationException::withMessages(['cleared_on' => [__('validation.admission_already_cleared')]]);
         }
@@ -150,7 +150,7 @@ class TemporaryAdmissionController extends Controller
 
     public function storeDocument(Request $request, TemporaryAdmission $temporaryAdmission)
     {
-        abort_unless($request->user()?->role->canManageEquipment(), 403);
+        abort_unless($request->user()?->role->canManageTemporaryAdmissions(), 403);
         $validated = $request->validate(['document' => ['required', 'file', 'mimes:pdf', 'max:10240'], 'document_type' => ['required', Rule::in(TemporaryAdmissionDocument::TYPES)], 'document_date' => ['nullable', 'date', 'required_if:document_type,initial,admission'], 'validity_months' => ['nullable', 'integer', 'min:1', 'max:120', 'required_if:document_type,admission']]);
         if ($validated['document_type'] === 'admission' && in_array($temporaryAdmission->status, ['returned', 'cleared'], true)) {
             throw ValidationException::withMessages(['document' => [__('validation.admission_closed_no_document')]]);
@@ -176,7 +176,7 @@ class TemporaryAdmissionController extends Controller
 
     public function destroyDocument(Request $request, TemporaryAdmission $temporaryAdmission, TemporaryAdmissionDocument $document)
     {
-        abort_unless($request->user()?->role->canManageEquipment(), 403);
+        abort_unless($request->user()?->role->canManageTemporaryAdmissions(), 403);
         abort_unless($document->temporary_admission_id === $temporaryAdmission->id, 404);
         $temporaryAdmission->changes()->create(['actor_user_id' => $request->user()->id, 'action' => 'document_deleted', 'previous_values' => ['document_id' => $document->id, 'document_type' => $document->document_type, 'name' => $document->original_name], 'new_values' => [], 'occurred_at' => now()]);
         Storage::disk($document->disk)->delete($document->path);
@@ -187,7 +187,7 @@ class TemporaryAdmissionController extends Controller
 
     public function destroy(Request $request, TemporaryAdmission $temporaryAdmission)
     {
-        abort_unless($request->user()?->role->canManageEquipment(), 403);
+        abort_unless($request->user()?->role->canManageTemporaryAdmissions(), 403);
         $temporaryAdmission->load('documents');
         foreach ($temporaryAdmission->documents as $document) {
             Storage::disk($document->disk)->delete($document->path);

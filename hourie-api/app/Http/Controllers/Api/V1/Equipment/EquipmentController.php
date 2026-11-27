@@ -38,6 +38,10 @@ class EquipmentController extends Controller
     public function index(ListEquipmentRequest $request, ListEquipment $listEquipment): AnonymousResourceCollection
     {
         $filters = $request->validated();
+        if ($request->user()->role->isSiteScoped()) {
+            // Only his site; -1 matches no site when he is assigned to none.
+            $filters['project_id'] = $request->user()->assignedProjectId() ?? -1;
+        }
         $collection = EquipmentSummaryResource::collection($listEquipment->handle($filters));
 
         if ($request->boolean('with_category_counts')) {

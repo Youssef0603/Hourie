@@ -30,6 +30,7 @@ export function BondDetails({
   onClose,
   onEdit,
   onRenew,
+  readOnly = false,
   onChanged,
   onDeleted,
 }: {
@@ -38,6 +39,7 @@ export function BondDetails({
   onEdit: () => void;
   /** Opens the one-step renewal (new expiry, bank letter, amount). */
   onRenew: () => void;
+  readOnly?: boolean;
   onChanged: (bond: Bond) => void;
   onDeleted: () => void;
 }) {
@@ -104,19 +106,21 @@ export function BondDetails({
           </button>
         </header>
         <div className="detail-content insurance-side-content">
-          <div className="detail-primary-actions bond-detail-actions">
-            <RenewButton due={state !== "active"} onClick={onRenew} />
-            <DetailIconButton icon="edit" label={operationPhrase("Modifier")} onClick={onEdit} />
-            <button
-              className="danger-button detail-delete-button"
-              type="button"
-              disabled={deleting}
-              onClick={() => void remove()}
-              aria-label={operationPhrase("Supprimer")}
-            >
-              <ActionIcon name="delete" />
-            </button>
-          </div>
+          {!readOnly && (
+            <div className="detail-primary-actions bond-detail-actions">
+              <RenewButton due={state !== "active"} onClick={onRenew} />
+              <DetailIconButton icon="edit" label={operationPhrase("Modifier")} onClick={onEdit} />
+              <button
+                className="danger-button detail-delete-button"
+                type="button"
+                disabled={deleting}
+                onClick={() => void remove()}
+                aria-label={operationPhrase("Supprimer")}
+              >
+                <ActionIcon name="delete" />
+              </button>
+            </div>
+          )}
           <section>
             <h3>
               <ActionIcon name="identification" />
@@ -178,6 +182,7 @@ export function BondDetails({
             </dl>
           </section>
           <BondDocuments
+            readOnly={readOnly}
             bond={bond}
             onChanged={(documents) => onChanged({ ...bond, documents })}
           />
@@ -221,9 +226,11 @@ export function BondDetails({
 
 function BondDocuments({
   bond,
+  readOnly,
   onChanged,
 }: {
   bond: Bond;
+  readOnly: boolean;
   onChanged: (documents: BondDocument[]) => void;
 }) {
   const [uploading, setUploading] = useState(false);
@@ -291,7 +298,7 @@ function BondDocuments({
               name={document.original_name}
               meta={formatFileSize(document.size_bytes)}
               onError={setError}
-              onDelete={() => void remove(document)}
+              onDelete={readOnly ? undefined : () => void remove(document)}
               deleting={deletingId === document.id}
             />
           )}
@@ -304,12 +311,14 @@ function BondDocuments({
           description={operationPhrase("Les garanties et avenants associés apparaîtront ici.")}
         />
       )}
-      <DocumentUploadDropzone
-        compact
-        disabled={uploading}
-        title={operationPhrase(uploading ? "Ajout en cours…" : "Ajouter des documents")}
-        onFiles={(files) => void upload(files)}
-      />
+      {!readOnly && (
+        <DocumentUploadDropzone
+          compact
+          disabled={uploading}
+          title={operationPhrase(uploading ? "Ajout en cours…" : "Ajouter des documents")}
+          onFiles={(files) => void upload(files)}
+        />
+      )}
     </section>
   );
 }

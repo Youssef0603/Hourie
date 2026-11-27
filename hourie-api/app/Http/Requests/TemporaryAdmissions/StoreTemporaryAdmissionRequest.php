@@ -12,7 +12,7 @@ class StoreTemporaryAdmissionRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()?->role->canManageEquipment() ?? false;
+        return $this->user()?->role->canManageTemporaryAdmissions() ?? false;
     }
 
     /**

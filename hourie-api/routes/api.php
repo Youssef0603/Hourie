@@ -34,6 +34,7 @@ use App\Http\Controllers\Api\V1\TollBadgeController;
 use App\Http\Middleware\EnsureFeatureIsEnabled;
 use App\Http\Middleware\EnsurePasswordWasChanged;
 use App\Http\Middleware\EnsureUserIsActive;
+use App\Http\Middleware\RestrictSiteScopedAccess;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', HealthController::class);
@@ -50,7 +51,7 @@ Route::prefix('v1/auth')->name('auth.')->group(function (): void {
     });
 });
 
-Route::prefix('v1')->middleware(['auth:sanctum', EnsureUserIsActive::class, EnsurePasswordWasChanged::class])->group(function (): void {
+Route::prefix('v1')->middleware(['auth:sanctum', EnsureUserIsActive::class, EnsurePasswordWasChanged::class, RestrictSiteScopedAccess::class])->group(function (): void {
     Route::post('purchase-orders/{purchaseOrder}/delivery-notes', [PurchaseOrderDeliveryNoteController::class, 'store']);
     Route::get('purchase-orders/{purchaseOrder}/delivery-notes/{deliveryNote}/file', [PurchaseOrderDeliveryNoteController::class, 'show'])
         ->name('purchase-orders.delivery-notes.show');

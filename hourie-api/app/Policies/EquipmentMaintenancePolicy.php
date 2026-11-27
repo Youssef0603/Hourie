@@ -19,12 +19,13 @@ class EquipmentMaintenancePolicy
 
     public function create(User $user): bool
     {
-        return $user->role->canManageEquipment();
+        return $user->role->canManageMaintenance();
     }
 
     public function update(User $user, EquipmentMaintenance $maintenance): bool
     {
-        return $user->role->canManageEquipment();
+        return $user->role->canManageMaintenance()
+            && ($maintenance->equipment === null || $user->can('view', $maintenance->equipment));
     }
 
     public function delete(User $user, EquipmentMaintenance $maintenance): bool

@@ -98,6 +98,15 @@ class UpdateEquipmentRequest extends FormRequest
                 : null;
             $currentLocationId = $equipment instanceof Equipment ? $equipment->current_location_id : null;
             $projectId = $this->exists('project_id') ? $this->input('project_id') : $currentProjectId;
+
+            // A Chef de chantier keeps equipment on his site: moving it to another
+            // site is a transfer, done by the Responsable matériel.
+            if ($this->user()?->role->isSiteScoped() && (int) $projectId !== (int) $currentProjectId) {
+                $validator->errors()->add('project_id', __('validation.equipment_site_locked'));
+
+                return;
+            }
+
             $locationId = $this->exists('current_location_id') ? $this->input('current_location_id') : $currentLocationId;
 
             if ($locationId === null) {

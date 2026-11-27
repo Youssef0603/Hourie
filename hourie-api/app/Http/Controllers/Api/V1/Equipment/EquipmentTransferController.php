@@ -84,7 +84,7 @@ class EquipmentTransferController extends Controller
 
     public function destroy(Request $request, Equipment $equipment, EquipmentChange $change): EquipmentResource
     {
-        Gate::authorize('update', $equipment);
+        Gate::authorize('transfer', $equipment);
 
         DB::transaction(function () use ($change, $equipment, $request): void {
             $latestTransfer = EquipmentChange::query()

@@ -5,59 +5,54 @@ namespace App\Policies;
 use App\Models\Equipment;
 use App\Models\User;
 
+/**
+ * Who may see and change equipment. A Chef de chantier only reaches the
+ * equipment of the site he is assigned to; everyone else reaches all of it.
+ */
 class EquipmentPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
     public function viewAny(User $user): bool
     {
         return true;
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
     public function view(User $user, Equipment $equipment): bool
     {
-        return true;
+        return $user->canReachProject($equipment->currentProjectId());
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
     public function create(User $user): bool
     {
-        return $user->role->canManageEquipment();
+        return $user->role->canCreateEquipment();
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
     public function update(User $user, Equipment $equipment): bool
     {
-        return $user->role->canManageEquipment();
+        return $user->role->canManageEquipment() && $this->view($user, $equipment);
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
+    /** Record maintenance or a repair on this machine. */
+    public function maintain(User $user, Equipment $equipment): bool
+    {
+        return $user->role->canManageMaintenance() && $this->view($user, $equipment);
+    }
+
+    /** Move it to another site. */
+    public function transfer(User $user, Equipment $equipment): bool
+    {
+        return $user->role->canTransferEquipment();
+    }
+
     public function delete(User $user, Equipment $equipment): bool
     {
         return $user->role->canDeleteEquipment();
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
     public function restore(User $user, Equipment $equipment): bool
     {
         return false;
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
     public function forceDelete(User $user, Equipment $equipment): bool
     {
         return false;

@@ -1,3 +1,4 @@
+import type { UserRoleCode } from '../auth/types'
 import type { EquipmentSummary } from '../equipment/types'
 
 export type ProjectStatus = string
@@ -63,7 +64,7 @@ export type Employee = {
   equipment_in_custody_count: number
   current_project: { id: number; name: string } | null
   current_company_location: { id: number; name: string } | null
-  user: { id: number; username: string; email: string | null; role: 'manager' | 'cms_manager' | 'generator_manager' | 'viewer'; is_active: boolean } | null
+  user: { id: number; username: string; email: string | null; role: UserRoleCode; is_active: boolean } | null
 }
 
 export type EmployeeDetails = Employee & {
@@ -100,7 +101,7 @@ export type CreateEmployeePayload = {
   assignment_ended_on: string | null
   create_account: boolean
   email: string | null
-  role: 'manager' | 'cms_manager' | 'generator_manager' | 'viewer' | null
+  role: UserRoleCode | null
   password: string | null
   password_confirmation: string | null
 }
@@ -122,7 +123,7 @@ export type UpdateEmployeePayload = {
   /** Only to rename an existing account; a new account gets one generated from the name. */
   username?: string | null
   email: string | null
-  role: 'manager' | 'cms_manager' | 'generator_manager' | 'viewer'
+  role: UserRoleCode
   password: string | null
   password_confirmation: string | null
 }
