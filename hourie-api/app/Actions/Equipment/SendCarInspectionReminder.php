@@ -55,7 +55,7 @@ class SendCarInspectionReminder
     /** @return Collection<int, string> */
     public function recipients(): Collection
     {
-        return collect(ApplicationSetting::reminderRecipients())
+        return collect(ApplicationSetting::reminderRecipients(topic: 'car_inspection'))
             ->filter(fn (mixed $email): bool => is_string($email) && filter_var($email, FILTER_VALIDATE_EMAIL) !== false)
             ->unique()
             ->values();

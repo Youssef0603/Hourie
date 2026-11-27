@@ -41,6 +41,7 @@ class SendInsuranceExpiryReminderJob implements ShouldBeUnique, ShouldQueue
             $reminder,
             'insurance_policy_id',
             'expiry_date',
+            topic: 'insurance',
         );
         if ($recipients === []) {
             throw new \RuntimeException('No reminder recipients are configured.');

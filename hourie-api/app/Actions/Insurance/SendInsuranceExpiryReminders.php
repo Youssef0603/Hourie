@@ -57,7 +57,7 @@ class SendInsuranceExpiryReminders
             return false;
         }
 
-        if (ApplicationSetting::reminderRecipients() === []) {
+        if (ApplicationSetting::reminderRecipients(topic: 'insurance') === []) {
             return false;
         }
 

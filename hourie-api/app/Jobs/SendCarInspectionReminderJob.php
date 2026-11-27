@@ -41,6 +41,7 @@ class SendCarInspectionReminderJob implements ShouldBeUnique, ShouldQueue
             $reminder,
             'equipment_id',
             'inspection_date',
+            topic: 'car_inspection',
         );
         if ($recipients === []) {
             throw new \RuntimeException('No reminder recipients are configured.');

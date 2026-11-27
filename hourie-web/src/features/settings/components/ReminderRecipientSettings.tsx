@@ -7,6 +7,16 @@ import { EmptyState } from "../../../shared/components/EmptyState";
 import { Modal } from "../../../shared/components/Modal";
 import { SearchableSelect } from "../../../shared/components/SearchableSelect";
 
+/** The kinds of reminder e-mail, in the order shown on each row. */
+const reminderTopics = [
+  { code: "insurance", label: "Assurances" },
+  { code: "bond", label: "Cautions" },
+  { code: "temporary_admission", label: "AT" },
+  { code: "car_inspection", label: "Visite technique" },
+] as const;
+type ReminderTopic = (typeof reminderTopics)[number]["code"];
+const allTopics = reminderTopics.map((topic) => topic.code) as ReminderTopic[];
+
 export function ReminderRecipientSettings({
   isAdding,
   onCloseAdd,
@@ -14,7 +24,7 @@ export function ReminderRecipientSettings({
   isAdding: boolean;
   onCloseAdd: () => void;
 }) {
-  type ReminderRecipient = { employee_id: number; name: string; email: string };
+  type ReminderRecipient = { employee_id: number; name: string; email: string; topics: ReminderTopic[] };
   type NotificationSettings = {
     recipients: ReminderRecipient[];
   };
@@ -41,7 +51,7 @@ export function ReminderRecipientSettings({
       .then((value) => setPeople(value.data))
       .catch(() => undefined);
   }, []);
-  async function persist(nextIds: number[], closeAdd = true) {
+  async function persist(next: Array<Pick<ReminderRecipient, "employee_id" | "topics">>, closeAdd = true) {
     setSaving(true);
     setError(null);
     try {
@@ -49,7 +59,9 @@ export function ReminderRecipientSettings({
         data: NotificationSettings;
       }>("/api/v1/notification-settings", {
         method: "PUT",
-        body: JSON.stringify({ employee_ids: nextIds }),
+        body: JSON.stringify({
+          recipients: next.map(({ employee_id, topics }) => ({ employee_id, topics })),
+        }),
       });
       setRecipients(response.data.recipients);
       setEmployeeId("");
@@ -75,7 +87,7 @@ export function ReminderRecipientSettings({
           <div className="reminder-escalation-copy">
             <h2>{t("Escalade des rappels")}</h2>
             <p>
-              {t("Rappels 1 à 3 : liste standard. Dès le 4e : liste standard + directeur général, automatiquement.")}
+              {t("Rappels 1 à 3 : les personnes ci-dessous, selon leurs types. Dès le 4e : le directeur général est ajouté automatiquement, pour tous les types.")}
             </p>
           </div>
         </section>
@@ -83,7 +95,7 @@ export function ReminderRecipientSettings({
         <div className="reminder-recipient-heading">
           <div>
             <h2>{t("Destinataires standards")}</h2>
-            <p>{t("Ils reçoivent chaque rappel avant et après l’escalade.")}</p>
+            <p>{t("Cliquez sur un type pour l’activer ou le retirer : chaque personne ne reçoit que les rappels surlignés.")}</p>
           </div>
           <span>{recipients.length}</span>
         </div>
@@ -97,18 +109,46 @@ export function ReminderRecipientSettings({
                   <strong>{recipient.name}</strong>
                   <small>{recipient.email}</small>
                 </span>
-                <span className="account-status active">{localized("Actif", "نشط")}</span>
+                <span className="reminder-topic-toggles">
+                  {reminderTopics.map((topic) => {
+                    const selected = recipient.topics.includes(topic.code);
+                    return (
+                      <button
+                        key={topic.code}
+                        type="button"
+                        className={`reminder-topic${selected ? " is-selected" : ""}`}
+                        aria-pressed={selected}
+                        disabled={saving}
+                        onClick={() =>
+                          void persist(
+                            recipients.map((value) =>
+                              value.employee_id === recipient.employee_id
+                                ? {
+                                    ...value,
+                                    topics: selected
+                                      ? value.topics.filter((code) => code !== topic.code)
+                                      : allTopics.filter((code) => code === topic.code || value.topics.includes(code)),
+                                  }
+                                : value,
+                            ),
+                            false,
+                          )
+                        }
+                      >
+                        {t(topic.label)}
+                      </button>
+                    );
+                  })}
+                </span>
                 <button
                   type="button"
+                  className="reminder-recipient-delete"
                   aria-label={localized(`Supprimer ${recipient.name}`, `حذف ${recipient.name}`)}
                   onClick={() =>
                     void persist(
-                      recipients
-                        .filter(
-                          (value) =>
-                            value.employee_id !== recipient.employee_id,
-                        )
-                        .map((value) => value.employee_id),
+                      recipients.filter(
+                        (value) => value.employee_id !== recipient.employee_id,
+                      ),
                     )
                   }
                 >
@@ -120,7 +160,7 @@ export function ReminderRecipientSettings({
             <EmptyState
               icon="people"
               title={t("Aucun destinataire")}
-              description={t("Ajoutez une personne pour recevoir les rappels d’assurance et de visite des véhicules.")}
+              description={t("Ajoutez une personne pour recevoir les rappels : assurances, cautions, AT et visites techniques.")}
             />
           )}
         </div>
@@ -133,8 +173,8 @@ export function ReminderRecipientSettings({
               event.preventDefault();
               if (employeeId)
                 void persist([
-                  ...recipients.map((recipient) => recipient.employee_id),
-                  Number(employeeId),
+                  ...recipients,
+                  { employee_id: Number(employeeId), topics: allTopics },
                 ]);
             }}
           >

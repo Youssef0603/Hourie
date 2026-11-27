@@ -63,7 +63,7 @@ class SendTemporaryAdmissionExpiryReminders
             }
         }
 
-        if (ApplicationSetting::reminderRecipients() === []) {
+        if (ApplicationSetting::reminderRecipients(topic: 'temporary_admission') === []) {
             return false;
         }
 

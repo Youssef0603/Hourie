@@ -2159,7 +2159,7 @@ html[dir="rtl"] .directory-form select {
 }
 .reminder-recipient-list article {
   display: grid;
-  grid-template-columns: auto 1fr auto auto;
+  grid-template-columns: auto minmax(9rem, 1fr) auto auto;
   align-items: center;
   gap: 0.75rem;
   min-height: 3.25rem;
@@ -2173,7 +2173,7 @@ html[dir="rtl"] .directory-form select {
 .reminder-email-dot {
   background: var(--color-primary);
 }
-.reminder-recipient-list article button {
+.reminder-recipient-list article .reminder-recipient-delete {
   display: grid;
   width: 1.8rem;
   height: 1.8rem;
@@ -2183,11 +2183,59 @@ html[dir="rtl"] .directory-form select {
   color: var(--color-primary);
   background: #fff1f4;
 }
-.reminder-recipient-list article button svg {
+.reminder-recipient-list article .reminder-recipient-delete svg {
   width: 0.9rem;
   height: 0.9rem;
   fill: none;
   stroke: currentColor;
+}
+/* One pill per kind of reminder; highlighted = this person receives it. */
+.reminder-topic-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.3rem;
+}
+.reminder-topic {
+  min-height: 1.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 0.2rem 0.65rem;
+  color: var(--color-text-muted);
+  background: #fff;
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+/* Fixed widths (room for the ✓) so each type lines up in a column from row to row. */
+.reminder-topic {
+  white-space: nowrap;
+  text-align: center;
+}
+.reminder-topic:nth-child(1) { min-width: 6.6rem; }
+.reminder-topic:nth-child(2) { min-width: 5.7rem; }
+.reminder-topic:nth-child(3) { min-width: 3.6rem; }
+.reminder-topic:nth-child(4) { min-width: 8.2rem; }
+.reminder-topic:hover {
+  border-color: var(--color-primary);
+}
+.reminder-topic.is-selected {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+.reminder-topic.is-selected::before {
+  content: "✓ ";
+}
+@media (max-width: 720px) {
+  .reminder-recipient-list article {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+  .reminder-topic-toggles {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
 }
 .reminder-recipient-list > p {
   padding: 0 1rem 0.75rem;

@@ -57,7 +57,7 @@ class SendBondExpiryReminders
             return false;
         }
 
-        if (ApplicationSetting::reminderRecipients() === []) {
+        if (ApplicationSetting::reminderRecipients(topic: 'bond') === []) {
             return false;
         }
 

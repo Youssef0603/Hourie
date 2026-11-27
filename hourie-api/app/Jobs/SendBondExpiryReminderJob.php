@@ -41,6 +41,7 @@ class SendBondExpiryReminderJob implements ShouldBeUnique, ShouldQueue
             $reminder,
             'bond_id',
             'expiry_date',
+            topic: 'bond',
         );
         if ($recipients === []) {
             throw new \RuntimeException('No reminder recipients are configured.');

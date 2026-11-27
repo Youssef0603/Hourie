@@ -6,6 +6,7 @@ return [
     'boolean' => 'Le champ :attribute doit être vrai ou faux.',
     'confirmed' => 'La confirmation du champ :attribute ne correspond pas.',
     'date' => 'Le champ :attribute doit être une date valide.',
+    'distinct' => 'Le champ :attribute contient une valeur en double.',
     'email' => 'Le champ :attribute doit être une adresse e-mail valide.',
     'enum' => 'La valeur sélectionnée pour :attribute est invalide.',
     'exists' => 'La valeur sélectionnée pour :attribute est invalide.',

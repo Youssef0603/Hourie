@@ -6,6 +6,7 @@ return [
     'boolean' => 'يجب أن تكون قيمة :attribute نعم أو لا.',
     'confirmed' => 'تأكيد حقل :attribute غير مطابق.',
     'date' => 'يجب أن يكون حقل :attribute تاريخًا صالحًا.',
+    'distinct' => 'يحتوي حقل :attribute على قيمة مكررة.',
     'email' => 'يجب أن يكون حقل :attribute بريدًا إلكترونيًا صالحًا.',
     'enum' => 'القيمة المحددة لحقل :attribute غير صالحة.',
     'exists' => 'القيمة المحددة لحقل :attribute غير صالحة.',
