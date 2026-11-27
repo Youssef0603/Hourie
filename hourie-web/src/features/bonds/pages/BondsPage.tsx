@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { ClearFiltersButton } from "../../../shared/components/FilterDrawer";
 import { apiRequest } from "../../../shared/api/http";
 import { FilterToggleButton, ToolbarIconButton } from "../../../shared/components/ToolbarButtons";
 import { Pagination } from "../../../shared/components/Pagination";
@@ -17,6 +18,7 @@ import type { Bond, BondSite as Site, BondStatus, BondType } from "../types";
 import { BondDetails } from "../components/BondDetails";
 import { BondFilters } from "../components/BondFilters";
 import { BondForm } from "../components/BondForm";
+import { RenewBondDialog } from "../components/RenewBondDialog";
 import type { PaginatedResponse } from "../../../shared/api/pagination";
 import { usePaginatedList } from "../../../shared/usePaginatedList";
 import { operationPhrase } from "../../../i18n/operations";
@@ -33,8 +35,16 @@ export function BondsPage({ initialSiteId = null }: BondsPageProps) {
   const [type, setType] = useState<BondType | "all">("all");
   const [siteId, setSiteId] = useState(initialSiteId ? String(initialSiteId) : "");
   const [showFilters, setShowFilters] = useState(false);
+  const filterCount = Number(status !== "all") + Number(type !== "all") + Number(Boolean(siteId));
+  function clearFilters() {
+    setStatus("all");
+    setType("all");
+    setSiteId("");
+    setPage(1);
+  }
   const [showAdd, setShowAdd] = useState(false);
   const [editing, setEditing] = useState<Bond | null>(null);
+  const [renewing, setRenewing] = useState<Bond | null>(null);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [selected, setSelected] = useState<Bond | null>(null);
 
@@ -114,11 +124,12 @@ export function BondsPage({ initialSiteId = null }: BondsPageProps) {
             <FilterToggleButton
               label={operationPhrase("Filtres")}
               active={showFilters}
-              count={Number(status !== "all") + Number(type !== "all") + Number(Boolean(siteId))}
+              count={filterCount}
               onClick={() => setShowFilters(true)}
             />
             <ToolbarIconButton icon="add" label={operationPhrase("Ajouter une caution")} onClick={() => setShowAdd(true)} />
             <ToolbarIconButton icon="refresh" label={operationPhrase("Actualiser")} onClick={() => void refresh()} />
+            <ClearFiltersButton count={filterCount} onClear={clearFilters} />
           </div>
         </div>
         <div className="equipment-table-wrap">
@@ -213,12 +224,6 @@ export function BondsPage({ initialSiteId = null }: BondsPageProps) {
             setPage(1);
           }}
           onClose={() => setShowFilters(false)}
-          onClear={() => {
-            setStatus("all");
-            setType("all");
-            setSiteId("");
-            setPage(1);
-          }}
         />
       )}
       {showAdd && (
@@ -251,12 +256,23 @@ export function BondsPage({ initialSiteId = null }: BondsPageProps) {
           onEdit={() => {
             setEditing(selected);
           }}
+          onRenew={() => setRenewing(selected)}
           onChanged={updateBond}
           onDeleted={() => {
             setBonds((current) =>
               current.filter((bond) => bond.id !== selected.id),
             );
             setSelectedId(null);
+          }}
+        />
+      )}
+      {renewing && (
+        <RenewBondDialog
+          bond={renewing}
+          onClose={() => setRenewing(null)}
+          onRenewed={(bond) => {
+            updateBond(bond);
+            setRenewing(null);
           }}
         />
       )}

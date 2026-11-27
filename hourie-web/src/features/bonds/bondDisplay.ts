@@ -1,3 +1,4 @@
+import { shiftDate, todayIso } from '../../shared/renewal'
 import type { Bond, BondStatus, BondType } from './types'
 import { formatDate, formatMoney } from '../../shared/format'
 import { expiryStatus } from '../../shared/expiry'
@@ -33,4 +34,9 @@ export function getBondStatus(bond: Bond): BondStatus {
 
 export function bondStatusLabel(status: BondStatus) {
   return operationPhrase(status === 'active' ? 'Active' : status === 'soon' ? 'Expire bientôt' : 'Expirée')
+}
+
+/** A bank extension (prorogation) keeps the issue date and pushes the expiry one year further by default. */
+export function nextBondExpiry(expiresOn: string | null, today = todayIso()) {
+  return shiftDate(expiresOn ?? today, 0, 1)
 }

@@ -1,3 +1,4 @@
+import { ClearFiltersButton } from "../../../shared/components/FilterDrawer";
 import {
   lazy,
   startTransition,
@@ -910,24 +911,19 @@ export function EquipmentPage({
                     label={fr.common.refresh}
                     onClick={refreshInventory}
                   />
-                  {hasFilters && (
-                    <button
-                      className="clear-filters"
-                      type="button"
-                      onClick={() => {
-                        setIsLoading(true);
-                        setError(null);
-                        setFilters({
-                          ...initialFilters,
-                          q: search,
-                          category: isSiteView ? "" : "generator",
-                          project_id: isSiteView ? String(siteContext?.id) : "",
-                        });
-                      }}
-                    >
-                      {fr.equipment.clearFilters}
-                    </button>
-                  )}
+                  <ClearFiltersButton
+                    count={hasFilters ? 1 : 0}
+                    onClear={() => {
+                      setIsLoading(true);
+                      setError(null);
+                      setFilters({
+                        ...initialFilters,
+                        q: search,
+                        category: isSiteView ? "" : "generator",
+                        project_id: isSiteView ? String(siteContext?.id) : "",
+                      });
+                    }}
+                  />
                 </div>
               </div>
 

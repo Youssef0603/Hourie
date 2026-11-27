@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { ClearFiltersButton } from "../../../shared/components/FilterDrawer";
 import { normalizeSearch } from "../../../shared/text";
 import { fr } from "../../../i18n/fr";
 import { operationPhrase } from "../../../i18n/operations";
@@ -234,21 +235,16 @@ export function PeoplePage({
               <ToolbarIconButton icon="add" label={fr.directory.addPerson} onClick={() => setShowForm(true)} />
             )}
             <ToolbarIconButton icon="refresh" label={fr.common.refresh} disabled={isRefreshing} onClick={() => void refreshPeople()} />
-            {activeFilterCount > 0 && (
-              <button
-                className="clear-filters"
-                type="button"
-                onClick={() => {
-                  setAccessFilter("");
-                  setRoleFilter("");
-                  setJobTitleFilter("");
-                  setProjectFilter("");
-                  setCurrentPage(1);
-                }}
-              >
-                {fr.equipment.clearFilters}
-              </button>
-            )}
+            <ClearFiltersButton
+              count={activeFilterCount}
+              onClear={() => {
+                setAccessFilter("");
+                setRoleFilter("");
+                setJobTitleFilter("");
+                setProjectFilter("");
+                setCurrentPage(1);
+              }}
+            />
           </div>
         </div>
         {showFilters && (

@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
+import { DetailIconButton } from "../../../shared/components/DetailIconButton";
 import { DocumentRow } from "../../../shared/components/DocumentRow";
 import { formatFileSize } from "../../../shared/format";
 import {
   apiRequest,
 } from "../../../shared/api/http";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
+import { RenewButton } from "../../../shared/components/RenewButton";
 import { DocumentUploadDropzone } from "../../../shared/components/DocumentUploadDropzone";
 import { EmptyState } from "../../../shared/components/EmptyState";
 import { PaginatedDocumentList } from "../../../shared/components/PaginatedDocumentList";
@@ -27,12 +29,15 @@ export function BondDetails({
   bond,
   onClose,
   onEdit,
+  onRenew,
   onChanged,
   onDeleted,
 }: {
   bond: Bond;
   onClose: () => void;
   onEdit: () => void;
+  /** Opens the one-step renewal (new expiry, bank letter, amount). */
+  onRenew: () => void;
   onChanged: (bond: Bond) => void;
   onDeleted: () => void;
 }) {
@@ -43,20 +48,7 @@ export function BondDetails({
   const [historyLoading, setHistoryLoading] = useState(true);
   const [historyError, setHistoryError] = useState("");
   const state = getBondStatus(bond);
-  async function refreshHistory() {
-    setHistoryLoading(true);
-    setHistoryError("");
-    try {
-      const response = await apiRequest<{ data: Bond }>(
-        `/api/v1/bonds/${bond.id}`,
-      );
-      setHistory(response.data.changes ?? []);
-    } catch {
-      setHistoryError(operationPhrase("Impossible de charger l’historique de cette caution."));
-    } finally {
-      setHistoryLoading(false);
-    }
-  }
+
   useEffect(() => {
     let active = true;
     apiRequest<{ data: Bond }>(`/api/v1/bonds/${bond.id}`)
@@ -75,17 +67,8 @@ export function BondDetails({
     return () => {
       active = false;
     };
-  }, [bond.id]);
-  function openHistory() {
-    const section = document.getElementById(
-      `bond-history-${bond.id}`,
-    ) as HTMLDetailsElement | null;
-    if (section) {
-      section.open = true;
-      section.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    }
-    if (!historyLoading) void refreshHistory();
-  }
+    // Reloads after an edit or a renewal too, so the new change shows at once.
+  }, [bond]);
   async function remove() {
     if (
       !window.confirm(
@@ -122,22 +105,8 @@ export function BondDetails({
         </header>
         <div className="detail-content insurance-side-content">
           <div className="detail-primary-actions bond-detail-actions">
-            <button
-              className="equipment-edit-button detail-toolbar-button"
-              type="button"
-              onClick={onEdit}
-            >
-              <ActionIcon name="edit" />
-              {operationPhrase("Modifier")}
-            </button>
-            <button
-              className="equipment-history-button detail-toolbar-button"
-              type="button"
-              onClick={() => void openHistory()}
-            >
-              <ActionIcon name="history" />
-              {operationPhrase("Voir l’historique")}
-            </button>
+            <RenewButton due={state !== "active"} onClick={onRenew} />
+            <DetailIconButton icon="edit" label={operationPhrase("Modifier")} onClick={onEdit} />
             <button
               className="danger-button detail-delete-button"
               type="button"

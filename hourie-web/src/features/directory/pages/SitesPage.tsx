@@ -1,4 +1,5 @@
 import { useCallback, useState, type FormEvent } from 'react'
+import { DetailIconButton } from '../../../shared/components/DetailIconButton'
 import { fr } from '../../../i18n/fr'
 import { operationPhrase } from '../../../i18n/operations'
 import { createSite, getSite, getSites } from '../api'
@@ -170,7 +171,7 @@ export function SitesPage({ canAdd, onOpenSite, onOpenInsurance, onOpenBonds, on
             {isLoadingDetails && <div className="site-details-loading"><LoadingSpinner label={fr.common.loading} /></div>}
             {detailsError && <div className="form-alert" role="alert">{detailsError}</div>}
             {canAdd && <div className="detail-primary-actions site-detail-toolbar">
-              <button className="equipment-edit-button detail-toolbar-button" type="button" onClick={() => setIsEditingSite(true)}><ActionIcon name="edit" />{fr.directory.editThisSite}</button>
+              <DetailIconButton icon="edit" label={fr.directory.editThisSite} onClick={() => setIsEditingSite(true)} />
             </div>}
             <section className="site-detail-section">
               <h3><ActionIcon name="identification" />{operationPhrase('Informations principales')}</h3>

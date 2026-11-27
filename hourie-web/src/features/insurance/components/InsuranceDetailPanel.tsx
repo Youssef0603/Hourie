@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { DetailIconButton } from "../../../shared/components/DetailIconButton";
 import { apiRequest } from "../../../shared/api/http";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
+import { RenewButton } from "../../../shared/components/RenewButton";
 import {
   coveredInsuranceLabel,
   formatInsuranceDate,
@@ -25,6 +27,7 @@ export function InsuranceDetailPanel({
   policy,
   onClose,
   onEdit,
+  onRenew,
   onDocumentsChanged,
   onDeleted,
   onOpenEquipment,
@@ -34,6 +37,8 @@ export function InsuranceDetailPanel({
   policy: Policy;
   onClose: () => void;
   onEdit: () => void;
+  /** Opens the one-step renewal (new period, attestation, premium). */
+  onRenew?: () => void;
   onDocumentsChanged: (documents: PolicyDocument[]) => void;
   onDeleted: () => void;
   onOpenEquipment?: (equipmentId: number) => void;
@@ -43,16 +48,6 @@ export function InsuranceDetailPanel({
   const text = operationsText().insurance;
   const state = insurancePolicyStatus(policy);
   const [isDeleting, setIsDeleting] = useState(false);
-
-  function openHistory() {
-    const section = document.getElementById(
-      `insurance-history-${policy.id}`,
-    ) as HTMLDetailsElement | null;
-    if (section) {
-      section.open = true;
-      section.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    }
-  }
 
   async function remove() {
     if (!window.confirm(text.deleteConfirmation(policy.policy_number)))
@@ -95,22 +90,10 @@ export function InsuranceDetailPanel({
         <div className="detail-content insurance-side-content">
           {!readOnly && (
             <div className="detail-primary-actions">
-              <button
-                className="equipment-edit-button detail-toolbar-button"
-                type="button"
-                onClick={onEdit}
-              >
-                <ActionIcon name="edit" />
-                {text.edit}
-              </button>
-              <button
-                className="equipment-history-button detail-toolbar-button"
-                type="button"
-                onClick={() => void openHistory()}
-              >
-                <ActionIcon name="history" />
-                {text.history}
-              </button>
+              {onRenew && (
+                <RenewButton due={state !== "active"} onClick={onRenew} />
+              )}
+              <DetailIconButton icon="edit" label={text.edit} onClick={onEdit} />
               <button
                 className="danger-button detail-delete-button"
                 type="button"

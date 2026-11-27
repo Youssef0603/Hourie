@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { ClearFiltersButton } from "../../../shared/components/FilterDrawer";
 import { apiRequest } from "../../../shared/api/http";
 import { FilterToggleButton, ToolbarIconButton } from "../../../shared/components/ToolbarButtons";
 import { Pagination } from "../../../shared/components/Pagination";
@@ -23,6 +24,7 @@ import type {
 import { InsuranceDetailPanel } from "../components/InsuranceDetailPanel";
 import { InsuranceFilterPanel } from "../components/InsuranceFilterPanel";
 import { InsuranceAddPanel } from "../components/InsurancePolicyForm";
+import { RenewInsuranceDialog } from "../components/RenewInsuranceDialog";
 import { RelatedEquipmentDetailPanel } from "../../equipment/components/RelatedEquipmentDetailPanel";
 import type { AuthenticatedUser } from "../../auth/types";
 import type { Language } from "../../../i18n/fr";
@@ -59,6 +61,13 @@ export function InsurancePage({
   const [showFilters, setShowFilters] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [editingPolicy, setEditingPolicy] = useState<Policy | null>(null);
+  const [renewingPolicy, setRenewingPolicy] = useState<Policy | null>(null);
+  const filterCount = Number(status !== "all") + Number(Boolean(projectId));
+  function clearFilters() {
+    setStatus("all");
+    setProjectId("");
+    setPage(1);
+  }
   const [sites, setSites] = useState<Array<{
     id: number;
     name: string;
@@ -189,11 +198,12 @@ export function InsurancePage({
             <FilterToggleButton
               label={text.filters}
               active={showFilters}
-              count={Number(status !== "all") + Number(Boolean(projectId))}
+              count={filterCount}
               onClick={() => setShowFilters((value) => !value)}
             />
             <ToolbarIconButton icon="add" label={text.addPolicy} onClick={() => setShowAdd(true)} />
             <ToolbarIconButton icon="refresh" label={text.refresh} disabled={loading} onClick={() => void refreshPolicies()} />
+            <ClearFiltersButton count={filterCount} onClear={clearFilters} />
           </div>
         </div>
         <div className="equipment-table-wrap">
@@ -283,11 +293,6 @@ export function InsurancePage({
             if (value) setActiveType("trc_rc");
           }}
           onClose={() => setShowFilters(false)}
-          onClear={() => {
-            setStatus("all");
-            setProjectId("");
-            setPage(1);
-          }}
         />
       )}
       {showAdd && (
@@ -329,6 +334,7 @@ export function InsurancePage({
           onEdit={() => {
             setEditingPolicy(selected);
           }}
+          onRenew={() => setRenewingPolicy(selected)}
           onDocumentsChanged={(documents) => {
             setSelected((current) => current ? { ...current, documents } : current);
             setPolicies((current) =>
@@ -345,6 +351,19 @@ export function InsurancePage({
           }}
           onOpenEquipment={(equipmentId) => {
             setRelatedEquipmentId(equipmentId);
+          }}
+        />
+      )}
+      {renewingPolicy && (
+        <RenewInsuranceDialog
+          policy={renewingPolicy}
+          onClose={() => setRenewingPolicy(null)}
+          onRenewed={(policy) => {
+            setPolicies((current) =>
+              current.map((item) => (item.id === policy.id ? policy : item)),
+            );
+            setSelected(policy);
+            setRenewingPolicy(null);
           }}
         />
       )}

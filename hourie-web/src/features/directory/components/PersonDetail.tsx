@@ -1,4 +1,5 @@
 import { fr } from "../../../i18n/fr";
+import { DetailIconButton } from "../../../shared/components/DetailIconButton";
 import { operationPhrase } from "../../../i18n/operations";
 import { formatDate } from "../../../shared/format";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
@@ -49,14 +50,7 @@ export function PersonDetail({
     <div className="person-detail">
       {canEdit && (
         <div className="detail-primary-actions person-detail-toolbar">
-          <button
-            className="equipment-edit-button detail-toolbar-button"
-            type="button"
-            onClick={onEdit}
-          >
-            <ActionIcon name="edit" />
-            {fr.common.edit}
-          </button>
+          <DetailIconButton icon="edit" label={fr.common.edit} onClick={onEdit} />
           <button
             className="danger-button detail-delete-button"
             type="button"

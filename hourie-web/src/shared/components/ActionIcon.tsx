@@ -1,5 +1,7 @@
+export type ActionIconName = 'add' | 'close' | 'collapse' | 'expand' | 'logout' | 'filter' | 'search' | 'refresh' | 'location' | 'transfer' | 'upload' | 'download' | 'edit' | 'history' | 'delete' | 'photo' | 'invoice' | 'maintenance' | 'identification' | 'specifications' | 'note' | 'inbox' | 'people'
+
 type ActionIconProps = {
-  name: 'add' | 'close' | 'collapse' | 'expand' | 'logout' | 'filter' | 'search' | 'refresh' | 'location' | 'transfer' | 'upload' | 'download' | 'edit' | 'history' | 'delete' | 'photo' | 'invoice' | 'maintenance' | 'identification' | 'specifications' | 'note' | 'inbox' | 'people'
+  name: ActionIconName
 }
 
 export function ActionIcon({ name }: ActionIconProps) {

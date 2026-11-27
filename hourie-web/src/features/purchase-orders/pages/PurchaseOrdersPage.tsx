@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { DetailIconButton } from "../../../shared/components/DetailIconButton";
 import { openDocument } from "../../../shared/documents";
 import { DocumentRow } from "../../../shared/components/DocumentRow";
 import { SupplierInvoices } from "../components/SupplierInvoices";
@@ -354,7 +355,7 @@ function PurchaseOrderDetails({ order, canManage, onClose, onPreview, onEdit, on
         </header>
         <div className="detail-content insurance-side-content">
           <div className="detail-primary-actions purchase-order-detail-actions">
-            {canManage && <button className="equipment-edit-button detail-toolbar-button" type="button" onClick={onEdit}><ActionIcon name="edit" /> {fr.common.edit}</button>}
+            {canManage && <DetailIconButton icon="edit" label={fr.common.edit} onClick={onEdit} />}
             <button className="equipment-history-button detail-toolbar-button" type="button" onClick={onPreview}><ActionIcon name="invoice" /> {operationPhrase("Aperçu")}</button>
             {canManage && <button className="danger-button detail-delete-button" type="button" aria-label={fr.common.delete} title={fr.common.delete} onClick={onDelete}><ActionIcon name="delete" /></button>}
           </div>

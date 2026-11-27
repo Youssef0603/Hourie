@@ -1,6 +1,6 @@
 import { type ChangeEvent } from 'react'
 import { fr, type Language } from '../../../i18n/fr'
-import { ActionIcon } from '../../../shared/components/ActionIcon'
+import { FilterDrawer, FilterGroup } from '../../../shared/components/FilterDrawer'
 import { SearchableSelect } from '../../../shared/components/SearchableSelect'
 import { catalogLabel, catalogOptions } from '../catalogs'
 import { assetFieldLabel, isGeneralEquipmentCategoryCode, type AssetCategoryCode, type AssetField } from '../assetCategories'
@@ -26,18 +26,15 @@ export function AssetFilterDrawer({ categoryCode, fields, filters, language, opt
     onChange: (event: ChangeEvent<HTMLInputElement>) => onChange(name, event.target.value),
   })
 
-  return <div className="filter-drawer-backdrop" onMouseDown={onClose}>
-    <aside className="filter-drawer" role="dialog" aria-modal="true" aria-label={fr.equipment.filters} onMouseDown={(event) => event.stopPropagation()}>
-      <header><div><p className="section-label">{fr.assets.title}</p><h2>{fr.equipment.filters}</h2></div><button type="button" onClick={onClose} aria-label={fr.common.close}><ActionIcon name="close" /></button></header>
-      <div className="filter-drawer-content">
-        <fieldset className="drawer-basic-filters"><legend>{fr.equipment.filters}</legend><div className="advanced-filter-grid">
+  return <FilterDrawer section={fr.assets.title} onClose={onClose}>
+        <FilterGroup>
           <label><span>{fr.equipment.condition}</span><SearchableSelect ariaLabel={fr.equipment.condition} value={filters.condition} onChange={(value) => onChange('condition', value)} placeholder={fr.common.all} options={catalogOptions(options?.catalogs, 'equipment_condition').map((option) => ({ value: option.code, label: catalogLabel(options?.catalogs, 'equipment_condition', option.code) }))} /></label>
           <label><span>{fr.equipment.usageStatus}</span><SearchableSelect ariaLabel={fr.equipment.usageStatus} value={filters.usage_status} onChange={(value) => onChange('usage_status', value)} placeholder={fr.common.all} options={[{ value: 'in_use', label: fr.equipment.usageInUse }, { value: 'not_in_use', label: fr.equipment.usageNotInUse }]} /></label>
           {!fixedProject && <label><span>{fr.equipment.project}</span><SearchableSelect ariaLabel={fr.equipment.project} value={filters.project_id} onChange={(value) => { onChange('project_id', value); onChange('location_id', '') }} placeholder={fr.common.all} options={(options?.projects ?? []).map((project) => ({ value: String(project.id), label: project.name }))} /></label>}
           <label><span>{fr.equipment.location}</span><SearchableSelect ariaLabel={fr.equipment.location} value={filters.location_id} onChange={(value) => onChange('location_id', value)} placeholder={fr.common.all} options={physicalLocations.map((location) => ({ value: String(location.id), label: filters.project_id === '' ? locationOptionLabel(location) : location.name }))} /></label>
           <label><span>{fr.equipment.custodian}</span><SearchableSelect ariaLabel={fr.equipment.custodian} value={filters.custodian_employee_id} onChange={(value) => onChange('custodian_employee_id', value)} placeholder={fr.common.all} options={(options?.employees ?? []).map((employee) => ({ value: String(employee.id), label: employee.name }))} /></label>
           <label><span>{fr.equipment.sort}</span><SearchableSelect ariaLabel={fr.equipment.sort} value={filters.sort} onChange={(value) => onChange('sort', value)} placeholder={fr.equipment.manufacturedNewestFirst} includeEmpty={false} options={[{ value: 'manufacture_year_desc', label: fr.equipment.manufacturedNewestFirst }, { value: 'manufacture_year_asc', label: fr.equipment.manufacturedOldestFirst }]} /></label>
-        </div></fieldset>
+        </FilterGroup>
         <DataQualityFilterChips filters={filters} onChange={onChange} />
         <div className="advanced-filter-panel">
           <fieldset><legend>{fr.equipment.assignmentAndDateFilters}</legend><div className="advanced-filter-grid">
@@ -51,9 +48,7 @@ export function AssetFilterDrawer({ categoryCode, fields, filters, language, opt
             <label><span>{fr.assets.valueFilter}</span><input {...field('asset_value')} disabled={filters.asset_field === ''} /></label>
           </div></fieldset>}
         </div>
-      </div>
-    </aside>
-  </div>
+  </FilterDrawer>
 }
 
 function CategorySpecificAssetFilters({ categoryCode, filters, options, onChange }: Pick<AssetFilterDrawerProps, 'categoryCode' | 'filters' | 'options' | 'onChange'>) {

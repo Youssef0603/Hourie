@@ -1,0 +1,106 @@
+/* Shared by every "Renouveler" dialog (insurance, bonds) and its toolbar button. */
+.renewal-form {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.75rem 0.8rem;
+}
+.renewal-form label {
+  display: grid;
+  grid-column: span 2;
+  align-content: end;
+  gap: 0.3rem;
+  color: var(--color-text-strong);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+/* The two dates share the first row half and half. */
+.renewal-form .renewal-date {
+  grid-column: span 3;
+}
+.renewal-form input {
+  width: 100%;
+  height: var(--control-height);
+  border: 1px solid var(--color-border);
+  border-radius: var(--control-radius);
+  padding: 0.5rem 0.7rem;
+  font: inherit;
+}
+.renewal-form .field-wide,
+.renewal-form .renewal-previous,
+.renewal-form .renewal-total,
+.renewal-form .maintenance-form-actions,
+.renewal-form .form-alert {
+  grid-column: 1 / -1;
+}
+.renewal-previous {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0.6rem 0.8rem;
+  border-radius: var(--control-radius);
+  background: var(--color-primary-soft);
+  color: var(--color-text-strong);
+  font-size: 0.8rem;
+}
+.renewal-previous svg {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: var(--color-primary);
+  stroke-width: 1.6;
+}
+.renewal-total {
+  display: flex;
+  justify-content: space-between;
+  margin: 0;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--color-border);
+  font-size: 0.8rem;
+  color: var(--color-text-muted, inherit);
+}
+.renewal-total strong {
+  color: var(--color-text-strong);
+}
+.renewal-form .maintenance-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+.detail-primary-actions .renew-button svg {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+.detail-primary-actions button.detail-toolbar-button.renew-button.is-due {
+  border-color: var(--color-primary);
+  color: #fff;
+  background: var(--color-primary);
+}
+.detail-primary-actions button.detail-toolbar-button.renew-button.is-due:hover {
+  border-color: var(--color-primary-dark);
+  color: #fff;
+  background: var(--color-primary-dark);
+}
+@media (max-width: 640px) {
+  .renewal-form {
+    grid-template-columns: 1fr;
+  }
+  .renewal-form label,
+  .renewal-form .renewal-date {
+    grid-column: 1 / -1;
+  }
+}
+.renewal-form .save-button svg {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}

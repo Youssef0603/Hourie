@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { DetailIconButton } from '../../../shared/components/DetailIconButton'
 import { fr } from '../../../i18n/fr'
 import { localized, operationPhrase as t } from '../../../i18n/operations'
 import { ApiError } from '../../../shared/api/http'
@@ -172,7 +173,7 @@ export function EquipmentEditForm({ equipment, employees, projects, locations, c
   }
 
   if (!forceOpen && !isOpen) {
-    return <button className="equipment-edit-button detail-toolbar-button" type="button" onClick={() => setEditing(true)}><ActionIcon name="edit" />{fr.common.edit}</button>
+    return <DetailIconButton icon="edit" label={fr.common.edit} onClick={() => setEditing(true)} />
   }
 
   return (

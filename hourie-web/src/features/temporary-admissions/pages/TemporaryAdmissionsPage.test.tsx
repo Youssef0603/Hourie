@@ -316,25 +316,24 @@ describe("TemporaryAdmissionsPage", () => {
     expect(screen.queryByText("Perkins 250 KVA")).not.toBeInTheDocument();
   });
 
-  it("does not show an error after an AT document uploads successfully", async () => {
+  it("renews an AT from the Renouveler dialog without showing an error", async () => {
     const user = userEvent.setup();
-    const { container } = render(<TemporaryAdmissionsPage canManage />);
+    render(<TemporaryAdmissionsPage canManage />);
     await user.click(await screen.findByText("S1445"));
+    await user.click(screen.getByRole("button", { name: "Renouveler" }));
 
-    fireEvent.change(screen.getByLabelText("Date de l’AT"), {
+    const renewal = screen.getByRole("dialog", { name: "Renouveler l’AT" });
+    fireEvent.change(within(renewal).getByLabelText("Date de l’AT"), {
       target: { value: "2027-10-06" },
     });
-    const fileInputs = container.querySelectorAll<HTMLInputElement>(
-      'input[type="file"]',
-    );
     await user.upload(
-      fileInputs[1],
+      renewal.querySelector<HTMLInputElement>('input[type="file"]')!,
       new File(["AT"], "AT-S1445-2027.pdf", { type: "application/pdf" }),
     );
-    await user.click(screen.getByRole("button", { name: "Ajouter l’AT" }));
+    await user.click(within(renewal).getByRole("button", { name: "Renouveler" }));
 
     await waitFor(() =>
-      expect(screen.queryByText("AT-S1445-2027.pdf")).not.toBeInTheDocument(),
+      expect(screen.queryByRole("dialog", { name: "Renouveler l’AT" })).not.toBeInTheDocument(),
     );
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });

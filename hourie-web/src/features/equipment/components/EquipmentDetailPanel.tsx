@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { DetailIconButton } from "../../../shared/components/DetailIconButton";
 import type { AuthenticatedUser } from "../../auth/types";
 import { activeLanguage, fr, type Language } from "../../../i18n/fr";
 import { ActionIcon } from "../../../shared/components/ActionIcon";
@@ -132,14 +133,6 @@ export function EquipmentDetailPanel({
     );
   }
 
-  const openHistory = () => {
-    if (!selected) return;
-    const section = document.getElementById(`equipment-history-${selected.id}`) as HTMLDetailsElement | null;
-    if (!section) return;
-    section.open = true;
-    section.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  };
-
   return (
     <>
       <div className={`detail-backdrop${nested ? " nested-detail-backdrop" : ""}`} onMouseDown={() => !isLoadingDetail && onClose()}>
@@ -164,7 +157,6 @@ export function EquipmentDetailPanel({
                   onEdit={() => onEditingChange(true)}
                   onDelete={onDelete}
                   onTransfer={() => setShowTransfer(true)}
-                  onHistory={openHistory}
                 />
 
                 <EquipmentDetailSection title={fr.equipment.assignment} icon="location" defaultOpen={hasAssignment} className="detail-assignment">
@@ -321,7 +313,6 @@ function DetailActions({
   onEdit,
   onDelete,
   onTransfer,
-  onHistory,
 }: {
   isOtherAsset: boolean;
   canManage: boolean;
@@ -329,14 +320,12 @@ function DetailActions({
   onEdit: () => void;
   onDelete: () => void;
   onTransfer: () => void;
-  onHistory: () => void;
 }) {
   return (
     <div className="detail-primary-actions">
-      {canManage && <button className="equipment-edit-button detail-toolbar-button" type="button" onClick={onEdit}><ActionIcon name="edit" />{fr.common.edit}</button>}
+      {canManage && <DetailIconButton icon="edit" label={fr.common.edit} onClick={onEdit} />}
       {canDelete && <button className="danger-button detail-delete-button" type="button" onClick={onDelete}><ActionIcon name="delete" />{isOtherAsset ? fr.assets.delete : fr.equipment.deleteGenerator}</button>}
       {canManage && <button className="equipment-transfer-button detail-toolbar-button" type="button" onClick={onTransfer}><ActionIcon name="transfer" />{fr.equipment.transfer}</button>}
-      <button className="equipment-history-button detail-toolbar-button" type="button" onClick={onHistory}><ActionIcon name="history" />{fr.audit.viewButton}</button>
     </div>
   );
 }

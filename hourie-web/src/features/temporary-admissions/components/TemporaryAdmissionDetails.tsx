@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { DetailIconButton } from "../../../shared/components/DetailIconButton";
 import { DocumentRow } from "../../../shared/components/DocumentRow";
 import {
   apiRequest,
@@ -8,10 +9,13 @@ import { DocumentUploadDropzone } from "../../../shared/components/DocumentUploa
 import { EmptyState } from "../../../shared/components/EmptyState";
 import { PaginatedDocumentList } from "../../../shared/components/PaginatedDocumentList";
 import { RecordHistory } from "../../../shared/components/RecordHistory";
+import { RenewButton } from "../../../shared/components/RenewButton";
+import { expiryStatus } from "../../../shared/expiry";
+import { RenewAdmissionDialog } from "./RenewAdmissionDialog";
 import { activeLanguage } from "../../../i18n/fr";
 import { formatDate as formatApiDate, formatMoney } from "../../../shared/format";
 import { normalizeSearch } from "../../../shared/text";
-import { localized, operationPhrase, operationsText } from "../../../i18n/operations";
+import { operationPhrase, operationsText } from "../../../i18n/operations";
 import {
   admissionError,
   fetchTemporaryAdmission,
@@ -43,7 +47,7 @@ export function TemporaryAdmissionDetails({
   const [deletingDocumentId, setDeletingDocumentId] = useState<number | null>(
     null,
   );
-  const [admissionDocuments, setAdmissionDocuments] = useState<File[]>([]);
+  const [showRenewal, setShowRenewal] = useState(false);
   const [showReturnForm, setShowReturnForm] = useState(false);
   const [showClearanceForm, setShowClearanceForm] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -69,29 +73,6 @@ export function TemporaryAdmissionDetails({
       });
     }
   }, [showClearanceForm]);
-
-  async function addAdmissionDocuments(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!admissionDocuments.length) return;
-    const formElement = event.currentTarget;
-    const form = new FormData(formElement);
-    await perform(async () => {
-      let saved = item;
-      for (const file of admissionDocuments) {
-        saved = await uploadAdmissionDocument(
-          item.id,
-          "admission",
-          file,
-          String(form.get("document_date")),
-          Number(form.get("validity_months")),
-        );
-        onChanged(saved);
-        setAdmissionDocuments((current) => current.filter((entry) => entry !== file));
-      }
-      setAdmissionDocuments([]);
-      formElement.reset();
-    }, operationPhrase("Impossible d’ajouter ce document AT."));
-  }
 
   async function addInvoices(files: File[]) {
     await perform(async () => {
@@ -302,15 +283,13 @@ export function TemporaryAdmissionDetails({
           <div className="detail-primary-actions">
             {canManage && (
               <>
-              <button
-                className="equipment-edit-button detail-toolbar-button"
-                type="button"
-                onClick={onEdit}
-                disabled={busy}
-              >
-                <ActionIcon name="edit" />
-                {operationPhrase("Modifier")}
-              </button>
+              {!["returned", "cleared"].includes(item.status) && (
+                <RenewButton
+                  due={expiryStatus(item.expires_on) !== "active"}
+                  onClick={() => setShowRenewal(true)}
+                />
+              )}
+              <DetailIconButton icon="edit" label={operationPhrase("Modifier")} onClick={onEdit} disabled={busy} />
               {!["returned", "cleared"].includes(item.status) && (
                 <button
                   className="equipment-transfer-button detail-toolbar-button"
@@ -335,23 +314,6 @@ export function TemporaryAdmissionDetails({
               )}
               </>
             )}
-            <button
-              className="equipment-history-button detail-toolbar-button temporary-admission-history-button"
-              type="button"
-              aria-label={operationPhrase("Voir l’historique")}
-              title={operationPhrase("Voir l’historique")}
-              onClick={() => {
-                const history = document.getElementById(
-                  `temporary-admission-history-${item.id}`,
-                ) as HTMLDetailsElement | null;
-                if (history) {
-                  history.open = true;
-                  history.scrollIntoView({ behavior: "smooth", block: "start" });
-                }
-              }}
-            >
-              <ActionIcon name="history" />
-            </button>
             {canManage && (
               <button
                 type="button"
@@ -559,72 +521,6 @@ export function TemporaryAdmissionDetails({
             <div className="temporary-admission-documents-group">
               <h4>{operationPhrase("Documents AT")}</h4>
               {documentList(atDocuments, operationPhrase("Aucun document AT enregistré."))}
-              {canManage && !["returned", "cleared"].includes(item.status) && (
-                <form
-                  className="temporary-admission-document-form"
-                  onSubmit={addAdmissionDocuments}
-                >
-                  <p className="temporary-admission-action-hint">
-                    {operationPhrase("L’échéance reste calculée depuis la date d’entrée de la déclaration. La durée de cet AT prolonge la période actuelle.")}
-                  </p>
-                  <label>
-                    {operationPhrase("Date de l’AT")}
-                    <input required type="date" name="document_date" />
-                  </label>
-                  <label>
-                    {operationPhrase("Durée de validité (mois)")}
-                    <input
-                      required
-                      type="number"
-                      name="validity_months"
-                      min={1}
-                      max={120}
-                      step={1}
-                      defaultValue={currentValidityMonths}
-                    />
-                  </label>
-                  <DocumentUploadDropzone
-                    compact
-                    disabled={busy}
-                    title={selectedAtDocumentsTitle(admissionDocuments)}
-                    description={operationPhrase("Un ou plusieurs documents AT · PDF · 10 Mo maximum par fichier")}
-                    onFiles={(files) =>
-                      setAdmissionDocuments((current) => [
-                        ...current,
-                        ...files,
-                      ])
-                    }
-                  />
-                  {admissionDocuments.length > 0 && (
-                    <ul className="temporary-admission-selected-files">
-                      {admissionDocuments.map((file, index) => (
-                        <li key={`${file.name}-${file.lastModified}-${index}`}>
-                          <span>{file.name}</span>
-                          <button
-                            type="button"
-                            aria-label={localized(`Retirer ${file.name}`, `إزالة ${file.name}`)}
-                            onClick={() =>
-                              setAdmissionDocuments((current) =>
-                                current.filter(
-                                  (_, candidate) => candidate !== index,
-                                ),
-                              )
-                            }
-                          >
-                            <ActionIcon name="delete" />
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                  <button
-                    className="primary-button temporary-admission-document-action"
-                    disabled={busy || !admissionDocuments.length}
-                  >
-                    {operationPhrase("Ajouter l’AT")}
-                  </button>
-                </form>
-              )}
             </div>
             <div className="temporary-admission-documents-group">
               <h4>
@@ -784,6 +680,17 @@ export function TemporaryAdmissionDetails({
             </>
           )}
         </div>
+        {showRenewal && (
+          <RenewAdmissionDialog
+            item={item}
+            validityMonths={currentValidityMonths}
+            onClose={() => setShowRenewal(false)}
+            onRenewed={(saved) => {
+              onChanged(saved);
+              setShowRenewal(false);
+            }}
+          />
+        )}
       </aside>
     </div>
   );
@@ -791,10 +698,5 @@ export function TemporaryAdmissionDetails({
 
 function formatDate(value: string | null) {
   return formatApiDate(value, { fallback: operationPhrase("À compléter") });
-}
-
-function selectedAtDocumentsTitle(files: File[]) {
-  if (!files.length) return operationPhrase("Ajouter des documents AT");
-  return activeLanguage === "ar" ? `${files.length} مستند إدخال مؤقت محدد` : `${files.length} document${files.length > 1 ? "s" : ""} AT sélectionné${files.length > 1 ? "s" : ""}`;
 }
 

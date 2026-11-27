@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { ClearFiltersButton } from '../../../shared/components/FilterDrawer'
 import { fr, type Language } from '../../../i18n/fr'
 import { operationPhrase as t } from '../../../i18n/operations'
 import { ActionIcon } from '../../../shared/components/ActionIcon'
@@ -125,7 +126,7 @@ export function AssetInventoryView({ category, language, options, filters, searc
           {canManage && isGeneratorSelected && <button className="table-refresh-button import-excel-action" type="button" onClick={() => setShowImportGenerator(true)}><ActionIcon name="upload" /><span>{fr.equipment.importExcel}</span></button>}
           {canManage && selectedCategory && options && <ToolbarIconButton icon="add" label={isGeneratorSelected ? fr.equipment.addGenerator : fr.assets.add} onClick={() => isGeneratorSelected ? setShowAddGenerator(true) : setShowAdd(true)} />}
           <ToolbarIconButton icon="refresh" label={fr.common.refresh} onClick={onRefresh} />
-          {activeFilterCount > 0 && <button className="clear-filters" type="button" onClick={onClearFilters}>{fr.equipment.clearFilters}</button>}
+          <ClearFiltersButton count={activeFilterCount} onClear={onClearFilters} />
         </div>
       </div>
       {showFilters && (isGeneratorSelected
