@@ -433,3 +433,34 @@ it('prints the standard situation PDF with where the work was done', function ()
         ->and($response->headers->get('Content-Disposition'))->toContain('inline; filename="Situation_SC-821-26-01-SIT-01_FERRAILLAGE_ABIDJAN.pdf"')
         ->and(substr((string) $response->getContent(), 0, 4))->toBe('%PDF');
 });
+
+it('removes the whole subcontracts module when it is switched off', function () {
+    $subcontract = createSteelSubcontract(['advance_amount' => 0, 'advance_recovery_rate' => 0, 'items' => [[
+        'description' => 'Pose des armatures HA', 'unit' => 'kg', 'quantity' => 4500, 'unit_price' => 250,
+        'materials_supplied_by' => 'arh',
+        'materials' => [['name' => 'Fer HA', 'unit' => 'kg', 'quantity_per_unit' => 1, 'waste_percent' => 5]],
+    ]]]);
+    $materialId = $subcontract['items'][0]['materials'][0]['id'];
+    $linked = $this->postJson('/api/v1/purchase-orders', steelPurchaseOrder($this->site->id, $materialId, 100))
+        ->assertCreated()
+        ->assertJsonPath('data.items.0.subcontract_item_material_id', $materialId)
+        ->json('data');
+
+    config(['hourie-features.subcontracts' => false]);
+
+    $this->getJson('/api/v1/auth/user')->assertOk()->assertJsonPath('data.features.subcontracts', false);
+    $this->getJson('/api/v1/subcontracts')->assertNotFound();
+    $this->getJson("/api/v1/subcontracts/{$subcontract['id']}")->assertNotFound();
+    $this->getJson('/api/v1/subcontractors')->assertNotFound();
+    $this->getJson("/api/v1/projects/{$this->site->id}/subcontract-materials")->assertNotFound();
+
+    $this->getJson("/api/v1/purchase-orders/{$linked['id']}")->assertOk()
+        ->assertJsonPath('data.items.0.subcontract_item_material_id', null)
+        ->assertJsonPath('data.items.0.material_label', null);
+
+    $order = steelPurchaseOrder($this->site->id, $materialId, 100);
+    $order['items'][0]['budget_code'] = 'BUD-9';
+    $this->postJson('/api/v1/purchase-orders', $order)->assertCreated()
+        ->assertJsonPath('data.items.0.subcontract_item_material_id', null)
+        ->assertJsonPath('data.items.0.budget_code', 'BUD-9');
+});

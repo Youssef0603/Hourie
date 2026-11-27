@@ -23,6 +23,7 @@ const user: AuthenticatedUser = {
     manage_users: true,
     manage_manager_accounts: true,
   },
+  features: { subcontracts: true },
 };
 
 describe("WorkspaceSidebar", () => {
@@ -59,6 +60,18 @@ describe("WorkspaceSidebar", () => {
     );
 
     expect(screen.getByRole("button", { name: "Actifs" })).toHaveAttribute("aria-current", "page");
+  });
+
+  it("hides the subcontracts module when it is switched off", () => {
+    const { rerender } = render(
+      <WorkspaceSidebar activeSection="dashboard" isOpen onClose={vi.fn()} onNavigate={vi.fn()} />,
+    );
+    expect(screen.getByRole("button", { name: "Sous-traitance" })).toBeInTheDocument();
+
+    rerender(
+      <WorkspaceSidebar activeSection="dashboard" isOpen onClose={vi.fn()} onNavigate={vi.fn()} showSubcontracts={false} />,
+    );
+    expect(screen.queryByRole("button", { name: "Sous-traitance" })).not.toBeInTheDocument();
   });
 });
 

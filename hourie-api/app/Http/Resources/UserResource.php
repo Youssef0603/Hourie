@@ -36,6 +36,9 @@ class UserResource extends JsonResource
                 'manage_users' => $this->role->canManageUsers(),
                 'manage_manager_accounts' => $this->role->canManageManagerAccounts(),
             ],
+            'features' => [
+                'subcontracts' => (bool) config('hourie-features.subcontracts'),
+            ],
         ];
     }
 }

@@ -62,8 +62,8 @@ class PurchaseOrderResource extends JsonResource
                 'id' => $item->id,
                 'position' => $item->position,
                 'budget_code' => $item->budget_code,
-                'subcontract_item_material_id' => $item->subcontract_item_material_id,
-                'material_label' => $item->subcontractMaterial
+                'subcontract_item_material_id' => config('hourie-features.subcontracts') ? $item->subcontract_item_material_id : null,
+                'material_label' => config('hourie-features.subcontracts') && $item->subcontractMaterial
                     ? $item->subcontractMaterial->item->code.' · '.$item->subcontractMaterial->item->description.' — '.$item->subcontractMaterial->name
                     : null,
                 'description' => $item->description,

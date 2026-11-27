@@ -107,7 +107,13 @@ function dateLabel(value: string) {
 }
 
 
-export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = [] }: { defaultPreparedBy: string; canManage: boolean; projects?: Array<{ id: number; name: string; code: string | null }> }) {
+export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = [], linkSubcontractMaterials = true }: {
+  defaultPreparedBy: string;
+  canManage: boolean;
+  projects?: Array<{ id: number; name: string; code: string | null }>;
+  /** False when the subcontracts module is off: lines take a free budget code only. */
+  linkSubcontractMaterials?: boolean;
+}) {
   const [search, setSearch] = useState("");
   const loadOrders = useCallback((page: number) => getPurchaseOrders(search, page), [search]);
   const [error, setError] = useState<string | null>(null);
@@ -120,15 +126,15 @@ export function PurchaseOrdersPage({ defaultPreparedBy, canManage, projects = []
   const editorProjectId = editor?.project_id ?? null;
 
   useEffect(() => {
-    if (!editorProjectId) return;
+    if (!editorProjectId || !linkSubcontractMaterials) return;
     let active = true;
     getSiteMaterials(editorProjectId)
       .then((materials) => { if (active) setSiteMaterials(materials); })
       .catch(() => { if (active) setSiteMaterials([]); });
     return () => { active = false; };
-  }, [editorProjectId]);
+  }, [editorProjectId, linkSubcontractMaterials]);
 
-  const materialsForEditor = editorProjectId ? siteMaterials : [];
+  const materialsForEditor = editorProjectId && linkSubcontractMaterials ? siteMaterials : [];
   const [editingId, setEditingId] = useState<number | undefined>();
   const [deliveryNoteFiles, setDeliveryNoteFiles] = useState<File[]>([]);
   const [editorDeliveryNotes, setEditorDeliveryNotes] = useState<PurchaseOrderDeliveryNote[]>([]);

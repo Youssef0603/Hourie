@@ -139,7 +139,10 @@ class PurchaseOrderController extends Controller
      */
     private function numberedItems(array $items, Project $project): array
     {
-        $materialIds = collect($items)->pluck('subcontract_item_material_id')->filter()->unique();
+        // With the subcontracts module off, lines are never linked to its materials.
+        $materialIds = config('hourie-features.subcontracts')
+            ? collect($items)->pluck('subcontract_item_material_id')->filter()->unique()
+            : collect();
         $materials = SubcontractItemMaterial::query()
             ->with('item:id,subcontract_id,code', 'item.subcontract:id,project_id')
             ->whereKey($materialIds)

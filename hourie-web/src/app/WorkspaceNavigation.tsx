@@ -56,13 +56,16 @@ export function WorkspaceSidebar({
   isOpen,
   onClose,
   onNavigate,
+  showSubcontracts = true,
 }: {
   activeSection: Section;
   isOpen: boolean;
   onClose: () => void;
   onNavigate: (path: string) => void;
+  /** False when the subcontracts module is switched off for this deployment. */
+  showSubcontracts?: boolean;
 }) {
-  const modules = workspaceModules();
+  const modules = workspaceModules().filter((module) => showSubcontracts || module.section !== "subcontracts");
   const groups = [
     { key: null, label: null },
     { key: "operations", label: fr.navigation.operationsGroup },

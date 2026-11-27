@@ -244,6 +244,10 @@ export function EquipmentPage({
       navigate("/assets/generator", true);
       return;
     }
+    if (currentRoute.section === "subcontracts" && !user.features.subcontracts) {
+      navigate("/dashboard", true);
+      return;
+    }
     const wasSiteId = previousSiteId.current;
     previousSiteId.current = currentRoute.siteId;
     const currentCategory =
@@ -341,7 +345,7 @@ export function EquipmentPage({
     return () => {
       cancelled = true;
     };
-  }, [filterQuery, pathname, user.permissions.manage_sites]);
+  }, [filterQuery, pathname, user.permissions.manage_sites, user.features.subcontracts]);
 
   function navigate(path: string, replace = false) {
     const nextUrl = new URL(path, window.location.origin);
@@ -664,6 +668,7 @@ export function EquipmentPage({
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
         onNavigate={(path) => navigate(path)}
+        showSubcontracts={user.features.subcontracts}
       />
 
       <div className="app-main">
@@ -1094,7 +1099,7 @@ export function EquipmentPage({
               relatedEquipmentContext={{ user, language, options }}
             />
           </Suspense>
-        ) : activeSection === "subcontracts" ? (
+        ) : activeSection === "subcontracts" && user.features.subcontracts ? (
           <Suspense fallback={<FeaturePageLoading />}>
             <SubcontractsPage
               canManage={user.permissions.manage_subcontracts}
@@ -1109,6 +1114,7 @@ export function EquipmentPage({
               defaultPreparedBy={user.name}
               canManage={user.permissions.manage_purchase_orders}
               projects={options?.projects ?? []}
+              linkSubcontractMaterials={user.features.subcontracts}
             />
           </Suspense>
         ) : activeSection === "sites" ? (

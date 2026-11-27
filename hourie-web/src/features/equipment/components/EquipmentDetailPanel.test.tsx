@@ -24,6 +24,7 @@ const user: AuthenticatedUser = {
     manage_users: false,
     manage_manager_accounts: false,
   },
+  features: { subcontracts: true },
 };
 
 function equipment(overrides: Partial<Equipment> = {}): Equipment {

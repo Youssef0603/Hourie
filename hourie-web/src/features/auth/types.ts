@@ -20,6 +20,10 @@ export type AuthenticatedUser = {
     manage_users: boolean
     manage_manager_accounts: boolean
   }
+  /** Modules switched on for this deployment (FEATURE_* in the API's .env). */
+  features: {
+    subcontracts: boolean
+  }
 }
 
 export type LoginCredentials = {
